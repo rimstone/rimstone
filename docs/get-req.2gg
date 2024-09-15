@@ -1,0 +1,210 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+get-req \-  (request-information)
+.SH PURPOSE
+Obtain data that describes the input request.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+get-req \\
+        errno | error | cookie-count | cookie <cookie index> \\
+        | arg-count | arg-value <arg index> | input-count | \\
+        | input-value <input index> | input-name <input index> \\
+        | header <header> | referring-url | method \\
+        | content-type | trace-file | process-id | name \\
+    to <variable>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+Information related to an input request can be obtained with get-req statement and the result stored into <variable> (in "to" clause). The following can be obtained (all are strings except where stated otherwise):
+
+.RS 4
+\[bu]    
+"errno" obtains the integer value of operating system "errno" tied to a last Gliimly statement that can return a status code. The "errno" value is saved internally; and restored here. It means that if "errno" changed for whatever reason since such Gliimly statement (such as with \fBcall-extended\fP), you will still obtain the correct value. See \fBerror-code\fP for an example. Note that errno value is undefined if there is no error, and can be 0 if the error is reported by Gliimly and not by operating system.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"error" returns the error message that correlates to "errno" value. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+"cookie-count" returns the number of cookies. This means any cookies received from the client plus any cookies added (with \fBset-cookie\fP) in the application minus any cookies deleted (with \fBdelete-cookie\fP). 
+
+
+.RE
+
+.RS 4
+\[bu]    
+"cookie" returns the cookie value specified by <cookie index> (a sequential number starting with 1 up to the number of cookies), for instance:
+
+.RS 4
+.EX
+
+get-req cookie-count to cookie_c
+start-loop repeat cookie_c use i
+    get-req cookie i to cookie_val
+    pf-web "cookie %s\en", cookie_val
+    @<br/>
+end-loop
+
+.EE
+.RE
+
+In this example, we get the number of cookies, and then print out each cookie value.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"arg-count" is the number of input arguments to your application (passed from a program caller, see "-a" option in \fBmgrg\fP and "--arg" in \fBgg\fP).
+
+
+.RE
+
+.RS 4
+\[bu]    
+"arg-value" is the string value of a single element from the array of input arguments, specified by <arg_index>. This array is indexed from 1 to the value obtained by "arg-count". Here is an example of using arg-count and arg-value:
+
+.RS 4
+.EX
+
+get-req arg-count to ac
+pf-out "Total args [%ld]", ac
+start-loop repeat ac use i
+    get-req arg-value i to av
+    pf-out "%s\en", av
+end-loop
+
+.EE
+.RE
+
+This code will display the number of input arguments (as passed to main() function of your program, excluding the first argument which is the name of the program), and then all the arguments. If there are no arguments, then variable 'ac' would be 0. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+"input-count" is the number of input parameters (from a \fBrequest\fP URL). Together with input-name and input-value, this lets you examine all input parameters in a \fBrequest\fP, especially in situations where the parameters are dynamic in nature.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"input-name" is the value of a single element from the array of input parameter names (from a \fBrequest\fP), specified by <input_index>. This array is indexed from 1 to "input-count". See "input-value" for an example.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"input-value" is the string value of a single element from the array of input parameter values (from a \fBrequest\fP), specified by <input_index>. This array is indexed from 1 to "input-count". For example:
+
+.RS 4
+.EX
+
+get-req input-count to input_c
+start-loop repeat input_c use i
+    get-req input-name i to input_n
+    get-req input-value i to input_v
+    pf-web "Input parameter #%ld, name is %s, value is %s\en", i, input_n, input_v
+    @<br/>
+end-loop
+
+.EE
+.RE
+
+In this example, we get the number of input parameters, and then print out each. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+"header" is the value of HTTP request header <header> that is set by the client. For example, if the HTTP request contains header "My-Header:30", then hval would be "30":
+
+.RS 4
+.EX
+
+get-req header "My-Header" to hval
+
+.EE
+.RE
+
+Note that not all HTTP request headers are set by the caller. For example, SERVER_NAME or QUERY_STRING are set by the web server, and to get such headers, use \fBget-sys\fP.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"method" is the request method. This is a number with values of GG_GET, GG_POST, GG_PUT, GG_PATCH or GG_DELETE for GET, POST, PUT, PATCH or DELETE requests, respectively. If it is not any of those commonly used ones, then the value is GG_OTHER and you can use \fBget-sys\fP with "environment" clause to obtain "REQUEST_METHOD" variable.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"content-type" is the request content type. It is a string and generally denotes the content type of a \fBrequest-body\fP, if included in the request. Common examples are "application/x-www-form-urlencoded", "multipart/form-data" or "application/json".
+
+
+.RE
+
+.RS 4
+\[bu]    
+"referring-url" is the referring URL (i.e. the page from which this request was called, for example by clicking a link). 
+
+
+.RE
+
+.RS 4
+\[bu]    
+"trace-file" is the full path of the trace file for this request (if enabled, see \fBtrace-run\fP).
+
+
+.RE
+
+.RS 4
+\[bu]    
+"process-id" is the "PID" (process ID) number of the currently executing process, as a number.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"name" is the request name as specified in the \fBrequest\fP URL.
+.RE
+
+
+.SH EXAMPLES
+Get the name of current trace file:
+
+.RS 4
+.EX
+
+get-req trace-file to trace_file
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Request information
+
+\fBget-req\fP   
+See all 
+\fBdocumentation\fP

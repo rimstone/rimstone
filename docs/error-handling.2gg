@@ -1,0 +1,58 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+error-handling \- Gliimly documentation (error-handling)
+.SH DESCRIPTION
+
+.LP
+.B WHEN YOUR PROGRAM ERRORS OUT
+.LP
+
+"Erroring out" means a process handling a request has encountered a difficulty that cannot be handled and it will either:
+
+.RS 4
+\[bu]    
+Skip the rest of the request, and move on quickly to handle the next request without exiting. Most errors are like this, for example your program has attempted to access memory outside of what's allocated, or you have called \fBreport-error\fP statement.
+
+.RE
+
+.RS 4
+\[bu]    
+Stop and exit, and it may be automatically restarted if it's a \fBservice\fP. For instance, the process could be out of memory, or the database is permanently down and connection cannot be re-established.
+.RE
+. 
+Note that if your program is \fBsingle-run\fP (for instance if it's a command-line program), it will exit in any case since it handles a single request anyway.
+.RE
+
+
+.LP
+.B WHEN THERE IS A PROBLEM IN GLIIMLY
+.LP
+
+If there is a fatal internal error (i.e. error in Gliimly code itself that cannot be handled), it will be caught by Gliimly, and the process will end. If your process is started with \fBmgrg\fP, it may be automatically restarted.
+
+.LP
+.B LOGGING THE ERROR
+.LP
+
+Regardless of the type of error and regardless of whether the process exits or not, the error is logged and the program stack with full source code lines (see \fBgg\fP for including debug information) will be written to backtrace file (use -e option of \fBgg\fP to obtain its location). Note that the program stack is logged only if Gliimly is built in debugging mode (see "DI=1" option when building Gliimly); otherwise, production code may be slowed down by stack dumping.
+
+You can see the list of last N errors (and the location of file containing backtrace for them) by using \fBgg\fP, for instance to see the last 3 errors:
+
+.RS 4
+.EX
+
+gg -e 3
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Error handling
+
+\fBdb-error\fP  
+\fBerror-code\fP  
+\fBerror-handling\fP  
+\fBreport-error\fP   
+See all 
+\fBdocumentation\fP

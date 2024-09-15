@@ -1,0 +1,87 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+install-arch \- Gliimly documentation (download-and-build)
+.SH DESCRIPTION
+
+.LP
+.B INSTALL GLIIMLY ON ARCH
+.LP
+
+For Arch-like distributions (like Arch or Manjaro):
+
+.B - Install git
+
+
+.RS 4
+.EX
+
+sudo pacman --noconfirm -Sy --overwrite "*" git
+
+.EE
+.RE
+
+
+.B - Download Gliimly
+
+
+.RS 4
+.EX
+
+git clone https://github.com/gliimly/gliimly.git
+cd gliimly
+
+.EE
+.RE
+
+
+.B - Install dependencies
+
+
+.RS 4
+.EX
+
+sudo pacman --noconfirm -Sy --overwrite "*" make gcc openssl curl 'mariadb-connector-c' fcgi 'postgresql-libs' sqlite3 pcre2
+
+.EE
+.RE
+
+
+.B - Build Gliimly
+
+Use DI=1 to build debug version, leave it as is for production:
+
+.RS 4
+.EX
+
+make clean
+make DI=0
+sudo make install
+
+.EE
+.RE
+
+
+.B - Tools and utilities
+
+Install useful tools and utilities, also used in examples (so if you're running examples, you must install these as well):
+
+.RS 4
+.EX
+
+sudo pacman --noconfirm -Sy --overwrite "*" tar curl
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Download and build
+
+\fBinstall\fP  
+\fBinstall-arch\fP  
+\fBinstall-debian\fP  
+\fBinstall-fedora\fP  
+\fBinstall-opensuse\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP

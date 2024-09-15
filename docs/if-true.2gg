@@ -1,0 +1,165 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+if-true \-  (program-flow)
+.SH PURPOSE
+Conditional statement.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+if-true <condition>
+    <any code>
+[
+else-if <condition>
+    <any code>
+] ...
+[
+else-if
+    <any code>
+] 
+end-if
+
+.EE
+.RE
+
+where <condition> is:
+
+.RS 4
+.EX
+
+( <comparison> [ and <comparison> [ , ... ] ] )
+|
+( <comparison> [ or <comparison> [ , ... ] ] )
+
+.EE
+.RE
+
+<comparison> is for strings:
+
+.RS 4
+.EX
+
+<string> \\
+   ( equal | not-equal | \\
+   lesser-than | lesser-equal | \\
+   greater-than | greater-equal | \\
+   contain | not-contain ) \\
+<check string> \\
+ [ case-insensitive ] [ length <length> ]
+
+.EE
+.RE
+
+<comparison> is for numbers
+
+.RS 4
+.EX
+
+<number> \\
+   ( equal | not-equal | \\
+   lesser-than | lesser-equal | \\
+   greater-than | greater-equal | \\
+   every | not-every ) \\
+<check number>  ...
+
+.EE
+.RE
+
+<comparison> is for booleans:
+
+.RS 4
+.EX
+
+<boolean> ( equal | not-equal ) <check boolean>  ...
+
+.EE
+.RE
+
+.SH DESCRIPTION
+if-true will evaluate a <condition> and execute code associated with the match. If the <condition> in if-true or "else-if" succeeds, then <any code> below is executed. If it is not a match, then the next condition in "else-if" statement is evaluated, one by one until a match is found and code under that statement executes. If no match is found, then code under "else-if" statement without a <condition> executes (if specified), otherwise program control passes outside of "end-if".
+
+A <condition> is made of one or more <comparison>s, connected by either "and" or "or" clause, but not both in the same <condition>. "and" clause uses logical AND to connect <comparisons> and it succeeds if all <comparison>s succeed. "or" clause uses logical OR to connect <comparisons> and it succeeds if at least one <comparison>s succeeds (if such a <comparison> is found, the following ones are not checked). 
+
+Each <comparison> examines either a string, a number or a boolean variable. 
+
+.LP
+.B STRING VARIABLE IN A COMPARISON
+.LP
+
+If "equal", "not-equal", "lesser-than", "lesser-equal", "greater-than" or "greater-equal" clause is used, a comparison succeeds if <string> is equal, not equal, lesser, lesser or equal, greater or greater-or-equal than <check string>, respectively. If "contain" or "not-contain" clause is used, a comparison succeeds if <string> is contained or not contained in <check string>, respectively. If "case-insensitive" clause is used, a comparison is performed without case sensitivity. If "length" clause is used, only the first <length> bytes of the strings are compared.
+
+.LP
+.B NUMBER VARIABLE IN A COMPARISON
+.LP
+
+If "equal", "not-equal", "lesser-than", "lesser-equal", "greater-than" or "greater-equal" clause is used, a comparison succeeds if <number> is equal, not equal, lesser, lesser or equal, greater or greater-or-equal than <check number>, respectively. 
+
+If "every" is used, then the comparison succeeds if the modulo of <number> and <check number> is 0 - this is useful in executing some code every N times but not the ones in between; with "not-every" the comparison success is this modulo is not 0 which is useful to execute code all the times except every Nth.
+
+.LP
+.B BOOLEAN VARIABLE IN A COMPARISON
+.LP
+
+If "equal" or "not-equal" clause is used, a comparison succeeds if <boolean> is equal or not equal than <check boolean>, respectively. 
+
+.LP
+.B ELSE-IF WITHOUT A <CONDITION>
+.LP
+
+With a given if-true, there can be only one "else-if" statement without a condition, and it must be the last one. 
+
+.LP
+.B NESTING
+.LP
+
+if-true can be nested, which can be up to 30 levels deep.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+%% i
+    out-header default
+    get-param inp
+
+    if-true inp equal "1"
+        @Found "1" in input
+    else-if inp equal "2"  or inp equal "3"
+        @Found "2" or "3" in input
+
+        get-param inp_num
+        string-number inp_num to num
+        if-true num equal 4
+            @Found 4 in more input
+        else-if num equal 5  and  inp equal "4"
+            @Found 5 in more input and "4" in input
+        else-if
+            @Something else
+        end-if
+
+    else-if
+        @Found something else
+    end-if
+%%
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Program flow
+
+\fBbreak-loop\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBset-bool\fP  
+\fBstart-loop\fP   
+See all 
+\fBdocumentation\fP

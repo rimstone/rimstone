@@ -1,0 +1,48 @@
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2019 Gliim LLC. 
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+
+policy_module(gg, 2.0.0)
+
+########################################
+#
+# Declarations
+#
+
+#create gg file type
+type ggfile_t;
+files_type(ggfile_t);
+
+
+#create gg execute type
+type gg_t;
+domain_type(gg_t)
+
+#create fcgi port type for gliim
+type ggport_t;
+corenet_port(ggport_t)
+
+#make execute type be the same as unconfined_t
+optional_policy(`
+     unconfined_domain(gg_t)
+')
+
+require {
+    type unconfined_t;
+    role unconfined_r;
+}
+
+#add to unconfine role
+role unconfined_r types gg_t;
+#set transition on execution of ggfile_t (by the unconfined process) to gg_t type
+type_transition unconfined_t ggfile_t : process gg_t;
+#allow transition from unconfined to gg_t
+allow unconfined_t gg_t : process transition;
+#allow execution of ggfile_t by the unconfined (which will then transion as above)
+allow unconfined_t ggfile_t : file { execute read getattr };
+#allow gg_t process domain to actually execute the ggfile_t
+allow gg_t ggfile_t : file {  ioctl read getattr lock execute execute_no_trans entrypoint open} ;
+#allow gliim port to bind
+allow gg_t ggport_t:tcp_socket { connect bind name_bind accept listen};
+

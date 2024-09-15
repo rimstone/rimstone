@@ -1,0 +1,50 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+p-web \-  (output)
+.SH PURPOSE
+Outputs a web-encoded string.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+p-web <string> [ length <length> ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+p-web is the same as \fBp-out\fP, except that the output is web-encoded (or HTML-encoded). This means such output is suited for use in web pages - the text will be displayed verbatim without HTML-markup being interpreted.
+
+If "length" clause is used, then only <length> leading bytes of <string> are web-encoded and then output. 
+
+.SH EXAMPLES
+Display "We use <hr/> markup" text, without "<hr/>" being displayed as a horizontal line:
+
+.RS 4
+.EX
+
+p-web "We use <hr/> markup"
+
+.EE
+.RE
+
+See \fBp-out\fP for more examples.
+.SH SEE ALSO
+ 
+.B - Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBpf-out\fP  
+\fBpf-url\fP  
+\fBpf-web\fP  
+\fBp-num\fP  
+\fBp-out\fP  
+\fBp-path\fP  
+\fBp-url\fP  
+\fBp-web\fP   
+See all 
+\fBdocumentation\fP

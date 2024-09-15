@@ -1,0 +1,35 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+purge-fifo \-  (FIFO)
+.SH PURPOSE
+Delete FIFO list data.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+purge-fifo <list> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+purge-fifo will delete all elements from the FIFO <list>, created by \fBnew-fifo\fP. The list is then empty and you can still put data into it, and get data from it afterwards, without having to call \fBnew-fifo\fP again.
+
+All keys or values stored in the list are also deleted.
+
+.SH EXAMPLES
+See \fBread-fifo\fP.
+.SH SEE ALSO
+ 
+.B - FIFO
+
+\fBdelete-fifo\fP  
+\fBnew-fifo\fP  
+\fBpurge-fifo\fP  
+\fBread-fifo\fP  
+\fBrewind-fifo\fP  
+\fBwrite-fifo\fP   
+See all 
+\fBdocumentation\fP

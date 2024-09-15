@@ -1,0 +1,149 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+call-extended \-  (safety)
+.SH PURPOSE
+Call C function or macro (extended mode only).
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+call-extended <function> "( " [ & ]<variable>  [ , ... ]  " )" 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+call-extended calls C <function> (which can be function or macro) with a list of parameter variables. The <function> is defined either in:
+
+.RS 4
+\[bu]    
+a ".c" file residing in the directory that contains application source code, or in
+
+.RE
+
+.RS 4
+\[bu]    
+a library with C linkage. Note that such library may not necessarily have been written in C. Most compiled languages can produce such libraries.
+.RE
+
+The <function> must be declared in a ".h" file residing in the application source code directory. You can have any number of ".c" and ".h" files. Any C files (.c) and any header files (.h) will be automatically picked up and included in your project. You do not need to do anything beyond creating them to be able to use functions or macros defined. A macro must be defined in ".h" file.
+
+call-extended statement can only be used in extended mode (see \fBextended-mode\fP). By default, Gliimly code runs in safe mode which does not allow use of call-extended statement. Note that using call-extended statement does not automatically make your application unsafe; rather, C code can be written in such a way to cause out-of-band memory reads and writes. Well-written C code should not cause such issues.
+
+.LP
+.B C SIGNATURE, INPUT/OUTPUT VARIABLES, TYPES
+.LP
+
+Each <variable> can be of C type (or a pointer to C type):
+
+.RS 4
+\[bu]    
+"gg_num" which is a signed integer 8 bytes in length (int64_t type). This represents Gliimly number.
+
+.RE
+
+.RS 4
+\[bu]    
+"char *" which is a pointer to an array of characters. This represents Gliimly string value.
+
+.RE
+
+.RS 4
+\[bu]    
+"bool" which is a boolean variable. This represents Gliimly boolean.
+.RE
+
+A <function> should not return a value. Rather, use a variable passed as a pointer if you wish to pass the function's output back to your Gliimly code.
+
+.SH EXAMPLES
+For instance, consider C file "calc.c":
+
+.RS 4
+.EX
+
+\[char35]include "gliim.h"
+
+// Compute factorial of f, and store result into res
+void factorial(gg_num f, gg_num *res)
+{
+    *res = 1;
+    gg_num i;
+    for (i = 2; i <= f; i++) {
+        *res *= i;
+    }
+}
+
+.EE
+.RE
+
+Declare this C function in a header file, for instance "calc.h":
+
+.RS 4
+.EX
+
+void factorial(gg_num f, gg_num *res);
+
+.EE
+.RE
+
+You can also have macros in a header file, so for example "calc.h" could be:
+
+.RS 4
+.EX
+
+void factorial(gg_num f, gg_num *res);
+
+\[char35]define mod10(n, m) m=(n)%10
+
+.EE
+.RE
+
+In this case you have defined a macro that calculates the moduo of 10 and stores a result into another variable.
+
+Use these in your Gliimly code with call-extended statement, for instance to use a function "factorial()":
+
+.RS 4
+.EX
+
+extended-mode
+
+begin-handler /fact
+    out-header default
+    set-number fact
+    call-extended factorial (10, &fact)
+    p-num fact
+end-handler
+
+.EE
+.RE
+
+In the above example, number "fact" is passed by reference (as a pointer), and it will contain the value of factorial of 10 on return. The result printed out is "3628800".
+
+To use macro "mod10()":
+
+.RS 4
+.EX
+
+extended-mode
+
+begin-handler /mod
+    out-header default
+    set-number mod
+    call-extended mod10(103, mod)
+    p-num mod
+end-handler
+
+.EE
+.RE
+
+In this example, you are using a C macro, so number "fact" is assigned a value directly, per C language rules. The result printed out is "3".
+.SH SEE ALSO
+ 
+.B - Safety
+
+\fBcall-extended\fP  
+\fBextended-mode\fP   
+See all 
+\fBdocumentation\fP

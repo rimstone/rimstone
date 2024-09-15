@@ -1,0 +1,389 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+gg \-  (gliim-compiler-and-utility)
+.SH PURPOSE
+Gliimly general purpose utility: build, test, run, miscellaneous (pronounced "gigi").
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+gg <options> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+
+.LP
+.B COMMAND-LINE OPTIONS
+.LP
+
+
+.RS 4
+\[bu]    
+-q Build Gliimly application from source code in the current directory. \fBmgrg\fP must run first in this directory with "-i" option to create the application. You must have at least one Gliimly source file (.gliim file), with each such file implementing a single \fBrequest\fP handler. All application source files must be contained in a flat directory; however, each request handler can handle any hierarchical path, so your API can be fully hierarchical.
+
+The following options can be used when building an application:
+
+
+.RS 4
+\[bu]    
+--db="<database vendor>:<db config file> ..."
+Specify a list of databases used in your application. Each element of the list is <database vendor> (which is 'mariadb', 'postgres' or 'sqlite'), followed by a colon (:) and then <db config file>, where <db config file> is used to refer to a database in \fBstatements\fP such as \fBrun-query\fP. 
+
+Each <database vendor>:<db config file> is separated by a space. You can list any number of databases for use in your application. A file in current directory with name <db config file> must exist and contain the connection parameters for database access, and is copied to Gliimly's database configuration directory (see \fBdirectories\fP). See \fBdatabase-config-file\fP for more details on the content of this file.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--lflag=<linker flags>
+If you wish to add any additional linker flags (such as any non-Gliimly libraries), specify them quoted under this option. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+--cflag=<C flags>
+If you wish to add any additional C compiler (gcc) flags, specify them quoted under this option. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+--trace
+If specified, tracing information code will be generated (without it, tracing is not available and \fBtrace-run\fP statement is ignored). Tracing only works when debugging mode is enabled, so --debug option must be used as well.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--path=<application path>
+This option lets you specify the \fBapplication path\fP for your request URLs. It is a leading path of a URL prior to request name and any parameters. If empty, the default is the application name preceded by a forward slash:
+
+.RS 4
+.EX
+
+/<app name>
+
+.EE
+.RE
+
+.RE
+
+.RS 4
+\[bu]    
+--maxupload=<max upload size>
+Specify maximum upload size for a file (in bytes). The default is approximately 25MB. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+--max-errors=<max errors>
+During building of an application, emit a maxium of <max errors> diagnostic messages. The default is 5.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--debug
+Generate debugging information when compiling your application. Debugging information is required to produce a backtrace file with the stack that contains source code line numbers, in order to pinpoint the exact location where report-error statement was used, or where the application crashed. It is also needed to use gdb for debugging purposes. Note that stack information is produced only when Gliimly is built in debugging mode (see "DI=1" option when \fBinstall\fPing Gliimly).
+
+
+.RE
+
+.RS 4
+\[bu]    
+--c-lines
+Skip generating line information when compiling .gliim files. By default line information is included, which allows errors to be reported with line numbers in .gliim files. If you want only generated C code line numbers to be used, use this option. This output will omit certain color-coded and other details that are normally present without this option.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--optimize-memory
+Use memory-optimizing garbage collection, which counts memory references and frees memory as soon as possible. Default is without memory optimization, which frees memory at the end of the request. Do not use this option unless your system is seriously starved for memory because it imposes a performance penatly (in some tests 15-25%).
+
+
+.RE
+
+.RS 4
+\[bu]    
+--posix-regex
+Use ERE (Extended Regular Expression) POSIX regex library built into Linux instead of default PCRE2, see \fBmatch-regex\fP. While the two are largely compatibile, you can use either one depending on your needs.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--plain-diag
+Do not use color-coded and more detailed Gliimly diagnostic output. While rare, you may need this option in cases when there may be a Gliimly or underlying compiler bug, or for some other reason.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-c,--clean 
+Clean all object and other intermediate files, so that consequent application build is a full recompilation. Use it alone and prior to rebuilding the application.
+.RE
+
+
+Note that when any gg compilation options change, the application is rebuilt (i.e. the change has the effect of "--clean").
+
+
+.RE
+
+.RS 4
+\[bu]    
+-i
+Display both include and linking flags for an application that uses \fBClient-API\fP to connect to Gliimly \fBservice\fP. The flags are for C compiler (gcc). If "--include" option is used in addition, then only include flags are displayed. If "--link" option is used in addition, then only linking flags are displayed. Use this to automate building of client applications with tools like Makefile.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-v
+Display Gliimly version as well as the Operating System version. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+-s
+Trace the execution of gg utility and display all the steps in making your application. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+-e <num of errors>
+Show the last <num of errors> from the backtrace file, which receives error message and stack trace when program crashes or \fBreport-error\fP is issued. Also display the path to backtrace file which contains the stack details.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-t <num of trace files>
+Show the last <num of trace files> most recent trace files for the application. This is useful when tracing (see \fBtrace-run\fP) to quickly find the trace files where Gliimly writes to. Also display the path to backtrace file which contains the stack details.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-o
+Show documentation directory - web page documentation is located here in the form of a gliimdoc.html file.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-l
+Show library directory - Gliimly's libraries and v1 code processor are located there.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-r [ --req="/<request name>[<url parameters>]" 
+    [ --app="application path" ] 
+    [ --service [ --remote="server:port" ] [ --socket="socket path" ] ] 
+    [ --method="<request method>" ] 
+    [ --content="<input file>" --content-type="<content type>" ] 
+    [ --silent-header ] 
+    [ --arg="<arguments>" ] 
+    [ --exec ] 
+Run a \fBsingle-run\fP program, or make a \fBservice\fP request, or display bash code to do the same for use in scripts. 
+
+If you are not in application's source code directory, then you must specify "--app" option to supply the application path (typically "/<application name>", see \fBrequest\fP). You can use "--req" option to specify the request name and optional URL parameters (see \fBrequest\fP), for example it may be:
+
+.RS 4
+.EX
+
+gg -r --req="/encrypt" --exec
+
+.EE
+.RE
+
+to execute request "encrypt", or
+
+.RS 4
+.EX
+
+gg -r --req="/encrypt/data=somedata?method=aes256" --exec
+
+.EE
+.RE
+
+where "/encrypt" is the request name, and "/data=somedata?method=aes256" represents the URL parameters. 
+
+Use --method to specify the HTTP request method, for instance:
+
+.RS 4
+.EX
+
+gg -r --req="/encrypt/data=somedata?method=aes256" --method=POST --exec
+
+.EE
+.RE
+
+If not specified, the default method is "GET". 
+
+If "--service" is not used, then \fBsingle-run\fP program will execute and you can specify program arguments with "--arg" option, in which case "<arguments>" is a string (double or single quoted) that contains any number of program arguments. To specify arguments for a service see "-a" option in \fBmgrg\fP.
+
+If "--service" is used, then application server will be contacted to execute a service; in this case if "--remote" is not specified, a local Unix socket is used to contact the server; otherwise "server:port" specified in "--remote" is the IP/name and port of the server to call, separated by a colon (":"). In case of a local Unix socket, the socket path is by default "/var/lib/gg/<app name>/sock/sock", where "/<app name>" is given by the last path segment in "--app" option, or if not specified it is derived from the name of a Gliimly application built in the current directory; otherwise the socket path is given by "--socket" option.
+
+By default, the output in any case will have the HTTP headers. If you don't want those to appear, use "--silent-header" option.
+
+If "--content" is used, then file <input file> is either piped to the standard input of a single-run program (if "--service" is not used), or sent as a content to the application server (if "--service" is used). You can also specify content type with "--content-type". For example:
+
+.RS 4
+.EX
+
+gg -r -app="/my_app" --req="/some_request?par1=val1&par2=20&par3=4" --method=PATCH --content=something.json --content-type=application/json --exec
+
+.EE
+.RE
+
+When "--exec" is not used, the output may look like this:
+
+.RS 4
+.EX
+
+export CONTENT_TYPE=
+export CONTENT_LENGTH=
+export GG_SILENT_HEADER=no
+export REQUEST_METHOD=GET
+export SCRIPT_NAME="/enc"
+export PATH_INFO="/encrypt/data/somedata"
+export QUERY_STRING="method=aes256"
+/var/lib/gg/bld/enc/enc
+
+.EE
+.RE
+
+If you copy the above and paste into bash shell, it will execute the command line program which handles the request specified (which gg would do when "--exec" is specified). Note that SCRIPT_NAME will be set to whatever application path you use (i.e. the default or if set with "--path" option when making the application; or with "--app" option here), see \fBrequest\fP. 
+
+Examples of using "-r" option to execute \fBsingle-run\fP program or to call a \fBservice\fP:
+
+.RS 4
+.EX
+
+\[char35]Execute current application as a single-run program, request "json"
+gg -r --req="/json" --exec
+
+\[char35]Execute application "app_name", service "json" by calling the application server running with a Unix socket
+gg -r --req="/json" --app="/app_name" --service  --exec
+
+\[char35]Execute application "app_name", service "json" by calling the application server running with a Unix socket (specified explicitly)
+\[char35]Request has input parameter "act" with value "perf"
+gg -r --req="/json?act=perf" --app="/app_name" --service --socket="/sock_path/sock"  --exec
+
+\[char35]Execute application "app_name", service "json" by calling the application server running with a TCP socket on port 2301
+\[char35]Request has input parameter "act" with value "perf"
+gg -r --req="/json/act=perf" --app="/app_name" --service --remote="192.168.0.21:2301"  --exec
+
+.EE
+.RE
+
+
+
+.RE
+
+.RS 4
+\[bu]    
+-u 
+Read stdin (standard input) and substitute any environment variables in the form of ${<var name>} with their values, and output to stdout (stdout). This is useful in processing configuration files that do not have parameter values hardcoded, but rather take them from the environment.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-m
+Add Gliimly syntax and keyword highlighting rules for files with .gliim extension to Vim editor for the currently logged on user. Note that you must have Vim installed; vi alone will not work.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-h
+Display help. 
+.RE
+
+
+.LP
+.B EXAMPLES
+.LP
+
+
+.RS 4
+\[bu]    
+Make application (-q), use three databases (--db) named mdb (MariaDB database), pdb (PostgreSQL) and sdb (SQLite), produce debugging information (--debug), produce tracing information (--trace):
+
+.RS 4
+.EX
+
+gg -q --db="mariadb:mdb postgres:pdb sqlite:sdb" --debug --trace 
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+make application, use MariaDB database db (--db), specify linker and C compilation flags, specify maximum upload size of about 18M:
+
+.RS 4
+.EX
+
+gg -q --db="mariadb:db" --lflag "-Wl,-z,defs" --cflag "-DXYZ123" --maxupload 18000000
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+Make application that doesn't use any databases:
+
+.RS 4
+.EX
+
+gg -q
+
+.EE
+.RE
+
+.RE
+
+.SH SEE ALSO
+ 
+.B - Gliim compiler and utility
+
+\fBgg\fP   
+See all 
+\fBdocumentation\fP

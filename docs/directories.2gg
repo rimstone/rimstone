@@ -1,0 +1,78 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+directories \- Gliimly documentation (general)
+.SH DESCRIPTION
+
+.LP
+.B APPLICATION DIRECTORY STRUCTURE
+.LP
+
+\fBmgrg\fP will create a Gliimly directory structure (see "-i" option) when you create your application. While you can keep and compile Gliimly source files in any directory, the directories used by Gliimly are always under /var/lib/gg directory.
+
+A Gliimly application is always owned by a single Operating System user (see "-u" option in mgrg), while different applications can be owned by different users. This is the directory structure:
+
+.RS 4
+\[bu]    
+/var/lib/gg/bld/<app name>
+Build directory is where your application executables are built, with name <app name>.srvc for a \fBservice\fP and <app name> for a \fBsingle-run\fP. This is a scratch-pad directory, so do not alter files in it, or use for anything else.
+
+
+.RE
+
+.RS 4
+\[bu]    
+/var/lib/gg/<app name>
+Application directory. All application data, including internals such as sockets, are kept here. Each such directory is owned by its owner with 700 privileges, preventing other users from accessing its files.
+
+
+.RE
+
+.RS 4
+\[bu]    
+/var/lib/gg/<app name>/app
+Application home directory. This is the current working directory when your application runs. Copy/move here any files and directories your application needs.
+
+
+.RE
+
+.RS 4
+\[bu]    
+/var/lib/gg/<app name>/app/file
+This is \fBfile-storage\fP used for uploads and new document creation. Do not write there directly; Gliimly does that for you, such as with \fBuniq-file\fP for instance, or when uploading files.
+
+
+.RE
+
+.RS 4
+\[bu]    
+/var/lib/gg/<app name>/app/trace
+Process tracing is written in per-process files if "--trace" option is used (see \fBgg\fP). Note that a special file "backtrace" is appended to when program crashes (or \fBreport-error\fP statement is used), and this file shows a full source backtrace, allowing for easier debugging. In order to see Gliimly source code lines, you must use "--debug" option, and to see a backtrace, Gliimly must be built with debugging information included. You can use "--c-lines" in order to show the source code lines of the generated C code, instead of Gliimly code.
+
+
+.RE
+
+.RS 4
+\[bu]    
+/var/lib/gg/<app name>/app/db
+Database configuration directory contains the \fBdatabase-config-file\fPs used by Gliimly to connect to databases; this directory is maintained by Gliimly and you should not use it.
+.RE
+
+While Gliimly directories are fixed, you can effectively change their location by creating a soft link. This way, your directories and files can be elsewhere, even on a different disk. For example, to house your file storage on a different disk:
+
+.RS 4
+.EX
+
+ln -s /home/disk0/file /var/lib/gg/<app name>/app/file
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - General
+
+\fBabout-gliim\fP  
+\fBdirectories\fP  
+\fBSELinux\fP   
+See all 
+\fBdocumentation\fP

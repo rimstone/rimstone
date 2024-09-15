@@ -1,0 +1,42 @@
+#!/bin/bash
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2019 Gliim LLC. 
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+
+#generate SELinux policies
+
+#$1 is lib dir, $2 is data dir, $3 is bindir
+
+LDIR="$1"
+DDIR="$2"
+BDIR="$3"
+
+cd $LDIR
+mkdir -p tmp
+cp -f gg.te gg.fc gliim.te tmp/
+cd tmp
+make -f /usr/share/selinux/devel/Makefile gg.pp 
+install -D -m 0600 gg.pp -t $DDIR/selinux/packages/ 
+checkmodule -M -m -o gliim.mod gliim.te 
+semodule_package -o gliim.pp -m gliim.mod 
+install -D -m 0600 gliim.pp -t $DDIR/selinux/packages/ ;
+
+if (( $EUID == 0 )); then
+    semodule -n -i "$DDIR/selinux/packages/gg.pp"
+    semodule -n -i "$DDIR/selinux/packages/gliim.pp"
+fi
+
+if [ -d "/var/lib/gg" ]; then 
+    if /usr/sbin/selinuxenabled ; then 
+        if (( $EUID == 0 )); then
+            load_policy
+            restorecon -R /var/lib/gg
+            restorecon -R $BDIR/vf
+        fi
+    fi
+fi
+
+cd $LDIR
+rm -rf tmp
+

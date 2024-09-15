@@ -1,0 +1,34 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+purge-list \-  (linked-list)
+.SH PURPOSE
+Delete linked list data.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+purge-list <list> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+purge-list will delete all elements (including their keys and values) from the linked <list>, created by \fBnew-list\fP. The list is then empty and you can still put data into it, and get data from it afterwards, without having to call \fBnew-list\fP again.
+
+.SH EXAMPLES
+See \fBread-list\fP.
+.SH SEE ALSO
+ 
+.B - Linked list
+
+\fBdelete-list\fP  
+\fBget-list\fP  
+\fBnew-list\fP  
+\fBposition-list\fP  
+\fBpurge-list\fP  
+\fBread-list\fP  
+\fBwrite-list\fP   
+See all 
+\fBdocumentation\fP

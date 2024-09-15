@@ -1,0 +1,193 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+encrypt-data \-  (encryption)
+.SH PURPOSE
+Encrypt data.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+encrypt-data <data> to <result> \\
+    [ input-length <input length> ] \\
+    [ binary [ <binary> ] ] \\
+    ( password <password> \\
+        [ salt <salt> [ salt-length <salt length> ] ] \\
+        [ iterations <iterations> ] \\
+        [ cipher <cipher algorithm> ] \\
+        [ digest <digest algorithm> ] 
+        [ cache ] 
+        [ clear-cache <clear cache> ) \\
+    [ init-vector <init vector> ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+encrypt-data encrypts <data> and stores the ciphertext to <result> specified by "to" clause.
+
+.LP
+.B CIPHER AND DIGEST
+.LP
+
+By default, AES-256-CBC encryption and SHA256 hashing is used. You can however specify different cipher and digest algorithms with <cipher algorithm> (in "cipher" clause) and <digest algorithm> (in "digest" clause) as long as \fBOpenSSL\fP supports them, or you have added them to OpenSSL. You can see the available ones by using:
+
+.RS 4
+.EX
+
+\[char35]get list of cipher providers
+openssl list -cipher-algorithms
+
+\[char35]get list of digest providers
+openssl list -digest-algorithms
+
+.EE
+.RE
+
+Note that the default algorithms will typically suffice. If you use different algorithms, you should have a specific reason. If you use a specific cipher and digest for encoding, you must use the same for decoding. The key derivation method is PBKDF2.
+
+.LP
+.B DATA TO BE ENCRYPTED
+.LP
+
+If "input-length" clause is missing, then the number of bytes encrypted is the length of <data> (see \fBstring-length\fP). If "input-length" clause is used, then <input length> bytes are encrypted.
+
+.LP
+.B PASSWORD
+.LP
+
+String <password> (in "password" clause) is the password used to encrypt and it must be a null-terminated string. 
+
+.LP
+.B SALT
+.LP
+
+String <salt> (in "salt" clause) is the salt used in Key Derivation Function (KDF) when an actual symmetric encryption key is created. If <salt length> (in "salt-length" clause) is not specified, then the salt is null-terminated, otherwise it is a binary value of length <salt length>. See \fBrandom-string\fP or \fBrandom-crypto\fP for generating a random salt. If you use the "salt" clause, then you must use the exact same <salt> when data is decrypted with \fBdecrypt-data\fP - typically salt values are stored or transmitted unencrypted.
+
+.LP
+.B ITERATIONS
+.LP
+
+The number of iterations used in producing a key is specified in <iterations> in "iterations" clause. The default is 1000 per \fBRFC 8018\fP, though depending on your needs and the quality of password you may choose a different value.
+
+.LP
+.B INITIALIZATION VECTOR (IV)
+.LP
+
+Different encrypted messages should have a different IV value, which is specified with <init vector> in the "init-vector" clause. See \fBrandom-string\fP or \fBrandom-crypto\fP for generating IV values. The decrypting side must use the same IV value to decrypt the message. Just like salt, IV is not a secret and is transmitted in plain text. Each cipher algorithm may require a certain number of bytes for IV.
+
+.LP
+.B ENCRYPTED DATA
+.LP
+
+The encrypted data is stored in <result> (in "to" clause). The encrypted data can be a binary data (if "binary" clause is present without boolean expression <binary>, or if <binary> evaluates to true), which is binary-mode encryption; or if not, it will be a null-terminated string, which is character-mode encryption, consisting of hexadecimal characters (i.e. ranging from "0" to "9" and "a" to "f"). Character mode of encryption is convenient if the result of encryption should be a human readable string, or for the purposes of non-binary storage in the database.
+
+.LP
+.B CACHING KEY
+.LP
+
+A key used to actually encrypt/decrypt data is produced by using password, salt, cipher, digest and the number of iterations. Depending on these parameters (especially the number of iterations), computing the key can be a resource intensive and lengthy operation. You can cache the key value and compute it only once (or once in a while) by using "cache" clause. If you need to recompute the key once in a while, use "clear-cache" clause. <clear cache> is a "bool" variable; the key cache is cleared if it is true, and stays if it is false. For example with encrypt-data (the same applies to decrypt-data):
+
+.RS 4
+.EX
+
+set-bool clear = true if-true q equal 0
+encrypt-data dt init-vector non password pwd \\
+    salt rs salt-length 10 iterations iter to \\
+    dt_enc cache clear-cache clear
+
+.EE
+.RE
+
+In this case, when "q" is 0, cache will be cleared, with values of password, salt and iterations presumably changed, and the new key is computed and then cached. In all other cases, the last computed key stays the same. Normally, with IV usage (in "init-vector" clause), there is no need to change the key often, or at all.
+
+Note that while "cache" clause is in effect, the values for "password", "salt", "cipher", "digest" and "iterations" clauses can change without any effect. Only when "clear-cache" evaluates to "true" are those values taken into account.
+
+.LP
+.B SAFETY
+.LP
+
+Unless you are encrypting/decrypting a single message, you should always use IV in "init-vector" clause. Its purpose is to randomize the data encrypted, so that same messages do not produce the same ciphertext.
+
+If you use salt, a random IV is created with each different salt value. However, different salt values without "cache" clause will regenerate the key, which may be computationally intensive, so it may be better to use a different IV instead for each new encryption and keep the salt value the same with the high number of iterations. In practicality this means using "cache" so that key is computed once per process with the salt, and IV changes with each message. If you need to recompute the key occasionally, use "clear-cache".
+
+Each cipher/digest combination carries separate recommendations about the usage of salt, IV and the number of iterations. Please consult their documentation for more details.
+
+.SH EXAMPLES
+In the following example, the data is encrypted, and then decrypted, producing the very same data:
+
+.RS 4
+.EX
+
+// Original string to encrypt
+set-string orig_data="something to encrypt!"
+
+// Encrypted data is in "res" variable
+encrypt-data orig_data password "mypass" to res
+
+// Decrypt what was just encrypted, decrypted data is in "dec_data"
+decrypt-data res password "mypass" to dec_data
+
+// Check that decrypted data matches the original 
+if (!strcmp (orig_data, dec_data)) {
+    @Success!
+} else {
+    @Failure!
+}
+
+.EE
+.RE
+
+A more involved example below encrypts specific number of bytes (6 in this case). \fBrandom-string\fP is used to produce salt. The length of data to encrypt is given with "input-length" clause. The encrypted data is specified to be "binary" (meaning not as a human-readable string), so the "output-length" of such binary output is specified. The decryption thus uses "input-length" clause to specify the length of data to decrypt, and also "output-length" to get the length of decrypted data. Finally, the original data is compared with the decrypted data, and the length of such data must be the same as the original (meaning 6):
+
+.RS 4
+.EX
+
+// Original data (only the first 6 bytes are encrypted)
+set-string orig_data="something to encrypt!"
+
+// Get 8 random binary bytes to be the salt
+random-string to newsalt length 8 binary
+
+// Encrypt data using salt and produce binary output (meaning it's not a null-terminated character string), with the
+// length of such output in "encrypted_len" variable.
+encrypt-data orig_data input-length 6 output-length encrypted_len password "mypass" salt newsalt to res binary
+
+// Decrypt the data encrypted above. The length of encrypted data is passed in "encrypted_len" variable, and then length of decrypted data
+// is obtained in "decrypted_len" variable.
+decrypt-data res output-length decrypted_len password "mypass" salt newsalt to dec_data input-length encrypted_len binary
+
+// Check if the 6 bytes of the original data matches decrypted data, and if exactly 6 bytes was decrypted
+if (!strncmp(orig_data,dec_data, 6) && decrypted_len == 6) {
+    @Success!
+} else {
+    @Failure!
+}
+
+.EE
+.RE
+
+An example of using different algorithms:
+
+.RS 4
+.EX
+
+encrypt-data "some data!" password "mypwd" salt rs1 to encd1 cipher "camellia-256-cfb1" digest "sha3-256"
+decrypt-data encd1 password "mypwd" salt rs1 to decd1 cipher "camellia-256-cfb1" digest "sha3-256"
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Encryption
+
+\fBdecrypt-data\fP  
+\fBderive-key\fP  
+\fBencrypt-data\fP  
+\fBhash-string\fP  
+\fBrandom-crypto\fP  
+\fBrandom-string\fP   
+See all 
+\fBdocumentation\fP

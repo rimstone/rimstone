@@ -1,0 +1,64 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+utf8-text \-  (UTF8)
+.SH PURPOSE
+Convert UTF8 string to text.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+utf8-text <utf8> \\
+    [ to <text> ] \\
+    [ length <length> ] \\
+    [ status <status> ] \\
+    [ error-text <error text> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+utf8-text will convert <utf8> text to <text> (specified with "to" clause). If <text> is omitted, then the result of conversion is output.
+
+<utf8> is a string that may contain UTF8 characters (as 2, 3 or 4 bytes representing a unicode character). Encoding creates a string that can be used as a value where text representation of UTF8 is required. utf8-text is performed according to \fBRFC7159\fP and \fBRFC3629\fP (UTF8 standard).
+
+Note that hexadecimal characters used for Unicode (such as \eu21d7) are always lowercase. Solidus character ("/") is not escaped, although \fBtext-utf8\fP will correctly process it if the input has it escaped.
+
+The number of bytes in <utf8> to be converted can be specified with <length> in "length" clause. If <length> is not specified, it is the length of string <utf8>. Note that a single UTF-8 character can be anywhere between 1 to 4 bytes. For example "љ" is 2 bytes in length. 
+
+The status of encoding can be obtained in number <status>. <status> is the string length of the result in <text> (or the number of bytes output if <text> is omitted), or -1 if error occurred (meaning <utf8> is an invalid UTF8) in which case <text> (if specified) is an empty string and the error text can be obtained in <error text> in "error-text" clause.
+
+.SH EXAMPLES
+Convert UTF8 string to text and verify the expected result:
+
+.RS 4
+.EX
+
+// UTF8 string 
+set-string utf8_str = "\[char92]"Doc\[char92]"\en\et\eb\ef\er\et⇗⇘\et▷◮𝄞ᏫⲠш\en/\[char92]"()\et"
+
+// Convert UTF8 string to text
+utf8-text utf8_str status encstatus to text_text
+
+// This is the text expected
+(( expected_result
+@\[char92]"Doc\[char92]"\en\et\eb\ef\er\et\eu21d7\eu21d8\et\eu25b7\eu25ee\eud834\eudd1e\eu13eb\eu2ca0\eu0448\en/\[char92]"()\et
+))
+
+// Make sure conversion was okay, decs is the length of the result (encj string)
+if-true text_text equal expected_result and encstatus not-equal -1
+    @decode-text worked okay
+end-if
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - UTF8
+
+\fBtext-utf8\fP  
+\fButf8-text\fP   
+See all 
+\fBdocumentation\fP

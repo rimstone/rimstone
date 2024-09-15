@@ -1,0 +1,125 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+application-setup \- Gliimly documentation (running-application)
+.SH DESCRIPTION
+
+.LP
+.B INITIALIZE APPLICATION
+.LP
+
+A Gliimly application must be initialized first. This means creating a directory structure owned by application owner, which can be any Operating System user. To initialize application <app name> while logged-in as application owner: 
+
+.RS 4
+.EX
+
+sudo mgrg -i -u $(whoami) <app name>
+
+.EE
+.RE
+
+
+.LP
+.B SETUP DATABASE(S)
+.LP
+
+If your application does not use database(s), you can skip this part.
+
+You can setup your database(s) in any way you see fit, and this includes creating the database objects (such as tables or indexes) used by your application; all Gliimly needs to know is the connection parameters, which include database login information (but can include other things as well). For each database in use, you must provide a \fBdatabase-config-file\fP in the same directory as your Gliimly source code. This file contains the database connection parameters - these parameters are database-specific. For example, if your code has statements like:
+
+.RS 4
+.EX
+
+run-query @mydb = ...
+
+//or
+
+begin-transaction @sales_db 
+
+.EE
+.RE
+
+then you must have files "mydb" and "sales_db" present. For example, MariaDB config file might look like:
+
+.RS 4
+.EX
+
+[client]
+user=gliimuser
+password=pwd
+database=gliimdb
+protocol=TCP
+host=127.0.0.1
+port=3306
+
+.EE
+.RE
+
+or for PostgreSQL:
+
+.RS 4
+.EX
+
+user=myuser password=mypwd dbname=mydb
+
+.EE
+.RE
+
+
+.LP
+.B MAKE APPLICATION
+.LP
+
+To compile and link the application that doesn't use database(s):
+
+.RS 4
+.EX
+
+gg -q 
+
+.EE
+.RE
+
+When you have database(s) in use, for instance assuming in above example that "mydb" is MariaDB database, "sales_db" is PostgreSQL, and "contacts" is SQLite database:
+
+.RS 4
+.EX
+
+gg -q --db="mariadb:mydb postgres:sales_db sqlite:contacts" 
+
+.EE
+.RE
+
+See \fBgg\fP for more options.
+
+.LP
+.B START APPLICATION
+.LP
+
+Stop the application first in case it was running, then start the application - for example:
+
+.RS 4
+.EX
+
+mgrg -m quit <app name>
+mgrg -w 3 <app name>
+
+.EE
+.RE
+
+See \fBmgrg\fP for more details.
+
+.LP
+.B RUNNING APPLICATION
+.LP
+
+You can run your application as \fBservice\fP, \fBCGI\fP or \fBsingle-run\fP.
+.SH SEE ALSO
+ 
+.B - Running application
+
+\fBapplication-setup\fP  
+\fBCGI\fP  
+\fBservice\fP  
+\fBsingle-run\fP   
+See all 
+\fBdocumentation\fP

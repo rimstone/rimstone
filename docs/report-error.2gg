@@ -1,0 +1,74 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+report-error \-  (error-handling)
+.SH PURPOSE
+Reports a fatal error.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+report-error <format>, <variable> [ , ... ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+report-error will report a fatal error. It will format an error message according to the <format> string and a list of <variable>s and then  write it in the trace file (see \fBdirectories\fP); this happens regardless of whether tracing is enabled or not.
+
+See \fBerror-handling\fP when report-error is called.
+
+<format> string must be present and there must be at least one <variable> (it means if you want to trace a simple string literal you still have to use "%s" as format). The reason for this is to avoid formatting errors, and to use formatting in a consistent fashion.
+
+
+.LP
+.B FORMAT
+.LP
+
+<format> string must be a literal. Variables must follow <format> separated by commas in the same order as placeholders. If you use any placeholders other than specified below, or the type of variables you use do not match the type of a correspoding placeholder in <format>, your program will \fBerror out\fP. You can use the following placeholders in <format> (see \fBtrace-run\fP for an example of usage):
+
+.RS 4
+\[bu]    
+%s for a string
+
+.RE
+
+.RS 4
+\[bu]    
+%<number>s for a string output with a width of at least <number> (any excess filled with spaces to the left),
+
+.RE
+
+.RS 4
+\[bu]    
+%ld for a number
+
+.RE
+
+.RS 4
+\[bu]    
+%<number>ld for a number output with a width of at least <number> (any excess filled with spaces to the left)
+.RE
+
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+report-error "Too many input parameters for %s, encountered total of [%ld]", "customer", num_count
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Error handling
+
+\fBdb-error\fP  
+\fBerror-code\fP  
+\fBerror-handling\fP  
+\fBreport-error\fP   
+See all 
+\fBdocumentation\fP

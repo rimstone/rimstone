@@ -1,0 +1,50 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+pf-web \-  (output)
+.SH PURPOSE
+Outputs a web-encoded formatted string.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+pf-web <format> , <variable> [ , <variable> ]... \\
+    [ to-error ] \\
+    [ to <string> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+pf-web is the same as \fBpf-out\fP, except that the output is web-encoded (or HTML-encoded). This means such output is suited for use in web pages - meaning any HTML-markup will be properly encoded.
+
+.SH EXAMPLES
+Display text containing HTML tags without them being rendered in the browser:
+
+.RS 4
+.EX
+
+pf-web "We use %s markup", "<hr/>"
+
+.EE
+.RE
+
+See \fBpf-out\fP for more examples.
+.SH SEE ALSO
+ 
+.B - Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBpf-out\fP  
+\fBpf-url\fP  
+\fBpf-web\fP  
+\fBp-num\fP  
+\fBp-out\fP  
+\fBp-path\fP  
+\fBp-url\fP  
+\fBp-web\fP   
+See all 
+\fBdocumentation\fP

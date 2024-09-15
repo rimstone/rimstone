@@ -1,0 +1,261 @@
+#!/bin/bash
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2019 Gliim LLC. 
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+
+
+# Set variables for building and installing a Gliimly application. 
+# If your system doesn't conform, you can change these variables to fit
+# GG_OSNAME_ID is 0(archlinux), 1(ubuntu 22), 2(ubuntu 20), 3(ubuntu 18), 4(debian 10), 5(debian 11), 6(fedora 37), 7(fedora 38), 8(redhat 8), 9(redhat 9), 10(opensuse tumbleweed), 11(mageia 8), 12(debian 12), 13(mageia 9)... 10000 (if unknown)
+
+function lowest_version() { 
+    echo "$@" | sed 's/ /\n/g'| sort -V | head -n 1 
+}
+
+#utility to check for versions matching
+if [ "$1" == "greater_than_eq" ]; then
+    L=$(lowest_version "$2" "$3" )
+    if [ "$L" == "$3" ]; then echo "1"; else echo "0"; fi
+    exit 0
+fi
+
+#do not do all twice if already done
+if [ "$GG_SYSTEM_DONE" != "1" ]; then
+
+#determine operating system
+    . /etc/os-release
+#check if lsb-release present, and use it to override os-release, as it is generally more accurate
+    if [ -f "/etc/lsb-release" ]; then
+        . /etc/lsb-release
+    fi
+#get the leading part in case of split (such as OSNAME-xxx)
+    export SUBID=$(echo $ID|awk -F "-" '{print $2}')
+    export ID=$(echo $ID|awk -F "-" '{print $1}')
+    export GG_PLATFORM_ID=$ID
+    if [[ "$ID" == "opensuse" && "$SUBID" == "tumbleweed" ]]; then
+#no version really for tumbleweed as it's just a date of build, not a designation of features
+        export VERSION_ID="tumbleweed"
+    fi
+    if [ "$GG_PLATFORM_ID" == "sles" ]; then
+        export GG_PLATFORM_ID="opensuse"
+    fi
+    if [ "$GG_PLATFORM_ID" == "ol" ]; then
+        export GG_PLATFORM_ID="oracle_linux"
+    fi
+    if [ "$GG_PLATFORM_ID" == "rhel" ]; then
+        export GG_PLATFORM_ID="redhat"
+    fi
+#version is always whatever comes prior to the first dot (usually just a number), even for Ubuntu (where version is technically 20.04 for instance, it's 20) to make things simpler. The actual version is always the lowest one for any release, so if the latest version of RH is 8.3, it's 8.1 that we try to use if available (to ensure compatibility), and thus we just call it "8".
+    if [ "$VERSION_ID" == "" ]; then
+#if VERSION_ID not available, try DISTRIB_RELEASE , typically in lsb-release
+        export VERSION_ID="$DISTRIB_RELEASE"
+    fi
+    if [ "$VERSION_ID" == "" ]; then
+#if VERSION_ID still empty, make it "rolling"
+        export VERSION_ID="rolling"
+    fi
+    export GG_PLATFORM_VERSION=$(sed 's/\([^\.]\+\)\..*/\1/g'<<<$VERSION_ID)
+    export GG_VERSION_ID="$VERSION_ID"
+    if [[ "$GG_PLATFORM_ID" == "fedora" || "$GG_PLATFORM_ID" == "redhat" || "$GG_PLATFORM_ID" == "opensuse" || "$GG_PLATFORM_ID" == "mageia" ]]; then
+        export GG_ISFEDORA=1
+    elif [ "$GG_PLATFORM_ID" == "arch" ]; then
+        export GG_PLATFORM_ID="archlinux"
+        export GG_ISARCH=1
+    elif [[ "$GG_PLATFORM_ID" == "ubuntu" || "$GG_PLATFORM_ID" == "debian" || "$GG_PLATFORM_ID" == "raspbian" ]]; then
+        export GG_ISDEBIAN=1
+        if [ "$UBUNTU_CODENAME" != "" ]; then
+            export GG_DEBIAN_DISTRIBUTION=$UBUNTU_CODENAME
+        else
+            export GG_DEBIAN_DISTRIBUTION=$VERSION_CODENAME
+        fi
+#DISTRIB_CODENAME would come from lsb-release, if present, take it if not available yet
+        if [[ "$GG_DEBIAN_DISTRIBUTION" == "" && "$DISTRIB_CODENAME" != "" ]]; then
+            export GG_DEBIAN_DISTRIBUTION=$DISTRIB_CODENAME
+        fi
+    else
+#try to figure out what this system may be, and use that
+        for i in $(echo "$ID_LIKE"); do
+            if [ "$i" == "fedora" ]; then
+                export GG_ISFEDORA=1
+                export GG_PLATFORM_ID="fedora"
+                break
+            elif [ "$i" == "arch" ]; then
+                export GG_PLATFORM_ID="archlinux"
+                export GG_ISARCH=1
+                break
+            elif [ "$i" == "debian" ]; then
+                export GG_ISDEBIAN=1
+                export GG_PLATFORM_ID="debian"
+                break
+            elif [[ "$i" == "redhat" || "$i" == "rhel" ]]; then
+                export GG_ISFEDORA=1
+                export GG_PLATFORM_ID="redhat"
+                break
+            elif [ "$i" == "ubuntu" ]; then
+                export GG_ISDEBIAN=1
+                export GG_PLATFORM_ID="ubuntu"
+                break
+            elif [[ "$i" == "opensuse" || "$i" == "sles" ]]; then
+                export GG_ISFEDORA=1
+                export GG_PLATFORM_ID="opensuse"
+                break
+            elif [ "$i" == "mageia" ]; then
+                export GG_ISFEDORA=1
+                export GG_PLATFORM_ID="mageia"
+                break
+            fi
+        done
+    fi
+#figure out the numerical osname for all supported platforms
+    export GG_OSNAME_ID="10000"
+    if [ "$GG_PLATFORM_ID" == "fedora" ]; then
+        if [ "$GG_PLATFORM_VERSION" == "37" ]; then export GG_OSNAME_ID="6"; fi
+        if [ "$GG_PLATFORM_VERSION" == "38" ]; then export GG_OSNAME_ID="7"; fi
+    elif [ "$GG_PLATFORM_ID" == "archlinux" ]; then
+        export GG_OSNAME_ID="0"
+    elif [ "$GG_PLATFORM_ID" == "debian" ]; then
+        if [ "$GG_PLATFORM_VERSION" == "10" ]; then export GG_OSNAME_ID="4"; fi
+        if [ "$GG_PLATFORM_VERSION" == "11" ]; then export GG_OSNAME_ID="5"; fi
+        if [ "$GG_PLATFORM_VERSION" == "12" ]; then export GG_OSNAME_ID="12"; fi
+    elif [[ "$GG_PLATFORM_ID" == "redhat" ]]; then
+        if [ "$GG_PLATFORM_VERSION" == "8" ]; then export GG_OSNAME_ID="8"; fi
+        if [ "$GG_PLATFORM_VERSION" == "9" ]; then export GG_OSNAME_ID="9"; fi
+    elif [ "$GG_PLATFORM_ID" == "ubuntu" ]; then
+        if [ "$GG_PLATFORM_VERSION" == "22" ]; then export GG_OSNAME_ID="1"; fi
+        if [ "$GG_PLATFORM_VERSION" == "20" ]; then export GG_OSNAME_ID="2"; fi
+        if [ "$GG_PLATFORM_VERSION" == "18" ]; then export GG_OSNAME_ID="3"; fi
+    elif [[ "$GG_PLATFORM_ID" == "opensuse" ]]; then
+        export GG_OSNAME_ID="10"
+    elif [ "$GG_PLATFORM_ID" == "mageia" ]; then
+        if [ "$GG_PLATFORM_VERSION" == "8" ]; then export GG_OSNAME_ID="11"; fi
+        if [ "$GG_PLATFORM_VERSION" == "9" ]; then export GG_OSNAME_ID="13"; fi
+    fi
+
+#
+#At this  point, the system should have been recognized, or the closest possible established based on ID_LIKE, since the
+#order of space-separated entires in ID_LIKE is that of likeness (the first being the most like)
+#
+
+#the following three should not be changed manually, make tools set them
+    export GG_LIBRARY_PATH=/usr/lib64/gliim
+    export GG_INCLUDE_PATH=/usr/include/gliim
+    export GG_VERSION=100.100
+
+#also obtain the libraries to link with for pcre2
+#pcre2_version may not exist until sys is called to produce GG_LIBRARY_PATH, so must guard if it exists
+#we use library path for gliim, because this must work with our without source
+    if [ -f $GG_LIBRARY_PATH/pcre2_version ]; then
+        export GG_PCRE2_LIBS=$(cat $GG_LIBRARY_PATH/pcre2_libs)
+        if [ "$_GG_PCRE2_LO" == "10.37" ]; then
+            export GG_PCRE2_NEW="1"
+        else
+            export GG_PCRE2_NEW="0"
+        fi
+    fi
+
+    
+
+    if [ "$GG_ISFEDORA" == "1" ]; then
+        if [ "$GG_PLATFORM_ID" == "opensuse" ]; then
+            export GG_PKG="zypper"
+            export GG_PKG_NONINTERACTIVE="-n"
+        elif [ "$GG_PLATFORM_ID" == "mageia" ]; then
+            export GG_PKG="dnf"
+            export GG_PKG_NONINTERACTIVE="-y"
+        else
+            export GG_PKG="dnf"
+            export GG_PKG_NONINTERACTIVE="-y"
+         fi
+    elif [ "$GG_ISDEBIAN" == "1" ]; then
+        export GG_PKG="apt"
+        export GG_PKG_NONINTERACTIVE="-y"
+    elif [ "$GG_ISARCH" == "1" ]; then
+        export GG_PKG="pacman"
+        export GG_PKG_NONINTERACTIVE="--noconfirm"
+    else
+        echo "Unknown Operating System [$GG_PLATFORM_ID]"
+        exit -4
+    fi
+
+#do not execute again if already done
+    export GG_SYSTEM_DONE=1
+fi 
+
+
+#
+#
+#
+#From here on, only system requests are allowed, each exiting with 'exit'
+#
+#
+#
+
+if [ "$1" == "pgconf" ]; then
+    ECODE="0"
+    which pg_config 2>/dev/null 1>/dev/null || ECODE=$?
+    if [ "$ECODE" == "0" ]; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+    exit 0
+fi
+
+if [ "$1" == "showid" ]; then
+    echo $GG_PLATFORM_ID
+    exit 0
+fi
+
+if [ "$1" == "showtype" ]; then
+    if [ "$GG_ISFEDORA" == "1" ]; then
+        echo "fedora"
+    elif [ "$GG_ISDEBIAN" == "1" ]; then
+        echo "debian"
+    elif [ "$GG_ISARCH" == "1" ]; then
+        echo "archlinux"
+    else
+        echo "unknown"
+    fi
+    exit 0
+fi
+
+
+#
+#
+#The following is a hack due to the bug in RH annobin (annotation for binaries)
+#Set HASANNOBIN to nothing (default) to let Gliimly figure it out, or set it to
+#override: 0 if annobin is enabled and 1 if annobin is disabled (right now we 
+#disable it). This only applies to fedora and such.
+#
+#
+HASANNOBIN=
+if [[ "$1" == "annobin" && "$HASANNOBIN" == "" ]]; then
+    HASANNOBIN="1"
+    if [ "$GG_ISFEDORA" == "1" ]; then
+       if [[ "$GG_PLATFORM_ID" == "redhat" || "$GG_PLATFORM_ID" == "centos" || "$GG_PLATFORM_ID" == "oracle_linux" ]]; then
+           LO=$(lowest_version $GG_PLATFORM_VERSION "7.999999")
+#GG_PLATFORM_VERSION lt 8
+           if [ "$LO" == "$GG_PLATFORM_VERSION" ]; then
+               HASANNOBIN="0"
+           fi
+        fi
+       if [ "$GG_PLATFORM_ID" == "fedora" ]; then
+#GG_PLATFORM_VERSION lt 27
+           LO=$(lowest_version $GG_PLATFORM_VERSION "26.999999")
+           if [ "$LO" == "$GG_PLATFORM_VERSION" ]; then
+               HASANNOBIN="0"
+           fi
+        fi
+        if [[ "$GG_PLATFORM_ID" == "opensuse"  || "$GG_PLATFORM_ID" == "mageia" ]]; then
+            HASANNOBIN="0"
+        fi
+    else
+        HASANNOBIN="0"
+    fi
+    if [ "$HASANNOBIN" == "1" ]; then
+        echo "-Wc,-fplugin=annobin -Wc,-fplugin-arg-annobin-disable"
+    fi
+    exit 0
+fi
+

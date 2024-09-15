@@ -1,0 +1,98 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+if-defined \-  (program-flow)
+.SH PURPOSE
+Conditional compilation.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+if-defined <symbol>
+    <any code>
+end-defined
+
+if-not-defined <symbol>
+    <any code>
+end-defined
+
+.EE
+.RE
+
+.SH DESCRIPTION
+if-defined will cause <any code> to be compiled if <symbol> is defined (see "--cflag" option in gg). If <symbol> is not defined, then <any code> is not compiled at all.
+
+if-not-defined will cause <any code> to be compiled if <symbol> is not defined (see "--cflag" option in gg). If <symbol> is defined, then <any code> is compiled.
+
+.SH EXAMPLES
+The following code will have a different output depending on how is application compiled:
+
+.RS 4
+.EX
+
+if-defined DEF1
+    @Defined
+end-defined
+if-not-defined DEF1
+    @Not defined
+end-defined
+
+.EE
+.RE
+
+If compiled with:
+
+.RS 4
+.EX
+
+gg -q
+
+.EE
+.RE
+
+then the output is:
+
+.RS 4
+.EX
+
+Not defined
+
+.EE
+.RE
+
+If compiled with:
+
+.RS 4
+.EX
+
+gg -q --cflag="-DDEF1"
+
+.EE
+.RE
+
+then the output is:
+
+.RS 4
+.EX
+
+Defined
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Program flow
+
+\fBbreak-loop\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBset-bool\fP  
+\fBstart-loop\fP   
+See all 
+\fBdocumentation\fP

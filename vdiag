@@ -1,0 +1,122 @@
+#!/bin/bash
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2019 Gliim LLC.  
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+
+#Internal diagnostic conversion tool used by gg. Do not use by itself, as it may change.
+
+#Colors that may be used now or in the future
+BLACK="\033[30m"
+CYAN="\033[36m"
+YELLOW="\033[33m"
+RED="\033[31m"
+GREEN="\033[32m"
+BLUE="\033[34m"
+WHITE="\033[37m"
+PINK="\033[35m"
+BOLD="\033[0;1m"
+NORMAL="\033[0;39m"
+
+#gliim application name. PLAIN is 1 if this is old-style (non-highlighted) diagnostics.
+APP="$1"
+PLAIN="$2"
+
+if [ "$PLAIN" == "1" ]; then
+#push standard input to stderr and exit with status
+    cat - 1>&2 
+    exit -1
+fi
+
+#clear temp files used further down
+rm -f /var/lib/gg/bld/$APP/.vdiag1
+rm -f /var/lib/gg/bld/$APP/.vdiag2
+rm -f /var/lib/gg/bld/$APP/.GG_TMP_DIAG81_*
+
+
+#
+#
+# Used to highlight diagnostics
+# Input: <line> <column> <file>
+# <line> is a full expanded line (with *10000+ext)
+# <file> is fq source .gliim file without .gliim extension
+# Outputs gliim stmt, C/"Generated C" code and a caret to column in generated code.
+#
+#
+function displ() {
+#expanded line number (gliimlyline*10000 + genline)
+    LN=$1
+#get .gliim source line
+    ((VLN=LN/10000))
+#column name, declare 1 if not recognizable
+    COL=$2
+    if [[ ! "$COL" =~ ^[0-9]+$ ]]; then 
+        COL=1
+    fi
+#gliim request or file name  without .gliim
+    F=$(basename $3)
+#analyze generated C code and get the exact line where gcc said the error was, remove leading and trailing whitespaces
+    CL=$(sed -n '/#line '$LN'/{ n; p }' /var/lib/gg/bld/$APP/__$F.o.c|sed 's/^[ \t]*//;s/[ \t]*$//')
+#analyze .gliim file name and get source gliim line text, remove leading and trailing whitespaces
+    VL=$(sed $VLN'q;d' ./$F.gliim|sed 's/^[ \t]*//;s/[ \t]*$//')
+#determine if the issue is a gliim line or just a C line in .gliim code. It's C code if the source code line is the same (i.e.
+#it matches), because for Gliimly code it wouldn't.
+    IS_GLIIMLY=0
+#if in Gliimly code, display it first, then down below display C code too
+    if [ "$CL" != "$VL" ]; then
+        echo -e -n "$RED>>> "; echo -n "Gliimly stmt: [$VL]"; echo -e "$NORMAL"
+        IS_GLIIMLY=1
+    fi
+#for C code, display it and put the caret up, first 
+    if [ "$IS_GLIIMLY" == "0" ]; then
+        echo -e -n "$RED>>> "; echo -n "C code: $CL"; echo -e "$NORMAL"
+#Add 12 for '>>> C code: '
+        ((COL=COL-1+12))
+        echo -n -e "$RED"
+    else
+        echo -e -n "$GREEN### "; echo -n "Generated C code: $CL"; echo -e "$NORMAL"
+#Add 22 for '### Generated C code: '
+        ((COL=COL-1+22))
+        echo -n -e "$GREEN"
+    fi
+#display spaces and 3 carets to point to gen C code
+    for ((i=1;i<=COL;i++)); do
+        echo -n -e " "
+    done
+    echo -e "^^^$NORMAL"
+}
+
+#from stdin, look in gcc diag output for xxx.gliim:yyy:zzz:wwww (source code name xxx with line yyy), but take out last 4 digits (from x10000 when creating #line numbers)
+#zzz and www are details about error. Replace with _GG_COLOR, which will be the color in output, gliim file name, skip the 4 digits that are artificially added to line
+#numbers, put in zzz and wwww and end color; then add _GG_TMP_DIAG81_ constant which will be substituted with generated C code diagnostic later
+#what's added to this constant is line number in gen C code, error and file name to processed later, so GG_TMP_DIAG81_line_column_file
+#all goes to temp file .vdiag1 in build scratch pad
+cat - | sed 's/^\([_a-zA-Z0-9]\+\)\.gliim:\([0-9]\+\)\([0-9]\{4\}\):[[:space:]]*\([^:]\+\)[[:space:]]*:\(.*\)$/__GG_COLOR*** \1.gliim:\2:\4:\5__GG_END_COLOR\n.GG_TMP_DIAG81_\2_\3_\4_\1/g' >  /var/lib/gg/bld/$APP/.vdiag1
+
+#if there is no error somehow, then exit with success
+if [ "$(cat /var/lib/gg/bld/$APP/.vdiag1)" == "" ]; then exit 0; fi
+
+#now get data added to constant _GG_TMP_DIAG81_ and process it in displ function, which will output color coded gliim source line, gen C line, and caret to point out the error
+#the output goes to .vdiag2, which is a short bash script that will echo the error message to .GG_TMP_DIAG81_line_column_file
+sed -n 's/.GG_TMP_DIAG81_\([0-9]\+\)_\([0-9]\+\)_\([^_]\+\)_\(.*\)/echo "$(displ \1\2 \3 \4)">\/var\/lib\/gg\/bld\/$APP\/.GG_TMP_DIAG81_\1_\2_\3_\4/gp' /var/lib/gg/bld/$APP/.vdiag1 >/var/lib/gg/bld/$APP/.vdiag2
+
+#execute .vdiag2 to produce output to .GG_TMP_DIAG81_line_column_file
+chmod +x /var/lib/gg/bld/$APP/.vdiag2
+. /var/lib/gg/bld/$APP/.vdiag2
+
+#now substitute the .GG_TMP_DIAG81_line_column_file  constant with the contents of the file with the same name generated above, for each error
+CDIR=$(pwd)
+cd /var/lib/gg/bld/$APP/
+#prevent error message if no .GG_TMP_DIAG81 found
+for i in $(ls .GG_TMP_DIAG81_* 2>/dev/null); do
+    sed -e $"/$i/{r $i" -e 'd}' /var/lib/gg/bld/$APP/.vdiag1 > /var/lib/gg/bld/$APP/.vdiag3
+    mv /var/lib/gg/bld/$APP/.vdiag3 /var/lib/gg/bld/$APP/.vdiag1
+done
+cd "$CDIR"
+
+#make sure stdout goes to stderr, since this is diagnostics
+#and also make colors for top diagnostic error
+cat /var/lib/gg/bld/$APP/.vdiag1|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/''|cat - 1>&2
+
+#make sure exit code is failure for these errors
+exit -1

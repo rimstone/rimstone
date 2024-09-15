@@ -1,0 +1,103 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+exec-program \-  (program-execution)
+.SH PURPOSE
+Execute a program.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+exec-program <program path> \\
+    [ args <program arg> [ , ... ] ] \\
+    [ status <exit status> ] \\
+    [ ( input <input string> [ input-length <string length> ] ) \\
+        | ( input-file <input file> ) ] \\
+    [ ( output <output string>  ) \\
+        | ( output-file <output file> ) ] \\
+    [ ( error <error string> ) | ( error-file <error file> ) ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+exec-program executes a program specified in <program path>, which can be a program name without path that exists in the path specified by the PATH environment variable; or an absolute path; or a path relative to the application home directory (see \fBdirectories\fP).
+
+A program can have input arguments (specified as strings with "args" clause), and if there are more than one, they must be separated by a comma. There is no limit on the number of input arguments, other than of the underlying Operating System. 
+
+You can specify a status variable <exit status> - this variable will have program's exit status. Note that if the program was terminated by a signal, <exit status> will have a value of 128+signal_number, so for example if the program was terminated with signal 9 (i.e. KILL signal), <exit status> will be 137 (i.e. 128+9). Any other kind of abnormal program termination (i.e. program termination where program did not set the exit code) will return 126 as <exit code>.
+
+Specifying program input and output is optional. If program has output and you are not capturing it in any way, the output is redirected to a temporary file that is deleted after exec-program completes.
+
+You can specify an <input string> to be passed to program's standard input (stdin) via "input" clause. If "input-length" is not used, the length of this input is the string length of <input string>, otherwise <string length> bytes is passed to the program. Alternatively, you can specify a file <input file> (via "input-file" clause) to be opened and directed into program's standard input (stdin). 
+
+You can redirect the program's output (which is "stdout") to a file <output file> using "output-file" clause. Alternatively, program's output can be captured in <output string> (via "output" clause).
+
+To get the program's error output (which is "stderr") to file <error file>, use "error-file" clause. Alternatively, program's error output can be captured in <error string> (via "error" clause).
+
+If <input file> cannot be opened, GG_ERR_READ is reported in <exit status>, and if either <output file> or <error file> cannot be opened, the status is GG_ERR_WRITE.
+
+.SH EXAMPLES
+To simply execute a program that is in the path, without any arguments, input or output:
+
+.RS 4
+.EX
+
+exec-program "myprogram" 
+
+.EE
+.RE
+
+Run "grep" program using a string as its standard input in order to remove a line that contains "bad line" in it, and outputting the result into "ovar" variable:
+
+.RS 4
+.EX
+
+exec-program "grep" args "-v", "bad line" "config" input "line 1\enline 2\enbad line\enline 3" output ovar 
+p-out ovar
+
+.EE
+.RE
+
+Get the list of files in the application home directory into buffer "ovar" and then display it:
+
+.RS 4
+.EX
+
+exec-program "ls" output ovar
+
+.EE
+.RE
+
+Similar to the above example of listing files, but output results to a file (which is then read and the result displayed), and provide options "-a -l -s" to "ls" program:
+
+.RS 4
+.EX
+
+exec-program "ls" args "-a", "-l", "-s" output-file "lsout"
+read-file "lsout" to final_res
+p-out final_res
+
+.EE
+.RE
+
+Count the lines of file "config" (which is redirected to the standard output of "wc" program) and store the result in variable "ovar" (by means of redirecting the output of "wc" program to it), and then display: 
+
+.RS 4
+.EX
+
+exec-program "wc" args "-l" input-file "config" output ovar
+p-out ovar
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Program execution
+
+\fBexec-program\fP  
+\fBhandler-status\fP   
+See all 
+\fBdocumentation\fP

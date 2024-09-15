@@ -1,0 +1,41 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+temporary-file \- Gliimly documentation (files)
+.SH DESCRIPTION
+To create a temporary file, use \fBuniq-file\fP with a "temporary" clause. Temporary files are the same as any other files in the \fBfile-storage\fP (and are organized in the same fashion), except that they are all under the subdirectory named "t":
+
+.RS 4
+.EX
+
+/var/lib/gg/<app_name>/app/file/t
+
+.EE
+.RE
+
+A temporary file is not automatically deleted - you can remove it with \fBdelete-file\fP statement when not needed (or use a periodic shell script to remove old temporary files). The reason for this is that the nature of temporary files varies, and they may not necessarily span a given time frame (such as a lifetime of a \fBrequest\fP, or a lifetime of a process that serves any number of such requests), and they may be used across number of requests for a specific purpose. Thus, it is your responsibility to remove a temporary file when it's appropriate for your application to do so.
+
+The reason for storing temporary files in a separate directory is to gain a separation of temporary files (which likely at some point can be freely deleted) from other files.
+
+See \fBuniq-file\fP for an example of creating a temporary file.
+.SH SEE ALSO
+ 
+.B - Files
+
+\fBclose-file\fP  
+\fBcopy-file\fP  
+\fBdelete-file\fP  
+\fBfile-position\fP  
+\fBfile-storage\fP  
+\fBfile-uploading\fP  
+\fBlock-file\fP  
+\fBopen-file\fP  
+\fBread-file\fP  
+\fBread-line\fP  
+\fBrename-file\fP  
+\fBstat-file\fP  
+\fBtemporary-file\fP  
+\fBuniq-file\fP  
+\fBunlock-file\fP  
+\fBwrite-file\fP   
+See all 
+\fBdocumentation\fP

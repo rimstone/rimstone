@@ -1,0 +1,1326 @@
+#!/bin/bash
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2019 Gliim LLC.  
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+
+#variable names for Gliimly start with GG_ (GG_C_ being compiling-related) and _ (internal)
+
+#
+#
+#make script for Gliimly application
+#
+#
+
+#
+#Set one or the other
+#
+#_BETA=""
+
+export GG_USER=$(whoami)
+#make sure HOME is available, some apps wipe it out like apache setenv
+if [ "$HOME" == "" ]; then
+    HOME=$(eval echo ~$GG_USER)
+fi
+
+#cannot run as run as it might mess up permissions. 
+if [[ $EUID -eq 0 ]]; then echo "You cannot run gliim as root or sudo"; exit -1; fi
+
+#enable "extended globs" (such as "parameter expansion" or ${!X}
+shopt -s extglob
+
+#display error context if gliim has a shell error, source file bash only
+set -eE -o functrace
+trap 'echo "Error: status $?, $(caller), line ${BASH_SOURCE[0]}/${LINENO}"' ERR
+
+#do not change these values, they are changed here by Makefile per platform when make install is done
+export GG_LIBRARY_PATH=/usr/lib/gliim
+. "$GG_LIBRARY_PATH"/sys
+#end of do-not-change
+
+#by default, make is silent (except for messages we emit). For debugging, use -e to see everything that's going on (this shows gliim execution too!)
+GG_SHOW_MAKE="-s"
+
+#location of Gliimly data
+export GG_DATA="/var/lib/gg"
+
+export GG_C_RESTPATH=""
+export GG_C_MAXUPLOAD="25000000"
+export GG_C_MAXERRORS="5"
+#plain diagnostics must have value, as it's passed in a script (vdiag) in vmakefile
+export GG_C_PLAINDIAG="0"
+
+#defaults for quick install
+_PROXYPORT="80"
+
+#display Gliimly usage
+#Internal: 
+#--asan build with ASAN
+#--asan-opt print out ASAN option to prefix the execution with, also works with prefix mgrg for better coverage of SERVICE program
+function use_message() {
+    echo "Usage: $0  OPTIONS 
+OPTIONS:
+
+-c      clean make artifacts for a rebuild
+-v      show version
+-s      show detailed execution (script tracing)
+-e N    show last N program errors
+-t N    show trace files for N most recent processes
+-o      show documentation directory
+-l      show library directory
+-m      setup syntax highlighting for Vim
+-u      substitute environment variables in stdin
+-r      display shell commands to run a program
+            --req=\"/<request name><url payload>\"
+            --method=\"<request method>\"
+            --content=\"<file name>\"
+            --content-type=\"<content type>\"
+            --exec
+            --app=\"application path\" 
+            --service
+            --remote=\"server IP:port\"
+            --socket=\"socket path\"
+            --arg=\"arguments\"
+-q      build application
+            --db=\"mariadb:<db name>|postgres:<db name> ...\" 
+            --lflag=<linker flags> 
+            --cflag=<c flags> 
+            --trace 
+            --c-lines 
+            --posix-regex
+            --debug 
+            --maxupload=<max upload size>
+            --path=\"/some/path\"
+            --max-errors=<max errors>
+            --plain-diag
+            --optimize-memory
+-i      display build flags for FastCGI client
+            --include
+                displays C compile flags
+            --link
+                displays C linking flags
+-h      this help
+Type 'man gg' for more information.
+"
+}
+
+#process all command-line options
+function main() {
+
+
+
+#list of Gliimly options for getop
+_OPT_STATUS="0"
+#do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
+_opts=$(getopt -a -n $0 -o e:t:,q,o,l,m,i,h,c,v,s,u,r --long db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+if [ $_OPT_STATUS -ne 0 ]; then
+    use_message 1>&2
+    exit -1
+fi
+
+#init flags used to emit helpful messages
+_DEVOPT=0
+_DO_QUICK=0
+
+#if nothing at all passed that is valid: make gliim application - that is just 'gliim'
+    eval set -- "$_opts"
+    while true; do 
+    case "$1" in 
+        --trace  )
+            export GG_C_TRACE="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --c-lines  )
+            export GG_C_SKIPLINES="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --plain-diag  )
+            export GG_C_PLAINDIAG="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --optimize-memory  )
+            export GG_C_OPTMEM="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --debug  )
+            export GG_C_DEBUG="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --asan-opt  )
+            echo "ASAN_OPTIONS=log_path=asan:halt_on_error=0"
+            exit 0
+            ;;
+        --asan  )
+            export GG_C_ASAN="1"
+            _DEVOPT=1
+            shift 
+            ;;
+#gg -r to talk to service (local socket by default)
+        --service  )
+            _REQ_SRV="1"
+            shift 
+            ;;
+        --path  )
+            export GG_C_RESTPATH="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --maxupload  )
+            export GG_C_MAXUPLOAD="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --max-errors  )
+            export GG_C_MAXERRORS="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --posix-regex  )
+            export GG_C_POSIXREGEX="1"
+            _DEVOPT=1
+            shift
+            ;;
+        --cflag  )
+            export GG_C_CFLAGS="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        -t )
+#display last N trace files (for N most recent processes)
+            _SHOWTRACE="$2"
+            shift 2
+            ;;
+        -u )
+#subst env vars from stdin to stdout
+            "$GG_LIBRARY_PATH"/v1 -envsub 
+            exit 0
+            ;;
+        -e )
+#display last N errors from backtrace
+            _SHOWERROR="$2"
+            shift 2
+            ;;
+        --lflag  )
+            export GG_C_LFLAGS="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --content-type  )
+#content type
+            _REQ_CONTENT_TYPE="$2"
+            shift 2
+            ;;
+        --content  )
+            #content file (read from file)
+            _REQ_CONTENT="$2"
+            shift 2
+            ;;
+        --silent-header )
+#silent-header for --exec
+            _REQ_SILENT_HEADER=1
+            shift 1
+            ;;
+        --arg  )
+#arguments for single-run execution
+            _REQ_ARG="$2"
+            shift 2
+            ;;
+        --method  )
+#request method (GET, POST...)
+            _REQ_METHOD="$2"
+            shift 2
+            ;;
+        --exec  )
+#request execute
+            _REQ_EXEC="1"
+            shift 1
+            ;;
+        --app  )
+#app name (script name) for -r
+            _REQ_APP="$2"
+            shift 2
+            ;;
+        --socket  )
+#socket for -r --exec
+            _REQ_SOCK="$2"
+            shift 2
+            ;;
+        --remote  )
+#serverIP:port for -r --exec
+            _REQ_IP="$2"
+            shift 2
+            ;;
+        --req  )
+#request name+payload 
+            _REQ_URL="$2"
+            shift 2
+            ;;
+        -r  )
+#display bash to run command-line program
+            _COMMRUN="1"
+            shift
+            ;;
+        -h  )
+#help message
+            use_message
+            shift
+            exit
+            ;;
+        -m )
+#Vim highlighting
+            _DO_HIGHLIGHT="1"
+            shift 
+            ;;
+        --link )
+#display FastCGI link
+            _DO_CLIENT_LINK="1"
+            shift 
+            ;;
+        --include )
+#display FastCGI include
+            _DO_CLIENT_INCLUDE="1"
+            shift 
+            ;;
+        -i )
+#display FastCGI client flags
+            _DO_CLIENT="1"
+            shift 
+            ;;
+        -q )
+#quick setup
+            _DO_QUICK="1"
+            shift 
+            ;;
+        --db )
+#db vendor
+            _ALLDB="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        -c )
+#clean the project's temp and object files. This is to be able to fully recompile the project afterwards.
+            _DO_CLEAN="1"
+            shift 
+            ;;
+        -d )
+#include debugging info in program
+            export GG_C_DEBUG="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        -l )
+#show lib directory
+            echo "$GG_LIBRARY_PATH"
+            shift 
+            exit
+            ;;
+        -o )
+#show documentation directory
+            docdir
+            shift 
+            exit
+            ;;
+        -s )
+#display gliim script's execution in detail
+            export GG_SHOW_MAKE=
+            set -x
+#this flag is if -s applies only to -q (i.e. compilation)
+#            _DEVOPT=1
+            shift 
+            ;;
+        -v )
+#display version of Gliimly
+            gg_version
+            exit
+            ;;
+        -- ) 
+            shift 
+            break
+            ;;
+        * ) 
+            use_message 1>&2
+            exit -1
+        esac
+    done
+
+    #check if old pcre2 lib, use glibc regex
+    if [ "$GG_PCRE2_NEW" == "0" ]; then export GG_C_POSIXREGEX="1"; fi
+
+#handle client fastcgi app building
+    if [[ "$_DO_QUICK" == "1" && "$_DO_CLIENT" == "1" ]]; then
+        error "Cannot use both -i and -q options. Use one or the other"
+    fi
+    if [ "$_DO_CLIENT" == "1" ]; then
+        show_client_bld
+        exit 0
+    fi
+
+#ask --debug to be used for tracing
+    if [[ "$GG_C_TRACE" == "1" && "$GG_C_DEBUG" != "1" ]]; then
+        error "In order to use tracing, you must use --debug option"
+    fi
+#internal: Address Sanitizer only with debug
+    if [[ "$GG_C_ASAN" == "1" && "$GG_C_DEBUG" != "1" ]]; then
+        error "In order to use ASAN, you must use --debug option"
+    fi
+
+#something extra and unexpected, complain about it, probably an error
+    if [ "$1" != "" ]; then
+        error "Unknown input [$1]"
+    fi
+
+#before app name checking b/c it doesn't have anything to do with it
+    if [ "$_DO_HIGHLIGHT" != "" ]; then
+        setup_highlighting
+        exit 0
+    fi
+
+#can run this from anywhere if has --req and (--service or --app), otherwise must be in app dir
+if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_IP" != "" || "$_REQ_SOCK" != "")))  ]]; then
+        _TOEXEC=".gg_reqexec"
+        #need || true to remove temp file
+        show_run_program || true
+        rm -f "$_TOEXEC"
+        exit 0
+    fi
+
+#application name created with mgrg in .vappname, which must exist
+    if [ -f ".vappname" ]; then
+        export GG_C_NAME=$(cat .vappname)
+    else
+        error "Gliimly application was not created yet. Please use mgrg to create an application first"
+    fi
+    check_name "$GG_C_NAME" "application name"
+    export GG_BLD0=$GG_DATA/bld
+    export GG_BLD=$GG_BLD0/$GG_C_NAME
+    export GG_H="$GG_DATA/$GG_C_NAME"
+    export GG_A="$GG_H/app"
+
+#THEN perform any actions
+
+#check for source only if compiling or cleaning up
+    if [[ "$_DO_QUICK" == "1" || "$_DO_CLEAN" == "1" ]]; then
+        _SRCC=$(ls *.gliim 2>/dev/null|wc -l)
+        if [ "$_SRCC" == "0" ]; then
+            error "No Gliimly source source code found."
+        fi
+        if [[ ! -d "$GG_A" || ! -d "$GG_BLD" ]]; then
+            error "Gliimly application [$GG_C_NAME] does not exist. Use mgrg to create it."
+        fi
+    fi
+    if [[ "$_DO_QUICK" == "0" && "$_DEVOPT" == "1" ]]; then
+        error "Use -q if you intend to make the application."
+    fi
+
+    if [ "$_SHOWERROR" != "" ]; then
+        showerr $_SHOWERROR
+        exit 0
+    fi
+
+    if [ "$_COMMRUN" != "" ]; then
+        _TOEXEC="$GG_BLD/.reqexec"
+        . $GG_BLD/.blds
+        show_run_program
+        exit 0
+    fi
+
+    if [ "$_SHOWTRACE" != "" ]; then
+        showtrace $_SHOWTRACE
+        exit 0
+    fi
+
+#perform cleaning FIRST. Must 
+    if [ "$_DO_CLEAN" == "1" ]; then
+        gg_clean
+        exit 0
+    fi
+
+
+#perform any actions
+#autoapp make app automatically. It exits at its end
+    if [ "$_DO_QUICK" == "1" ]; then 
+#build app
+        autoapp
+    fi
+
+
+#these are 'in-conclusion' actions, they happen LAST
+    error "No action specified."
+}
+
+
+
+
+#
+#
+#Functions used in processing
+#
+#
+
+#
+#
+#
+#Show flags for client FastCGI app building. 
+#
+#
+#
+function show_client_bld() {
+#if neither --cflag nor --lflag specified, print out both
+    if [[ "$_DO_CLIENT_INCLUDE" != "1" &&  "$_DO_CLIENT_LINK" != "1" ]]; then
+        _DO_CLIENT_INCLUDE=1
+        _DO_CLIENT_LINK=1
+    fi
+#print the flag asked for, if both, place them on the same line
+    if [ "$_DO_CLIENT_INCLUDE" == "1" ]; then
+        echo -n "-I$GG_INCLUDE_PATH "
+    fi
+    if [ "$_DO_CLIENT_LINK" == "1" ]; then
+        echo -n "-L$GG_LIBRARY_PATH -lgliimcli -Wl,--rpath=$GG_LIBRARY_PATH "
+    fi
+    echo ""
+}
+
+#
+#
+#
+#Setup keyword highlighting for Vim
+#
+#
+#
+function setup_highlighting() {
+    mkdir -p $HOME/.vim
+    mkdir -p $HOME/.vim/syntax
+    cp $GG_LIBRARY_PATH/gliim.vim $HOME/.vim/syntax/gliim.vim
+#set .gliim file type to use gliim.vim above
+    _USEV="autocmd BufRead,BufNewFile *.gliim set filetype=gliim"
+    if [ ! -f "$HOME/.vimrc" ]; then
+        echo "$_USEV" > $HOME/.vimrc
+    else
+        _HERE=$(grep -F "$_USEV" $HOME/.vimrc |wc -l)
+        if [ "$_HERE" == "0" ]; then
+            echo "$_USEV" >> $HOME/.vimrc
+        fi
+    fi
+#make sure syntax is on
+    _SYNON="syntax on"
+    _HERE=$(grep -F "$_SYNON" $HOME/.vimrc |wc -l)
+    if [ "$_HERE" == "0" ]; then
+        echo "$_SYNON" >> $HOME/.vimrc
+    fi
+}
+
+
+
+#
+#
+#
+#Display bash to run command-line program
+#
+#
+#
+function show_run_program() {
+    if [ "$GG_C_RESTPATH" == "" ];  then
+        _APATH="/$GG_C_NAME"
+    else
+        #remove any trailing / with ${X%%<pattern>}
+        _APATH="${GG_C_RESTPATH%%+(/)}"
+    fi
+#--app overrides current working directory application above
+    if [ "$_REQ_APP" != "" ]; then
+        _APATH="$_REQ_APP"
+    fi
+#get app name from _APATH, it's the last path segment, since _APATH is application path
+    _ANAME=$(echo "$_APATH" | awk -F "/" '{print $NF}')
+    _REQ_PATH="/<request name><url payload>"
+    _REQ_QUERY="<request query>"
+    if [ "$_REQ_URL" != "" ]; then
+        if [[ "$_REQ_URL" =~ ^.*\?.*$ ]]; then
+            _REQ_PATH=$(echo "$_REQ_URL" | cut -d "?" -f 1)
+            _REQ_QUERY=$(echo "$_REQ_URL" | cut -d "?" -f 2)
+        else
+            _REQ_PATH="$_REQ_URL"
+            _REQ_QUERY=""
+        fi
+    fi
+    if [ "$_REQ_METHOD" == "" ]; then
+        _REQ_METHOD="GET"
+    fi
+    _CONT=""
+    _CONTL=""
+    _CONTT="export CONTENT_TYPE="
+    _SHEADER="export GG_SILENT_HEADER=no"
+    if [ "$_REQ_SILENT_HEADER" == "1" ]; then
+        _SHEADER="export GG_SILENT_HEADER=yes"
+    fi
+    if [[ "$_REQ_CONTENT_TYPE" != "" && "$_REQ_CONTENT" == "" ]]; then
+        error "Cannot use --content-type without --content"
+    fi
+    if [ "$_REQ_CONTENT" != "" ]; then
+        if [ ! -f "$_REQ_CONTENT" ]; then
+           error "Cannot access file $_REQ_CONTENT"
+        fi
+        _CONT="cat '$_REQ_CONTENT' | "
+        _CONTL="export CONTENT_LENGTH=\$(stat -c%s '$_REQ_CONTENT')"
+        if [ "$_REQ_CONTENT_TYPE" != "" ]; then
+            _CONTT="export CONTENT_TYPE='$_REQ_CONTENT_TYPE'"
+        fi
+    else
+        _CONTL="export CONTENT_LENGTH="
+    fi
+    echo "$_CONTT
+$_CONTL
+$_SHEADER
+export REQUEST_METHOD=$_REQ_METHOD
+export SCRIPT_NAME=\"$_APATH\"
+export PATH_INFO=\"$_REQ_PATH\"
+export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
+    if [ "$_REQ_SRV" == "1" ]; then
+        if [[ "$_REQ_IP" != "" && "$_REQ_SOCK" != "" ]]; then
+            error "Cannot use both --remote and --socket"
+        fi
+        if [ "$_REQ_IP" != "" ]; then
+            echo "${_CONT}cgi-fcgi -connect \"$_REQ_IP\" $_APATH" >> $_TOEXEC 
+        else
+            if [ "$_REQ_SOCK" != "" ]; then
+                if [ ! -S "$_REQ_SOCK" ]; then
+                    error "Cannot access socket $_REQ_SOCK or is not a socket file"
+                fi
+                echo "${_CONT}cgi-fcgi -connect $_REQ_SOCK $_APATH" >> $_TOEXEC 
+            else
+                echo "${_CONT}cgi-fcgi -connect /var/lib/gg/$_ANAME/sock/sock  $_APATH" >> $_TOEXEC 
+            fi
+        fi
+    else
+        if [[ "$_REQ_IP" != "" || "$_REQ_SOCK" != "" ]]; then
+            error "Cannot use --remote or --socket without --service"
+        fi
+        #add arguments if specified for command-line run
+        ADD_ARG=""
+        if [ "$_REQ_ARG" != "" ]; then
+            ADD_ARG=" $_REQ_ARG"
+        fi
+        echo "${_CONT}/var/lib/gg/bld/$_ANAME/$_ANAME$ADD_ARG" >> $_TOEXEC 
+    fi
+    if [[ "$_REQ_EXEC" == "1" && "$_REQ_URL" == "" ]]; then
+        error "Cannot use --exec without --req"
+    fi
+    if [ "$_REQ_EXEC" == "1" ]; then
+       chmod +x $_TOEXEC
+       RCODE=0
+       . $_TOEXEC || RCODE=$?
+       if [ "$RCODE" != "0" ]; then
+           exit $RCODE
+       fi
+    else
+        cat $_TOEXEC
+    fi
+}
+
+
+#
+#
+#
+#Show last $1 trace files
+#
+#
+#
+function showtrace() {
+    ls -aslrt /var/lib/gg/$GG_C_NAME/app/trace/trace* |tail -n $1
+    echo "Backtrace: /var/lib/gg/$GG_C_NAME/app/trace/backtrace"
+}
+
+#
+#
+#
+#Show last $1 errors from backtrace
+#
+#
+#
+function showerr() {
+    grep -a "ERROR:" /var/lib/gg/$GG_C_NAME/app/trace/backtrace |tail -n $1
+    echo "Backtrace: /var/lib/gg/$GG_C_NAME/app/trace/backtrace"
+}
+
+#
+#
+#
+#Get database vendors and names from dbvendor:dbname ... format, which is the input ($1)
+#
+#
+#
+function getdbs() {
+#database vendor/name pairs
+
+    _DBL="$1"
+    _j=0
+    for _i in $(echo "$_DBL"); do
+#-n says do not print non-matches, p says print matches only
+        _DBV[$_j]=$(sed -n 's/\(.*\):\(.*\)/\1/p' <<<$_i)
+        _DBN[$_j]=$(sed -n 's/\(.*\):\(.*\)/\2/p' <<<$_i)
+        if [[ "${_DBV[$_j]}" != "mariadb" && "${_DBV[$_j]}" != "postgres" && "${_DBV[$_j]}" != "sqlite" ]]; then
+            error "Database [${_DBV[$_j]}] is not supported (specify database as vendor:database_name, and in case of multiple databases separated them with a space in a quoted value)"
+        fi
+        if [ "${_DBN[$_j]}" == "" ]; then
+            error "Database configuration file not specified"
+        fi
+        if [[ ! "$_DBVALL" =~ " ${_DBV[$_j]} " ]]; then
+            _DBVALL="$_DBVALL ${_DBV[$_j]} "
+        fi
+        ((_j=_j+1))
+    done
+}
+
+#
+#
+#
+#Autocreate settings file used to recompile if one (or more) of them changes
+#File $GG_BLD/blds is used in vmakefile as a signal to recompile all (if changed)
+#Sole purpose is to know when to recompile, nothing is cached as far as command-line params go.
+#
+#GG_C_MAXERRORS and GG_C_PLAINDIAG do not affect compilation, only the output of errors, so not
+#part of mkset.
+#
+#
+function mkset() {
+    echo "GG_C_TRACE='$GG_C_TRACE'
+GG_C_SKIPLINES='$GG_C_SKIPLINES'
+GG_C_ASAN='$GG_C_ASAN'
+GG_C_DEBUG='$GG_C_DEBUG'
+GG_C_OPTMEM='$GG_C_OPTMEM'
+GG_C_MAXUPLOAD='$GG_C_MAXUPLOAD'
+GG_C_RESTPATH='$GG_C_RESTPATH'
+GG_C_CFLAGS='$GG_C_CFLAGS'
+GG_C_LFLAGS='$GG_C_LFLAGS'
+GG_C_POSIXREGEX='$GG_C_POSIXREGEX'
+GG_C_MODULES='$GG_C_MODULES'
+GG_C_V1_MOD='$(stat -c "%Y" $GG_LIBRARY_PATH/v1)'
+GG_C_GG_MOD='$(stat -c "%Y" $(which gg))'
+GG_DBS='$_ALLDB'
+" > $GG_BLD/.blds
+    if [ ! -f "$GG_BLD/blds" ]; then
+        cp -f $GG_BLD/.blds $GG_BLD/blds
+    else
+        _ECODE="0"
+        diff $GG_BLD/.blds $GG_BLD/blds > /dev/null || _ECODE="$?"
+        if [ "$_ECODE" != 0 ]; then
+            cp -f $GG_BLD/.blds $GG_BLD/blds
+        fi
+    fi
+}
+
+
+#
+#
+#
+#Show documentation directory
+#
+#
+#
+function docdir() {
+    if [ "$GG_ISFEDORA" == "1" ]; then
+        echo "$(rpm -E '%{_datadir}')/gliim"
+    elif [ "$GG_ISDEBIAN" == "1" ]; then
+        echo "/usr/share/gliim"
+    elif [ "$GG_ISARCH" == "1" ]; then
+        echo "/usr/share/gliim"
+    else
+        error "Unknown Operating System"
+    fi
+}
+
+#
+#
+#
+#Check if app name is valid
+#
+#
+#
+function check_name() {
+#$1 is the name
+#$2 is the type of it (used in error message)
+    if [[ ! "$1" =~ ^[-a-zA-Z0-9_]{1,30}$ ]]; then
+        error "$2 name can be made up of alphanumerical characters only, hyphen or underscore, and its length must be between 1 and 30 characters, found [$1]"
+    fi
+}
+
+
+
+#
+#
+#
+#Emitting error messages
+#
+#
+#
+function error() {
+#$1 is message
+    echo -e "** Error: $1" 1>&2
+    exit -1
+}
+
+
+
+
+#
+#
+#if GG_C_MODULES read from .cache file and available, get the usage and set modules
+#
+#
+function read_modules() {
+
+#Set _ISMOD_* variables and call set_modules to set variables for building of application. This is for databases only.
+    for _i in $(echo "$GG_C_MODULES"); do
+        if [ "$_i" == "mariadb" ]; then
+            _ISMOD_MARIADB="1"
+        elif [ "$_i" == "postgres" ]; then
+            _ISMOD_POSTGRES="1"
+        elif [ "$_i" == "sqlite" ]; then
+            _ISMOD_SQLITE="1"
+        else
+            error "Unknown module [$_i]"
+        fi
+    done
+
+#
+#begin automatic libs discovery
+#
+#figure out if there's need for these libs
+#these find out if there's mention of these calls. A more native C approach was attempted
+#where during v1 compilation, information was collected and then used later, however that method ended up being either same or 
+#slower than this due to complexities of collecting and manipulating, and having to change (now) simple Makefile rules.
+#Trying to obtain modification times, save and compare later was alone more than double the time of what's below.
+#This gives all files to grep, so avoid slow "for i in $(ls *.gliim)", and checks for file that has other than filename:0, so
+#that's where :[1-9] comes from. By far the fastest method.
+#Overall, the slowdown in performance of full recompile with this is only about 0.06% for 67 .gliim files and about 8000 lines of code.
+#The limit here is about 100,000 file with names of 20 chars long, so unlikely to have that many source files with that long names
+#This approach also scales the best. For example, adding 10 more libs put it at 0.4%, whereas the approach with grepping
+#each lib separately puts it at 0.74%, or almost double.
+#
+
+#first look for all possible statements
+    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-index \|hash-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.gliim>$GG_BLD/.findmod || true
+#then from occurrances, look for curl
+    if [[ $(grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod) != "" ]]; then _ISMOD_CURL="1"; fi
+#then from occurrances, look for index
+    if [[ $(grep -m 1 -o "^[[:space:]]*[a-z]\+-index " $GG_BLD/.findmod) != "" ]]; then _ISMOD_TREE="1"; fi
+#then from occurrances, look for pcre2
+    if [[ $(grep -m 1 -o "^[[:space:]]*match-regex " $GG_BLD/.findmod) != "" ]]; then _ISMOD_PCRE2="1"; fi
+#then from occurrances, look for fcgi
+    if [[ $(grep -m 1 -o "^[[:space:]]*[a-z]\+-remote " $GG_BLD/.findmod) != "" ]]; then _ISMOD_SERVICE="1"; fi
+#then from occurrances, look for crypto
+    if [[ $(grep -m 1 -o "^[[:space:]]*\(hash-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \)" $GG_BLD/.findmod) != "" ]]; then _ISMOD_CRYPTO="1"; fi
+
+
+#
+#end automatic libs discovery
+#
+
+    GG_MOD_LIBS=
+    GG_MODULES=
+    GG_MODULES_INCLUDE=
+    GG_STUBS=
+    GG_LIST_ALL_MODULES=
+#sqlite module
+    if [ "$_ISMOD_SQLITE" == "1" ]; then
+        GG_SQLITE_USED="-DGG_SQLITE_INCLUDE"
+#sqlite3.h is installed in include directory, so no need to specify
+        #GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE -I /usr/include/sqlite3.h"
+        GG_MODULES="$GG_MODULES -lsqlite3"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimlylite"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES sqllite"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_sqlite.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES sqlite"
+    fi
+#postgres module
+    if [ "$_ISMOD_POSTGRES" == "1" ]; then
+        GG_POSTGRES_USED="-DGG_POSTGRES_INCLUDE"
+        GG_C_PGCONF=$(. "$GG_LIBRARY_PATH"/sys pgconf)
+        if [ "$GG_C_PGCONF" == "yes" ]; then
+            GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE -I $(pg_config --includedir)"
+        else
+            GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE $(pkg-config --cflags libpq)"
+        fi
+        GG_MODULES="$GG_MODULES -lpq"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimpg"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES postgres"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_postgres.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES postgres"
+    fi
+#mariadb module
+    if [ "$_ISMOD_MARIADB" == "1" ]; then
+        GG_MARIADB_USED="-DGG_MARIADB_INCLUDE"
+        GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE $(mariadb_config --include)"
+        GG_MODULES="$GG_MODULES $(mariadb_config --libs)"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimmys"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES mariadb"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_mariadb.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES mariadb"
+    fi
+#fcgi module
+    if [ "$_ISMOD_SERVICE" == "1" ]; then
+        GG_SERVICE_USED="-DGG_SERVICE_INCLUDE"
+        #GG_MODULES="$GG_MODULES -lfcgi" - nothing here since fcgi client implemented from scratch
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimscli"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES fcgi"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_srvc.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES curl"
+    fi
+#pcre2 module
+    if [ "$_ISMOD_PCRE2" == "1" ]; then
+        #this is if not using plain posix regex, otherwise nothing to do
+        if [ "$GG_C_POSIXREGEX" != "1" ]; then
+            GG_PCRE2_USED="-DGG_PCRE2_INCLUDE"
+            GG_MODULES="$GG_MODULES $GG_PCRE2_LIBS"
+            GG_MOD_LIBS="$GG_MOD_LIBS -lgliimpcre2 -ldl"
+            GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
+        else
+            #pcre is not used, but we still use glibc regex, so include regex.h and compile pcre2.c (which does both
+            #glibc and pcre2)
+            GG_PCRE2_USED="-DGG_PCRE2_INCLUDE"
+            GG_MOD_LIBS="$GG_MOD_LIBS -lgliimpcre2glibc -ldl"
+            GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
+        fi
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_pcre2.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
+    fi
+#index module
+    if [ "$_ISMOD_TREE" == "1" ]; then
+        GG_TREE_USED="-DGG_TREE_INCLUDE"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimtree"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES tree"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_tree.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES tree"
+    fi
+#curl module
+    if [ "$_ISMOD_CURL" == "1" ]; then
+        GG_CURL_USED="-DGG_CURL_INCLUDE"
+        GG_MODULES="$GG_MODULES -lcurl"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimcurl"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES curl"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_curl.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES curl"
+    fi
+#crypto module
+    if [ "$_ISMOD_CRYPTO" == "1" ]; then
+        GG_CRYPTO_USED="-DGG_CRYPTO_INCLUDE"
+        GG_MODULES="$GG_MODULES -lssl -lcrypto"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimsec"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES crypto"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_crypto.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES crypto"
+    fi
+    if [[ "$_ISMOD_MARIADB" == "1" || "$_ISMOD_POSTGRES" == "1" || "$_ISMOD_SQLITE" == "1"  ]]; then
+        GG_MOD_LIBS="-lgliimdb $GG_MOD_LIBS"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_gendb.o"
+    fi
+
+
+#used in vmakecommon/install to properly link modules at link-time and to substitute stubs for those modules that are not used
+    export GG_MODULES
+    export GG_MODULES_INCLUDE
+    export GG_STUBS
+    export GG_MOD_LIBS
+    export GG_C_MODULES
+    export GG_LIST_ALL_MODULES
+    export GG_MARIADB_USED
+    export GG_SERVICE_USED
+    export GG_CURL_USED
+    export GG_TREE_USED
+    export GG_PCRE2_USED
+    export GG_CRYPTO_USED
+}
+
+#
+#
+#
+#make generated files affect recompilation ONLY if they are different
+#
+#
+#
+function copy_if_diff () {
+    F="$1"
+    _ISDIFF=$(diff $GG_BLD/$F.new $GG_BLD/$F 2>/dev/null) || true
+    if [[ "$_ISDIFF" != "" || ! -f "$GG_BLD/$F" ]]; then
+        mv $GG_BLD/$F.new $GG_BLD/$F
+    else
+        rm -rf $GG_BLD/$F.new
+    fi
+}
+
+
+
+#
+#
+#sets a list of many source code files (source.gliim, gliimapp.h, gg_dispatch_request.gliim etc.)
+#takes care of generated vs provided source code: if a certain handler is provided, then don't generate it.
+#
+#
+function gen_src() {
+
+#
+#Files generated here are $GG_BLD/source.gliim,gliimapp.h,gg_dispatch_request.gliim.
+#
+
+#
+#Generate source.gliim, all the source files needed for Gliimly app
+#
+    _T="source.gliim"
+#this is all source files, including C files
+    _SRCC=$(ls *.c 2>/dev/null) || true
+    _SRCF=$(ls *.gliim 2>/dev/null) || true
+    _HDRF=$(ls *.h 2>/dev/null) || true
+
+    echo "#SPDX-License-Identifier: Apache-2.0" >> $GG_BLD/$_T.new
+    echo "#Copyright 2019 Gliim LLC. " >> $GG_BLD/$_T.new
+    echo >> $GG_BLD/$_T.new
+    echo "#" >> $GG_BLD/$_T.new
+    echo "#Lists source files in your application. This is an auto-generated file." >> $GG_BLD/$_T.new
+    echo "#" >> $GG_BLD/$_T.new
+    echo >> $GG_BLD/$_T.new
+    echo "#Include files here:" >> $GG_BLD/$_T.new
+    _HFILES=$(echo "$_HDRF" | grep -a -v gliimapp.h | xargs)
+    echo "GG_HEADER_FILES=$(echo $_HFILES)" >> $GG_BLD/$_T.new
+    echo >> $GG_BLD/$_T.new
+    echo "#Source files here:" >> $GG_BLD/$_T.new
+    echo "GG_SOURCE_FILES=$(echo $_SRCF)" >> $GG_BLD/$_T.new
+    echo "GG_SOURCE_C_FILES=$(echo $_SRCC)" >> $GG_BLD/$_T.new
+
+    _ISDIFF=$(diff $GG_BLD/$_T.new $GG_BLD/$_T 2>/dev/null) || true
+    if [[ "$_ISDIFF" != "" || ! -f "$GG_BLD/$_T" ]]; then
+        mv $GG_BLD/$_T.new $GG_BLD/$_T
+    else
+        rm -rf $GG_BLD/$_T.new
+    fi
+
+
+
+#
+#Generate gliimapp.h, a file that has a list of C declarations neeeded to build an app
+#
+    _T="gliimapp.h"
+
+    echo "// SPDX-License-Identifier: Apache-2.0"  >> $GG_BLD/$_T.new
+    echo "// Copyright 2019 Gliim LLC. ">> $GG_BLD/$_T.new
+    echo >> $GG_BLD/$_T.new
+    echo "// This is an auto-generated file for a GLIIMLY application" >> $GG_BLD/$_T.new
+    echo >> $GG_BLD/$_T.new
+    echo "#ifndef _GLIIMLYAPP" >> $GG_BLD/$_T.new
+    echo "#define _GLIIMLYAPP" >> $GG_BLD/$_T.new
+    echo >> $GG_BLD/$_T.new
+    if [ "$_HFILES" != "" ]; then
+        for i in $(echo "$_HFILES"); do
+            sed 's/\(.*\)/#include "\1"/g' <<< $i >> $GG_BLD/$_T.new
+        done
+        echo >> $GG_BLD/$_T.new
+    fi
+    echo "// function prototypes of your code" >> $GG_BLD/$_T.new
+#declare all functions, including non-request ones (whether implemented or not)
+    for _F in $(echo $_SRCF); do
+        _FN=${_F%.*}
+        #if main, cannot have that, since we have main() already. Must delete $_T.new in order to regenerate, otherwise main would remain
+        if [ "${_FN}" == "main" ]; then rm -f $GG_BLD/$_T.new ; error "Service handler name cannot be 'main'" ; fi
+        echo "void ${_FN}();" >> $GG_BLD/$_T.new
+    done
+    echo >> $GG_BLD/$_T.new
+    echo "#endif" >> $GG_BLD/$_T.new
+
+    #if newly generated file is the same as the old one, don't touch the old one in order to
+    #prevent recompilation needlessly
+    _ISDIFF=$(diff $GG_BLD/$_T.new $GG_BLD/$_T 2>/dev/null) || true
+    if [[ "$_ISDIFF" != "" || ! -f "$GG_BLD/$_T" ]]; then
+        mv $GG_BLD/$_T.new $GG_BLD/$_T
+    else
+        rm -rf $GG_BLD/$_T.new
+    fi
+
+#
+#Generate gg_dispatch_request.gliim, the main request handler. Based on the source code names of handler files (.gliim files)
+#
+    _T="gg_dispatch_request.gliim"
+#Generate request files, this is used for a dispatcher
+#and for a dispatcher, only request files matter 
+    _NUMF=$(echo $_SRCF | wc -w)
+
+    if [ "$_NUMF" == "0" ]; then
+        error "Application must have at least one .gliim file, none found"
+    fi
+
+    echo "// SPDX-License-Identifier: Apache-2.0" >>$GG_BLD/$_T.new
+    echo "// Copyright 2019 Gliim LLC. " >>$GG_BLD/$_T.new
+    echo >>$GG_BLD/$_T.new
+    echo "// GLIIMLY auto-generated request dispatcher" >>$GG_BLD/$_T.new
+    echo >>$GG_BLD/$_T.new
+    echo "begin-handler /gg_dispatch_request" >>$GG_BLD/$_T.new
+
+
+#req_done used to skip before/after execution if no handler used
+    echo "    volatile int req_done;" >>$GG_BLD/$_T.new #volatile because of longjmp, so the init below doesn't get optimized
+
+    if [ "$_NUMF" != "0" ]; then
+        echo "    get-req name to req" >>$GG_BLD/$_T.new
+    fi
+    #
+    # Setting up longjmp must be done after ANY local variables are established so they are not lost after any exit-handler
+    # or errors. This is because stack pointer after sigsetjmp will be LOST. So all local vars definitions must be PRIOR to it
+    #
+#longjmp for when a request exits via exit-handler. If return value is <>0, it means
+#this is a call from longjmp, and we should proceed to right after gg_dispatch_request - that is the extent
+#of unwinding, such that we rollback uncommitted transactions, shutdown request and release all memory and
+#then move on to the next request.
+#Cannot place setjmp within if, may not process correctly when jump happens.
+#We use gg_done_setjmp to prohibit exit-handler from executing the jump unless sigsetjmp was done first at runtime.
+    echo "    int ret_val = sigsetjmp(gg_jmp_buffer, 1);" >>$GG_BLD/$_T.new
+    echo "    if (ret_val != 0) goto end_point_exit;" >>$GG_BLD/$_T.new
+    echo "    gg_done_setjmp = 1;" >>$GG_BLD/$_T.new
+#right now the return value is always 0 (directly or called from longjmp)
+#the jump will work because all we do is go to after_service() function, which doesn't depend on any
+#automatic variables from gg_dispatch_request, and after that function exits
+#
+#
+#
+    echo "    .req_done = 0;" >>$GG_BLD/$_T.new #must be initialized separately (not as int req_done=0;) because longjmp may return to the same function and won't be initialized again
+#create file with all request names for v1 to process for the main function code. This way all request info is stored as constants to be loaded as program's data, meaning the fastest possible in huge memory blocks, without having to set up each individually
+#first line is the number of lines that follow, to make code generation easier
+    echo $_NUMF > $GG_BLD/.reqlist.new
+    _F_FIRST=""
+    for _F in $(echo $_SRCF); do
+        _FN=${_F%.*}
+        if [ "$_F_FIRST" == "" ]; then _F_FIRST="$_FN"; fi
+        echo "$_FN " >>$GG_BLD/.reqlist.new
+    done
+    echo "  gg_request_handler _gg_req_handler;" >>$GG_BLD/$_T.new
+    echo "  gg_num found = GG_OKAY;" >>$GG_BLD/$_T.new
+    if [ "$_NUMF" == "1" ]; then
+        echo "    if (!strcmp (req, \"$_F_FIRST\") || req[0] == 0) _gg_req_handler = $_F_FIRST; else found = GG_ERR_EXIST;" >>$GG_BLD/$_T.new
+    else
+#get handler function that handles this request from the pre-computed hash
+        echo "    _gg_req_handler = gg_find_hash (&gg_dispatch, req, NULL, 0, &found);" >>$GG_BLD/$_T.new
+    fi
+#before handler executes only IF req found a handler, that's why it's not in front of if()
+    echo "      if (found == GG_OKAY) {" >>$GG_BLD/$_T.new
+    echo "        .before_service();" >>$GG_BLD/$_T.new
+    echo "        .req_done = 1;" >>$GG_BLD/$_T.new
+    echo "        ._gg_req_handler();" >>$GG_BLD/$_T.new
+    echo "    } else {" >>$GG_BLD/$_T.new
+    echo "        gg_bad_request();" >>$GG_BLD/$_T.new
+    echo "        gg_report_error (\"Request [%s] not found\", req);" >>$GG_BLD/$_T.new
+    echo "    }" >>$GG_BLD/$_T.new
+
+#when exit-handler is done, this is where we must end up. Since this code is executed after
+#gg_dispatch_request, we can't longjump here. We long jump to a prior point and then go to here.
+    echo ".end_point_exit:" >>$GG_BLD/$_T.new
+#set gg_done_setjmp to 0, because if we do exit-handler in after_service(), it would go into infinite loop, coming back to after.
+#this way, exit-handler in after_service, or anywhere afterwards, will do nothing. Only when the next request comes along, and gg_done_setjmp is set to 1
+#in the beginning of this function, we will actually jump to end_point_exit:
+    echo "    .gg_done_setjmp = 0;" >>$GG_BLD/$_T.new
+#regardless of whether a request normally ended, or had exit-handler, it would come here, and before anything else, memory handling must be set back
+#to Gliimly, or otherwise, and gg_* memory function will fail if set to true. after_service() should not be affected by type of memory used.
+
+#cannot do exit-handler in after_service - must simply do return(s)
+    echo "    .if (req_done == 1) { after_service(); }" >>$GG_BLD/$_T.new
+#
+#There can be NOTHING after .after() that uses any automatic variables from gg_dispatch_request() or
+#exit-handler (and longjmp) will not work
+#
+    echo "end-handler" >>$GG_BLD/$_T.new
+    echo >>$GG_BLD/$_T.new
+
+    copy_if_diff "$_T"
+    copy_if_diff ".reqlist"
+}
+
+
+
+#
+#
+#
+#Create linkage for before,after and startup events. _weak_ linkage didn't work because Gliimly should produce
+#a program that links *only* with Gliimly libs. It means we only distribute a single file, which is a program,
+#that has only the minimal set of code - and this program uses Gliimly's shared library. Hence, all is shared 
+#(the program between different instance and all the shared libs).
+#GG_EVENT_STUBS is all the stubs used.
+#So, GG_EVENT_STUBS could be "/usr/lib/gliim/stub_after.o" but then available after vmakefile will be "$GG_BLD/before_service.o $GG_BLD/startup.o"
+#and all three will be present (one empty and two implemented)
+#
+#
+#
+function stub_events() {
+    GG_EVENT_STUBS=
+    if [ ! -f "before_service.gliim" ]; then
+        GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/stub_before.o"
+    fi
+    if [ ! -f "after_service.gliim" ]; then
+        GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/stub_after.o"
+    fi
+    export GG_EVENT_STUBS
+}
+
+
+#
+#
+#
+#Build Gliimly app
+#
+#
+#
+function build_app() {
+    _VFILES=$(ls *.gliim 2>/dev/null|wc -l) 
+    if [ "$_VFILES" == "0" ]; then error "Your project must have at least one .gliim file"; fi
+#set .dbvendors for v1 to pickup
+    db_lib
+#get any modules in use, and generate a list of all modules
+    read_modules
+#generate needed source code
+    gen_src
+#generate stubs (if needed) for events (before, after, startup..)
+    stub_events
+#create file that tells make to recompile if options changed
+    mkset
+#make the application (compile and link)
+    make $GG_SHOW_MAKE  -f "$GG_LIBRARY_PATH"/vmakefile all
+}
+
+#
+#
+#
+#Command line options implementation
+#
+#
+#
+
+function gg_version() {
+#the final year is based on the year when the last Makefile ran, which is a pretty good indicator of when was the last change done here by the author;
+#of course, for those who compile from source, and don't use the provided deb/dnf packages, it will always be the current year - that is not the intention -
+#in that case, change this manually to the year from the official distribution!!!! That is required under most copyright laws, in which the second year should
+#be the year of the last change by the author.
+    echo "Gliimly $GG_VERSION$_BETA on $GG_PLATFORM_ID ($GG_PLATFORM_VERSION)"
+    echo "Copyright (c) 2019-$(date '+%Y') Gliim LLC"
+
+}
+
+#
+#
+#
+#display file or empty string if it doesn't exist
+#
+#
+#
+function cat0() {
+    if [ ! -f "$1" ]; then echo ""; else cat "$1"; fi
+}
+
+
+
+#
+#
+#
+#Quick auto app maker
+#
+#
+#
+function autoapp() {
+
+    build_app 
+    exit
+}
+
+
+#
+#
+#
+#Set library modules from --db. Either db_lib (-q) or init_db (-qa) is executed, but not both
+#
+#
+#
+function db_lib() {
+#parse --db input
+#get list of dbs - add any new db vendors here (currently mariadb and postgres)
+    rm -f $GG_BLD/.dbvendors
+    getdbs "$_ALLDB"
+    _TOTDB="${#_DBV[@]}"
+    for (( _i=0; _i<$_TOTDB; _i++ )); do
+#must copy array element 
+        _DBNAME="${_DBN[$_i]}"
+        _DBCONF="$_DBNAME"
+#build list of all
+        _ALLC="$_ALLC
+$_DBCONF"
+        _DBMAKE="${_DBV[$_i]}"
+        if [ "$_DBMAKE" == "sqlite" ]; then
+            if [ "$_DONELITE" == "" ]; then
+                export GG_C_MODULES="$GG_C_MODULES $_DBMAKE"
+                _DONELITE="1"
+            fi    
+#for v1.c to pick up
+            echo "${_DBCONF}=sqlite" >> $GG_BLD/.dbvendors
+            if [ ! -f "$_DBCONF" ]; then
+                error "Database configuration file [$_DBCONF] ($_DBMAKE) not found"
+            fi
+            "$GG_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $GG_A/db/"$_DBCONF"
+        fi
+        if [ "$_DBMAKE" == "mariadb" ]; then
+            if [ "$_DONEMARIA" == "" ]; then
+                export GG_C_MODULES="$GG_C_MODULES $_DBMAKE"
+                _DONEMARIA="1"
+            fi    
+#for v1.c to pick up
+            echo "${_DBCONF}=mariadb" >> $GG_BLD/.dbvendors
+            if [ ! -f "$_DBCONF" ]; then
+                error "Database configuration file [$_DBCONF] ($_DBMAKE) not found"
+            fi
+            "$GG_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $GG_A/db/"$_DBCONF"
+        fi
+        if [ "$_DBMAKE" == "postgres" ]; then
+            if [ "$_DONEPG" == "" ]; then
+                export GG_C_MODULES="$GG_C_MODULES $_DBMAKE"
+                _DONEPG="1"
+            fi
+#for v1.c to pick up
+            echo "${_DBCONF}=postgres" >> $GG_BLD/.dbvendors
+            if [ ! -f "$_DBCONF" ]; then
+                error "Database configuration file [$_DBCONF] ($_DBMAKE) not found"
+            fi
+            "$GG_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $GG_A/db/"$_DBCONF"
+        fi
+    done
+#check db conf name unique
+    _TUNIQ=$(echo $_ALLC|sort -k 1|uniq|wc -l)
+    _TOT=$(echo $_ALLC|wc -l)
+    if [ "$_TUNIQ" != "$_TOT" ]; then
+        error "Database configuration names must be unique"
+    fi
+}
+
+
+
+#
+#
+#
+#Clean building artifacts of Gliimly code to rebuilt it entirely
+#
+#
+#
+function gg_clean() {
+#clean the source and other code, so the next gliim app compilation will be a full rebuild
+    make $GG_SHOW_MAKE -f "$GG_LIBRARY_PATH"/vmakefile clean
+}
+
+
+main "$@"
+
+
+

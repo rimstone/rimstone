@@ -1,0 +1,76 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+get-sys \-  (system-information)
+.SH PURPOSE
+Obtain data that describes the system.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+get-sys \\
+    environment <var name> \\
+        directory | os-name | os-version \\
+    to <variable>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+System-describing variables can be obtained with get-sys statement and the result stored into <variable>. The following system variables can be obtained:
+
+.RS 4
+\[bu]    
+"environment" returns the name of a given environment variable <var name>. If this is a server program, then the environment passed from a remote caller (such as web proxy) is queried. If this is a \fBsingle-run\fP program, then the environment from the Operating System is queried. In the following example,the QUERY_STRING variable (i.e. the actual query string from URL) is obtained:
+
+.RS 4
+.EX
+
+get-sys environment "QUERY_STRING" to qstr
+
+.EE
+.RE
+
+
+
+.RE
+
+.RS 4
+\[bu]    
+"directory" is the execution directory of the \fBsingle-run\fP program, i.e. the current working directory when the program was executed. Note that Gliimly will change the current working directory immediately afterwards to the application home directory (see \fBdirectories\fP). You can use this clause to work with files in the directory where the program was started. If your program runs as a \fBservice\fP, then "directory" clause always returns application home directory, regardless of which directory \fBmgrg\fP program manager started your application from.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"os-name" is the name of Operating System.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"os-version" is the version of Operating System.
+.RE
+
+
+.SH EXAMPLES
+Get the name of the Operating System
+
+.RS 4
+.EX
+
+get-sys os-name to os_name
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - System information
+
+\fBget-sys\fP   
+See all 
+\fBdocumentation\fP

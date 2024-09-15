@@ -1,0 +1,204 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+about-gliim \- Gliimly documentation (general)
+.SH DESCRIPTION
+
+.LP
+.B MODELING LANGUAGE
+.LP
+
+Gliimly is a very high-level modeling language. It's not about allocating memory, or moving and manipulating bits and bytes, or about writing expressions. It's about solving problems by modeling the solution and connecting the components to create high-performance, low-footprint executables.
+
+.LP
+.B SERVICE ORIENTED
+.LP
+
+A Gliimly program works as a service provider, meaning it handles service \fBrequest\fPs by providing a reply. It can be either a \fBservice\fP or a \fBsingle-run\fP program that processes GET, POST, PUT, PATCH, DELETE or any other HTTP requests. 
+
+The URL for a request must state the application name, and a also request name which is the source file handling it. So, "/app-name/my-request" means that application name is "app-name" and that "request_name.gliim" file will implement a request handler. A request executes in this order:
+
+.RS 4
+\[bu]    
+An optional before-handler handler executes (see \fBbefore-handler\fP). 
+
+.RE
+
+.RS 4
+\[bu]    
+Gliimly's \fBrequest dispatcher\fP executes a \fBrequest\fP handler. 
+
+.RE
+
+.RS 4
+\[bu]    
+An optional after-handler handler executes (see \fBafter-handler\fP).
+.RE
+
+
+.LP
+.B RUNNING AS A SERVICE
+.LP
+
+A Gliimly service is served by either
+
+.RS 4
+\[bu]    
+a fixed number of service processes, or
+
+.RE
+
+.RS 4
+\[bu]    
+a dynamic number based on the request load, from 0 to any maximum number specified.
+.RE
+Each Gliimly service process handles one request at a time, and all such processes work in parallel. This means you do not need to worry about thread-safety with Gliimly. Server processes generally stay up across any number of requests, increasing response time. The balance between the number of processes and the memory usage during high request loads can be achieved with adaptive feature of \fBmgrg\fP, Gliimly's service process manager. 
+
+A service can be requested by:
+
+.RS 4
+\[bu]    
+reverse proxies, such as Apache, Nginx, HAProxy etc.,
+
+.RE
+
+.RS 4
+\[bu]    
+programs written in any language using \fBClient-API\fP,
+
+.RE
+
+.RS 4
+\[bu]    
+Gliimly's own \fBgg\fP utility (see -r option)
+
+.RE
+
+.RS 4
+\[bu]    
+another Gliimly service by means of \fBcall-remote\fP (on secure networks) and \fBcall-web\fP (on the web via SSL/TSL secure connections).
+.RE
+
+With \fBcall-remote\fP, you can execute remote requests in parallel, and get results, error messages and exit status in a single statement. This makes it easy to distribute and parallelize your application logic and/or build application tiers on a local or any number of remote machines, without having to write any multi-threaded code.
+
+.LP
+.B USAGE
+.LP
+
+Gliimly services and single-run programs can implement most back-end application layers, including 
+
+.RS 4
+\[bu]    
+presentation (eg. building a web page), 
+
+.RE
+
+.RS 4
+\[bu]    
+application logic,
+
+.RE
+
+.RS 4
+\[bu]    
+data (eg. database) layers, and any others.
+.RE
+
+
+.LP
+.B SINGLE-RUN PROGRAM
+.LP
+
+When your Gliimly service is \fBsingle-run\fP, a request is handled by a single execution - for instance from command-line. This may be suitable for batch jobs, for use in shell scripts, for testing/mocking, as well as any other situation where it is more useful or convenient to execute a single-run program. Note that a single-run program can double as \fBCGI\fP (Common Gateway Interface) as well.
+
+.LP
+.B LANGUAGE
+.LP
+
+Gliimly programming language is memory-safe, meaning it will prevent you from accidentally overwriting memory or freeing it when it shouldn't be. Gliimly's \fBmemory-handling\fP is not limited to just memory safety; it also includes automatic freeing of memory at the end of a request, preventing memory leaks which can be fatal to long running processes. Similarly, files open with file-handling statements are automatically closed at the end of each request, serving the same purpose. 
+
+.LP
+.B TYPES
+.LP
+
+Gliimly is a strongly-typed language, with only three primitive types (numbers, strings and booleans) and a number of structured types (message, split-string, array, index, index-cursor, fifo, lifo, list, file and service). Gliimly is a declarative language, with a few lines of code implementing large functionalities. Gliimly is also very simple - it does not even have expressions! That's because it's designed to achieve application goals with less coding.
+
+The number type is a signed 64-bit integer. The boolean type evaluates to true (non-zero) or false (zero). The string type evaluates to any sequence of bytes (binary or text) that is always trailed with a null character regardless, which is not counted in string's length. All constants follow C rules of formatting.
+
+.LP
+.B STATEMENTS
+.LP
+
+Gliimly \fBstatements\fP are designed for safety, ease of use, and ability to write stable code. Most statements typically perform common complex tasks with options to easily customize them; such options are compile-time whenever possible, increasing run-time performance.
+
+.LP
+.B VARIABLES, SCOPE
+.LP
+
+A variable is created the first time it's encountered in any given scope, and is never created again in the same or inner scopes, which avoids common bugs involving more than one variable with the same name in related scopes. You can still of course create variables with the same name in unrelated scopes. 
+
+Some structured types (array, index, list) as well as primitive types (numbers, strings and booleans) can be created with process-scope, meaning their value persists throughout any requests served by the same process. This is useful for making services that allow keeping and fast quering of data (such as caches).
+
+Numbers and booleans are assigned by value, while strings are assigned by reference (for obvious reason to avoid unnecessary copying).
+
+.LP
+.B INFRASTRUCTURE
+.LP
+
+Gliimly includes request-processing and all the necessary infrastructure, such as for process management, files, networking, service protocols, database, string processing etc.
+
+.LP
+.B PERFORMANCE
+.LP
+
+Gliimly applications are high-performance native executables by design, hence absolutely no byte-code, interpreters and similar. Since Gliimly is declarative, just a few \fBstatements\fP are needed to implement lots of functionality. These statements are implemented in pure C, and are not slowed down by memory checks as they are safe internally by implementation. Only developer-facing Gliimly code needs additional logic to enforce memory safety, and that's a very small part of overall run-time cost. This means Gliimly can truly be memory-safe and high-performance at the same time.
+
+.LP
+.B DATABASE ACCESS
+.LP
+
+Gliimly provides access to a number of popular databases, such as MariaDB/mySQL, PostgreSQL and SQLite. (see \fBdatabase-config-file\fP):
+
+.RS 4
+\[bu]    
+transactional support (begin, commit, rollback),
+
+.RE
+
+.RS 4
+\[bu]    
+protection against SQL injections for safety, 
+
+.RE
+
+.RS 4
+\[bu]    
+automatic and persistent database connections with unlimited reuse across all SQL queries for high performance,
+
+.RE
+
+.RS 4
+\[bu]    
+prepared SQL statements for high performance.
+.RE
+
+
+.LP
+.B PROVEN LIBRARIES
+.LP
+
+Gliimly uses well-known and widely used Free Open Source libraries like cURL, OpenSSL, crypto, FastCGI, standard database-connectivity libraries from MariaDB, PostgreSQL, SQLite etc., for compliance, performance and reliability.
+
+.LP
+.B NAMES OF OBJECTS
+.LP
+
+Do not use object names (such as variables and request names) that start with "_gg_", "_gg_", "gg_" or "gg_" (including upper-case variations) as those are reserved by Gliimly.
+.SH SEE ALSO
+ 
+.B - General
+
+\fBabout-gliim\fP  
+\fBdirectories\fP  
+\fBSELinux\fP   
+See all 
+\fBdocumentation\fP
