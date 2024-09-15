@@ -1,0 +1,140 @@
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2019 Gliim LLC. 
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+
+#variable names for Gliimly start with GG_ (GG_C_ being compiling-related) and _ (internal)
+
+# 
+# Gliimly  make file 
+#
+
+#
+# Setting of build variables
+# 
+
+
+SHELL:=/bin/bash
+
+export GG_EXPLAIN
+
+_SYSTEMID=$(shell $$GG_LIBRARY_PATH/sys showid)
+
+# c/linker flags
+_CC=gcc
+
+#ASAN (internal)
+ifeq ($(strip $(GG_C_ASAN)),1)
+    _ASAN=-fsanitize=address -fsanitize-recover=address
+else
+    _ASAN=
+endif
+
+ifeq ($(strip $(GG_C_DEBUG)),1)
+    _OPTIM_COMP=-g3 -DDEBUG -rdynamic
+    _OPTIM_LINK=-rdynamic
+else
+    _OPTIM_COMP=-O3
+    _OPTIM_LINK=
+endif
+
+_APPMAKE=-DGG_APPMAKE=1    
+
+GG_SERVICE_TARGET=$(GG_BLD)/$(GG_C_NAME).srvc
+GG_TARGET=$(GG_BLD)/$(GG_C_NAME)
+
+ifeq ($(strip $(_SYSTEMID)),opensuse)
+    GG_SERVICE_INCLUDE=-I /usr/include/fastcgi
+else
+    GG_SERVICE_INCLUDE=
+endif
+
+
+#If opt-mem is used, then optimize memory (lower speed!)
+GG_OPTMEM_FLAG=
+ifeq ($(strip $(GG_C_OPTMEM)),1)
+    GG_OPTMEM_FLAG=-optmem
+else
+    GG_OPTMEM_FLAG=
+endif
+
+#If c-lines is used, then show all diagnostics
+GG_DIAG_OUT=
+ifeq ($(strip $(GG_C_SKIPLINES)),1)
+    GG_X_FLAG=-x
+else
+    GG_X_FLAG=
+endif
+
+ifeq ($(strip $(GG_C_POSIXREGEX)),1)
+    GG_POSIXREGEX_FLAG=-DGG_C_POSIXREGEX
+else
+    GG_POSIXREGEX_FLAG=
+endif
+
+#even though GG_DIAG_OUT is set to "", at run time it will have value from make_source macro. This is because of how makefile assignments work with = (and not :=)
+_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) -Werror -Wall -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -fsigned-char $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) -DGG_OSNAME_ID=$(GG_OSNAME_ID) $(GG_POSIXREGEX_FLAG) -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) $(_ASAN)
+
+
+
+
+#
+# Rules for building
+# 
+
+all: $(GG_SERVICE_TARGET)  $(GG_TARGET)
+
+#clean files. *.gliimo is produced by GLIIMLY, the result is generated/object files
+clean:
+	if [ -d "$(GG_BLD)" ]; then find $(GG_BLD)/ -name "*" -type f \( -name "*.o" -or -name "*.c" -or -name "*.h" \) -exec rm -f {} \; ; fi
+
+
+#include $(GG_BLD)/source.gliim
+#obtain GG_SOURCE_FILES, GG_SOURCE_C_FILES and GG_HEADER_FILES from generated source.gliim
+ifneq (clean,$(filter clean,$(MAKECMDGOALS)))
+    include $(GG_BLD)/source.gliim
+endif
+GG_HEADER_FILES:=$(GG_HEADER_FILES) 
+
+#string subst: short for $(patsubst %.gliim,%.o,$(GG_SOURCE_FILES)) which finds whitespace-separated word in $(GG_SOURCE_FILES) that match %.gliim and replaces them with %.o
+#the same for C files in GG_SOURCE_C_FILES
+_OBJ_FILES=$(GG_SOURCE_FILES:%.gliim=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG_BLD)/%.oc)
+
+#when making source, start with compiling; then if error, check if plain diagnostic; if not, recompile with error processed by vdiag script to produce highlights (in which
+#case we don't use caret, we produce one ourselves instead of gcc)
+define make_source
+	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) -plain-diag "1" -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$(shell basename $@).c 
+	GG_DIAG_OUT="" ; $(_CC) -c $(GG_BLD)/__$(shell basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr ; if [ "$$?" != "0" ]; then if [ "$$GG_C_PLAINDIAG" == "1" ]; then cat $(GG_BLD)/.comperr; exit -1; else GG_DIAG_OUT="-fno-diagnostics-show-caret"; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) -plain-diag "$(GG_C_PLAINDIAG)" -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$(shell basename $@).c; $(_CC) -c $(GG_BLD)/__$(shell basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr; cat $(GG_BLD)/.comperr | $(GG_LIBRARY_PATH)/vdiag "$(GG_C_NAME)" $(GG_C_PLAINDIAG) ; fi ; fi
+endef
+
+#the rest if compilation of source files and producing object files and libraries needed for apache,
+#do not change these
+$(GG_BLD)/gg_dispatch_request.o: $(GG_BLD)/gg_dispatch_request.gliim $(GG_INCLUDE_PATH)/gliim.h $(GG_HEADER_FILES) $(GG_BLD)/gliimapp.h $(GG_BLD)/blds
+	$(call make_source)
+
+$(GG_BLD)/%.o: %.gliim $(GG_INCLUDE_PATH)/gliim.h $(GG_HEADER_FILES) $(GG_BLD)/gliimapp.h $(GG_BLD)/blds
+	$(call make_source)
+
+$(GG_BLD)/%.oc: %.c $(GG_INCLUDE_PATH)/gliim.h $(GG_HEADER_FILES) $(GG_BLD)/gliimapp.h $(GG_BLD)/blds
+	GG_BN=$$(basename $@) ; $(_CC) -c $${GG_BN%.*}.c  $(_CFLAGS) -o $@ -I`pwd` 
+
+#does not need to depend on gliimsrvcapp.c because it makes it. There's a dependency on params (blds) and list of files to be made (.reqlist)
+#because now we have hash list there that accounts for all request name. If we didn't have this, adding new .gliim file would not be picked up until
+#the next next time something changes on the gg command line!
+$(GG_BLD)/gliimsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist
+	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) -plain-diag "$(GG_C_PLAINDIAG)" -main -name "$(GG_C_NAME)" -max-upload "$(GG_C_MAXUPLOAD)" -app-path "$(GG_C_RESTPATH)" -trace "$(GG_C_TRACE)" -out $(GG_BLD)/gliimsrvcapp.c
+	$(_CC) -c $(GG_BLD)/gliimsrvcapp.c  $(_CFLAGS) -DCMOD -o $@ -I`pwd` 
+
+_LDFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) $(_ASAN)
+
+
+
+#libs are always specified *after* the object where they're needed. Link flags (including -L) go first.
+
+$(GG_BLD)/$(GG_C_NAME).srvc: $(GG_BLD)/gliimsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) $(GG_BLD)/gg_dispatch_request.o
+	$(_CC) -o $@ $^ $(_LDFLAGS) $(GG_EVENT_STUBS) -lsrvcgliim -lfcgi $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
+
+$(GG_BLD)/$(GG_C_NAME): $(GG_BLD)/gliimsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) $(GG_BLD)/gg_dispatch_request.o
+	$(_CC) -o $@ $^ $(_LDFLAGS) $(GG_EVENT_STUBS) -lgliim $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
+
+

@@ -1,0 +1,92 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+get-time \-  (time)
+.SH PURPOSE
+Get time.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+get-time to <time var> \\
+    [ timezone <tz> ] \\
+    [ year <year> ] \\
+    [ month <month> ] \\
+    [ day <day> ] \\
+    [ hour <hour> ] \\
+    [ minute <minute> ] \\
+    [ second <second> ] \\
+    [ format <format> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+get-time produces <time var> variable that contains string with time. <time var> is \fBallocated memory\fP.
+
+If none of "year", "month", "day", "hour", "minute" or "second" clauses are used, then current time is produced. 
+
+Use timezone to specify that time produced will be in timezone <tz>. For example if <tz> is "EST", that means Eastern Standard Time, while "MST" means Mountain Standard Time. The exact way to get a full list of timezones recognized on your system may vary, but on many systems you can use:
+
+.RS 4
+.EX
+
+timedatectl list-timezones
+
+.EE
+.RE
+
+So for example to get the time in Phoenix, Arizona you could use "America/Phoenix" for <tz>. If timezone clause is omitted, then time is produced in "GMT" timezone by default. DST (Daylight Savings Time) is automatically adjusted.
+
+Each variable specified with "year", "month", "day", "hour", "minute" or "second" is a time to be added or subtracted to/from current date. For example "year 2" means add 2 years to the current date, and "year -4" means subtract 4 years, whereas "hour -4" means  subtract 4 hours, etc. So for example, a moment in time that is 2 years into the future minus 5 days minus 1 hour is:
+
+.RS 4
+.EX
+
+get-time to time_var year 2 day -5 hour -1
+
+.EE
+.RE
+
+<format> allows you to get the time in any string format you like, using the specifiers available in C "strftime". For example, if <format> is "%A, %B %d %Y, %l:%M %p %Z", it will produce something like "Sunday, November 28 2021, 9:07 PM MST". The default format is "UTC/GMT" format, which for instance, is suitable for use with cookie timestamps, and looks something like "Mon, 16 Jul 2012 00:03:01 GMT".
+
+.SH EXAMPLES
+To get current time in "GMT" timezone, in a format that is suitable for use with \fBset-cookie\fP (for example to set expiration date):
+
+.RS 4
+.EX
+
+get-time to mytime
+
+.EE
+.RE
+
+To get the time in the same format, only 1 year and 2 months in the future:
+
+.RS 4
+.EX
+
+get-time to mytime year 1 month 2
+
+.EE
+.RE
+
+An example of a future date (1 year, 3 months, 4 days, 7 hours, 15 minutes and 22 seconds into the future), in a specific format (see "strftime"):
+
+.RS 4
+.EX
+
+get-time to time_var timezone "MST" year 1 month 3 day 4 hour 7 minute 15 second 22 format "%A, %B %d %Y, %l:%M %p %Z"
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Time
+
+\fBget-time\fP  
+\fBpause-program\fP   
+See all 
+\fBdocumentation\fP

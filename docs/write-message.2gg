@@ -1,0 +1,43 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+write-message \-  (messages)
+.SH PURPOSE
+Write key/value to a message.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+write-message <message>  key <key> value <value>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+write-message will append to <message> a key/value pair, in the form of string <key> (in "key" clause) and string <value> (in "value" clause). 
+
+<message> must have been created with \fBnew-message\fP. In order to use write-message, a message must not have been read from (see \fBread-message\fP). 
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+new-message msg
+write-message msg key "key1" value "value1"
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Messages
+
+\fBget-message\fP  
+\fBnew-message\fP  
+\fBread-message\fP  
+\fBSEMI\fP  
+\fBwrite-message\fP   
+See all 
+\fBdocumentation\fP

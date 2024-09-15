@@ -1,0 +1,87 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+connect-haproxy-tcp-socket \- Gliimly documentation (web-servers)
+.SH DESCRIPTION
+This shows how to connect your application listening on TCP port <port number> (started with "-p" option in \fBmgrg\fP) to HAProxy load balancer.
+
+HAProxy can balance the load between different web servers, which in turn are connected to your applications. Since in this case HAProxy does not directly communicate with a Gliimly application (which is behind a web server), you may lookup examples of this online.
+
+When you want HAProxy to directly communicate with a Gliimly application server, you may use configuration similar to this (shown is just a bare-bone setup needed to accomplish the goal):
+
+.RS 4
+.EX
+
+global
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    mode    http
+    timeout connect 5000
+    timeout client  50000
+    timeout server  50000
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
+
+frontend front_server
+    mode http
+    bind *:90
+    use_backend backend_servers if { path_reg -i ^.*\e/func_test\e/.*$ } 
+    option forwardfor
+
+fcgi-app gliim-fcgi
+    log-stderr global
+    docroot /var/lib/gg/func_test/app
+    path-info ^.+(/func_test)(/.+)$ 
+
+backend backend_servers                                                                                                                     
+    mode http
+    filter fcgi-app gliim-fcgi
+    use-fcgi-app gliim-fcgi
+    server s1 127.0.0.1:2301 proto fcgi
+
+.EE
+.RE
+
+Restart HAProxy:
+
+.RS 4
+.EX
+
+sudo systemctl restart haproxy
+
+.EE
+.RE
+
+Note that Gliimly application path is "/func_test" (and the application name may or may not be the same, see \fBrequest\fP). The TCP port of the application is "2301" (could be any port number you choose that's greater than 1000 and lower than 65535). 
+
+HAProxy itself is bound to port 90, and "path_reg" specifies which URLs will be passed to your Gliimly application (i.e. they must have "/func_test/" in the URL). "path-info" specifies SCRIPT_NAME and PATH_INFO (as "()" regular sub-expressions), which are as such passed to your Gliimly application. "docroot" is set to the application home directory (see \fBdirectories\fP).
+
+A Gliimly aplication (named "func_test") would have been started with (using the same application name "func_test" and TCP port "2301"):
+
+.RS 4
+.EX
+
+mgrg -p 2301 func_test
+
+.EE
+.RE
+
+Now you should be able to connect and load-balance your Gliimly application servers directly from HAProxy.
+.SH SEE ALSO
+ 
+.B - Web servers
+
+\fBconnect-apache-tcp-socket\fP  
+\fBconnect-apache-unix-socket\fP  
+\fBconnect-haproxy-tcp-socket\fP  
+\fBconnect-nginx-tcp-socket\fP  
+\fBconnect-nginx-unix-socket\fP   
+See all 
+\fBdocumentation\fP

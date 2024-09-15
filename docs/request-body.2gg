@@ -1,0 +1,43 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+request-body \-  (request-data)
+.SH PURPOSE
+Get the body of an HTTP request.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+request-body <request body> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+request-body stores the request body of an HTTP request into string <request body>.
+
+If the content type of the request is "multipart/form-data", the request body is empty because all the data (including any attached files) can be obtained by using \fBget-param\fP (see \fBfile-uploading\fP for files). In all other cases, request body is available.
+
+Typical use of request-body is when some text or binary information is attached to the request, such as JSON for example, though it can be anything else, for example an image, some text, or a PDF document. Usually request body is present for POST, PUT or PATCH requests, but you can also obtain it for GET or DELETE requests, if supplied (for instance identifying a resource may require more information than can fit in a query string), or for any custom request method.
+
+.SH EXAMPLES
+String variable "reqb" will hold request body of a request:
+
+.RS 4
+.EX
+
+request-body reqb
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Request data
+
+\fBget-param\fP  
+\fBrequest-body\fP  
+\fBset-param\fP   
+See all 
+\fBdocumentation\fP

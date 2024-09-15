@@ -1,0 +1,38 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+syntax-highlighting \- Gliimly documentation (language)
+.SH DESCRIPTION
+For syntax highlighting of Gliimly programs in Vim, do this once:
+
+.RS 4
+.EX
+
+gg -m
+
+.EE
+.RE
+
+The above will create a syntax file in your local Vim syntax directory:
+
+.RS 4
+.EX
+
+$HOME/.vim/syntax/gliim.vim
+
+.EE
+.RE
+
+and also update your local $HOME/.vimrc file to use this syntax for files with .gliim extension. All files updated are local, i.e. they affect only the current user. Each user who wants this feature must issue the above command.
+
+The Gliimly highlighting syntax is tested with Vim 8.1.
+.SH SEE ALSO
+ 
+.B - Language
+
+\fBinline-code\fP  
+\fBstatements\fP  
+\fBsyntax-highlighting\fP  
+\fBunused-var\fP  
+\fBvariable-scope\fP   
+See all 
+\fBdocumentation\fP

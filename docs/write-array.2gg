@@ -1,0 +1,144 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+write-array \-  (array)
+.SH PURPOSE
+Store key/value pair into an array.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+write-array <array> \\
+    key <key> \\
+    value <value> \\
+    [ status <status> ] \\
+    [ old-value <old value> ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+write-array will store string <key> (in "key" clause) and <value> (in "value" clause) into array <array>, which must be created with \fBnew-array\fP. 
+
+<key> and <value> are collectively called an "element". 
+
+If <key> already exists in the array table, then the old value associated with it is returned in string <old value> (in "old-value" clause) and <value> will replace the old value - in this case <status> number (in "status" clause) has a value of GG_INFO_EXIST. 
+
+If <key> did not exist, <status> will be GG_OKAY and <old value> is unchanged.
+
+If an <array> was created with "process-scope" clause (see \fBnew-array\fP), then the element (including <key> and <value>) will not be freed when the current request ends, rather it will persist while the process runs, unless deleted (see \fBread-array\fP with delete clause).
+
+.SH EXAMPLES
+Writing data to array:
+
+.RS 4
+.EX
+
+new-array h 
+write-array h key "mykey" value "some data"
+
+.EE
+.RE
+
+Writing new value with the same key and obtaining the previous value (which is "some data"):
+
+.RS 4
+.EX
+
+write-array h key "mykey" value "new data" status st old-value od
+if-true st equal GG_INFO_EXIST
+    @Previous value for this key is <<p-out od>>
+end-if
+
+.EE
+.RE
+
+The following is an array key/value service, where a process-scoped array is created. It provides inserting, deleting and querying key/value pairs. Such a service process can run indefinitely:
+
+.RS 4
+.EX
+
+%% /arraysrv
+    out-header default
+
+    do-once
+    new-array h hash-size 1024 process-scope
+    end-do-once
+
+    // Get input parameters
+    get-param op
+    get-param key
+    get-param data
+
+    if-true op equal "add" // Add data to array, make a copy as input params are request-scoped
+        write-array h key key value data old-value old_data status st
+        if-true st equal GG_INFO_EXIST
+            delete-string old_data
+        end-if
+        @Added [<<p-out key>>]
+    else-if op equal "delete" // Delete data and obtain the value deleted
+        read-array h key (key) value val delete status st
+        if-true st equal GG_ERR_EXIST
+            @Not found [<<p-out key>>]
+        else-if
+            // If found, then delete key and value
+            @Deleted [<<p-out val>>]
+            delete-string val
+        end-if
+    else-if op equal "query" // Query array based on key value
+        read-array h key (key) value val status st
+        if-true st equal GG_ERR_EXIST
+            @Not found, queried [<<p-out key>>]
+        else-if
+            @Value [<<p-out val>>]
+        end-if
+    end-if
+%%
+
+.EE
+.RE
+
+Create and make the application, then run it as service:
+
+.RS 4
+.EX
+
+// Create application
+sudo mgrg -i -u $(whoami) arr
+// Make application
+gg -q
+// Start application (single process key service)
+mgrg -w 1 arr
+
+.EE
+.RE
+
+Try it from a command line client (see \fBgg\fP):
+
+.RS 4
+.EX
+
+// Add data
+gg -r --req="/arraysrv/op=add/key=15/data=15" --service --app="/arr" --exec
+// Query data
+gg -r --req="/arraysrv/op=query/key=15" --service --app="/arr" --exec
+// Delete data
+gg -r --req="/arraysrv/op=delete/key=15" --service --app="/arr" --exec
+
+.EE
+.RE
+
+See \fBread-array\fP for more examples.
+.SH SEE ALSO
+ 
+.B - Array
+
+\fBget-array\fP  
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBresize-array\fP  
+\fBwrite-array\fP   
+See all 
+\fBdocumentation\fP

@@ -1,0 +1,49 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+code-blocks \- Gliimly documentation (program-flow)
+.SH DESCRIPTION
+
+.LP
+.B CODE BLOCKS
+.LP
+
+Use curly braces ("{" and "}") to open and close a code block. They create a separate scope for previously non-existing variables defined within them, which begins with "{" and ends with "}". Note that if a variable existed in an outer scope, it cannot be created in the inner scope.
+
+Note that \fBif-true\fP, \fBrun-query\fP, \fBstart-loop\fP and \fBread-line\fP statements contain implicit code blocks, meaning the code between them and the accompanying end-statement is within implicit "{" and "}".
+
+.SH EXAMPLES
+The following code will first print out "outside" and then "inside" twice, illustrating the fact that variable "s1" is defined only in the outer scope once. Variable "s2" exists only in inner scope:
+
+.RS 4
+.EX
+
+begin-handler /scope
+    out-header default
+    @<<p-out s1>>
+    set-string s1="outside"
+    {
+        set-string s2="inner variable"
+        set-string s1="inside"
+        @<<p-out s1>>
+    }
+    @<<p-out s1>>
+end-handler
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Program flow
+
+\fBbreak-loop\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBset-bool\fP  
+\fBstart-loop\fP   
+See all 
+\fBdocumentation\fP

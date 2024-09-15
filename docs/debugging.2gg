@@ -1,0 +1,141 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+debugging \- Gliimly documentation (debugging)
+.SH DESCRIPTION
+
+.LP
+.B TRACING AND BACKTRACE FILE
+.LP
+
+To see any errors reported by Gliimly, use -e option of \fBgg\fP and check backtrace file. For example, to see the last 3 error messages:
+
+.RS 4
+.EX
+
+gg -e 3
+
+.EE
+.RE
+
+You can use \fBtrace-run\fP statement to create run-time traces (see \fBdirectories\fP for directory location). To quickly find the location of recently written-to trace files, use -t option of \fBgg\fP, for example for 5 most recently used trace files:
+
+.RS 4
+.EX
+
+gg -t 5
+
+.EE
+.RE
+
+Use \fBget-req\fP to get the trace file location at run-time from your application.
+
+.LP
+.B OUTPUT FROM GLIIMLY APPLICATION WITHOUT WEB SERVER
+.LP
+
+Use \fBgg\fP (see -r option) to send a request from command line, and receive reply from your \fBservice\fPs. This is useful in debugging issues and automating tests.
+
+.LP
+.B ISSUES IN STARTING MGRG
+.LP
+
+\fBmgrg\fP starts your web application, running as \fBservice\fP processes. If you're having issues with mgrg, check out its log. Assuming your application name is "app_name", the log file is:
+
+.RS 4
+.EX
+
+/var/lib/gg/app_name/mgrglog/log
+
+.EE
+.RE
+
+
+.LP
+.B WEB SERVER ERROR LOG
+.LP
+
+If you are using a web server as a reverse proxy, check its error log, which would store the error messages emitted. Typically, such files are in the following location:
+
+.RS 4
+.EX
+
+/var/log/<web server>
+
+.EE
+.RE
+
+(for example /var/log/apache2), but the location may vary - consult your web server's documentation.
+
+.LP
+.B USING GDB DEBUGGER
+.LP
+
+In order to use gdb debugger, you must make your application with "--debug" flag (see \fBgg\fP). Do not use "--debug" in any other case, because performance will be considerably affected.
+
+Ultimately, you can attach a debugger to a running Gliimly process. If your application name is "app_name", first find the PID (process ID) of its process(es):
+
+.RS 4
+.EX
+
+ps -ef|grep app_name.srvc
+
+.EE
+.RE
+
+Note that you can control the number of worker processes started, and thus have only a single worker process (or the minimum necessary), which will make attaching to the process that actually processes a request easier (see \fBgg\fP).
+
+Use gdb to load your program:
+
+.RS 4
+.EX
+
+sudo gdb /var/lib/gg/bld/app_name/app_name.srvc
+
+.EE
+.RE
+
+and then attach to the process (<PID> is the process ID you obtained above):
+
+.RS 4
+.EX
+
+att <PID>
+
+.EE
+.RE
+
+Once attached, you can break in the request you're debugging:
+
+.RS 4
+.EX
+
+br <request name>
+
+.EE
+.RE
+
+or in general Gliimly request dispatcher:
+
+.RS 4
+.EX
+
+br gg_dispatch_request
+
+.EE
+.RE
+
+which would handle any request to your application.
+
+Note that by default, gdb will show Gliimly code and you can step through it as you've written it, which is easy to follow and understand. 
+
+However, if you wish to step through the underlying C libraries, use "--c-lines" option in \fBgg\fP when making your application. In addition, you can use "--plain-diag" option to see diagnostics for underlying C code alone. These options should be used only if you're trying to debug issues with Gliimly itself, or to find and report a bug in Gliimly.
+
+Debugging version of Gliimly, as well as using "--debug" option to compile, will considerably slow down run-time performance (in some tests about 50-55%); do not use Gliimly build with debugging symbols (see \fBinstall\fP) nor "--debug" (see \fBgg\fP) in production.
+.SH SEE ALSO
+ 
+.B - Debugging
+
+\fBdebugging\fP  
+\fBtrace-run\fP   
+See all 
+\fBdocumentation\fP

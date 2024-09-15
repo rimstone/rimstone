@@ -1,0 +1,16 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+variable-scope \- Gliimly documentation (language)
+.SH DESCRIPTION
+Gliimly uses scope rules for variables that is similar to other programming languages.
+.SH SEE ALSO
+ 
+.B - Language
+
+\fBinline-code\fP  
+\fBstatements\fP  
+\fBsyntax-highlighting\fP  
+\fBunused-var\fP  
+\fBvariable-scope\fP   
+See all 
+\fBdocumentation\fP

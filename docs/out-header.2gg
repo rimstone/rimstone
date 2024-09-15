@@ -1,0 +1,162 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+out-header \-  (web)
+.SH PURPOSE
+Output HTTP header.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+out-header default 
+|
+out-header use \\
+    [ content-type <content type> ] \\
+    [ download [ <download> ] ] \\
+    [ etag [ <etag> ] ] \\
+    [ file-name <file name> ] \\
+    [ ( cache-control <cache control> ) | no-cache ] \\
+    [ status-id <status id> ] \\
+    [ status-text <status text> ] \\
+    [ custom <header name>=<header value> [ , ... ] ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+out-header outputs HTTP header and also sends any cookies produced by \fBset-cookie\fP and \fBdelete-cookie\fP.
+
+A web page must have an HTTP header output before any other response. Note that while cookies may be set after out-header, they still must be set before outputting the data (such as for instance via \fBoutput-statement\fP or \fBp-out\fP). If your application uses out-header multiple times, all but the very first one are ignored. 
+
+If out-header is not called prior to the actual output, your program will \fBerror out\fP. Be sure to always first use out-header prior to any output for a \fBrequest\fP.
+
+Use out-header for dynamically generated web pages. If you wish to output a file (such as an image or a PDF document), do not use this statement; rather use \fBsend-file\fP instead which outputs its own header.
+
+The HTTP header is sent back to a client who initiated a request. You can specify any custom headers with "use" clause. 
+
+.LP
+.B DEFAULT HEADER
+.LP
+
+If "default" clause is in place, a default header is constructed, which uses a status of 200/OK and content type of 
+
+.RS 4
+.EX
+
+text/html;charset=utf-8
+
+.EE
+.RE
+
+and cache control of 
+
+.RS 4
+.EX
+
+Cache-Control:max-age=0, no-cache; Pragma: no-cache
+
+.EE
+.RE
+
+The default header is typical for dynamically generated web pages, and most of the time you would use the default header.
+
+.LP
+.B HEADERS
+.LP
+
+The following are subclauses that allow setting any custom header:
+
+.RS 4
+\[bu]    
+<content type> is content type (such as "text/html" or "image/jpg" etc.) If you are sending a file to a client for download and you don't know its content type, you can use "application/octet-stream" for a generic binary file.
+
+.RE
+
+.RS 4
+\[bu]    
+If "download" is used without boolean expression <download>, or if <download> evaluates to true, then the file is sent to a client for downloading - otherwise the default is to display file in client.
+
+.RE
+
+.RS 4
+\[bu]    
+<file name> is the name of the file being sent to a client. This is not the local file name - it is the file name that client will use for its own purposes.
+
+.RE
+
+.RS 4
+\[bu]    
+<cache control> is the cache control HTTP header. "no-cache" instructs the client not to cache. Only one of "cache-control" and "no-cache" can be used. An example of <cache control>:
+
+.RS 4
+.EX
+
+send-file "somepic.jpg" headers cache-control "max-age: 3600"
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+If "etag" is used without boolean expression <etag>, or if <etag> evaluates to true, then "ETAG" header will be generated (a timestamp) and included, otherwise it is not. The time stamp is of last modification date of the file (and typically used to cache a file on client if it hasn't changed on the server). "etag" is useful to let the client know to download the file only once if it hasn't changed, thus saving network and computing resources. ETAG header is used only for \fBsend-file\fP.
+
+.RE
+
+.RS 4
+\[bu]    
+<status id> and <status text> are status settings for the response, as strings (such as "425" for "status-id" and "Too early" for "status-text"). 
+
+.RE
+
+.RS 4
+\[bu]    
+To set any type of generic HTTP header, use "custom" subclause, where <header name> and <header value> represent the name and value of a single header. Multiple headers are separated by a comma. There is no limit on the maximum number of such headers, other than of the underyling HTTP protocol. You must not use "custom" to set headers already set elsewhere (such as "etag" for instance), as that may cause unpredictable behavior. For instance this sets two custom headers:
+
+.RS 4
+.EX
+
+out-header use custom "CustomOption3"="CustomValue3", "Status"="418 I'm a teapot"
+
+.EE
+.RE
+
+"custom" subclause lets you use any custom headers that exist today or may be added in the future, as well as any headers of your own design.
+.RE
+
+You can use \fBsilent-header\fP before output-header in order to suppress its output.
+
+.SH EXAMPLES
+To output the default HTTP header for a dynamically generated page (a typical usage):
+
+.RS 4
+.EX
+
+out-header default
+
+.EE
+.RE
+
+To set a custom header for a web page that changes cache control and adds two new headers:
+
+.RS 4
+.EX
+
+out-header use content-type "text/html" cache-control "max-age:3600" custom "some_HTTP_option"="value_for_some_HTTP_option", "some_HTTP_option_1"="value_for_some_HTTP_option_1"
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Web
+
+\fBcall-web\fP  
+\fBout-header\fP  
+\fBsend-file\fP  
+\fBsilent-header\fP   
+See all 
+\fBdocumentation\fP

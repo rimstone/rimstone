@@ -1,0 +1,65 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+connect-nginx-tcp-socket \- Gliimly documentation (web-servers)
+.SH DESCRIPTION
+This shows how to connect your application listening on TCP port <port number> (started with "-p" option in \fBmgrg\fP) to Nginx web server.
+
+
+.B - Step 1
+:
+You will need to edit the Nginx configuration file. For Ubuntu and similar:
+
+.RS 4
+.EX
+
+sudo vi /etc/nginx/sites-enabled/default
+
+.EE
+.RE
+
+while on Fedora and other systems it might be at:
+
+.RS 4
+.EX
+
+sudo vi /etc/nginx/nginx.conf
+
+.EE
+.RE
+
+
+Add the following in the "server {}" section ("/<app path>" is the application path, see \fBrequest\fP):
+
+.RS 4
+.EX
+
+location /<app path>/ { include /etc/nginx/fastcgi_params; fastcgi_pass  127.0.0.1:<port number>; }
+
+.EE
+.RE
+
+
+.B - Step 2
+:
+Finally, restart Nginx:
+
+.RS 4
+.EX
+
+sudo systemctl restart nginx
+
+.EE
+.RE
+
+Note: you must not have any other URL resource that starts with "/<app path>/" (such as for example "/<app path>/something") as the web server will attempt to pass them as a reverse proxy request, and they will likely not work. If you need to, you can change the application path to be different from "/<app path>", see \fBrequest\fP.
+.SH SEE ALSO
+ 
+.B - Web servers
+
+\fBconnect-apache-tcp-socket\fP  
+\fBconnect-apache-unix-socket\fP  
+\fBconnect-haproxy-tcp-socket\fP  
+\fBconnect-nginx-tcp-socket\fP  
+\fBconnect-nginx-unix-socket\fP   
+See all 
+\fBdocumentation\fP

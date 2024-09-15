@@ -1,0 +1,636 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+documentation \- Gliimly documentation (documentation)
+.SH DESCRIPTION
+
+.LP
+.B REFERENCE FOR GLIIMLY VERSION 17
+.LP
+
+Note: All the topics below are available as a \fBsingle-page documentation\fP. 
+
+
+
+.RS 4
+\[bu]    
+
+.B - API
+
+\fBClient-API\fP  
+\fBServer-API\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Application information
+
+\fBget-app\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Array
+
+\fBget-array\fP  
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBresize-array\fP  
+\fBwrite-array\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Base64
+
+\fBdecode-base64\fP  
+\fBencode-base64\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Cookies
+
+\fBdelete-cookie\fP  
+\fBget-cookie\fP  
+\fBset-cookie\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Database
+
+\fBbegin-transaction\fP  
+\fBcommit-transaction\fP  
+\fBcurrent-row\fP  
+\fBdatabase-config-file\fP  
+\fBdb-error\fP  
+\fBrollback-transaction\fP  
+\fBrun-query\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Debugging
+
+\fBdebugging\fP  
+\fBtrace-run\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Distributed computing
+
+\fBcall-remote\fP  
+\fBnew-remote\fP  
+\fBread-remote\fP  
+\fBrun-remote\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Documentation
+
+\fBdocumentation\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Download and build
+
+\fBinstall\fP  
+\fBinstall-arch\fP  
+\fBinstall-debian\fP  
+\fBinstall-fedora\fP  
+\fBinstall-opensuse\fP  
+\fBuninstall\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Encryption
+
+\fBdecrypt-data\fP  
+\fBderive-key\fP  
+\fBencrypt-data\fP  
+\fBhash-string\fP  
+\fBrandom-crypto\fP  
+\fBrandom-string\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Error handling
+
+\fBdb-error\fP  
+\fBerror-code\fP  
+\fBerror-handling\fP  
+\fBreport-error\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - FIFO
+
+\fBdelete-fifo\fP  
+\fBnew-fifo\fP  
+\fBpurge-fifo\fP  
+\fBread-fifo\fP  
+\fBrewind-fifo\fP  
+\fBwrite-fifo\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Files
+
+\fBclose-file\fP  
+\fBcopy-file\fP  
+\fBdelete-file\fP  
+\fBfile-position\fP  
+\fBfile-storage\fP  
+\fBfile-uploading\fP  
+\fBlock-file\fP  
+\fBopen-file\fP  
+\fBread-file\fP  
+\fBread-line\fP  
+\fBrename-file\fP  
+\fBstat-file\fP  
+\fBtemporary-file\fP  
+\fBuniq-file\fP  
+\fBunlock-file\fP  
+\fBwrite-file\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - General
+
+\fBabout-gliim\fP  
+\fBdirectories\fP  
+\fBSELinux\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Gliim compiler and utility
+
+\fBgg\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Hex encoding
+
+\fBdecode-hex\fP  
+\fBencode-hex\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Index
+
+\fBdelete-index\fP  
+\fBget-index\fP  
+\fBnew-index\fP  
+\fBpurge-index\fP  
+\fBread-index\fP  
+\fBuse-cursor\fP  
+\fBwrite-index\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - JSON parsing
+
+\fBjson-doc\fP  
+\fBread-json\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Language
+
+\fBinline-code\fP  
+\fBstatements\fP  
+\fBsyntax-highlighting\fP  
+\fBunused-var\fP  
+\fBvariable-scope\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - License
+
+\fBlicense\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - LIFO
+
+\fBdelete-lifo\fP  
+\fBnew-lifo\fP  
+\fBpurge-lifo\fP  
+\fBread-lifo\fP  
+\fBrewind-lifo\fP  
+\fBwrite-lifo\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Linked list
+
+\fBdelete-list\fP  
+\fBget-list\fP  
+\fBnew-list\fP  
+\fBposition-list\fP  
+\fBpurge-list\fP  
+\fBread-list\fP  
+\fBwrite-list\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Memory
+
+\fBmemory-handling\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Messages
+
+\fBget-message\fP  
+\fBnew-message\fP  
+\fBread-message\fP  
+\fBSEMI\fP  
+\fBwrite-message\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Numbers
+
+\fBnumber-expressions\fP  
+\fBnumber-string\fP  
+\fBset-number\fP  
+\fBstring-number\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBpf-out\fP  
+\fBpf-url\fP  
+\fBpf-web\fP  
+\fBp-num\fP  
+\fBp-out\fP  
+\fBp-path\fP  
+\fBp-url\fP  
+\fBp-web\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Program execution
+
+\fBexec-program\fP  
+\fBhandler-status\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Program flow
+
+\fBbreak-loop\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBset-bool\fP  
+\fBstart-loop\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Quick start
+
+\fB123-hello-world\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Regex
+
+\fBmatch-regex\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Request data
+
+\fBget-param\fP  
+\fBrequest-body\fP  
+\fBset-param\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Request information
+
+\fBget-req\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Requests
+
+\fBrequest\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Running application
+
+\fBapplication-setup\fP  
+\fBCGI\fP  
+\fBservice\fP  
+\fBsingle-run\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Safety
+
+\fBcall-extended\fP  
+\fBextended-mode\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Service manager
+
+\fBmgrg\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Service processing
+
+\fBafter-handler\fP  
+\fBbefore-handler\fP  
+\fBbegin-handler\fP  
+\fBsub-handler\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBlower-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-length\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - System information
+
+\fBget-sys\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Time
+
+\fBget-time\fP  
+\fBpause-program\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - URL encoding
+
+\fBdecode-url\fP  
+\fBencode-url\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - UTF8
+
+\fBtext-utf8\fP  
+\fButf8-text\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Web
+
+\fBcall-web\fP  
+\fBout-header\fP  
+\fBsend-file\fP  
+\fBsilent-header\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Web encoding
+
+\fBdecode-web\fP  
+\fBencode-web\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Web servers
+
+\fBconnect-apache-tcp-socket\fP  
+\fBconnect-apache-unix-socket\fP  
+\fBconnect-haproxy-tcp-socket\fP  
+\fBconnect-nginx-tcp-socket\fP  
+\fBconnect-nginx-unix-socket\fP   
+.RE
+
+
+
+
+.LP
+.B MAN PAGES
+.LP
+
+Gliimly documentation is available online, and also as man pages (i.e. manual pages). You can take any of the topics above and type it in man, for example
+
+.RS 4
+.EX
+
+man run-query
+
+man how-gliim-works
+
+.EE
+.RE
+
+The Gliimly section is '2gg', so in case of other software having conflicting topic names, you can also type
+
+.RS 4
+.EX
+
+man 2gg run-query
+
+man 2gg how-gliim-works
+
+.EE
+.RE
+

@@ -1,0 +1,53 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+text-utf8 \-  (UTF8)
+.SH PURPOSE
+Convert text to UTF8 string.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+text-utf8 <text> \\
+    [ status <status> ] \\
+    [ error-text <error text> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+text-utf8 will convert string value <text> to UTF8. <text> itself will hold the resulting UTF8 string. If you don't wish <text> to be modified, make a copy of it first (see \fBcopy-string\fP). See \fButf8-text\fP for the reverse conversion and data standards information.
+
+You can obtain <status> in "status" clause. <status> number is GG_OKAY if successful, or GG_ERR_UTF8 if there was an error, in which case <error text> string in "error-text" clause will contain the error message.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+// Unicode value to encode to UTF8
+set-string txt = "\eu0459\\\[char92]"Doc\\\[char92]"\\en\\et\\eb\\ef\\er\\et\\eu21d7\\eu21d8\\et\\eu25b7\\eu25ee\\euD834\\euDD1E\\eu13eb\\eu2ca0\\eu0448\\en\\e/\\\[char92]"()\\et"
+
+// Convert to UTF8 
+text-utf8 txt status txt_status error-text txt_error
+
+// Expected UTF8 result
+set-string utf8 = "љ\[char92]"Doc\[char92]"\en\et\eb\ef\er\et⇗⇘\et▷◮𝄞ᏫⲠш\en/\[char92]"()\et"
+
+// Make sure conversion was successful
+if-true utf8 not-equal txt or txt_status not-equal GG_OKAY or txt_error not-equal ""
+    @Error in converting string to UTF8
+end-if
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - UTF8
+
+\fBtext-utf8\fP  
+\fButf8-text\fP   
+See all 
+\fBdocumentation\fP

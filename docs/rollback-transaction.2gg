@@ -1,0 +1,70 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+rollback-transaction \-  (database)
+.SH PURPOSE
+Rollbacks a SQL transaction.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+rollback-transaction [ @<database> ] \\
+    [ on-error-continue | on-error-exit ] \\
+    [ error <error> ] [ error-text <error text> ] \\
+    [ options <options> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+rollback-transaction will roll back a transaction started with \fBbegin-transaction\fP. 
+
+<options> (in "options" clause) is any additional options to send to database you wish to supply for this functionality.
+
+Once you start a transaction with \fBbegin-transaction\fP, you must either commit it with \fBcommit-transaction\fP or rollback with \fBrollback-transaction\fP. If you do neither, your transaction will be rolled back once the \fBrequest\fP has completed and your program will stop with an error message. This is because opening a transaction and leaving without committing or a rollback is a bug in your program.  
+
+You must use begin-transaction, commit-transaction and rollback-transaction instead of calling this functionality through \fBrun-query\fP.
+
+.LP
+.B DATABASE
+.LP
+
+<database> is specified in "@" clause and is the name of the \fBdatabase-config-file\fP. If ommited, your program must use exactly one database (see --db option in \fBgg\fP).
+
+.LP
+.B ERROR HANDLING
+.LP
+
+The error code is available in <error> variable in "error" clause - this code is always "0" if successful. The <error> code may or may not be a number but is always returned as a string value. In case of error, error text is available in "error-text" clause in <error text> string.
+
+"on-error-continue" clause specifies that \fBrequest\fP processing will continue in case of an error, whereas "on-error-exit" clause specifies that it will exit. This setting overrides database-level \fBdb-error\fP for this specific statement only. If you use "on-error-continue", be sure to check the error code.
+
+Note that if database connection was lost, and could not be reestablished, the request will error out (see \fBerror-handling\fP).
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+begin-transaction @mydb
+run-query @mydb="insert into employee (name, dateOfHire) values ('Terry', now())" 
+run-query @mydb="insert into payroll (name, salary) values ('Terry', 100000)" 
+rollback-transaction @mydb
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Database
+
+\fBbegin-transaction\fP  
+\fBcommit-transaction\fP  
+\fBcurrent-row\fP  
+\fBdatabase-config-file\fP  
+\fBdb-error\fP  
+\fBrollback-transaction\fP  
+\fBrun-query\fP   
+See all 
+\fBdocumentation\fP

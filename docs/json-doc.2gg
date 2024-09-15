@@ -1,0 +1,137 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+json-doc \-  (JSON-parsing)
+.SH PURPOSE
+Parse JSON text.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+json-doc <text> to <json> \\
+    [ status <status> ] [ length <length> ] [ noencode ] \\
+    [ error-text <status> ] [ error-position <status> ] \\
+
+json-doc  delete <json>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+json-doc will parse JSON <text> into <json> variable, which can be used with \fBread-json\fP to get the data.
+
+The length of <text> may be specified with "length" clause in <length> variable, or if not, it will be the string length of <text>.
+
+The "status" clause specifies the return <status> number, which is GG_OKAY if successful or GG_ERR_JSON if there is an error. The number <error position> in "error-position" clause is the byte position in <text> where error was found (starting with "0"), in which case <error text> in "error-text" clause is the error message.
+
+String <text> is modified during parsing for performance reasons, to minimize memory copying. If you don't wish <text> to be modified, make a copy of it before parsing it (see \fBcopy-string\fP). In many cases though, this is not necessary, allowing for better performance.
+
+"noencode" clause will not encode strings, i.e. convert from JSON Unicode strings to UTF8, nor will it perform any validity checks on strings. This may be useful as a performance boost, however it is not recommended in general.
+
+The maximum depth of nested structures in JSON document (i.e. objects and arrays) is 32, and the maximum length of normalized leaf node name is 1024 (see \fBread-json\fP for more on normalized names). There is no limit on document size.
+
+.SH EXAMPLES
+Parse the following JSON document and display all keys and values from it. You can use them as they come along, or store them into \fBnew-array\fP or \fBnew-index\fP for instance for searching of large documents. This also demonstrates usage of UTF8 characters:
+
+.RS 4
+.EX
+
+out-header default
+
+// JSON to parse
+set-string jd unquoted = {"menu":\\
+    {"id": "file",\\
+    "value": 23091,\\
+    "active": false,\\
+    "popup":\\
+        {"menuitem":\\
+            [{"value": "New", "onclick": "CreateNewDoc with\euD834\euDD1Emusic"},\\
+            {"value": "Open", "onclick": "OpenDoc() with \euD834\euDD1E\euD834\euDD1E"},\\
+            {"value": "Close", "onclick": "\euD834\euDD1ECloseDoc()"}\\
+            ]\\
+        }\\
+    }\\
+}
+
+// Parse JSON
+json-doc jd status st error-text et error-position ep to nj
+
+// Check parsing okay, if not display error details
+if-true st not-equal GG_OKAY
+    @Error [<<p-out et>>] at [<<p-num ep>>]
+    exit-handler -1
+end-if
+
+// Display all data elements in order from top to bottom
+start-loop
+    read-json nj key k value v type t next
+    if-true t equal GG_JSON_TYPE_NONE
+        break-loop
+    end-if
+    @Key [<<p-out k>>]
+    @Value [<<p-out v>>]
+    @Type [<<p-num t>>]
+    @--------
+end-loop
+@
+
+// Delete JSON document
+json-doc delete nj
+
+.EE
+.RE
+
+The output would be:
+
+.RS 4
+.EX
+
+Key ["menu"."id"]
+Value [file]
+Type [0]
+--------
+Key ["menu"."value"]
+Value [23091]
+Type [1]
+--------
+Key ["menu"."active"]
+Value [false]
+Type [3]
+--------
+Key ["menu"."popup"."menuitem"[0]."value"]
+Value [New]
+Type [0]
+--------
+Key ["menu"."popup"."menuitem"[0]."onclick"]
+Value [CreateNewDoc with𝄞music]
+Type [0]
+--------
+Key ["menu"."popup"."menuitem"[1]."value"]
+Value [Open]
+Type [0]
+--------
+Key ["menu"."popup"."menuitem"[1]."onclick"]
+Value [OpenDoc() with 𝄞𝄞]
+Type [0]
+--------
+Key ["menu"."popup"."menuitem"[2]."value"]
+Value [Close]
+Type [0]
+--------
+Key ["menu"."popup"."menuitem"[2]."onclick"]
+Value [𝄞CloseDoc()]
+Type [0]
+--------
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - JSON parsing
+
+\fBjson-doc\fP  
+\fBread-json\fP   
+See all 
+\fBdocumentation\fP

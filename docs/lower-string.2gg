@@ -1,0 +1,49 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+lower-string \-  (strings)
+.SH PURPOSE
+Lower-case a string.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+lower-string <string>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+lower-string converts all <string>'s characters to lower case.
+
+.SH EXAMPLES
+The resulting "str" is "good":
+
+.RS 4
+.EX
+
+set-string str="GOOD"
+lower-string str
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBlower-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-length\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

@@ -1,0 +1,39 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+read-split \-  (strings)
+.SH PURPOSE
+Obtain split string pieces.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+read-split <piece number> from <split string> to <piece> [ status <status> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+read-split will read split string pieces from <split string> which is produced by \fBsplit-string\fP. <piece number> is the number (starting with 1) of the piece to retrieve in string <piece>. <status> number (in "status" clause) is GG_OKAY if successful, or GG_ERR_OVERFLOW if <piece number> is not valid (meaning it's outside of the range of pieces parsed by split-string).
+
+.SH EXAMPLES
+See \fBsplit-string\fP.
+.SH SEE ALSO
+ 
+.B - Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBlower-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-length\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

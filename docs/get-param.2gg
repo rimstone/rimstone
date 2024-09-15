@@ -1,0 +1,138 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+get-param \-  (request-data)
+.SH PURPOSE
+Get a parameter value.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+get-param <name> [ type <type> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+get-param stores a parameter value in variable <name>. A parameter is a name/value pair kept by Gliimly for each request. The parameter's name must match <name>. A parameter can be of any type. A parameter is set either:
+
+.RS 4
+\[bu]    
+by the caller in \fBrequest URL\fP, or
+
+.RE
+
+.RS 4
+\[bu]    
+with \fBset-param\fP statement anywhere during request's execution.
+.RE
+
+If a parameter is a string, it is  trimmed for whitespaces (both on left and right).
+
+.LP
+.B TYPES
+.LP
+
+By default, <name> is a string variable, unless <type> (in "type" clause) is specified. <type> can be "string" for a string variable (the default), "bool" for a boolean variable, "number" for a number variable, "message" for a \fBmessage\fP variable, "split-string" for a \fBsplit-string\fP variable, "array" for an \fBarray\fP variable, "index" for an \fBindex\fP variable, "index-cursor" for an \fBindex cursor\fP variable, "fifo" for a \fBFIFO\fP variable, "lifo" for a \fBLIFO\fP variable, "list" for a \fBlist\fP variable, "file" for a \fBfile\fP variable, and "service" for a \fBservice\fP variable.
+
+The value obtained with get-param is checked to be of the proper <type>, and if it isn't, your request will \fBerror out\fP. The exception to this is that a string parameter can be converted into a number or a boolean, assuming the string value represents a valid number or is "true"/"false".  Parameters of "number" and "bool" types are obtained by value, and others by reference. It means for instance, that you can pass an index to sub-handler and read and write nodes there, and such changes will be visible in the caller request.
+
+.LP
+.B INPUT PARAMETERS FROM A CALLER
+.LP
+
+Input parameters from an outside caller are specified as name/value pairs (see \fBservice\fP or \fBsingle-run\fP). Input parameter name can be made up of alphanumeric characters, hyphen or underscore only and cannot start with a digit. Note that a hyphen is automatically converted to underscore, so for instance an input parameter "some-parameter" in HTTP request will be "some_parameter" in get-param. 
+
+.B - File uploads
+
+File uploads are handled as input parameters as well, see \fBfile-uploading\fP.
+
+.B - Web input parameters
+
+As an example, for HTML form input parameters named "param1" with value "value1" and "param2" with value "value2":
+
+.RS 4
+.EX
+
+<input type='hidden' name='param1' value='value1'>
+<input type='hidden' name='param2' value='value2'>
+
+.EE
+.RE
+
+you can get these parameters and print out their values by using:
+
+.RS 4
+.EX
+
+get-param param1
+get-param param2
+
+.EE
+.RE
+
+A request may be in the form of a web link URL, and getting the parameter values is the same:
+
+.RS 4
+.EX
+
+http://<your web server>/<app name>/<request name>&param1=value1&param2=value2
+
+.EE
+.RE
+
+
+.LP
+.B SETTING PARAMETERS DURING REQUEST'S EXECUTION
+.LP
+
+Use \fBset-param\fP to replace the value of an existing parameter, or create a new one. For instance:
+
+.RS 4
+.EX
+
+get-param par1
+\[char46]..
+set-param par1="new value"
+
+.EE
+.RE
+
+In this case the value of an existing parameter "par1" is replaced with "new value". In the following code a new parameter is created, which can be retrieved later with get-param:
+
+.RS 4
+.EX
+
+set-param par1="new value"
+get-param par1
+
+.EE
+.RE
+
+See \fBsub-handler\fP for more examples.
+
+.LP
+.B DUPLICATE INPUT PARAMETER NAMES
+.LP
+
+If there are multiple input parameters with the same name set by the request caller, such as 
+
+.RS 4
+.EX
+
+http://<web address>/<app name>/<request name>?par=val1&par=val2
+
+.EE
+.RE
+
+the value of input parameter "par" is undefined. Do not specify multiple input parameters with the same name.
+.SH SEE ALSO
+ 
+.B - Request data
+
+\fBget-param\fP  
+\fBrequest-body\fP  
+\fBset-param\fP   
+See all 
+\fBdocumentation\fP

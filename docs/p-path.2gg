@@ -1,0 +1,73 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+p-path \-  (output)
+.SH PURPOSE
+Outputs URL application path.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+p-path 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+p-path outputs a URL application path (see \fBrequest\fP), i.e. the leading path segment(s) prior to request name.
+
+If no "--path" option in \fBgg\fP is used to specify URL application path, then it is the same as application name prepended with a forward slash:
+
+.RS 4
+.EX
+
+/<app name>
+
+.EE
+.RE
+
+p-path provides the leading part of a URL path after which request name and its parameters can be specified. It is used in HTML forms and URLs (either for HTML or API) to refer back to the same application.
+
+Use \fBp-path\fP to create the absolute URL path to refer back to your service so you can issue \fBrequest\fPs to it. 
+
+For example, this is a link that specifies request to service "show-notes":
+
+.RS 4
+.EX
+
+@<a href="<<p-path>>/show-notes?date=yesterday">Show Notes</a> 
+
+.EE
+.RE
+
+If you are building HTML forms, you can add a note with:
+
+.RS 4
+.EX
+
+@<form action="<<p-path>>/add-note" method="POST">
+@<input type="text" name="note" value="">
+@</form>
+
+.EE
+.RE
+
+See \fBrequest\fP for more on URL structure.
+.SH SEE ALSO
+ 
+.B - Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBpf-out\fP  
+\fBpf-url\fP  
+\fBpf-web\fP  
+\fBp-num\fP  
+\fBp-out\fP  
+\fBp-path\fP  
+\fBp-url\fP  
+\fBp-web\fP   
+See all 
+\fBdocumentation\fP

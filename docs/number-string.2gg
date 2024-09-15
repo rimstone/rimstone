@@ -1,0 +1,71 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+number-string \-  (numbers)
+.SH PURPOSE
+Convert number to string.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+number-string <number> [ to <string> ] \\
+    [ base <base> ] \\
+    [ status <status> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+<number> is converted to <string> in "to" clause, using <base> in "base" clause, where <base> is by default 10. <base> can be between 2 and 36, inclusive. <number> can be positive or negative (i.e. signed) and can be of any integer type up to 64-bit (char, int, long, long long etc.).  If "to" clause is omitted, then <number> is printed out.
+
+Note that any letters in <string> (depending on the <base>) are always lower-case.
+
+If there is an error, such as if <base> is incorrect, then <status> number (in "status" clause) is GG_ERR_FAILED, otherwise it's GG_OKAY.
+
+Use of number-string (and \fBp-num\fP which is based on it) for converting and outputting numbers is high-performance and recommended if your application needs to do that often. If number-string prints out a number (i.e. "to" clause is omitted), and this is within \fBwrite-string\fP, then <number> is output into the buffer that builds a new string.
+
+.SH EXAMPLES
+The following will allocate memory for string "x" to be "801":
+
+.RS 4
+.EX
+
+set-number x = 801
+number-string x to res 
+
+.EE
+.RE
+
+The following will store "-238f" to string "res":
+
+.RS 4
+.EX
+
+set-number x = -9103
+number-string x to res base 16
+
+.EE
+.RE
+
+To print out a number -131:
+
+.RS 4
+.EX
+
+set-number x = -131
+number-string x
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Numbers
+
+\fBnumber-expressions\fP  
+\fBnumber-string\fP  
+\fBset-number\fP  
+\fBstring-number\fP   
+See all 
+\fBdocumentation\fP

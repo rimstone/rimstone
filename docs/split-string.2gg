@@ -1,0 +1,127 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+split-string \-  (strings)
+.SH PURPOSE
+Split a string into pieces based on a delimiter.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+split-string  <string> with <delimiter> to <result> 
+
+split-string delete <result> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+split-string will find all instances of string <delimiter> in <string> and then split it into pieces delimited by string <delimiter>. The <result> can be used with \fBread-split\fP to obtain the pieces and with split-string to delete it (use "delete" clause with <result> to delete it).
+
+All pieces produced will be trimmed both on left and right. If a piece is double quoted, then double quotes are removed. For instance save this code in "ps.gliim" in a separate directory:
+
+.RS 4
+.EX
+
+%% parse
+    out-header default
+    set-string clist = "a , b, \[char92]"c , d\[char92]" , e"
+    split-string clist with "," to res count tot
+    start-loop repeat tot use i
+        read-split i from res to item status st
+        if-true st not-equal GG_OKAY
+            break-loop
+        end-if
+        // Output each item
+        pf-out " [%s]", item
+    end-loop
+%%
+
+.EE
+.RE
+
+Create the application, build and run it:
+
+.RS 4
+.EX
+
+sudo mgrg -i -u $(whoami) ps
+gg -q
+gg -r --req="/parse" --exec --silent-header
+
+.EE
+.RE
+
+The output would be:
+
+.RS 4
+.EX
+
+ [a] [b] [c , d] [e]
+
+.EE
+.RE
+
+split-string is useful for parsing CSV (Comma Separated Values) or any other kind of separated values, where separator can be any string of any length, for example if you're parsing an encoded URL-string, then "&amp;" may be a separator, as in the example below.
+
+.SH EXAMPLES
+The following will parse a string containing name/value pairs (such as "name=value") separated by string "&amp;":
+
+.RS 4
+.EX
+
+%% /parse-url
+    out-header default
+    // Data to parse - data/value pairs delimited by "&amp;" string, and data and value delimited by equal sign:
+    set-string url ="x=23&amp;y=good&amp;z=hello_world"
+
+    // Split string first into pieces based on "amp;"
+    split-string url with "&amp;" to url_var count tot
+
+    // For each of name=value pairs, split it with equal sign
+    start-loop repeat tot use i
+        // Get a url pair (each separated with "&amp;")
+        read-split i from url_var to item
+        // Then split that with "=" 
+        split-string item with "=" to item_var
+        // Get name and value
+        read-split 1 from item_var to name
+        read-split 2 from item_var to val
+        pf-out "Variable %s has value %s\en", name, val
+    end-loop
+%%
+
+.EE
+.RE
+
+The result is:
+
+.RS 4
+.EX
+
+Variable x has value 23
+Variable y has value good
+Variable z has value hello_world
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBlower-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-length\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

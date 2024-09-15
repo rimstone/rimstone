@@ -1,0 +1,99 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+pf-out \-  (output)
+.SH PURPOSE
+Outputs a formatted string without encoding.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+pf-out <format> , <variable> [ , <variable> ]... \\
+    [ to-error ] \\
+    [ to <string> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+pf-out formats a string according to the <format> string and a list of <variable>s and then outputs the result without any encoding (meaning a string is output exactly as it is, and the client may interpret such text in any way it sees fit). 
+
+.LP
+.B FORMAT
+.LP
+
+<format> string must be a literal. Variables must follow <format> separated by commas in the same order as placeholders. If you use any placeholders other than specified below, or the type of variables you use do not match the type of a correspoding placeholder in <format>, your program will \fBerror out\fP. You can use the following placeholders in <format> (see \fBtrace-run\fP for an example of usage):
+
+.RS 4
+\[bu]    
+%s for a string
+
+.RE
+
+.RS 4
+\[bu]    
+%<number>s for a string output with a width of at least <number> (any excess filled with spaces to the left),
+
+.RE
+
+.RS 4
+\[bu]    
+%ld for a number
+
+.RE
+
+.RS 4
+\[bu]    
+%<number>ld for a number output with a width of at least <number> (any excess filled with spaces to the left)
+.RE
+
+<format> string must be present and there must be at least one <variable> (it means if you want to print out a simple string literal you still have to use "%s" as format).
+
+If "to-error" clause is used, the output is sent to "stderr", or standard output stream.
+
+If "to" clause is used, then the output of pf-out is stored into <string>. 
+
+.SH EXAMPLES
+To output data (the string output is "the number is 20"):
+
+.RS 4
+.EX
+
+pf-out "%s is %d", "the number", 20
+
+.EE
+.RE
+
+Create a query text string by means of \fBwrite-string\fP statement:
+
+.RS 4
+.EX
+
+//
+/ Construct the run-time text of dynamic SQL
+//
+write-string qry_txt
+@select * from <<pf-out "%s where id="%ld", table_name, id_num>>
+end-write-string
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBpf-out\fP  
+\fBpf-url\fP  
+\fBpf-web\fP  
+\fBp-num\fP  
+\fBp-out\fP  
+\fBp-path\fP  
+\fBp-url\fP  
+\fBp-web\fP   
+See all 
+\fBdocumentation\fP

@@ -1,0 +1,142 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+trace-run \-  (debugging)
+.SH PURPOSE
+Emit trace.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+trace-run [ <format>, <variable> [ , ... ] ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+trace-run formats a tracing message according to the <format> string and a list of <variable>s and then writes the result into current process' trace file.
+
+trace-run can be used without any clauses, in which case a location (file name and line number) is recorded in the trace file - this is useful when you only want to know if the execution passed through your code.
+
+If trace-run has any other clauses, then <format> string must be present and there must be at least one <variable> (it means if you want to trace a simple string literal you still have to use "%s" as format).
+
+For tracing to have effect, debugging and tracing must be enabled (see "--debug" and "--trace" options in \fBgg\fP). For location of trace files, see \fBdirectories\fP.
+
+.LP
+.B FORMAT
+.LP
+
+<format> string must be a literal. Variables must follow <format> separated by commas in the same order as placeholders. If you use any placeholders other than specified below, or the type of variables you use do not match the type of a correspoding placeholder in <format>, your program will \fBerror out\fP. You can use the following placeholders in <format> (see \fBtrace-run\fP for an example of usage):
+
+.RS 4
+\[bu]    
+%s for a string
+
+.RE
+
+.RS 4
+\[bu]    
+%<number>s for a string output with a width of at least <number> (any excess filled with spaces to the left),
+
+.RE
+
+.RS 4
+\[bu]    
+%ld for a number
+
+.RE
+
+.RS 4
+\[bu]    
+%<number>ld for a number output with a width of at least <number> (any excess filled with spaces to the left)
+.RE
+
+Here's an example of using the format placeholders:
+
+.RS 4
+.EX
+
+%% /my-request
+    out-header default
+    @Hi
+    trace-run "%s it's %ld degrees outside, or with minimum width: %20s it's %20ld outside", "yes", 90, "yes", 90
+%%
+
+.EE
+.RE
+
+Create and make the application:
+
+.RS 4
+.EX
+
+sudo mgrg -i -u $(whoami) test
+gg --trace --debug
+
+.EE
+.RE
+
+Run it:
+
+.RS 4
+.EX
+
+gg -r --req="/my-request" --exec
+
+.EE
+.RE
+
+The output is:
+
+.RS 4
+.EX
+
+Hi
+
+.EE
+.RE
+
+And to find the location of trace file:
+
+.RS 4
+.EX
+
+gg -t 1
+
+.EE
+.RE
+
+The line in the trace file output by your trace-run would be similar to:
+
+.RS 4
+.EX
+
+2024-08-01-17-13-55 (my_request.gliim:4)| my_request yes it's 90 degrees outside, or with minimum width:                  yes it's                   90 outside
+
+.EE
+.RE
+
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+// Trace information
+trace-run "Program wrote %ld bytes into file %s", num_bytes, file_name
+
+// Trace that program execution passed through here
+trace-run
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Debugging
+
+\fBdebugging\fP  
+\fBtrace-run\fP   
+See all 
+\fBdocumentation\fP

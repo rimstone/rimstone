@@ -1,0 +1,108 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+read-array \-  (array)
+.SH PURPOSE
+Get data from array.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+// Random access to array data:
+
+read-array <array> \\
+    key <key> \\
+    value <value> \\
+    [ delete [ <delete> ] ] \\
+    [ status <status> ] 
+
+// Sequential access to array data:
+
+read-array <array> traverse begin
+
+read-array <array> traverse \\
+    key <key> \\
+    value <value>  \\
+    [ delete [ <delete> ] ] \\
+    [ status <status> ] \\
+
+.EE
+.RE
+
+.SH DESCRIPTION
+
+.LP
+.B WITHOUT "TRAVERSE" CLAUSE
+.LP
+
+read-array will obtain an element from <array>, which is a string <value> (in "value" clause) based on a string <key> (in "key" clause). <array> was created by \fBnew-array\fP. 
+
+You can also delete an element from the array by using "delete" clause - the <value> is still obtained though it is no longer in the array table. The array element is deleted if "delete" clause is used without boolean expression <delete>, or if <delete> evaluates to true.
+
+If no <key> was found in the array table, <status> number (in "status" clause) is GG_ERR_EXIST and <value> is unchanged, otherwise <status> is GG_OKAY. 
+
+.LP
+.B WITH "TRAVERSE" CLAUSE
+.LP
+
+read-array with "traverse" clause obtains <key> and <value> of the current element, and then positions to the next one. You can also delete this element from the array by using "delete" clause - the <key> and <value> are still obtained though the element is no longer in the array table. The array element is deleted if "delete" clause is used without boolean expression <delete>, or if <delete> evaluates to true.
+
+Use "begin" clause to position at the very first element. This is useful if you wish to get all the key/value pairs from a array table - note they are not extracted in any particular order. When there are no more elements, <key> and <value> are unchanged and <status> number (in "status" clause) is GG_ERR_EXIST, otherwise <status> is GG_OKAY.
+
+You may search, add or delete elements while traversing a array table, and this will be reflected in all elements not yet traversed.
+
+.SH EXAMPLES
+In this example, new array is created, a key/value pair is written to it, and then the value is obtained and the element deleted; return status is checked:
+
+.RS 4
+.EX
+
+// Create new array
+new-array h 
+
+// Write to array
+write-array h key "X0029" value "some data"
+
+// Read from array
+read-array h key "X0029" value res status f delete
+if-true f equal GG_ERR_EXIST
+    @No data in array!
+else-if
+    @Deleted value is <<p-out res>>
+end-if
+
+.EE
+.RE
+
+The following will traverse the entire array and display all the data:
+
+.RS 4
+.EX
+
+// Position at the beginning of array table
+read-array h traverse begin
+start-loop
+    // Get elements, one by one, until NULL returned as a key
+    read-array h traverse key k value r status f
+    if-true f equal GG_ERR_EXIST
+        break;
+    end-if
+    pf-out "Key [%s] data [%s]\en", k, r
+end-loop
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Array
+
+\fBget-array\fP  
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBresize-array\fP  
+\fBwrite-array\fP   
+See all 
+\fBdocumentation\fP

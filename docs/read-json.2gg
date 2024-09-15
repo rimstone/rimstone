@@ -1,0 +1,52 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+read-json \-  (JSON-parsing)
+.SH PURPOSE
+Read data elements of JSON document.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+read-json <json> \\
+    [ key <key> ] \\
+    [ value <value> ] \\
+    [ type <type> ] \\
+    [ next ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+read-json reads data elements from <json> variable, which is created with \fBjson-doc\fP. A data element is a string <key>/<value> pair of a leaf node, where key (in "key" clause) is a normalized key name, which is the value's name preceded with the names of all objects and array members leading up to it, separated by a dot ("."). 
+
+The actual <value> is obtained with "value" clause, and the <type> of value can be obtained with "type" clause. 
+
+<type> is a number that can be GG_JSON_TYPE_STRING, GG_JSON_TYPE_NUMBER, GG_JSON_TYPE_REAL, GG_JSON_TYPE_BOOL and GG_JSON_TYPE_NULL for string, number, real (floating point), boolean and null values respectively. Note that <value> is always a string representation of these types.
+
+Use "next" clause to move to the next sequential key/value pair in the document, from top down. Typically, you would get a key first, examine if it's of interest to you, and then obtain value. This is because Gliimly uses "lazy" approach where value is not copied until needed; with this approach JSON parsing is faster.
+
+If there are no more data elements to read, <type> is GG_JSON_TYPE_NONE.
+
+<key> in "key" clause is a normalized name of any given leaf node in JSON text. This means every non-leaf node is included (such as arrays and objects), separated by a dot ("."), and arrays are indexed with "[]". An example would be:
+
+.RS 4
+.EX
+
+"menu"."popup"."menuitem"[1]."onclick"
+
+.EE
+.RE
+
+
+.SH EXAMPLES
+See \fBjson-doc\fP.
+.SH SEE ALSO
+ 
+.B - JSON parsing
+
+\fBjson-doc\fP  
+\fBread-json\fP   
+See all 
+\fBdocumentation\fP

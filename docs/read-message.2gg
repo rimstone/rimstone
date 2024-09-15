@@ -1,0 +1,41 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+read-message \-  (messages)
+.SH PURPOSE
+Read key/value from message.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+read-message <message> \\
+    key <key> \\
+    value <value> \\
+    [ status <status> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+read-message reads strings <key> (in "key" clause) and <value> (in "value" clause) from <message>, which must have been created with \fBnew-message\fP. 
+
+The reading of key/value pairs starts from the beginning of message and proceeds sequentially forward. Once a key/value pair is read it cannot be read again.
+
+<status> number (in "status" clause) will be GG_OKAY for a successful read, GG_ERR_FORMAT if message is not in \fBSEMI\fP format or GG_ERR_LENGTH if message isn't of proper length.
+
+Once a message is read from, it cannot be written to (see \fBwrite-message\fP).
+
+.SH EXAMPLES
+See \fBnew-message\fP.
+.SH SEE ALSO
+ 
+.B - Messages
+
+\fBget-message\fP  
+\fBnew-message\fP  
+\fBread-message\fP  
+\fBSEMI\fP  
+\fBwrite-message\fP   
+See all 
+\fBdocumentation\fP

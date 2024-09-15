@@ -1,0 +1,48 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+p-num \-  (output)
+.SH PURPOSE
+Outputs a number.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+p-num <number> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+p-num outputs a number given by <number> variable. 
+
+.SH EXAMPLES
+To output a number to a client:
+
+.RS 4
+.EX
+
+set-number x = 100
+p-num x
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBpf-out\fP  
+\fBpf-url\fP  
+\fBpf-web\fP  
+\fBp-num\fP  
+\fBp-out\fP  
+\fBp-path\fP  
+\fBp-url\fP  
+\fBp-web\fP   
+See all 
+\fBdocumentation\fP

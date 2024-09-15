@@ -1,0 +1,60 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+index \- Gliimly documentation ()
+.SH DESCRIPTION
+Gliimly is a web programming language that's:
+
+.RS 4
+\[bu]    
+service-oriented, 
+
+.RE
+
+.RS 4
+\[bu]    
+modeling, 
+
+.RE
+
+.RS 4
+\[bu]    
+declarative, 
+
+.RE
+
+.RS 4
+\[bu]    
+extremely simple,
+
+.RE
+
+.RS 4
+\[bu]    
+memory-safe, 
+
+.RE
+
+.RS 4
+\[bu]    
+high-performance,
+
+.RE
+
+.RS 4
+\[bu]    
+industry-standard Free Open Source libraries,
+
+.RE
+
+.RS 4
+\[bu]    
+extensible,
+
+.RE
+
+.RS 4
+\[bu]    
+\fBApache 2\fP Free Open Source.
+.RE
+
+\fBInstall Gliimly\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP. Articles and release info at \fBBlog\fP.

@@ -1,0 +1,115 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+123-hello-world \- Gliimly documentation (quick-start)
+.SH DESCRIPTION
+
+.LP
+.B STEP 1: INSTALL GLIIMLY
+.LP
+
+First \fBinstall\fP Gliimly.
+
+.LP
+.B STEP 2: BUILD IT
+.LP
+
+Create Hello World source file (hello.gliim) in a new directory; note it's all one bash command:
+
+.RS 4
+.EX
+
+echo 'begin-handler /hello
+    out-header default
+    @Hello World!
+end-handler' > hello.gliim
+
+.EE
+.RE
+
+Create Hello World application:
+
+.RS 4
+.EX
+
+sudo mgrg -i -u $(whoami) helloworld
+
+.EE
+.RE
+
+Make Hello World application:
+
+.RS 4
+.EX
+
+gg -q 
+
+.EE
+.RE
+
+
+.LP
+.B STEP 3: RUN IT
+.LP
+
+You can run Hello World both as a service and from command line:
+
+.RS 4
+\[bu]    
+As a service, first start your Hello World application server:
+
+.RS 4
+.EX
+
+mgrg -w 3 helloworld
+
+.EE
+.RE
+
+then connect to the \fBservice\fP:
+
+.RS 4
+.EX
+
+gg -r --req="/hello" --silent-header --service --exec
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+Execute as \fBsingle-run\fP from command line:
+
+.RS 4
+.EX
+
+gg -r --req="/hello" --silent-header --exec
+
+.EE
+.RE
+
+.RE
+
+
+.LP
+.B EXPECTED RESULT
+.LP
+
+
+.RS 4
+.EX
+
+Hello World!
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Quick start
+
+\fB123-hello-world\fP   
+See all 
+\fBdocumentation\fP

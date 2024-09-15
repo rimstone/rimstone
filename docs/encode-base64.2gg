@@ -1,0 +1,88 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+encode-base64 \-  (base64)
+.SH PURPOSE
+Base64 encode.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+encode-base64 <data> to <output data> \\
+    [ input-length <input length> ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+encode-base64 will encode string <data> into base64 string <output data>.
+
+If "input-length" clause is used, then <input length> is the number of bytes encoded, otherwise the entirety of <data> is encoded. 
+
+The result is stored in <output data> (in "to" clause).
+
+Base64-encoded strings are often used where binary data needs to be in a format that complies with certain text-based protocols, such as in attaching documents in email, or embedding binary documents (such as "JPG" images for example) in web pages with "data:image/jpg;base64..." specified, etc.
+
+.SH EXAMPLES
+An example that encodes a string, decodes, and finally checks if they match:
+
+.RS 4
+.EX
+
+// Original string, generally this would be binary data in most cases
+set-string dt ="  oh well  "
+
+// Encode in base64
+encode-base64 dt to out_dt 
+
+decode-base64 out_dt to new_dt
+
+if-true dt equal new_dt
+    @Success!
+else-if
+    @Failure!
+end-if
+
+.EE
+.RE
+
+In the next example, "input-length" clause is used, and only a partial of the input string is encoded, then later compared to the original:
+
+.RS 4
+.EX
+
+// Original string, generally this would be binary data in most cases
+set-string dt ="  oh well  "
+
+// Encode in base64, encode only 6 bytes
+encode-base64 dt input-length 6 to out_dt
+
+decode-base64 out_dt to new_dt
+
+// Get length of decoded string
+string-length new_dt to new_len
+
+if-true new_len not-equal 6
+    @Failure!
+else-if
+    @Success!
+end-if
+
+if-true dt equal new_dt length new_len
+    @Success!
+else-if
+    @Failure! [<<p-out dt>>] [<<p-out new_dt>>]
+end-if
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Base64
+
+\fBdecode-base64\fP  
+\fBencode-base64\fP   
+See all 
+\fBdocumentation\fP

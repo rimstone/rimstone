@@ -1,0 +1,68 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+set-cookie \-  (cookies)
+.SH PURPOSE
+Set cookie.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+set-cookie <cookie name>=<cookie value> \\
+    [ expires <expiration> ] \\
+    [ path <path> ] \\
+    [ same-site "Lax"|"Strict"|"None" ] \\
+    [ no-http-only [ <no-http-only> ] ] \\
+    [ secure [ <secure> ] ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+To set a cookie named by string <cookie name> to string value <cookie value>, use set-cookie statement. A cookie can be set before or after sending out a header (see \fBout-header\fP). However a cookie must be set prior to outputting any actual response (such as with \fBoutput-statement\fP or \fBp-out\fP for example), or the program will error out and stop. 
+
+Cookie's <expiration> date (as a a string, see \fBget-time\fP) is given with "expires" clause. The default is session cookie meaning the cookie expires when client session closes.
+
+Cookie's <path> is specified with "path" clause. The default is the URL path of the \fBrequest\fP URL.
+
+Whether a cookie applies to the same site is given with "same-site" clause along with possible values of "Lax", "Strict" or "None". 
+
+By default a cookie is not accessible to client scripting (i.e. "HttpOnly") -you can change this with "no-http-only" clause. That will be the case if "no-http-only" clause is used without bool expression <no-http-only>, or if <no-http-only> evaluates to true.
+
+Use "secure" if a secure connection (https) is used, in order to specify this cookie is available only with a secure connection. That will be the case if "secure" is used without bool expression <secure>, or if <secure> evaluates to true.
+
+Cookies are commonly used for session maintenance, tracking and other purposes. Use \fBget-cookie\fP and \fBdelete-cookie\fP together with set-cookie to manage cookies.
+
+.SH EXAMPLES
+To set a cookie named "my_cookie_name" to value "XYZ", that will go with the reply and expire in 1 year and 2 months from now, use:
+
+.RS 4
+.EX
+
+get-time to mytime year 1 month 2
+set-string my_cookie_value="XYZ"
+set-cookie "my_cookie_name"=my_cookie_value expires mytime path "/" same-site "Lax"
+
+.EE
+.RE
+
+A cookie that can be used by JavaScript (meaning we use no-http-only clause):
+
+.RS 4
+.EX
+
+set-cookie "my_cookie_name"=my_cookie_value no-http-only
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Cookies
+
+\fBdelete-cookie\fP  
+\fBget-cookie\fP  
+\fBset-cookie\fP   
+See all 
+\fBdocumentation\fP

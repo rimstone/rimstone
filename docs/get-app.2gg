@@ -1,0 +1,102 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+get-app \-  (application-information)
+.SH PURPOSE
+Obtain data that describes the application.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+get-app \\
+    name | directory | trace-directory | file-directory \\
+        | db-vendor <database configuration> | upload-size \\
+        | path | is-service \\
+    to <variable>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+Application-related variables can be obtained with get-app statement. The following application variables can be obtained (they are all strings unless indicated otherwise):
+
+.RS 4
+\[bu]    
+"name" returns the name of your application, as specified when created (see \fBmgrg\fP). 
+
+.RE
+
+.RS 4
+\[bu]    
+"directory" is the directory where your application resides, i.e. the application home directory (see \fBdirectories\fP).
+
+.RE
+
+.RS 4
+\[bu]    
+"trace-directory" is the directory where your application trace files are written, if enabled (see \fBdirectories\fP).
+
+.RE
+
+.RS 4
+\[bu]    
+"is-service" is a boolean variable that is true if your code is running as a \fBservice\fP, or false if it is running as a \fBsingle-run\fP program.
+
+.RE
+
+.RS 4
+\[bu]    
+"file-directory" is the directory where Gliimly file storage system is, i.e. \fBfile-storage\fP.
+
+.RE
+
+.RS 4
+\[bu]    
+"db-vendor" is the database vendor name of database given by <database configuration> (as used for example in \fBrun-query\fP). You can use it to create database specific conditions. The database vendor name can be compared against predefined string constants GG_MARIADB (for MariaDB database), GG_POSTGRES (for Postgres database) and GG_SQLITE (for SQLite database).
+
+.RE
+
+.RS 4
+\[bu]    
+"path" is the leading path of the URL request that can be used to build web forms and links leading back to your application. It returns the same value as \fBp-path\fP.
+
+.RE
+
+.RS 4
+\[bu]    
+"upload-size" is the maximum allowed size of an uploaded file - this is a number (see \fBgg\fP for setting this value).
+.RE
+
+
+.SH EXAMPLES
+Get the name of Gliimly application:
+
+.RS 4
+.EX
+
+get-app name to appname
+
+.EE
+.RE
+
+Get the vendor of database db:
+
+.RS 4
+.EX
+
+get-app db-vendor db to dbv
+if-true dbv equal GG_POSTGRES
+    // do something Postgres specific
+end-if
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Application information
+
+\fBget-app\fP   
+See all 
+\fBdocumentation\fP

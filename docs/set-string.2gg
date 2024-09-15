@@ -1,0 +1,82 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+set-string \-  (strings)
+.SH PURPOSE
+Set value of a string variable.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+set-string <variable> [ = <string> ] [ process-scope ] [ unquoted ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+String variable <variable> will be assigned a value of <string> if clause "=" is present; otherwise <variable> is assigned an empty string.
+
+If "process-scope" clause is used, then <variable> will be of process scope, meaning its value will persist from one \fBrequest\fP to another for the life of the process; this clause can only be used if <variable> did not already exist.
+
+If "unquoted" clause is used, then <string> literal is unquoted, and everything from equal clause ("=") to the rest of the line is a <string>; in this case there is no need to escape double quotes or backslashes. Note that in this case, "unquoted" and any other clause must appear prior to equal clause ("=") and after variable, because they wouldn't otherwise be recognized. For instance:
+
+.RS 4
+.EX
+
+set-string my_string unquoted = this is "some" string where there escape characters like \en do "not work"
+
+.EE
+.RE
+
+This is the same as:
+
+.RS 4
+.EX
+
+set-string my_string = "this is \[char92]"some\[char92]" string where there escape characters like \\en do \[char92]"not work\[char92]""
+
+.EE
+.RE
+
+"unquoted" clause is useful when writing string literals that would otherwise need lots of escaping.
+
+.SH EXAMPLES
+Initialize "my_string" variable to "":
+
+.RS 4
+.EX
+
+set-string my_string 
+
+.EE
+.RE
+
+Initialize "my_string" variable to "abc":
+
+.RS 4
+.EX
+
+set-string my_string = "abc"
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBlower-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-length\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

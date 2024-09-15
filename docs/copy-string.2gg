@@ -1,0 +1,86 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+copy-string \-  (strings)
+.SH PURPOSE
+Copies string to another string.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+copy-string <source string> to <dest string> \\
+    [ start-with <start with> ] \\
+    [ length <length> ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+Use copy-string to copy <source string> to <dest string>.
+
+<start with> number (in "start-with" clause) is the position in <source string> to start copying from, with 0 being the first byte.
+
+Without "length" clause, the whole of <source string> is copied. With "length" clause, exactly <length> bytes are copied into <dest string>.
+
+You can copy a string to itself. In this case, the original string remains and the new string references a copy:
+
+.RS 4
+.EX
+
+set-string str = "original string" // string to change
+
+set-string orig = str // references original copy of the string to change
+
+copy-string str to str // make a copy of string to change and assign it to itself
+
+upper-string str // change the copy
+
+// Now "str" references "ORIGINAL STRING" 
+// and "orig" references "original string"
+
+.EE
+.RE
+
+
+.SH EXAMPLES
+After copy-string below, "my_str" will be a copy of string "some value":
+
+.RS 4
+.EX
+
+set-string other_string="some value"
+copy-string other_string to my_str 
+
+.EE
+.RE
+
+Copy certain number of bytes, the result in "my_str" will be "ome":
+
+.RS 4
+.EX
+
+set-string other_string="some value"
+copy-string other_string to my_str length 3 start-with 1
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBlower-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-length\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

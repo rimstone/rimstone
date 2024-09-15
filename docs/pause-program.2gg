@@ -1,0 +1,48 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+pause-program \-  (time)
+.SH PURPOSE
+Pause request execution.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+pause-program <milli seconds>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+pause-program will delay request execution (i.e. sleep, meaning not utilize computing resources) for a number of <milli seconds>. For instance:
+
+.RS 4
+.EX
+
+pause-program 1500
+
+.EE
+.RE
+
+will pause for 1.5 seconds.
+
+.SH EXAMPLES
+Pause execution for 0.25 seconds:
+
+.RS 4
+.EX
+
+pause-program 250
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Time
+
+\fBget-time\fP  
+\fBpause-program\fP   
+See all 
+\fBdocumentation\fP

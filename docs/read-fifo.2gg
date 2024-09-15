@@ -1,0 +1,79 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+read-fifo \-  (FIFO)
+.SH PURPOSE
+Reads key/value pair from a FIFO list.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+read-fifo <list> \\
+    key <key> \\
+    value <value> \\
+    [ status <status> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+read-fifo retrieves an element from the FIFO <list> into <key> string  (in "key" clause) and <value> string (in "value" clause).
+
+Once an element has been retrieved, the next use of read-fifo will obtain the following one, in the same order they were put in. read-fifo starts with the first element put in, and moves forward from there, unless \fBrewind-fifo\fP is called, which positions back to the first one.
+
+If the element is successfuly retrieved, <status> number (in "status" clause) is GG_OKAY, otherwise it is GG_ERR_EXIST, which means there are no more elements to retrieve.
+
+.SH EXAMPLES
+In this example, a FIFO list is created, and two key/value pairs added. They are then retrieved in a loop and printed out (twice with rewind), and then the list is purged:
+
+.RS 4
+.EX
+
+// Create a list
+new-fifo mylist
+
+// Add data to the list
+write-fifo mylist key "key1" value "value1"
+write-fifo mylist key "some2" value "other2"
+
+start-loop
+    // Get data from the list
+    read-fifo mylist key k value v status st
+
+    // Check if no more data
+    if-true st not-equal GG_OKAY
+        break
+    end-if
+
+    @Obtained key <<p-out k>> with value <<p-out v>>
+end-loop
+
+// Go through the list again, use rewind-fifo for that
+rewind-fifo mylist
+
+start-loop
+    read-fifo mylist key k value v status st
+    if-true st not-equal GG_OKAY
+        break
+    end-if
+    @Again obtained key <<p-out k>> with value <<p-out v>>
+end-loop
+
+purge-fifo mylist
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - FIFO
+
+\fBdelete-fifo\fP  
+\fBnew-fifo\fP  
+\fBpurge-fifo\fP  
+\fBread-fifo\fP  
+\fBrewind-fifo\fP  
+\fBwrite-fifo\fP   
+See all 
+\fBdocumentation\fP

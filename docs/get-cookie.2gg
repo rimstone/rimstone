@@ -1,0 +1,43 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+get-cookie \-  (cookies)
+.SH PURPOSE
+Get cookie value.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+get-cookie <cookie value> = <cookie name>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+get-cookie obtains string <cookie value> of a cookie with the name given by string <cookie name>. A cookie would be obtained via incoming request from the client (such as web browser) or it would be set using \fBset-cookie\fP.
+
+The value of cookie is stored in <cookie value>.  
+
+Cookies are often used to persist user data on the client, such as for maintaining session security or for convenience of identifying the user etc.
+
+.SH EXAMPLES
+Get value of cookie named "my_cookie_name" - variable my_cookie_value will hold its value:
+
+.RS 4
+.EX
+
+get-cookie my_cookie_value="my_cookie_name"
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Cookies
+
+\fBdelete-cookie\fP  
+\fBget-cookie\fP  
+\fBset-cookie\fP   
+See all 
+\fBdocumentation\fP

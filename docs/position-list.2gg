@@ -1,0 +1,66 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+position-list \-  (linked-list)
+.SH PURPOSE
+Set current element in a linked list.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+position-list <list> \\
+    [ first | last | end | previous | next | \\
+    [ status <status> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+position-list changes the current element of linked <list>. A current element is the one that is read with \fBread-list\fP. A newly added element is written with \fBwrite-list\fP by inserting it just before the current element, thus becoming a new current element. Reading from <list> does not change its current element; use position-list to explicitly change it.
+
+To position to the first element, use "first" clause. Use "last" clause to make the last element the current one. Use "previous" and "next" to change the current element to just before or just after it. 
+
+A position just beyond the last element in <list> is considered the "end" of it; in this case write-list will append an element to <list> and this element becomes its last, which is equivalent to using write-list statement with "append" clause. 
+
+Use "end" clause to set current element to <list>'s end. Note that "end" clause is equivalent to using "next" clause on the the last element in <list>.
+
+If you attempt to position prior to the first element, after the end of <list>, or anywhere in an empty list, then <status> number (in "status" clause") is GG_ERR_EXIST, otherwise it is GG_OKAY. Note that if <status> is GG_ERR_EXIST, the current element will not change.
+
+.SH EXAMPLES
+Position to the next element in list:
+
+.RS 4
+.EX
+
+position-list mylist next status st
+if-true st equal GG_ERR_EXIST
+    @Beyond the end of list
+end-if
+
+.EE
+.RE
+
+Position to the first element in list:
+
+.RS 4
+.EX
+
+position-list mylist first
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Linked list
+
+\fBdelete-list\fP  
+\fBget-list\fP  
+\fBnew-list\fP  
+\fBposition-list\fP  
+\fBpurge-list\fP  
+\fBread-list\fP  
+\fBwrite-list\fP   
+See all 
+\fBdocumentation\fP

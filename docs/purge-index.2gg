@@ -1,0 +1,47 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+purge-index \-  (index)
+.SH PURPOSE
+Delete all index nodes.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+purge-index <index> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+purge-index will delete all <index> nodes; <index> must have been created with \fBnew-index\fP. All of <index>'s nodes, and their keys/values all deleted.
+
+After purge-index, the index is empty and you can use it again (write into it, read from it etc.).
+
+.SH EXAMPLES
+Delete all index data:
+
+.RS 4
+.EX
+
+new-index myindex
+\[char46]..
+purge-index myindex 
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Index
+
+\fBdelete-index\fP  
+\fBget-index\fP  
+\fBnew-index\fP  
+\fBpurge-index\fP  
+\fBread-index\fP  
+\fBuse-cursor\fP  
+\fBwrite-index\fP   
+See all 
+\fBdocumentation\fP
