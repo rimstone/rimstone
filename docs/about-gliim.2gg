@@ -7,7 +7,7 @@ about-gliim \- Gliimly documentation (general)
 .B MODELING LANGUAGE
 .LP
 
-Gliimly is a very high-level modeling language. It's not about allocating memory, or moving and manipulating bits and bytes, or about writing expressions. It's about solving problems by modeling the solution and connecting the components to create high-performance, low-footprint executables.
+Gliimly is a very high-level modeling language. It's about solving problems by modeling the solution and connecting the components to create high-performance, low-footprint executables; and not about managing memory, manipulating bits and bytes or writing complex code.
 
 .LP
 .B SERVICE ORIENTED
