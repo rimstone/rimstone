@@ -2,6 +2,7 @@ Gliimly is a web programming language that's:
 * service\-oriented, 
 * modeling, 
 * declarative, 
+* functional and statically typed, 
 * extremely simple,
 * memory\-safe, 
 * high\-performance,
@@ -11,5 +12,4 @@ Gliimly is a web programming language that's:
 [Install Gliimly](http://gliimly.github.io//install.html)\. See [Documentation](http://gliimly.github.io//documentation.html)\. Source at [github\.com](https://github.com/gliimly/gliimly)\. Articles and release info at [Blog](https://gliimly.blogspot.com/)\.
 ---
 Visit [official Gliimly home page](http://gliimly.github.io).
-Copyright (c) Gliim LLC
 

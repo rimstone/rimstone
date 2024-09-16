@@ -24,6 +24,12 @@ declarative,
 
 .RS 4
 \[bu]    
+functional and statically typed, 
+
+.RE
+
+.RS 4
+\[bu]    
 extremely simple,
 
 .RE
