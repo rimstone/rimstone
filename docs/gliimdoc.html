@@ -225,13 +225,15 @@ ul {
 
 
 
-<div class='vhub'>Gliimly Single-Page Documentation for version 20</div><hr/>
+<div class='vhub'>Gliimly Single-Page Documentation for version 27</div><hr/>
 This page contains all of Gliimly documentation topics combined into one. It may be easier to search. <!--GLIIMBEGDOC39--><br/><br/>
 <a href='#123-hello-world.html'>123-hello-world</a><br/>
 <a href='#about-gliim.html'>about-gliim</a><br/>
 <a href='#after-handler.html'>after-handler</a><br/>
 <a href='#application-setup.html'>application-setup</a><br/>
+<a href='#article-hello-world.html'>article-hello-world</a><br/>
 <a href='#article-what-is-gliiml.html'>article-what-is-gliiml</a><br/>
+<a href='#article-what-is-gliiml-long.html'>article-what-is-gliiml-long</a><br/>
 <a href='#before-handler.html'>before-handler</a><br/>
 <a href='#begin-handler.html'>begin-handler</a><br/>
 <a href='#begin-transaction.html'>begin-transaction</a><br/>
@@ -613,7 +615,63 @@ You can run your application as <a href='/service.html'>service</a>, <a href='/C
 <a href='/single-run.html'>single-run</a> &nbsp; <br/>
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
+<a id='article-hello-world.html'></a>
+<br/>
+Create a directory for your Hello World application and then switch to it:<br/>
+<div class="shcode">
+<pre id='code_1'>
+<span class="Statement">mkdir</span> hello-world
+<span class="Statement">cd</span> hello-world</pre>
+</div><br/>
+Create the application:<br/>
+<div class="shcode">
+<pre id='code_2'>
+sudo mgrg <span class="Special">-i</span> <span class="Special">-u</span> <span class="PreProc">$(</span><span class="Special">whoami</span><span class="PreProc">)</span> hello</pre>
+</div><br/>
+Create a file hello_world.gliim:<br/>
+<div class="shcode">
+<pre id='code_3'>
+vim hello_world.gliim</pre>
+</div><br/>
+and copy this code to it:<br/>
+<div class='code'>
+<pre id='code_1'>
+<span class="gliimConstruct"> begin-handler</span> /hello-world
+<span class="gliimConstruct">     out-header</span><span class="gliimClause"> default</span>
+<span class="gliimConstruct">     get-param</span> name
+<span class="gliimConstruct">     @</span>This is Hello World from <span class="gliimConstruct">&lt;&lt;p-out</span> name<span class="gliimConstruct">&gt;&gt;</span>
+<span class="gliimConstruct"> end-handler</span></pre>
+</div><br/>
+This service takes input parameter "name" (see <a href='/get-param.html'>get-param</a>), and then outputs it along with a greeting message (see <a href='/output-statement.html'>output-statement</a>).<br/>
+<br/>
+Compile the application:<br/>
+<div class="shcode">
+<pre id='code_4'>
+gg <span class="Special">-q</span></pre>
+</div><br/>
+Run the application by executing this service from command line. Note passing the input parameter "name" with value "Mike":<br/>
+<div class="shcode">
+<pre id='code_5'>
+gg <span class="Special">-r</span> <span class="Special">--req</span><span class="Statement">=</span><span class="Statement">&quot;</span><span class="Constant">/hello-world/name=Mike</span><span class="Statement">&quot;</span> <span class="Special">--exec</span> <span class="Special">--silent-header</span></pre>
+</div><br/>
+The output is:<br/>
+<div class='ncode'>
+<pre id='code_1'>
+This is Hello World from Mike</pre>
+</div><br/>
+Gliimly is at <a href='https://gliimly.github.io/'>https://gliimly.github.io/</a>.<br/>
 <a id='article-what-is-gliiml.html'></a>
+<br/>
+Gliimly is a new programming language and framework for developing web services and web applications. It is: <br/>
+<ul><li>declarative language designed for simplicity,<br/>
+</li><li>memory-safe,<br/>
+</li><li>functional statically-typed,<br/>
+</li><li>high-performance compiled language, designed to create fast and small native executables without interpreters or p-code, <br/>
+</li><li>built on top of industry-standard Open Source libraries, such as SSL, Curl, MariaDB and others, in addition to native Gliimly's, <br/>
+</li><li>extensible with any standard libraries,<br/>
+</li><li>very simple to work with by design to reduce comlexity and improve performance.</li></ul>
+Gliimly is at <a href='https://gliimly.github.io/'>https://gliimly.github.io/</a>.<br/>
+<a id='article-what-is-gliiml-long.html'></a>
 <br/>
 Gliimly is a new programming language and framework for developing web services and web applications. The reason for Gliimly is to make software development easier, more reliable and to improve run-time performance. To do this, Gliimly is a very high level language yet it's a high performance one; those two qualities aren't usually together.<br/>
 <br/>
@@ -785,18 +843,19 @@ Exit the loop after 300 loops:<br/>
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
 <a id='call-extended.html'></a>
-<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Call extended</div><hr/><span style="font-weight:bold;">Purpose</span>: Call C function or macro (extended mode only).<br/>
+<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Call extended</div><hr/><span style="font-weight:bold;">Purpose</span>: Call external function or macro (extended mode only).<br/>
 <br/>
 <div class='code'>
 <pre id='code_1'>
 <span class="gliimConstruct"> call-extended</span> &lt;function&gt; <span class="Constant">&quot;( &quot;</span> [ &amp; ]&lt;variable&gt;  [ , ... ]  <span class="Constant">&quot; )&quot;</span></pre>
 </div><br/>
-call-extended calls C &lt;function&gt; (which can be function or macro) with a list of parameter variables. The &lt;function&gt; is defined either in:<br/>
-<ul><li>a ".c" file residing in the directory that contains application source code, or in<br/>
-</li><li>a library with C linkage. Note that such library may not necessarily have been written in C. Most compiled languages can produce such libraries.</li></ul>
-The &lt;function&gt; must be declared in a ".h" file residing in the application source code directory. You can have any number of ".c" and ".h" files. Any C files (.c) and any header files (.h) will be automatically picked up and included in your project. You do not need to do anything beyond creating them to be able to use functions or macros defined. A macro must be defined in ".h" file.<br/>
+call-extended calls &lt;function&gt; (which can be a function or macro) with a list of parameter variables. The &lt;function&gt; is defined either in:<br/>
+<ul><li>a library with C interop - note that such library can be written in many different languages. Most compiled languages can produce such libraries (such as Rust, C/C++ and others),<br/>
+</li><li>a ".c" file residing in the directory that contains application source code - again such a C file can in turn call code from libraries produced by any language that supports C interop (most do).<br/>
+</li><li>if a macro, in a ".h" file residing in the directory that contains application source code.</li></ul>
+The &lt;function&gt; must be declared via C-style declaration in a ".h" file residing in the application source code directory. You can use "--lflag" and "--cflag" options of <a href='/gg.html'>gg</a> to supply libraries used. In addition, if you need to, you can also have any number of ".c" and ".h" files which will be automatically included in your project. A macro must be defined in ".h" file.<br/>
 <br/>
-call-extended statement can only be used in extended mode (see <a href='/extended-mode.html'>extended-mode</a>). By default, Gliimly code runs in safe mode which does not allow use of call-extended statement. Note that using call-extended statement does not automatically make your application unsafe; rather, C code can be written in such a way to cause out-of-band memory reads and writes. Well-written C code should not cause such issues.<br/>
+call-extended statement can only be used in extended mode (see <a href='/extended-mode.html'>extended-mode</a>). By default, Gliimly code runs in safe mode which does not allow use of call-extended statement. Note that using call-extended statement does not automatically make your application unsafe; rather, extended code can be written in a memory-safe language (such as Rust), or even if written in C it can be made in such a way not to cause out-of-band memory reads and writes. <br/>
 <div class="vsub"><a id="C signature, input/output variables, types"></a>C signature, input/output variables, types</div>
 Each &lt;variable&gt; can be of C type (or a pointer to C type):<br/>
 <ul><li>"gg_num" which is a signed integer 8 bytes in length (int64_t type). This represents Gliimly number.<br/>
@@ -2922,7 +2981,7 @@ ln <span class="Special">-s</span> /home/disk0/file /var/lib/gg/<span class="Sta
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
 <a id='documentation.html'></a>
-<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 20"></a>Reference for Gliimly version 20</div>
+<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 27"></a>Reference for Gliimly version 27</div>
 <span style="font-weight:bold;">Note</span>: All the topics below are available as a <a href='/gliimdoc.html'>single-page documentation</a>. <br/>
 <br/>
 <ul><br/>
