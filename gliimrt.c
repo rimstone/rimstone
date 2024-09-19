@@ -33,6 +33,7 @@ void gg_write_ereport(char *errtext, gg_config *pc);
 void gg_read_child (int ofd, char **out_buf);
 void gg_gen_header_end ();
 void gg_check_set_cookie (char *name, char *val, char *secure, char *samesite, char *httponly, char *safety_clause, size_t safety_clause_len);
+inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num nbyte);
 // write-string macros
 #define GG_WRSTR_CUR (gg_get_config()->ctx.req->curr_write_to_string)
 #define GG_WRSTR (gg_get_config()->ctx.req->write_string_arr[GG_WRSTR_CUR])
@@ -3060,6 +3061,13 @@ char *gg_getenv (char *var)
 }
 
 
+inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num nbyte)
+{
+    GG_TRACE("");
+    // gg_gen_header_end() will set data_was_output to 1
+    if (pc->ctx.req->data_was_output == 0) gg_gen_header_end (); // send cookies and \r\n divider
+    return gg_gen_write (iserr, s, nbyte);  // send actual data
+}
 
 //
 // Write web output. However, if header not sent, error out or output trace warning that header/data MAY NOT be output. 
@@ -3073,18 +3081,20 @@ gg_num gg_write_web (bool iserr, gg_config *pc, char *s, gg_num nbyte)
     GG_TRACE("");
     if (pc->ctx.req->sent_header == 1) 
     {
-        // gg_gen_header_end() will set data_was_output to 1
-        if (pc->ctx.req->data_was_output == 0) gg_gen_header_end (); // send cookies and \r\n divider
-        return gg_gen_write (iserr, s, nbyte);  // send actual data
+        return gg_write_after_header (iserr, pc, s, nbyte);
     } 
     else
     {
         if (pc->ctx.gg_report_error_is_in_report == 0) 
         {
-            gg_report_error ("Attempting to write to web without outputting header first, use out-header statement");
+            gg_output_http_header(pc->ctx.req); // if no header output, do it first. User can output with out-header in any way they want
+            return gg_write_after_header (iserr, pc, s, nbyte);
+            // used to be gg_report_error ("Attempting to write to web without outputting header first, use out-header statement");
         }
         else
         {
+            // No need to try and output header because if pc->ctx.gg_report_error_is_in_report != 0, then in gg_report_error()
+            // we will call gg_server_error() which will output 500 error, so it's better not to try
             // this allows to send to stderr even if header not output
             GG_TRACE ("WARNING: writing to web even though header was not sent");
             return gg_gen_write (iserr, s, nbyte);

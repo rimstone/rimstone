@@ -2,7 +2,7 @@
 .SH NAME
 call-extended \-  (safety)
 .SH PURPOSE
-Call C function or macro (extended mode only).
+Call external function or macro (extended mode only).
 
 .SH SYNTAX
 
@@ -15,22 +15,28 @@ call-extended <function> "( " [ & ]<variable>  [ , ... ]  " )"
 .RE
 
 .SH DESCRIPTION
-call-extended calls C <function> (which can be function or macro) with a list of parameter variables. The <function> is defined either in:
+call-extended calls <function> (which can be a function or macro) with a list of parameter variables. The <function> is defined either in:
 
 .RS 4
 \[bu]    
-a ".c" file residing in the directory that contains application source code, or in
+a library with C interop - note that such library can be written in many different languages. Most compiled languages can produce such libraries (such as Rust, C/C++ and others),
 
 .RE
 
 .RS 4
 \[bu]    
-a library with C linkage. Note that such library may not necessarily have been written in C. Most compiled languages can produce such libraries.
+a ".c" file residing in the directory that contains application source code - again such a C file can in turn call code from libraries produced by any language that supports C interop (most do).
+
 .RE
 
-The <function> must be declared in a ".h" file residing in the application source code directory. You can have any number of ".c" and ".h" files. Any C files (.c) and any header files (.h) will be automatically picked up and included in your project. You do not need to do anything beyond creating them to be able to use functions or macros defined. A macro must be defined in ".h" file.
+.RS 4
+\[bu]    
+if a macro, in a ".h" file residing in the directory that contains application source code.
+.RE
 
-call-extended statement can only be used in extended mode (see \fBextended-mode\fP). By default, Gliimly code runs in safe mode which does not allow use of call-extended statement. Note that using call-extended statement does not automatically make your application unsafe; rather, C code can be written in such a way to cause out-of-band memory reads and writes. Well-written C code should not cause such issues.
+The <function> must be declared via C-style declaration in a ".h" file residing in the application source code directory. You can use "--lflag" and "--cflag" options of \fBgg\fP to supply libraries used. In addition, if you need to, you can also have any number of ".c" and ".h" files which will be automatically included in your project. A macro must be defined in ".h" file.
+
+call-extended statement can only be used in extended mode (see \fBextended-mode\fP). By default, Gliimly code runs in safe mode which does not allow use of call-extended statement. Note that using call-extended statement does not automatically make your application unsafe; rather, extended code can be written in a memory-safe language (such as Rust), or even if written in C it can be made in such a way not to cause out-of-band memory reads and writes. 
 
 .LP
 .B C SIGNATURE, INPUT/OUTPUT VARIABLES, TYPES
