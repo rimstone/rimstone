@@ -4756,8 +4756,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
+                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
+
+                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
                         carve_stmt_obj (&mtext, false);
                         oprintf("gg_puts (GG_WEB, gg_app_path, gg_app_path_len, false);\n"); // optimized to compute strlen at compile time
+                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
 
                         continue;
                     }
@@ -4766,10 +4770,14 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
+                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
+
+                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
                         carve_stmt_obj (&mtext, true);
                         check_var (&mtext, GG_DEFNUMBER, NULL);
 
                         do_numstr (NULL, mtext, NULL, NULL);
+                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
 
                         continue;
                     }
@@ -4778,8 +4786,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
                         char *length = find_keyword (mtext, GG_KEYLENGTH, 1);
+                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
 
                         carve_statement (&length, "p-url", GG_KEYLENGTH, 0, 1);
+                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
                         carve_stmt_obj (&mtext, true);
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
@@ -4788,6 +4798,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (length == NULL) length = "GG_EMPTY_LONG_PLAIN_ZERO";
 
                         oprintf("gg_puts (GG_URL, %s, %s, true);\n", mtext, length); 
+                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
 
                         continue;
                     }
@@ -4796,8 +4807,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
                         char *length = find_keyword (mtext, GG_KEYLENGTH, 1);
+                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
 
                         carve_statement (&length, "p-web", GG_KEYLENGTH, 0, 1);
+                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
                         carve_stmt_obj (&mtext, true);
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
@@ -4806,6 +4819,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (length == NULL) length = "GG_EMPTY_LONG_PLAIN_ZERO";
 
                         oprintf("gg_puts (GG_WEB, %s, %s, true);\n", mtext, length); 
+                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
 
                         continue;
                     }

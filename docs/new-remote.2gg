@@ -34,7 +34,7 @@ new-remote will create resources needed for a service call (see \fBcall-remote\f
 .B LOCAL OR LOCATION
 .LP
 
-If "local" clause is used, then service is a Gliimly application running on the same computer, and the name of this application is <app name>. 
+If "local" clause is used, then service is a Gliimly application running on the same computer, and the name of this application is string <app name>. 
 
 If "local" is not used, then you must use "location" clause. <location> (in "location" clause) is a string representing either a Unix socket or a TCP socket of a remote service, and is:
 

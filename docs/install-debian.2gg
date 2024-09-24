@@ -30,7 +30,7 @@ sudo apt -y install git
 
 git clone https://github.com/gliimly/gliimly.git
 cd gliimly
-git checkout 32
+git checkout 35
 
 .EE
 .RE

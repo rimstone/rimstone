@@ -1082,7 +1082,8 @@ bool cmp_type (gg_num t1, gg_num t2)
 // Encode string v, producing output result res. enc_type is GG_WEB (for
 // web encoding) or GG_URL (for url encoding). Pointer to pointer 'res' is allocated
 // with sufficient memory in the worst case scenario (if allocate_new is 1), or if it is 0, it MUST
-// have enough space to hold GG_MAX_ENC_BLOWUP(vLen) in it), vLen is the string length of v.
+// have enough space to hold GG_MAX_ENC_BLOWUP(vLen) in it) and the caller MUST handle any setting of memory length!
+// vLen is the string length of v.
 // Null character added.
 // String v can be smaller than length vLen, vLen is the maximum number of characters encoded.
 // Returns length of an encoded string.
@@ -1140,8 +1141,11 @@ gg_num gg_encode_base (gg_num enc_type, char *v, gg_num vLen, char **res, gg_num
         assert (1==2);
     }
     (*res)[j] = 0;
-    *res = (char*)gg_realloc (gg_mem_get_id(*res), j+1); // reduce memory usage
-    gg_mem_set_len (gg_mem_get_id(*res), j+1);
+    if (allocate_new==1)
+    {
+        *res = (char*)gg_realloc (gg_mem_get_id(*res), j+1); // reduce memory usage
+        gg_mem_set_len (gg_mem_get_id(*res), j+1);
+    }
     return j;
 }
 

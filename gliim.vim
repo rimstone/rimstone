@@ -1,7 +1,7 @@
 " Language: Gliimly
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2024-September-23
+" Latest Revision: 2024-September-24
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link gliimConstruct Statement
@@ -1764,6 +1764,11 @@ syn region gg_r_construct_p_web start="^[[:space:]]*p-web" skip="\\[[:space:]]*$
     syn match gg_h_construct_p_web "^[[:space:]]*p-web" contained containedin=gg_r_construct_p_web
     syn match gg_h_clause_p_web " length \@=" contained containedin=gg_r_construct_p_web
     syn match gg_h_print_inline_p_web " length \@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_clause_p_web " new-line \@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " new-line,\@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " new-line$" contained containedin=gg_r_construct_p_web
+    syn match gg_h_print_inline_p_web " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_print_inline_p_web " new-line \@=" contained containedin=gg_r_inline_p_web
     syn region gg_r_inline_p_web start="<<[[:space:]]*p-web \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_web '<<[[:space:]]*p-web \@=' contained containedin=gg_r_inline_p_web
     syn match gg_h_print_inline_p_web '>>' contained containedin=gg_r_inline_p_web
@@ -1777,6 +1782,11 @@ syn region gg_r_construct_p_url start="^[[:space:]]*p-url" skip="\\[[:space:]]*$
     syn match gg_h_construct_p_url "^[[:space:]]*p-url" contained containedin=gg_r_construct_p_url
     syn match gg_h_clause_p_url " length \@=" contained containedin=gg_r_construct_p_url
     syn match gg_h_print_inline_p_url " length \@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_clause_p_url " new-line \@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " new-line,\@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " new-line$" contained containedin=gg_r_construct_p_url
+    syn match gg_h_print_inline_p_url " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_print_inline_p_url " new-line \@=" contained containedin=gg_r_inline_p_url
     syn region gg_r_inline_p_url start="<<[[:space:]]*p-url \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_url '<<[[:space:]]*p-url \@=' contained containedin=gg_r_inline_p_url
     syn match gg_h_print_inline_p_url '>>' contained containedin=gg_r_inline_p_url
@@ -1788,6 +1798,11 @@ syn region gg_r_construct_p_num start="^[[:space:]]*p-num" skip="\\[[:space:]]*$
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_num,gg_r_inline_p_num,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_num,gg_r_inline_p_num,gg_r_at
     syn match gg_h_construct_p_num "^[[:space:]]*p-num" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " new-line \@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " new-line,\@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " new-line$" contained containedin=gg_r_construct_p_num
+    syn match gg_h_print_inline_p_num " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_num
+    syn match gg_h_print_inline_p_num " new-line \@=" contained containedin=gg_r_inline_p_num
     syn region gg_r_inline_p_num start="<<[[:space:]]*p-num \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_num '<<[[:space:]]*p-num \@=' contained containedin=gg_r_inline_p_num
     syn match gg_h_print_inline_p_num '>>' contained containedin=gg_r_inline_p_num
@@ -1799,6 +1814,11 @@ syn region gg_r_construct_p_path start="^[[:space:]]*p-path" skip="\\[[:space:]]
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_path,gg_r_inline_p_path,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_path,gg_r_inline_p_path,gg_r_at
     syn match gg_h_construct_p_path "^[[:space:]]*p-path" contained containedin=gg_r_construct_p_path
+    syn match gg_h_clause_p_path " new-line \@=" contained containedin=gg_r_construct_p_path
+    syn match gg_h_clause_p_path " new-line,\@=" contained containedin=gg_r_construct_p_path
+    syn match gg_h_clause_p_path " new-line$" contained containedin=gg_r_construct_p_path
+    syn match gg_h_print_inline_p_path " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_path
+    syn match gg_h_print_inline_p_path " new-line \@=" contained containedin=gg_r_inline_p_path
     syn region gg_r_inline_p_path start="<<[[:space:]]*p-path" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_path '<<[[:space:]]*p-path' contained containedin=gg_r_inline_p_path
     syn match gg_h_print_inline_p_path '>>' contained containedin=gg_r_inline_p_path

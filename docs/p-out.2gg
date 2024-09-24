@@ -9,7 +9,7 @@ Outputs a string without encoding.
 .RS 4
 .EX
 
-p-out <string> [ length <length> ] 
+p-out <string> [ length <length> ] [ new-line ]
 
 .EE
 .RE
@@ -18,6 +18,10 @@ p-out <string> [ length <length> ]
 p-out outputs a string expression given by <string>, without any encoding (meaning a string is output exactly as it appears). 
 
 If "length" clause is used, then only <length> leading bytes of <string> are output. 
+
+If "new-line" clause is used, then a new line ("\en") is output after <string>.
+
+Note that all bytes of <string> are output, even if <string> contains null-bytes.
 
 .SH EXAMPLES
 To output data verbatim to a client:
@@ -36,7 +40,7 @@ Writing to client, outputting text followed by a horizontal rule - the text is o
 .RS 4
 .EX
 
-p-out "This is a non-encoded output<br/>"
+p-out "This is a non-encoded output<br/>" new-line
 p-out "<hr/>"
 
 .EE
