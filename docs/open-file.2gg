@@ -32,7 +32,6 @@ Create a file (or truncate an existing one), write 25,000 rows and the read back
 .EX
 
 %% /ofile
-    out-header default
     // Create new file, or truncate an old file if it exists
     open-file "testwrite" file-id nf new-truncate
 

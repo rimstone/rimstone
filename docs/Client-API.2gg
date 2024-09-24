@@ -579,8 +579,6 @@ In this case, you're using a Unix socket to communicate with the Gliimly service
 
 begin-handler /hello_simple
    silent-header
-   out-header default
-
    @Hi there!
 end-handler
 
@@ -730,7 +728,6 @@ To test it, you can create a Gliimly application. Copy this to "hello.gliim" fil
 
 begin-handler /hello
     silent-header
-    out-header default
 
     // Get request body
     request-body rb

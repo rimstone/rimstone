@@ -42,8 +42,6 @@ In a new directory, create file indexsrv.gliim and copy to it:
 .EX
 
 %% /indexsrv
-    out-header default
-
     do-once
     new-index t process-scope
     end-do-once
@@ -54,7 +52,7 @@ In a new directory, create file indexsrv.gliim and copy to it:
     get-param data
 
     if-true op equal "add" // Add data to index
-        write-index t key key value data status st
+        write-index t key (key) value data status st
         if-true st equal GG_OKAY
             @Added [<<p-out key>>]
         else-if

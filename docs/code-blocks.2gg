@@ -18,7 +18,6 @@ The following code will first print out "outside" and then "inside" twice, illus
 .EX
 
 begin-handler /scope
-    out-header default
     @<<p-out s1>>
     set-string s1="outside"
     {

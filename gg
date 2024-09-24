@@ -226,7 +226,7 @@ _DO_QUICK=0
             shift 1
             ;;
         --arg  )
-#arguments for single-run execution
+#arguments for command-line execution
             _REQ_ARG="$2"
             shift 2
             ;;

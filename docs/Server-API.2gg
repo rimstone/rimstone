@@ -142,7 +142,6 @@ File "example.gliim" will call the above functions and display the results:
 extended-mode
 
 begin-handler /example
-    out-header default
 
     set-number fact
     call-extended get_factorial (10, &fact)

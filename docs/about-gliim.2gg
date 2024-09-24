@@ -13,7 +13,7 @@ Gliimly is a very high-level modeling language. It's about solving problems by m
 .B SERVICE ORIENTED
 .LP
 
-A Gliimly program works as a service provider, meaning it handles service \fBrequest\fPs by providing a reply. It can be either a \fBservice\fP or a \fBsingle-run\fP program that processes GET, POST, PUT, PATCH, DELETE or any other HTTP requests. 
+A Gliimly program works as a service provider, meaning it handles service \fBrequest\fPs by providing a reply. It can be either a \fBservice\fP or a \fBcommand-line\fP program that processes GET, POST, PUT, PATCH, DELETE or any other HTTP requests. 
 
 The URL for a request must state the application name, and a also request name which is the source file handling it. So, "/app-name/my-request" means that application name is "app-name" and that "request_name.gliim" file will implement a request handler. A request executes in this order:
 
@@ -81,10 +81,16 @@ another Gliimly service by means of \fBcall-remote\fP (on secure networks) and \
 With \fBcall-remote\fP, you can execute remote requests in parallel, and get results, error messages and exit status in a single statement. This makes it easy to distribute and parallelize your application logic and/or build application tiers on a local or any number of remote machines, without having to write any multi-threaded code.
 
 .LP
+.B COMMAND-LINE PROGRAM
+.LP
+
+A \fBcommand-line\fP program handles a single request before it exits. This may be suitable for batch jobs, for use in shell scripts, for testing/mocking, as well as any other situation where it is more useful or convenient to execute a command-line program. Note that a command-line program can double as \fBCGI\fP (Common Gateway Interface) as well.
+
+.LP
 .B USAGE
 .LP
 
-Gliimly services and single-run programs can implement most back-end application layers, including 
+Gliimly services and command-line programs can implement most back-end application layers, including 
 
 .RS 4
 \[bu]    
@@ -103,12 +109,6 @@ application logic,
 data (eg. database) layers, and any others.
 .RE
 
-
-.LP
-.B SINGLE-RUN PROGRAM
-.LP
-
-When your Gliimly service is \fBsingle-run\fP, a request is handled by a single execution - for instance from command-line. This may be suitable for batch jobs, for use in shell scripts, for testing/mocking, as well as any other situation where it is more useful or convenient to execute a single-run program. Note that a single-run program can double as \fBCGI\fP (Common Gateway Interface) as well.
 
 .LP
 .B LANGUAGE

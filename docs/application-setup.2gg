@@ -112,14 +112,14 @@ See \fBmgrg\fP for more details.
 .B RUNNING APPLICATION
 .LP
 
-You can run your application as \fBservice\fP, \fBCGI\fP or \fBsingle-run\fP.
+You can run your application as \fBservice\fP, \fBCGI\fP or \fBcommand-line\fP.
 .SH SEE ALSO
  
 .B - Running application
 
 \fBapplication-setup\fP  
 \fBCGI\fP  
-\fBservice\fP  
-\fBsingle-run\fP   
+\fBcommand-line\fP  
+\fBservice\fP   
 See all 
 \fBdocumentation\fP

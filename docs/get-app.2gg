@@ -41,7 +41,7 @@ Application-related variables can be obtained with get-app statement. The follow
 
 .RS 4
 \[bu]    
-"is-service" is a boolean variable that is true if your code is running as a \fBservice\fP, or false if it is running as a \fBsingle-run\fP program.
+"is-service" is a boolean variable that is true if your code is running as a \fBservice\fP, or false if it is running as a \fBcommand-line\fP program.
 
 .RE
 

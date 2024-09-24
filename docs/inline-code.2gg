@@ -55,7 +55,6 @@ In the code below, "some_req" is a request handler that outputs some text, and i
 .EX
 
 %% /some-req
-    out-header default
     @world 
 %%
 

@@ -1,10 +1,10 @@
 .TH GLIIM 2gg $VERSION $DATE Development Tools
 .SH NAME
-single-run \- Gliimly documentation (running-application)
+command-line \- Gliimly documentation (running-application)
 .SH DESCRIPTION
-A Gliimly application can run as a web application or a single-run program, or both - such as when some requests can be either fulfilled through web interface or executed otherwise (such as on the command line). Note that Gliimly produces two separate executables: a \fBservice\fP one and a single-run one - they are different because single-run program does not need the service library and thus is smaller. 
+A Gliimly application can run as a web application or a command-line program, or both - such as when some requests can be either fulfilled through web interface or executed otherwise (such as on the command line). Note that Gliimly produces two separate executables: a \fBservice\fP one and a command-line one - they are different because command-line program does not need the service library and thus is smaller. 
 
-The name of the single-run executable is the same as the application name, and its path is (assuming <app name> is the application name):
+The name of the command-line executable is the same as the application name, and its path is (assuming <app name> is the application name):
 
 .RS 4
 .EX
@@ -19,13 +19,13 @@ The name of the single-run executable is the same as the application name, and i
 .B OUTPUT
 .LP
 
-A single-run program works the same way as a service executable, and the output is the same, except that it is directed to stdout (standard output) and stderr (standard error). 
+A command-line program works the same way as a service executable, and the output is the same, except that it is directed to stdout (standard output) and stderr (standard error). 
 
 .LP
 .B EXIT CODE
 .LP
 
-To specify the exit code of a single-run program, use \fBhandler-status\fP. To exit the program, use \fBexit-handler\fP, or otherwise the program will exit when it reaches the end of a \fBrequest\fP.
+To specify the exit code of a command-line program, use \fBhandler-status\fP. To exit the program, use \fBexit-handler\fP, or otherwise the program will exit when it reaches the end of a \fBrequest\fP.
 
 .LP
 .B EXECUTING A REQUEST
@@ -108,7 +108,7 @@ export GG_SILENT_HEADER=yes
 .EE
 .RE
 
-This will suppress the effect of \fBout-header\fP, or for any other case where headers are output. This has the same effect as \fBsilent-header\fP, the only difference is that the environment variable applies to the entire application.
+This will suppress the output of HTTP headers (either the default or with \fBout-header\fP), or for any other case where headers are output. This has the same effect as \fBsilent-header\fP, the only difference is that the environment variable applies to the entire application.
 
 .LP
 .B URL-ENCODING THE INPUT
@@ -152,14 +152,14 @@ If your parameters do not contain characters that need URL encoding, then you ca
 .B CGI
 .LP
 
-You can also use a single-run program with \fBCGI\fP (Common Gateway Interface). 
+You can also use a command-line program with \fBCGI\fP (Common Gateway Interface). 
 .SH SEE ALSO
  
 .B - Running application
 
 \fBapplication-setup\fP  
 \fBCGI\fP  
-\fBservice\fP  
-\fBsingle-run\fP   
+\fBcommand-line\fP  
+\fBservice\fP   
 See all 
 \fBdocumentation\fP

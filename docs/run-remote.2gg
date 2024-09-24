@@ -57,8 +57,6 @@ See details for each clause in \fBnew-remote\fP (for "local" through "timeout" c
 .EX
 
 begin-handler /serv
-    out-header default
-
     run-remote nf local "hash-server-yey" \\
         url-path "/hash-server-yey/server/op=add/key=sb_XYZ/data=sdb_123" \\
         finished-okay sfok \\

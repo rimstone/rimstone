@@ -87,8 +87,6 @@ Copy this to "manage_keys.gliim" source file:
 .EX
 
 %% /manage-keys
-   out-header default
-
    do-once
    new-array h hash-size 1024 process-scope
    end-do-once
@@ -133,7 +131,6 @@ Create file "srv.gliim" and copy to it this code:
 .EX
 
 begin-handler /srv
- out-header default
  // Create resources (prepare) for 3 service calls
  // We pass environment variable GG_SILENT_HEADER to these calls
  // so they don't emit HTTP header

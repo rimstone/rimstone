@@ -32,7 +32,6 @@ Copy to file "callsub.gliim":
 .EX
 
 %% /callsub
-    out-header default
     //
     // First call to sub-handler
     //

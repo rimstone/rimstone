@@ -27,7 +27,6 @@ If new-message is used without "from" clause, data can be added to <message> wit
 .EX
 
 begin-handler /msg
-    out-header default
     new-message msg
     write-message msg key "weather" value "nice"
     write-message msg key "distance" value "near"

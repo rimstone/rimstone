@@ -31,7 +31,6 @@ In this example, a LIFO list is created, and two key/value pairs added. They are
 .EX
 
 %% /lifo
-    out-header default
     new-lifo mylist
 
     // Add data to the list

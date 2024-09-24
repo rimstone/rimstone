@@ -24,6 +24,8 @@ $HOME/.vim/syntax/gliim.vim
 
 and also update your local $HOME/.vimrc file to use this syntax for files with .gliim extension. All files updated are local, i.e. they affect only the current user. Each user who wants this feature must issue the above command.
 
+You can then change the color scheme to anything you like by using ":colorscheme" directly in editor, or by specifying "colorscheme" in your ".vimrc" file for a persistent change.
+
 The Gliimly highlighting syntax is tested with Vim 8.1.
 .SH SEE ALSO
  

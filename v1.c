@@ -50,6 +50,7 @@
 #define GG_KEYPARAM "param "
 #define GG_KEYEXIT "exit"
 #define GG_KEYOPTIONS "options "
+#define GG_KEYNEWLINE "new-line"
 #define GG_KEYCREATE "create "
 #define GG_KEYTYPE0 "type"
 #define GG_KEYTYPE "type "
@@ -4735,8 +4736,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
                         char *length = find_keyword (mtext, GG_KEYLENGTH, 1);
+                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
 
                         carve_statement (&length, "p-out", GG_KEYLENGTH, 0, 1);
+                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
                         carve_stmt_obj (&mtext, true);
                         //
                         check_var (&length, GG_DEFNUMBER, NULL);
@@ -4745,6 +4748,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (length == NULL) length = "GG_EMPTY_LONG_PLAIN_ZERO";
 
                         oprintf("gg_puts (GG_NOENC, %s, %s, true);\n", mtext, length); 
+                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
 
                         continue;
                     }

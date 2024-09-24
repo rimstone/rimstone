@@ -58,7 +58,6 @@ Here's an example of using the format placeholders:
 .EX
 
 %% /my-request
-    out-header default
     @Hi
     trace-run "%s it's %ld degrees outside, or with minimum width: %20s it's %20ld outside", "yes", 90, "yes", 90
 %%

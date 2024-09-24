@@ -28,7 +28,6 @@ Here is a simple implementation of before-handler handler that just outputs "Get
 .EX
 
 before-handler
-    out-header default
     @Getting Started!! 
 end-before-handler
 

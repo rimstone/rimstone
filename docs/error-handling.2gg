@@ -20,7 +20,7 @@ Skip the rest of the request, and move on quickly to handle the next request wit
 Stop and exit, and it may be automatically restarted if it's a \fBservice\fP. For instance, the process could be out of memory, or the database is permanently down and connection cannot be re-established.
 .RE
 . 
-Note that if your program is \fBsingle-run\fP (for instance if it's a command-line program), it will exit in any case since it handles a single request anyway.
+Note that if your program is \fBcommand-line\fP, it will exit in any case since it handles a single request anyway.
 .RE
 
 

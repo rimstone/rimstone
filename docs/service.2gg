@@ -79,7 +79,7 @@ In this case, the timeout is set to 8 seconds.
 
 \fBapplication-setup\fP  
 \fBCGI\fP  
-\fBservice\fP  
-\fBsingle-run\fP   
+\fBcommand-line\fP  
+\fBservice\fP   
 See all 
 \fBdocumentation\fP

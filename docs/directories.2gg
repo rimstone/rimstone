@@ -14,7 +14,7 @@ A Gliimly application is always owned by a single Operating System user (see "-u
 .RS 4
 \[bu]    
 /var/lib/gg/bld/<app name>
-Build directory is where your application executables are built, with name <app name>.srvc for a \fBservice\fP and <app name> for a \fBsingle-run\fP. This is a scratch-pad directory, so do not alter files in it, or use for anything else.
+Build directory is where your application executables are built, with name <app name>.srvc for a \fBservice\fP and <app name> for a \fBcommand-line\fP program. This is a scratch-pad directory, so do not alter files in it, or use for anything else.
 
 
 .RE
