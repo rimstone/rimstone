@@ -22,7 +22,7 @@ System-describing variables can be obtained with get-sys statement and the resul
 
 .RS 4
 \[bu]    
-"environment" returns the name of a given environment variable <var name>. If this is a server program, then the environment passed from a remote caller (such as web proxy) is queried. If this is a \fBsingle-run\fP program, then the environment from the Operating System is queried. In the following example,the QUERY_STRING variable (i.e. the actual query string from URL) is obtained:
+"environment" returns the name of a given environment variable <var name>. If this is a server program, then the environment passed from a remote caller (such as web proxy) is queried. If this is a \fBcommand-line\fP program, then the environment from the Operating System is queried. In the following example,the QUERY_STRING variable (i.e. the actual query string from URL) is obtained:
 
 .RS 4
 .EX
@@ -38,7 +38,7 @@ get-sys environment "QUERY_STRING" to qstr
 
 .RS 4
 \[bu]    
-"directory" is the execution directory of the \fBsingle-run\fP program, i.e. the current working directory when the program was executed. Note that Gliimly will change the current working directory immediately afterwards to the application home directory (see \fBdirectories\fP). You can use this clause to work with files in the directory where the program was started. If your program runs as a \fBservice\fP, then "directory" clause always returns application home directory, regardless of which directory \fBmgrg\fP program manager started your application from.
+"directory" is the execution directory of the \fBcommand-line\fP program, i.e. the current working directory when the program was executed. Note that Gliimly will change the current working directory immediately afterwards to the application home directory (see \fBdirectories\fP). You can use this clause to work with files in the directory where the program was started. If your program runs as a \fBservice\fP, then "directory" clause always returns application home directory, regardless of which directory \fBmgrg\fP program manager started your application from.
 
 
 .RE

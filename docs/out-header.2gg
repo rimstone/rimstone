@@ -25,21 +25,21 @@ out-header use \\
 .RE
 
 .SH DESCRIPTION
-out-header outputs HTTP header and also sends any cookies produced by \fBset-cookie\fP and \fBdelete-cookie\fP.
+out-header outputs HTTP header and also sends any cookies produced by \fBset-cookie\fP and \fBdelete-cookie\fP. A web page must have an HTTP header output before any other response. 
 
-A web page must have an HTTP header output before any other response. Note that while cookies may be set after out-header, they still must be set before outputting the data (such as for instance via \fBoutput-statement\fP or \fBp-out\fP). If your application uses out-header multiple times, all but the very first one are ignored. 
+If out-header is not used, a default HTTP header is sent out just before the very first output (see \fBoutput-statement\fP, \fBp-out\fP etc.) at which point any cookie updates are sent as well; this default header is the same as using "out-header default".
 
-If out-header is not called prior to the actual output, your program will \fBerror out\fP. Be sure to always first use out-header prior to any output for a \fBrequest\fP.
+If you use out-header multiple times, all but the very first one are ignored.
 
-Use out-header for dynamically generated web pages. If you wish to output a file (such as an image or a PDF document), do not use this statement; rather use \fBsend-file\fP instead which outputs its own header.
+If you wish to output a file (such as an image or a PDF document), do not use out-header; rather use \fBsend-file\fP instead which outputs its own header.
 
-The HTTP header is sent back to a client who initiated a request. You can specify any custom headers with "use" clause. 
+The HTTP header is sent back to a client who initiated a request. You can specify any custom headers with "use" clause.
 
 .LP
 .B DEFAULT HEADER
 .LP
 
-If "default" clause is in place, a default header is constructed, which uses a status of 200/OK and content type of 
+If no out-header is used, or if "default" clause is in place, a default header is constructed, which uses a status of 200/OK and content type of
 
 .RS 4
 .EX
@@ -49,7 +49,7 @@ text/html;charset=utf-8
 .EE
 .RE
 
-and cache control of 
+and cache control of
 
 .RS 4
 .EX
@@ -59,7 +59,7 @@ Cache-Control:max-age=0, no-cache; Pragma: no-cache
 .EE
 .RE
 
-The default header is typical for dynamically generated web pages, and most of the time you would use the default header.
+The default header is typical for dynamically generated web pages, and most of the time you would use the default header - meaning you don't need to specify out-header statement.
 
 .LP
 .B HEADERS
@@ -130,7 +130,7 @@ out-header use custom "CustomOption3"="CustomValue3", "Status"="418 I'm a teapot
 You can use \fBsilent-header\fP before output-header in order to suppress its output.
 
 .SH EXAMPLES
-To output the default HTTP header for a dynamically generated page (a typical usage):
+Sometimes you may want to output the default header immediately, for instance if the first output produces may take some time:
 
 .RS 4
 .EX

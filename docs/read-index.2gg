@@ -82,8 +82,6 @@ In this example, a million key/value pairs are inserted into an index, and then 
 
 %% /index-example
 
-    out-header default
-
     new-index myindex key-as "positive integer" // create new index
 
     set-number i

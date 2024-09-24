@@ -37,7 +37,6 @@ Parse the following JSON document and display all keys and values from it. You c
 .RS 4
 .EX
 
-out-header default
 
 // JSON to parse
 set-string jd unquoted = {"menu":\\

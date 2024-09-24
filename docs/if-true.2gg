@@ -122,7 +122,6 @@ if-true can be nested, which can be up to 30 levels deep.
 .EX
 
 %% i
-    out-header default
     get-param inp
 
     if-true inp equal "1"

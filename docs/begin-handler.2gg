@@ -23,7 +23,7 @@ A <request path> can be a request name (i.e. without any forward slashes) or a p
 
 For example, a <request path> can be "wine_items" or "/wine-items" "/items/wine" etc. In general, it represents the nature of a request, such as an action on an object, a resource path handled by it etc. There is no specific way to interpret a request path, and you can construct it in a way that works for you.
 
-If "sub-handler" clause is used, then this handler can only be called from another handler by using \fBsub-handler\fP statement; it cannot be called from an outside caller, be it a \fBservice\fP call or \fBsingle-run\fP program. This mechanism automatically guards direct execution by outside callers of such handlers for safety, for instance by checking user credentials first. 
+If "sub-handler" clause is used, then this handler can only be called from another handler by using \fBsub-handler\fP statement; it cannot be called from an outside caller, be it a \fBservice\fP call or \fBcommand-line\fP program. This mechanism automatically guards direct execution by outside callers of such handlers for safety, for instance by checking user credentials first. 
 
 Note that you can also use "%%" instead of either begin-handler or end-handler or both. 
 
@@ -36,7 +36,6 @@ The following begin-handler is implemented in file "items__wines__red_wine.gliim
 .EX
 
 begin-handler  /items/wines/red-wine
-    out-header default
     @This is a request handler to display a list of red wines!
 end-handler
 
@@ -49,7 +48,6 @@ Another way to write this is:
 .EX
 
 %%  /items/wines/red-wine
-    out-header default
     @This is a request handler to display a list of red wines!
 %%
 

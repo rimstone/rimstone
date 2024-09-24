@@ -62,7 +62,6 @@ This example will connect to local Unix socket file "/var/lib/gg/app_name/sock/s
 .RS 4
 .EX
 
-out-header default
 // Create single call
 new-remote srv location "/var/lib/gg/app_name/sock/sock" \\
     method "GET" app-path "/app_name" request-path "/server" \\

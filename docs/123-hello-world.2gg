@@ -19,7 +19,6 @@ Create Hello World source file (hello.gliim) in a new directory; note it's all o
 .EX
 
 echo 'begin-handler /hello
-    out-header default
     @Hello World!
 end-handler' > hello.gliim
 
@@ -80,7 +79,7 @@ gg -r --req="/hello" --silent-header --service --exec
 
 .RS 4
 \[bu]    
-Execute as \fBsingle-run\fP from command line:
+Execute as \fBcommand-line\fP program:
 
 .RS 4
 .EX

@@ -40,7 +40,6 @@ To read a text file line by line, and display as a web page with line breaks:
 .RS 4
 .EX
 
-out-header default
 read-line "/home/bear/tmp/ll/filexx" to one_line status st
     string-length one_line to line_len
     @Line length is <<p-num line_len>>, line is <<p-web one_line>> status <<p-num st>><br/>

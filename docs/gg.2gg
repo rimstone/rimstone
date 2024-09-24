@@ -211,7 +211,7 @@ Show library directory - Gliimly's libraries and v1 code processor are located t
     [ --silent-header ] 
     [ --arg="<arguments>" ] 
     [ --exec ] 
-Run a \fBsingle-run\fP program, or make a \fBservice\fP request, or display bash code to do the same for use in scripts. 
+Run a \fBcommand-line\fP program, or make a \fBservice\fP request, or display bash code to do the same for use in scripts. 
 
 If you are not in application's source code directory, then you must specify "--app" option to supply the application path (typically "/<application name>", see \fBrequest\fP). You can use "--req" option to specify the request name and optional URL parameters (see \fBrequest\fP), for example it may be:
 
@@ -247,13 +247,13 @@ gg -r --req="/encrypt/data=somedata?method=aes256" --method=POST --exec
 
 If not specified, the default method is "GET". 
 
-If "--service" is not used, then \fBsingle-run\fP program will execute and you can specify program arguments with "--arg" option, in which case "<arguments>" is a string (double or single quoted) that contains any number of program arguments. To specify arguments for a service see "-a" option in \fBmgrg\fP.
+If "--service" is not used, then \fBcommand-line\fP program will execute and you can specify program arguments with "--arg" option, in which case "<arguments>" is a string (double or single quoted) that contains any number of program arguments. To specify arguments for a service see "-a" option in \fBmgrg\fP.
 
 If "--service" is used, then application server will be contacted to execute a service; in this case if "--remote" is not specified, a local Unix socket is used to contact the server; otherwise "server:port" specified in "--remote" is the IP/name and port of the server to call, separated by a colon (":"). In case of a local Unix socket, the socket path is by default "/var/lib/gg/<app name>/sock/sock", where "/<app name>" is given by the last path segment in "--app" option, or if not specified it is derived from the name of a Gliimly application built in the current directory; otherwise the socket path is given by "--socket" option.
 
 By default, the output in any case will have the HTTP headers. If you don't want those to appear, use "--silent-header" option.
 
-If "--content" is used, then file <input file> is either piped to the standard input of a single-run program (if "--service" is not used), or sent as a content to the application server (if "--service" is used). You can also specify content type with "--content-type". For example:
+If "--content" is used, then file <input file> is either piped to the standard input of a command-line program (if "--service" is not used), or sent as a content to the application server (if "--service" is used). You can also specify content type with "--content-type". For example:
 
 .RS 4
 .EX
@@ -282,12 +282,12 @@ export QUERY_STRING="method=aes256"
 
 If you copy the above and paste into bash shell, it will execute the command line program which handles the request specified (which gg would do when "--exec" is specified). Note that SCRIPT_NAME will be set to whatever application path you use (i.e. the default or if set with "--path" option when making the application; or with "--app" option here), see \fBrequest\fP. 
 
-Examples of using "-r" option to execute \fBsingle-run\fP program or to call a \fBservice\fP:
+Examples of using "-r" option to execute \fBcommand-line\fP program or to call a \fBservice\fP:
 
 .RS 4
 .EX
 
-\[char35]Execute current application as a single-run program, request "json"
+\[char35]Execute current application as a command-line program, request "json"
 gg -r --req="/json" --exec
 
 \[char35]Execute application "app_name", service "json" by calling the application server running with a Unix socket

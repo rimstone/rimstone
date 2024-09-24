@@ -35,7 +35,6 @@ You can use any file name (likely choose a name that signifies the purpose of a 
 .EX
 
 %% /locktest
-    out-header default
     // Get application home directory
     get-app directory to dir
     // Create lock file name

@@ -15,15 +15,15 @@ silent-header
 .RE
 
 .SH DESCRIPTION
-silent-header will suppress the output of HTTP headers, such as with \fBout-header\fP, or in any other case where headers are output. The effect applies to current \fBrequest\fP only; if you use it conditionally, then you can have it on or off dynamically. If you want to suppres the headers across the entire \fBsingle-run\fP application, set GG_SILENT_HEADER environment variable to value of "yes" prior to running it.
+silent-header will suppress the output of HTTP headers, such as with \fBout-header\fP, or in any other case where headers are output. The effect applies to current \fBrequest\fP only; if you use it conditionally, then you can have it on or off dynamically. If you want to suppres the headers across the entire \fBcommand-line\fP program, set GG_SILENT_HEADER environment variable to value of "yes" prior to running it.
 
-Note that you still have to use \fBout-header\fP regardless, as it is expected to be there if you output anything; however its actual output will be suppressed. silent-header must be used prior to outputting headers.
+silent-header must be used prior to outputting headers, meaning either prior to any output (if out-header is not used) or prior to first out-header.
 
 There are many uses for silent-header, among them:
 
 .RS 4
 \[bu]    
-A single-run program (such as a command line program) may use it to produce generic output, without any headers,
+A command-line program (such as a command line program) may use it to produce generic output, without any headers,
 
 .RE
 
@@ -45,7 +45,6 @@ a web program may output a completely different (non-HTTP) set of headers, etc.
 .EX
 
 silent-header 
-out-header
 
 // No headers output 
 

@@ -58,7 +58,10 @@ If "cache" clause is used, then regex compilation of <pattern> will be done only
 .RS 4
 .EX
 
-set-bool cl_c = true if-true q equal 0
+set-bool cl_c
+if-true q equal 0
+    set-bool cl_c = true 
+end-if
 match-regex ps in look_in replace-with "Yes it is \\e1!" result res cache clear-cache cl_c
 
 .EE

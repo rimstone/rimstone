@@ -2,7 +2,7 @@
 .SH NAME
 request \- Gliimly documentation (requests)
 .SH DESCRIPTION
-Gliimly applications run by processing requests. A request always takes form of an HTTP request, meaning a URL, an optional HTTP request body, and any environment variables. This is regardless of whether it's a \fBservice\fP or a \fBsingle-run\fP application. 
+Gliimly applications run by processing requests. A request always takes form of an HTTP request, meaning a URL, an optional HTTP request body, and any environment variables. This is regardless of whether it's a \fBservice\fP or a \fBcommand-line\fP program. 
 
 .LP
 .B HANDLING OF REQUESTS
@@ -211,8 +211,6 @@ Structuring your parameters, i.e. the order in a query path or path segments, an
 .EX
 
 begin-handler /buy-item
-    out-header default
-
     get-param sku
     get-param price
 
@@ -229,8 +227,6 @@ For a hierarchical URL path, you would write the same:
 .EX
 
 begin-handler /items/wine-collection/red-wine/buy-item
-    out-header default
-
     get-param sku
     get-param price
 
@@ -255,7 +251,7 @@ An incoming request is handled by a first available process:
 
 .RS 4
 \[bu]    
-For a \fBsingle-run\fP application, there is only a single process, and it handles a single requests before it exits. 
+For a \fBcommand-line\fP program, there is only a single process, and it handles a single requests before it exits. 
 
 .RE
 

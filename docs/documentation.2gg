@@ -4,7 +4,7 @@ documentation \- Gliimly documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GLIIMLY VERSION 27
+.B REFERENCE FOR GLIIMLY VERSION 32
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -463,8 +463,8 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 \fBapplication-setup\fP  
 \fBCGI\fP  
-\fBservice\fP  
-\fBsingle-run\fP   
+\fBcommand-line\fP  
+\fBservice\fP   
 .RE
 
 

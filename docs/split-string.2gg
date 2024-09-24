@@ -25,7 +25,6 @@ All pieces produced will be trimmed both on left and right. If a piece is double
 .EX
 
 %% parse
-    out-header default
     set-string clist = "a , b, \[char92]"c , d\[char92]" , e"
     split-string clist with "," to res count tot
     start-loop repeat tot use i
@@ -72,7 +71,6 @@ The following will parse a string containing name/value pairs (such as "name=val
 .EX
 
 %% /parse-url
-    out-header default
     // Data to parse - data/value pairs delimited by "&amp;" string, and data and value delimited by equal sign:
     set-string url ="x=23&amp;y=good&amp;z=hello_world"
 

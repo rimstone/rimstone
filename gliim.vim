@@ -1,7 +1,7 @@
 " Language: Gliimly
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2024-September-18
+" Latest Revision: 2024-September-23
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link gliimConstruct Statement
@@ -1812,6 +1812,11 @@ syn region gg_r_construct_p_out start="^[[:space:]]*p-out" skip="\\[[:space:]]*$
     syn match gg_h_construct_p_out "^[[:space:]]*p-out" contained containedin=gg_r_construct_p_out
     syn match gg_h_clause_p_out " length \@=" contained containedin=gg_r_construct_p_out
     syn match gg_h_print_inline_p_out " length \@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_clause_p_out " new-line \@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " new-line,\@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " new-line$" contained containedin=gg_r_construct_p_out
+    syn match gg_h_print_inline_p_out " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_print_inline_p_out " new-line \@=" contained containedin=gg_r_inline_p_out
     syn region gg_r_inline_p_out start="<<[[:space:]]*p-out \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_out '<<[[:space:]]*p-out \@=' contained containedin=gg_r_inline_p_out
     syn match gg_h_print_inline_p_out '>>' contained containedin=gg_r_inline_p_out
