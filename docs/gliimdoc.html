@@ -220,7 +220,7 @@ ul {
 
 
 
-<div class='vhub'>Gliimly Single-Page Documentation for version 32</div><hr/>
+<div class='vhub'>Gliimly Single-Page Documentation for version 35</div><hr/>
 This page contains all of Gliimly documentation topics combined into one. It may be easier to search. <!--GLIIMBEGDOC39--><br/><br/>
 <a href='#123-hello-world.html'>123-hello-world</a><br/>
 <a href='#about-gliim.html'>about-gliim</a><br/>
@@ -229,6 +229,7 @@ This page contains all of Gliimly documentation topics combined into one. It may
 <a href='#article-hello-world.html'>article-hello-world</a><br/>
 <a href='#article-hello-world-service.html'>article-hello-world-service</a><br/>
 <a href='#article-hello-world-service-web.html'>article-hello-world-service-web</a><br/>
+<a href='#article-statements.html'>article-statements</a><br/>
 <a href='#article-vim-coloring.html'>article-vim-coloring</a><br/>
 <a href='#article-what-is-gliiml.html'>article-what-is-gliiml</a><br/>
 <a href='#article-what-is-gliiml-long.html'>article-what-is-gliiml-long</a><br/>
@@ -722,6 +723,17 @@ Now you can call your web service, from the web. In this case it's probably a lo
 http://127.0.0.1/hello/hello-world/name=Mike</pre>
 </div><br/>
 Note the URL <a href='/request.html'>request</a> structure: first comes the application path ("/hello") followed by request path ("/hello-world") followed by URL parameters ("/name=Mike"). The result:<br/>
+<a id='article-statements.html'></a>
+<br/>
+Gliimly is a new programming language and framework for developing web services and web applications. The reason for Gliimly is to make software development easier, more reliable and to improve run-time performance. To do this, Gliimly is a very high level language yet it's a high performance one; those two qualities aren't usually together.<br/>
+<br/>
+Gliimly is a declarative language designed for simplicity. That means top-down approach, rather than bottom-up: it's more about describing what to do than coding it. It's a modeling language where pieces are assembled together quickly and with confidence. It's about the framework to create and deploy web services based on what they need to do from human perspective, more so than the technical one.<br/>
+<br/>
+Underlying Gliimly's functionality are industry-standard Open Source libraries, such as SSL, Curl, MariaDB and others, in addition to native Gliimly's. <br/>
+<br/>
+In extended mode, Gliimly is extensible with any standard libraries. You can also include C files directly in your project to compile with it. In this mode, Gliimly (obviously) does not guaratee memory safety, but it does not necessarily mean it's not safe either.<br/>
+<br/>
+Gliimly is very simple to work with - it doesn't even have expressions in a sense other languages do, save for very basic integer expressions (with plus, minus, divide, multiply). This is by design to reduce comlexity and improve performance. Gliimly's statements aim to deliver complete functionality without complicated coding, and are customizable to a great extent, statically optimized at compile-time for performance.<br/>
 <a id='article-vim-coloring.html'></a>
 <br/>
 Gliimly installation comes with a Vim module for highlighting Gliimly code. After installing Gliimly, run this to install the Vim module:<br/>
@@ -3134,7 +3146,7 @@ ln <span class="Special">-s</span> /home/disk0/file /var/lib/gg/<span class="Sta
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
 <a id='documentation.html'></a>
-<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 32"></a>Reference for Gliimly version 32</div>
+<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 35"></a>Reference for Gliimly version 35</div>
 <span style="font-weight:bold;">Note</span>: All the topics below are available as a <a href='/gliimdoc.html'>single-page documentation</a>. <br/>
 <br/>
 <ul><br/>
@@ -5049,7 +5061,7 @@ sudo pacman <span class="Special">--noconfirm</span> <span class="Special">-Sy</
 <pre id='code_2'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">32</span></pre>
+git checkout <span class="Constant">35</span></pre>
 </div><br/>
 <span style="font-weight:bold;">- Install dependencies</span><br/>
 <div class="shcode">
@@ -5094,7 +5106,7 @@ sudo apt <span class="Special">-y</span> install git</pre>
 <pre id='code_2'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">32</span></pre>
+git checkout <span class="Constant">35</span></pre>
 </div><br/>
 <span style="font-weight:bold;">- Install dependencies</span><br/>
 <div class="shcode">
@@ -5138,7 +5150,7 @@ sudo dnf <span class="Special">-y</span> install git</pre>
 <pre id='code_2'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">32</span></pre>
+git checkout <span class="Constant">35</span></pre>
 </div><br/>
 <span style="font-weight:bold;">- Install dependencies</span><br/>
 <div class="shcode">
@@ -5200,7 +5212,7 @@ sudo zypper <span class="Special">-n</span> install git</pre>
 <pre id='code_2'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">32</span></pre>
+git checkout <span class="Constant">35</span></pre>
 </div><br/>
 <span style="font-weight:bold;">- Install dependencies</span><br/>
 <div class="shcode">
@@ -5985,7 +5997,7 @@ If new-message is used without "from" clause, data can be added to &lt;message&g
 </div><br/>
 new-remote will create resources needed for a service call (see <a href='/call-remote.html'>call-remote</a>); these resources are contained in variable &lt;service&gt;.<br/>
 <div class="vsub"><a id="Local or location"></a>Local or location</div>
-If "local" clause is used, then service is a Gliimly application running on the same computer, and the name of this application is &lt;app name&gt;. <br/>
+If "local" clause is used, then service is a Gliimly application running on the same computer, and the name of this application is string &lt;app name&gt;. <br/>
 <br/>
 If "local" is not used, then you must use "location" clause. &lt;location&gt; (in "location" clause) is a string representing either a Unix socket or a TCP socket of a remote service, and is:<br/>
 <ul><li>for a Unix socket, a fully qualified name to a Unix socket file used to communicate with the service (for a Gliimly server, it's "/var/lib/gg/&lt;app name&gt;/sock/sock", where &lt;app name&gt; is the application name), or<br/>
@@ -6617,11 +6629,15 @@ Position to the first element in list:<br/>
 <br/>
 <div class='code'>
 <pre id='code_1'>
-<span class="Statement"> p-out</span> &lt;string&gt; [<span class="Identifier"> length</span> &lt;length&gt; ]</pre>
+<span class="Statement"> p-out</span> &lt;string&gt; [<span class="Identifier"> length</span> &lt;length&gt; ] [<span class="Identifier"> new-line</span> ]</pre>
 </div><br/>
 p-out outputs a string expression given by &lt;string&gt;, without any encoding (meaning a string is output exactly as it appears). <br/>
 <br/>
 If "length" clause is used, then only &lt;length&gt; leading bytes of &lt;string&gt; are output. <br/>
+<br/>
+If "new-line" clause is used, then a new line ("\n") is output after &lt;string&gt;.<br/>
+<br/>
+Note that all bytes of &lt;string&gt; are output, even if &lt;string&gt; contains null-bytes.<br/>
 <div class="vsub"><a id="Examples"></a>Examples</div>
 To output data verbatim to a client:<br/>
 <div class='code'>
@@ -6632,7 +6648,7 @@ To output data verbatim to a client:<br/>
 Writing to client, outputting text followed by a horizontal rule - the text is output to a client (such as browser) as it is, and the browser will interpret tags "&lt;br/&gt;" and "&lt;hr/&gt;" as a line break and a horizonal line and display them as such:<br/>
 <div class='code'>
 <pre id='code_3'>
-<span class="Statement"> p-out</span> <span class="Constant">&quot;This is a non-encoded output&lt;br/&gt;&quot;</span>
+<span class="Statement"> p-out</span> <span class="Constant">&quot;This is a non-encoded output&lt;br/&gt;&quot;</span><span class="Identifier"> new-line</span>
 <span class="Statement"> p-out</span> <span class="Constant">&quot;&lt;hr/&gt;&quot;</span></pre>
 </div><br/>
 Create a query text string by means of <a href='/write-string.html'>write-string</a> statement:<br/>
