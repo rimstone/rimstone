@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "37"
+#define GG_VERSION "44"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -435,6 +435,8 @@ typedef struct gg_msg_s
 {
     char *data; // message itself
     gg_num len; // current message length
+    gg_num tot; // total allocated, which can be far greater than current message length to avoid massive realloc-s
+    gg_num addinc; // add memory increment, starts with 128 and goes up to 4K
     gg_num curr; // where in parsing, or adding to, is message currently
     char mode; // GG_MSG_NONE, GG_MSG_READ, GG_MSG_WRITE, default MSG_NONE, must delete msg to change from read to write and vice versa
 } gg_msg;
@@ -486,8 +488,11 @@ typedef struct s_gg_ipar
     char found; // when using input-param, it's 0 if not asked for yet, 1 if was. Speeds up finding params.
                 // it must be either 0 or 1, nothing else; if so, input-param won't work
     char *name; // URL names for GET/POST request
-    void *value; // URL values for GET/POST request, or any param set with set-param
+    union {
+        void *value; // URL values for GET/POST request, or any param set with set-param
                  // which can be of any type, not just string
+        gg_num numval; // number value, if type is number, used for set-param from number so we can get-param from it (using *value won't work as C is iffy on this).
+    } tval; // it's either value or numval, both are 8 bytes
     gg_num type; // type of variable
     bool alloc; // is allocated? true if so. it means it's gliimmem; say input from web isn't alloc'd
 } gg_ipar;

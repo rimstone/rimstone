@@ -9,13 +9,15 @@ Outputs a number.
 .RS 4
 .EX
 
-p-num <number> 
+p-num <number>  [ new-line ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
 p-num outputs a number given by <number> variable. 
+
+If "new-line" clause is used, then a new line ("\en") is output after <number>.
 
 .SH EXAMPLES
 To output a number to a client:
