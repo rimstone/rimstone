@@ -301,6 +301,13 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
     // except nonce (IV), which is unique each time
     // if iv is NULL, Gliimly allows that only if cache is not used. In that case, the password is
     // computed each time and salt must be different each time, so new iv is generated every time.
+    if (iv != NULL)
+    {
+        // make sure IV length is sufficient, or otherwise EVP_EncryptInit_ex2 will SIGSEG trying to copy nonexistent bytes
+        int req_ivlen = EVP_CIPHER_CTX_get_iv_length(e);
+        gg_num iv_len = gg_mem_get_len (gg_mem_get_id(iv)); 
+        if (iv_len < req_ivlen) gg_report_error ("Length of Initialization Vector (IV) must be [%d] but only [%ld] allocated", req_ivlen, iv_len);
+    }
 #if OPENSSL_VERSION_MAJOR  >= 3
     EVP_EncryptInit_ex2(e, NULL, NULL, iv, NULL);
 #else

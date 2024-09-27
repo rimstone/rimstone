@@ -928,6 +928,8 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     // when there is a redirection to home page, referring url is empty
 
     char *sil = gg_getenv ("GG_SILENT_HEADER");
+    // Silent header is special as it is passed from mgrg, if -z is used there. So check for it.
+    if (sil[0] == 0) sil = gg_getenv_os ("GG_SILENT_HEADER");
     if (!strcmp (sil, "yes")) 
     {
         req->silent = 1;
@@ -1543,7 +1545,10 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 
     // We don't do  calloc because it may memset (doesn't always do that, but still),
     // we initialize everything below, including 'found' member. This is generally faster.
-    req->ip.ipars = (gg_ipar*)gg_malloc (req->ip.num_of_input_params * sizeof (gg_ipar));
+    // NOTE: +1 below is if there are no input params, in which case we would malloc 0 bytes. Given
+    // mem_ functions place zero byte in debug mode when memory is freed, that would be SIGSEG here, and it does 
+    // happen in do_once functional test.
+    req->ip.ipars = (gg_ipar*)gg_malloc (req->ip.num_of_input_params * sizeof (gg_ipar)+1);
 
     j = 0;
     gg_num name_length;
@@ -1560,9 +1565,9 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
         }
         j += name_length+1;
         value_len = strlen (content + j); 
-        (req->ip.ipars)[i].value = content +j;
+        (req->ip.ipars)[i].tval.value = content +j;
         gg_num trimmed_len = value_len;
-        (req->ip.ipars)[i].value = gg_trim_ptr ((req->ip.ipars)[i].value, &trimmed_len);// trim the input parameter for whitespaces (both left and right)
+        (req->ip.ipars)[i].tval.value = gg_trim_ptr ((req->ip.ipars)[i].tval.value, &trimmed_len);// trim the input parameter for whitespaces (both left and right)
         // add as partial, parent is always  non-delete, so no need to set it
         req->ip.ipars[i].type = GG_DEFSTRING;
         req->ip.ipars[i].alloc = false;
@@ -1710,7 +1715,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
             }
             // this name/value must be added
             req->ip.ipars[req->ip.num_of_input_params-1].name = name;
-            req->ip.ipars[req->ip.num_of_input_params-1].value = value;
+            req->ip.ipars[req->ip.num_of_input_params-1].tval.value = value;
             // add as partial, parent is always  non-delete, so no need to set it
             req->ip.ipars[req->ip.num_of_input_params-1].type = GG_DEFSTRING;
             req->ip.ipars[req->ip.num_of_input_params-1].alloc = false;
@@ -1731,7 +1736,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 // 
 // In URL list of inputs, set value for input name to val.
 // req is the request structure.
-// Returns >=0 index where it is in ip.ipars[].value array 
+// Returns >=0 index where it is in ip.ipars[].tval.value array 
 // Value is set, and no copy of it is made. Use copy-string to make a copy if needed.
 //
 gg_num gg_set_input (gg_input_req *req, char *name, void *val, gg_num type)
@@ -1752,10 +1757,10 @@ gg_num gg_set_input (gg_input_req *req, char *name, void *val, gg_num type)
         if (req->ip.ipars[found_input_param].alloc == true) 
         {
             // regardless of old and new param type, if they are equal, do nothing
-            if (gg_optmem && val != req->ip.ipars[found_input_param].value)
+            if (gg_optmem && val != req->ip.ipars[found_input_param].tval.value)
             {
                 // If old param alloc'd and string, delete its reference
-                if (cmp_type(req->ip.ipars[req->ip.num_of_input_params-1].type, GG_DEFSTRING)) gg_mem_del_ref (gg_mem_get_id(req->ip.ipars[found_input_param].value));
+                if (cmp_type(req->ip.ipars[req->ip.num_of_input_params-1].type, GG_DEFSTRING)) gg_mem_del_ref (gg_mem_get_id(req->ip.ipars[found_input_param].tval.value));
                 // if new param is string and not equal old one, add reference
                 if (cmp_type (type, GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val);
             }
@@ -1764,8 +1769,9 @@ gg_num gg_set_input (gg_input_req *req, char *name, void *val, gg_num type)
         {
             if (gg_optmem && cmp_type (type, GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val); // existing is not allocated, nothing to delete ref
         }
-        req->ip.ipars[found_input_param].value = val;
-        // The end result here is if val and req->ip.ipars[found_input_param].value are equal, then no refcount change as it should be
+        if (cmp_type (type, GG_DEFNUMBER)) req->ip.ipars[found_input_param].tval.numval = *(gg_num*)val;
+        else req->ip.ipars[found_input_param].tval.value = val;
+        // The end result here is if val and req->ip.ipars[found_input_param].tval.value are equal, then no refcount change as it should be
         //
         req->ip.ipars[found_input_param].type = type;
         req->ip.ipars[found_input_param].alloc = true;
@@ -1780,7 +1786,10 @@ gg_num gg_set_input (gg_input_req *req, char *name, void *val, gg_num type)
     req->ip.ipars = (gg_ipar*)gg_realloc (gg_mem_get_id(req->ip.ipars), req->ip.num_of_input_params*sizeof (gg_ipar));
     // add new input param from some variable, so now it's like another variable that points to it, add refcount
     req->ip.ipars[req->ip.num_of_input_params-1].name = name;
-    req->ip.ipars[req->ip.num_of_input_params-1].value = val;
+    // assign special for number b/c number loses scope after set-param leaves the code block
+    if (cmp_type (type, GG_DEFNUMBER)) req->ip.ipars[req->ip.num_of_input_params-1].tval.numval = *(gg_num*)val;
+    else req->ip.ipars[req->ip.num_of_input_params-1].tval.value = val;
+    //
     if (gg_optmem && cmp_type(type,GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val); // no target since there was nothing there, but only if string
     req->ip.ipars[req->ip.num_of_input_params-1].type = type;
     req->ip.ipars[req->ip.num_of_input_params-1].alloc = true;
@@ -1841,7 +1850,7 @@ void *gg_get_input_param (gg_input_req *req, char *name, gg_num type)
                     req->ip.ipars[i].found = 1; // input-param found it, likely not to be asked for again
                                                // which makes the search space for future input-params one lesser
                     found_input_param = i;
-                    char *v = (char*)(req->ip.ipars[i].value);
+                    char *v = (char*)(req->ip.ipars[i].tval.value);
                     if (type != GG_DEFUNKN) 
                     {
                         gg_num act = req->ip.ipars[i].type; // act is the actual type of data, 'type' is type we're asked to provide
@@ -1865,12 +1874,17 @@ void *gg_get_input_param (gg_input_req *req, char *name, gg_num type)
                         {
                             if (!req->ip.ipars[i].alloc ) 
                             {
-                                v = req->ip.ipars[i].value = gg_strdup (v); 
+                                v = req->ip.ipars[i].tval.value = gg_strdup (v); 
                                 req->ip.ipars[i].alloc = true; // so it's strdup'd only once even if requested many times
                             } 
                             // note that deletion of reference of target is done in v1.c, as well as adding reference to variable assigned to it.
                             return v;
-                        } else return v; // otherwise it's just a pointer
+                        } else 
+                        {
+                            // number is a special case, we have a value for it.
+                            if (cmp_type (GG_DEFNUMBER, type)) return (void*)&(req->ip.ipars[i].tval.numval);
+                            else return v; // otherwise it's just a pointer
+                        }
                     } else { return GG_EMPTY_STRING; }  // we found index of param via GG_DEFUNKN, return
                 }
             }
@@ -2066,14 +2080,15 @@ void gg_read_child (int ofd, char **out_buf)
     gg_num curr = 0;
     while (1) 
     {
-        gg_num rd = read (ofd, *out_buf + curr, tread - 1);
+        gg_num rd = read (ofd, *out_buf + curr, tread - 1); // -1 so we can place null char at the end
         if (rd == 0) break;
         if (rd == -1) gg_report_error ("Cannot read from program execution, error [%d], error text [%s]", errno, strerror(errno));
         curr += rd;
-        if (rd < tread - 1) tread = EXEC_BLEN; // if reading close to end, or stalling, do not alloc another 4K chunk and waste it
-                                       // rather start small again
+        if (rd < tread - 1) tread = (rd < EXEC_BLEN ? EXEC_BLEN : rd+1); // if reading close to end, or stalling, just add as much as given, or EXEC_BLEN
+                                                                         // whichever is greater
         else {
-            if (tread < 4096) tread *= 2; // go up to 4K blocks, but no more
+            if (tread < 4096) tread *= 2; // go up to 4K blocks, but if too big (8x), add quarter each time
+            else if (curr > 8*tread) tread = curr/4; 
         }
         *out_buf = (char*) gg_realloc (gg_mem_get_id(*out_buf), curr + tread); 
     }
@@ -2854,7 +2869,8 @@ void gg_break_down (char *value, char *delim, gg_split_str **broken_ptr)
 
     gg_num tot_break = MAX_BREAK_DOWN;
 
-    broken->pieces = (char**)gg_malloc(tot_break * sizeof(char*));
+    // see comment for allocating ipars in gg_get_input()
+    broken->pieces = (char**)gg_malloc(tot_break * sizeof(char*)+1);
 
     gg_num curr_break = 0;
     char *curr_value = value;

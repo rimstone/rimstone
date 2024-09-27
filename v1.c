@@ -6293,7 +6293,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (numinput !=NULL) oprintf ("%s=gg_get_config()->ctx.req->ip.num_of_input_params;\n", to); 
                         if (argval !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->args.args[%s-1]);\n", to, argval); 
                         if (argnum !=NULL) oprintf ("%s=gg_get_config()->ctx.req->args.num_of_args;\n", to); // not alloced
-                        if (inputval !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->ip.ipars[%s-1].value);\n", to, inputval); 
+                        if (inputval !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->ip.ipars[%s-1].tval.value);\n", to, inputval); 
                         if (inputname !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->ip.ipars[%s-1].name);\n", to, inputname); 
                         if (ref !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->referring_url);\n", to); 
                         if (numcookie !=NULL) oprintf ("%s=gg_get_config()->ctx.req->num_of_cookies;\n", to); 
@@ -7079,7 +7079,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
 
-                        if ((t != GG_DEFNUMBER && t != GG_DEFBOOL && t != GG_DEFSTRING) && !gg_is_sub) gg_report_error ("get-param type [%s] can only be used within sub-handler", typename(t));
+                        // we used to forbid non-string/bool/number in non-sub-handler. But we should be able to create say index in sub-handler and pass it back
+                        // to caller. In gliimrt.c, we error out if such param with such type is not found.
+                        // if ((t != GG_DEFNUMBER && t != GG_DEFBOOL && t != GG_DEFSTRING) && !gg_is_sub) gg_report_error ("get-param type [%s] can only be used within sub-handler", typename(t));
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "delete-string", &mtext, &msize, 0, &gg_is_inline)) != 0)
@@ -9036,16 +9038,6 @@ int main (int argc, char* argv[])
     // turn off safe mode for generated code, which is safe by design
     if (gg_mode!=GG_MODE_INTERNAL && (_main == 1 || !strcmp (src_file_name + bld_path_len, "gg_dispatch_request.gliim"))) gg_mode=GG_MODE_INTERNAL;
 
-    // get home directory
-    char *cwd;
-    //
-    // Then we get current working directory
-    //
-    if ((cwd = getcwd (NULL, 0)) == NULL)
-    {
-        gg_report_error ( "Cannot get current working directory, error [%s]", strerror(errno));
-        exit (1);
-    }
     //
     //
     // We must set various variables used in GLIIMLY shared library, for example, global connection data (description, transaction marker, 

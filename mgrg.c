@@ -33,6 +33,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <sys/prctl.h>
 
 // must update this if updating in gliim.h
@@ -149,6 +150,7 @@ static char *client_msg = "";  // message from client -m
 static gg_num temp_no_restart = 0;  // by default, process stopped is restarted. 
                                  // if temp_no_restart is 1, then it won't be, if 0, it will be.
 static gg_num modreload = 1; // reload if exec modified
+static bool silent = false;
 static char *parg = ""; // input args -a
 static char *xarg[GG_MAX_ARGS]; // list of parsed args -a
 static gg_num mslp=400; /*millisecs to sleep*/ 
@@ -694,12 +696,30 @@ static void start_child (char *command, gg_num pcount) {
 
         if (lfd != -1) close(lfd); // close lock file (since lock doesn't propogate to child anyway)
 
-        // execvp can easily fail when command's time stamp changes and the process is to be restarted. Typically it's
+        // execvpe can easily fail when command's time stamp changes and the process is to be restarted. Typically it's
         // permission denied, and it happens because we want to restart process when exec changes. But exec doesn't change instantly,
         // and while it's changing, there are typically 5-10 failures here if execvp here runs right after exec timestamp
         // change detected. We must exit, and that's fine, since this process will be restarted with feature that brings up
         // dead processes. We also add a bit of sleep when change detected, after checkmod().
-        if (execvp(command, xarg)) exit(-1);
+        // Note that we put environment in gg_env - we intentionally clean up environment so service programs do not get confused with
+        // possibly random environment variables. TODO: add environment variables to this list through startup mgrg process (somehow, not
+        // necessarily via actual environment), maybe a file with A=B, or a string 'X=Y Z=W' possibly this.
+        //
+        // Setup environment
+        char **gg_env;
+        char *em = "Too many environment variables";
+        gg_num tot_env = (1)+1; // for 1 env var plus one NULL at the end
+        gg_env = (char**)malloc(sizeof(char*) * tot_env);
+        char o_sil[100];
+        snprintf (o_sil, sizeof(o_sil), "GG_SILENT_HEADER=%s", silent?"yes":"no");
+        gg_num curr_env = 0;
+        gg_env[curr_env++] = o_sil;
+        gg_env[curr_env] = NULL;
+        if (curr_env >= tot_env) exit_error (em);
+        //
+        // Execute service process
+        //
+        if (execvpe(command, xarg, gg_env)) exit(-1);
     } else if (fres == -1) {
         // ERROR
         exit_error("Cannot fork child process [%s]", GG_FERR);
@@ -797,7 +817,7 @@ int main(int argc, char **argv)
     gg_num tspikeset = 0;
 
 
-    while ((c = getopt_long(argc, argv, "ft:l:dgnu:eir:xs:a:m:vc:p:w:h", opts, &oind)) != -1) {
+    while ((c = getopt_long(argc, argv, "ft:l:dgnu:eir:xs:a:m:vc:p:w:hz", opts, &oind)) != -1) {
         switch (c) {
             case -1: break;
             case 0:
@@ -821,6 +841,9 @@ int main(int argc, char **argv)
                 break;
             case 'n':
                 dnr = 1;
+                break;
+            case 'z':
+                silent = true;
                 break;
             case 'g':
                 modreload = 0;

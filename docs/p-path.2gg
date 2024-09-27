@@ -9,7 +9,7 @@ Outputs URL application path.
 .RS 4
 .EX
 
-p-path 
+p-path [ new-line ]
 
 .EE
 .RE
@@ -54,6 +54,8 @@ If you are building HTML forms, you can add a note with:
 .RE
 
 See \fBrequest\fP for more on URL structure.
+
+If "new-line" clause is used, then a new line ("\en") is output after the path.
 .SH SEE ALSO
  
 .B - Output

@@ -10,6 +10,8 @@
 #include "gliim.h"
 // add 38 for ' equals length', and null at the end
 #define GG_MSG_ADD_LEN 30 
+// buffer size to add when adding items, it increases up to 4K
+#define GG_MSG_BUFF_LEN 128
 #define GG_MSG_SEP "="
 #define GG_MSG_SEP_LEN sizeof(GG_MSG_SEP)-1
 void gg_init_msg(gg_msg *t);
@@ -47,7 +49,8 @@ char *gg_get_msg (gg_msg *msg)
 }
 
 //
-// Write key/value to message msg. 
+// Write key/value to message msg. The buffer starts with adding 128, then 256, etc  up to 4K, then if total allocd is
+// greater than 8x increment, make increment 0.25 of total each time to avoid massive reallocs and copying.
 //
 void gg_write_msg(gg_msg *msg, char *key, char *value)
 {
@@ -66,7 +69,8 @@ void gg_write_msg(gg_msg *msg, char *key, char *value)
     gg_num valuel = gg_mem_get_len (gg_mem_get_id(value));
     if (msg->curr == 0)
     {
-        msg->data = gg_malloc (keyl+valuel+GG_MSG_ADD_LEN); 
+        msg->addinc = GG_MSG_BUFF_LEN;
+        msg->data = gg_malloc (msg->tot = keyl+valuel+GG_MSG_ADD_LEN + msg->addinc); 
     }
     else
     {
@@ -75,7 +79,9 @@ void gg_write_msg(gg_msg *msg, char *key, char *value)
         // via gg_get_msg(), we can't add any more data! Otherwise any
         // previous get-message would become invalid pointer!
         //
-        msg->data = gg_realloc (gg_mem_get_id(msg->data), msg->len+keyl+valuel+GG_MSG_ADD_LEN); 
+        if (msg->addinc <= 4096) msg->addinc *= 2;
+        else if (msg->tot > 8*msg->addinc) msg->addinc = msg->tot/4; 
+        if (msg->tot < msg->len+keyl+valuel+GG_MSG_ADD_LEN) msg->data = gg_realloc (gg_mem_get_id(msg->data), msg->tot = msg->len+keyl+valuel+GG_MSG_ADD_LEN + msg->addinc); 
     }
     memcpy (msg->data+msg->curr, key, keyl);
     memcpy (msg->data+msg->curr+keyl, GG_MSG_SEP, GG_MSG_SEP_LEN);
@@ -214,6 +220,7 @@ void gg_init_msg(gg_msg *t)
     t->data = GG_EMPTY_STRING;
     t->len = 0;
     t->curr = 0;
+    t->addinc = GG_MSG_BUFF_LEN;
     t->mode = GG_MSG_NONE;
 }
 

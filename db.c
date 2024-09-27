@@ -1009,7 +1009,7 @@ char *gg_db_prep_text(char *t)
     GG_TRACE("");
     char *f;
 
-    gg_num tot = gg_count_substring (t, _GG_LOOK_S, sizeof(_GG_LOOK_S), 0);
+    gg_num tot = gg_count_substring (t, _GG_LOOK_S, sizeof(_GG_LOOK_S)-1, 0);
     if (tot == 0) return t; // nothing to do if no params
 
     gg_num len = (gg_num)strlen (t);
@@ -1097,7 +1097,7 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
 
     gg_num num_of_percents;
     gg_num count_percents;
-    count_percents = gg_count_substring (format, _GG_LOOK_S, sizeof(_GG_LOOK_S), 1);
+    count_percents = gg_count_substring (format, _GG_LOOK_S, sizeof(_GG_LOOK_S)-1, 1);
     num_of_percents = count_percents; // used in a countdown later in this code
 
     
@@ -1122,7 +1122,7 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
     // All %s must be quoted, otherwise in select ... where id=%s, it could be made to be
     // select ... where id=2;drop table x; if input parameters is id=2;drop table x;
 #define _GG_LOOK_S "'%s'"
-    gg_num numPlaceWithQuotes = gg_count_substring (format, _GG_LOOK_S, sizeof(_GG_LOOK_S), 1);
+    gg_num numPlaceWithQuotes = gg_count_substring (format, _GG_LOOK_S, sizeof(_GG_LOOK_S)-1, 1);
     if (numPlaceWithQuotes != count_percents)
     {
         gg_report_error ("All arguments in SQL statement must be quoted, including numbers, format [%s], number of arguments [%ld]", format, count_percents);
