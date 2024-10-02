@@ -28,12 +28,12 @@ openssl list -digest-algorithms
 .EE
 .RE
 
-If "binary" clause is used without boolean expression <binary>, or if <binary> evaluates to true, then the <result> is a binary string that may contain null-characters. With the default SHA256, it is 32 bytes in length, while for instance with SHA3-384 it is 48 bytes in length, etc. 
+If "binary" clause is used without boolean variable <binary>, or if <binary> evaluates to true, then the <result> is a binary string that may contain null-characters. With the default SHA256, it is 32 bytes in length, while for instance with SHA3-384 it is 48 bytes in length, etc. 
 
 Without "binary" clause, or if <binary> evaluates to false, each binary byte of hashed string is converted to two hexadecimal characters ("0"-"9" and "a"-"f"), hence <result> is twice as long as with "binary" clause. 
 
 .SH EXAMPLES
-String "hash" will have a hashed value of the given string, an example of which might look like "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855":
+String "result" will have a hashed value of the given string, an example of which might look like "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855":
 
 .RS 4
 .EX
@@ -71,6 +71,7 @@ hash-string "hello world" to hash digest "sha3-384" binary
 \fBderive-key\fP  
 \fBencrypt-data\fP  
 \fBhash-string\fP  
+\fBhmac-string\fP  
 \fBrandom-crypto\fP  
 \fBrandom-string\fP   
 See all 

@@ -17,7 +17,7 @@ delete-cookie <cookie name> [ path <cookie path> ] [ status <status> ] [ secure 
 .SH DESCRIPTION
 delete-cookie marks a cookie named <cookie name> for deletion, so it is sent back in the reply telling the client (such as browser) to delete it. 
 
-Newer client implementations require a cookie deletion to use a secure context if the cookie is considered secure, and it is recommended to use "secure" clause to delete such a cookie. This is the case when either "secure" clause is used without boolean expression <secure>, or if <secure> evaluates to true.
+Newer client implementations require a cookie deletion to use a secure context if the cookie is considered secure, and it is recommended to use "secure" clause to delete such a cookie. This is the case when either "secure" clause is used without boolean variable <secure>, or if <secure> evaluates to true.
 
 <cookie name> is a cookie that was either received from the client as a part of the request, or was added with \fBset-cookie\fP. 
 

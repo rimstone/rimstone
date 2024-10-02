@@ -26,7 +26,7 @@ write-file <file> | ( file-id <file id> ) \\
 
 This is a simple method of writing a file. File named <file> is opened, data written, and file is closed. <file> can be a full path name, or a path relative to the application home directory (see \fBdirectories\fP).
 
-write-file writes <content> to <file>. If "append" clause is used without boolean expression <append>, or if <append> evaluates to true, the <content> is appended to the file; otherwise the file is overwritten with <content>, unless "position" clause is used in which case file is not overwritten and <content> is written at byte <position> (with 0 being the first byte). Note that <position> can be beyond the end of file, in which case null-bytes are written between the current end of file and <position>.
+write-file writes <content> to <file>. If "append" clause is used without boolean variable <append>, or if <append> evaluates to true, the <content> is appended to the file; otherwise the file is overwritten with <content>, unless "position" clause is used in which case file is not overwritten and <content> is written at byte <position> (with 0 being the first byte). Note that <position> can be beyond the end of file, in which case null-bytes are written between the current end of file and <position>.
 
 File is created if it does not exist (even if "append" is used), unless "position" clause is used in which case file must exist. 
 
@@ -45,7 +45,7 @@ If "position" clause is used, then data is written starting from byte <position>
 
 If "length" is not used, then a whole string is written to a file, and the number of bytes written is the length of that string. If "length" is specified, then exactly <length> bytes are written.
 
-If "append" clause is used without boolean expression <append>, or if <append> evaluates to true, then file pointer is set at the end of file and data written.
+If "append" clause is used without boolean variable <append>, or if <append> evaluates to true, then file pointer is set at the end of file and data written.
 
 If "status" clause is used, then the number of bytes written is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be GG_ERR_POSITION (if <position> is negative or file does not support it), GG_ERR_WRITE (if there is an error writing file) or GG_ERR_OPEN if file is not open. Note that no partial data will be written; if all of data cannot be written to the file, then none will be written, and in that case an error of GG_ERR_WRITE will be reported in <status>.
 

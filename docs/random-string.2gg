@@ -68,6 +68,7 @@ random-string to str length 8 binary
 \fBderive-key\fP  
 \fBencrypt-data\fP  
 \fBhash-string\fP  
+\fBhmac-string\fP  
 \fBrandom-crypto\fP  
 \fBrandom-string\fP   
 See all 

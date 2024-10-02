@@ -15,7 +15,7 @@ count-substring <substring> in <string> to <count> [ case-insensitive [ <case in
 .RE
 
 .SH DESCRIPTION
-count-substring counts the number of occurrences of <substring> in <string> and stores the result in <count> (specified in "to" clause). By default, search is case-sensitive. If you use "case-insensitive" clause without boolean expression <case insensitive>, or if <case insensitive> evaluates to true, then the search is case-insensitive.
+count-substring counts the number of occurrences of <substring> in <string> and stores the result in <count> (specified in "to" clause). By default, search is case-sensitive. If you use "case-insensitive" clause without boolean variable <case insensitive>, or if <case insensitive> evaluates to true, then the search is case-insensitive.
 
 If <substring> is empty (""), <count> is 0.
 

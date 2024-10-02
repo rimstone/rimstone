@@ -37,7 +37,7 @@ The salt for key derivation can be given with <salt> in "salt" clause. If "salt-
 
 The number of iterations is given by <iterations> in "iterations" clause. The default is 1000 per \fBRFC 8018\fP, though depending on your needs and the quality of <source> you may choose a different value.
 
-By default, the derived key is produced in a hexadecimal form, where each byte is encoded as two-character hexadecimal characters, so its length is 2*<length>. If "binary" clause is used without boolean expression <binary>, or if <binary> evaluates to true, then the output is a binary string of <length> bytes.
+By default, the derived key is produced in a hexadecimal form, where each byte is encoded as two-character hexadecimal characters, so its length is 2*<length>. If "binary" clause is used without boolean variable <binary>, or if <binary> evaluates to true, then the output is a binary string of <length> bytes.
 
 Key derivation is often used when storing password-derivatives in the database (with salt), and also for symmetrical key generation.
 
@@ -61,6 +61,7 @@ derive-key mk from "clave secreta" digest "sha-256" salt rs9 salt-length 10 iter
 \fBderive-key\fP  
 \fBencrypt-data\fP  
 \fBhash-string\fP  
+\fBhmac-string\fP  
 \fBrandom-crypto\fP  
 \fBrandom-string\fP   
 See all 

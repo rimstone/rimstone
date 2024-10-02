@@ -38,7 +38,7 @@ read-array <array> traverse \\
 
 read-array will obtain an element from <array>, which is a string <value> (in "value" clause) based on a string <key> (in "key" clause). <array> was created by \fBnew-array\fP. 
 
-You can also delete an element from the array by using "delete" clause - the <value> is still obtained though it is no longer in the array table. The array element is deleted if "delete" clause is used without boolean expression <delete>, or if <delete> evaluates to true.
+You can also delete an element from the array by using "delete" clause - the <value> is still obtained though it is no longer in the array table. The array element is deleted if "delete" clause is used without boolean variable <delete>, or if <delete> evaluates to true.
 
 If no <key> was found in the array table, <status> number (in "status" clause) is GG_ERR_EXIST and <value> is unchanged, otherwise <status> is GG_OKAY. 
 
@@ -46,7 +46,7 @@ If no <key> was found in the array table, <status> number (in "status" clause) i
 .B WITH "TRAVERSE" CLAUSE
 .LP
 
-read-array with "traverse" clause obtains <key> and <value> of the current element, and then positions to the next one. You can also delete this element from the array by using "delete" clause - the <key> and <value> are still obtained though the element is no longer in the array table. The array element is deleted if "delete" clause is used without boolean expression <delete>, or if <delete> evaluates to true.
+read-array with "traverse" clause obtains <key> and <value> of the current element, and then positions to the next one. You can also delete this element from the array by using "delete" clause - the <key> and <value> are still obtained though the element is no longer in the array table. The array element is deleted if "delete" clause is used without boolean variable <delete>, or if <delete> evaluates to true.
 
 Use "begin" clause to position at the very first element. This is useful if you wish to get all the key/value pairs from a array table - note they are not extracted in any particular order. When there are no more elements, <key> and <value> are unchanged and <status> number (in "status" clause) is GG_ERR_EXIST, otherwise <status> is GG_OKAY.
 
