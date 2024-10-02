@@ -87,7 +87,7 @@ Note that you can also include any other headers as environment variables by usi
 .RS 4
 .EX
 
-export HTTP_GG_HEADER="some value"
+export HTTP_GLIIMLY_HEADER="some value"
 
 .EE
 .RE
@@ -98,12 +98,12 @@ You would set the "HTTP_" variable(s) prior to executing the program.
 .B SUPPRESSING HTTP HEADER OUTPUT FOR THE ENTIRE APPLICATION
 .LP
 
-If you wish to suppress the output of HTTP headers for all requests, set environment variable GG_SILENT_HEADER to "yes" before executing the program:
+If you wish to suppress the output of HTTP headers for all requests, use "--silent-header" option in "gg -r":
 
 .RS 4
 .EX
 
-export GG_SILENT_HEADER=yes
+gg -r --app="/stock" --req="/add-stock/name=ABC/price=300" --exec --silent-header
 
 .EE
 .RE

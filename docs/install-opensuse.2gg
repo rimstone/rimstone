@@ -29,7 +29,7 @@ sudo zypper -n install git
 
 git clone https://github.com/gliimly/gliimly.git
 cd gliimly
-git checkout 37
+git checkout 44
 
 .EE
 .RE

@@ -1,7 +1,7 @@
 " Language: Gliimly
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2024-September-24
+" Latest Revision: 2024-September-30
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link gliimConstruct Statement
@@ -1569,6 +1569,20 @@ syn region gg_r_construct_hash_string start="^[[:space:]]*hash-string" skip="\\[
     hi def link gg_h_clause_output_hash_string    gliimClauseOutput
     hi def link gg_h_construct_hash_string    gliimConstruct
     hi def link gg_h_print_inline_hash_string    gliimConstruct
+syn region gg_r_construct_hmac_string start="^[[:space:]]*hmac-string" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_hmac_string,gg_r_inline_hmac_string,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_hmac_string,gg_r_inline_hmac_string,gg_r_at
+    syn match gg_h_construct_hmac_string "^[[:space:]]*hmac-string" contained containedin=gg_r_construct_hmac_string
+    syn match gg_h_clause_hmac_string " binary \@=" contained containedin=gg_r_construct_hmac_string
+    syn match gg_h_clause_hmac_string " binary,\@=" contained containedin=gg_r_construct_hmac_string
+    syn match gg_h_clause_hmac_string " binary$" contained containedin=gg_r_construct_hmac_string
+    syn match gg_h_clause_hmac_string " digest \@=" contained containedin=gg_r_construct_hmac_string
+    syn match gg_h_clause_hmac_string " key \@=" contained containedin=gg_r_construct_hmac_string
+    syn match gg_h_clause_output_hmac_string " to \@=" contained containedin=gg_r_construct_hmac_string
+    hi def link gg_h_clause_hmac_string    gliimClause
+    hi def link gg_h_clause_output_hmac_string    gliimClauseOutput
+    hi def link gg_h_construct_hmac_string    gliimConstruct
+    hi def link gg_h_print_inline_hmac_string    gliimConstruct
 syn region gg_r_construct_derive_key start="^[[:space:]]*derive-key" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_derive_key,gg_r_inline_derive_key,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_derive_key,gg_r_inline_derive_key,gg_r_at

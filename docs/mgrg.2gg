@@ -141,6 +141,13 @@ Specify any command-line arguments for your application (see "arg-count" and "ar
 
 .RS 4
 \[bu]    
+-z
+Suppress HTTP headers in all \fBservice\fP handlers in the application. This is equivalent to having \fBsilent-header\fP implied at the beginning of each \fBservice handler\fP.
+
+.RE
+
+.RS 4
+\[bu]    
 -s <sleep millisecs>
 The basis time period (in milliseconds) that mgrg will sleep before checking for commands (specified by -m option), or check for dead service processes that need restarting. It can be between 100 and 5000 milliseconds. Smaller value will mean higher responsiveness but also higher CPU usage. The default value usually suffices, and should not be changed without due consideration.
 
