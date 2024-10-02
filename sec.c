@@ -14,7 +14,67 @@
 
 // Prototypes
 void gg_sec_err (char *err);
+EVP_MD *gg_get_digest(char *digest_name);
 
+//
+// Get digest based on digest_name, accounts for various OpenSSL versions
+//
+EVP_MD *gg_get_digest(char *digest_name)
+{
+    GG_TRACE("");
+    EVP_MD *md = NULL;
+#if OPENSSL_VERSION_MAJOR  >= 3
+// in OpenSSL3, only if the implementation of digest exists, it will be non-NULL, while EV_get_digestbyname may return non-NULL
+// even if not existing
+    md = EVP_MD_fetch(NULL, digest_name, NULL);
+#else
+    md = EVP_get_digestbyname(digest_name);
+#endif
+    if (md == NULL) gg_sec_err ("Unknown digest");
+    return md;
+}
+
+
+//
+// Generate HMAC (hash-based message authentication code) for data based on key and hash algo digest_name
+// Returns the HMAC.
+// If binary is true, then output binary data (otherwise it's hex human readable by default)
+//
+char *gg_hmac (char *key, char *data, char *digest_name, bool binary)
+{
+    GG_TRACE("");
+    unsigned char hmac[EVP_MAX_MD_SIZE + 1]; // result
+
+    // final result, which may be hex, so it would be double size
+    char *out = gg_malloc (binary ? (EVP_MAX_MD_SIZE + 1) : ((EVP_MAX_MD_SIZE + 1)*2)+ 2) ; // +2 is just in case for null
+
+    // get digest
+    EVP_MD *md = gg_get_digest(digest_name);
+
+    // do hmac
+    int key_len = (int)gg_mem_get_len(gg_mem_get_id( key) );
+    int data_len = (int)gg_mem_get_len(gg_mem_get_id( data) );
+    unsigned int res_len;
+    if (HMAC(md, key, key_len, (unsigned char*)data, data_len, binary?(unsigned char*)out:hmac, &res_len) == NULL) gg_sec_err ("Cannot create HMAC");
+
+#if OPENSSL_VERSION_MAJOR  >= 3
+    EVP_MD_free(md); // EVP_get_digestbyname doesn't need freeing
+#endif
+
+    // if binary the output is done, set the output length
+    if (binary) { gg_mem_set_len (gg_mem_get_id(out), (gg_num)res_len+1); return out; }
+
+    char *p = out;
+    // This is if not binary, convert hash to out, which is hexstring
+    gg_num i;
+    for ( i = 0; i < res_len; i++, p += 2 ) 
+    {
+        GG_HEX_FROM_BYTE (p, (unsigned int)hmac[i]);
+    }
+    *p = 0;
+    gg_mem_set_len (gg_mem_get_id(out), p - out+1); 
+    return out;
+}
 
 //
 // CSPRNG random data generator. buf is the pre-allocated buffer,
@@ -68,8 +128,10 @@ char *gg_hash_data( char *val, char *digest_name, bool binary)
 
     EVP_MD_CTX *mdctx;
     if ((mdctx = EVP_MD_CTX_new()) == NULL) gg_sec_err ("Cannot allocate digest context");
-    const EVP_MD *md = EVP_get_digestbyname(digest_name);
-    if (md == NULL) gg_sec_err ("Unknown digest");
+
+    // get digest
+    EVP_MD *md = gg_get_digest(digest_name);
+
     EVP_MD_CTX_init(mdctx);
     EVP_DigestInit_ex(mdctx, md, NULL);
 
@@ -83,6 +145,10 @@ char *gg_hash_data( char *val, char *digest_name, bool binary)
     EVP_DigestFinal_ex(mdctx,binary?(unsigned char*)out:hash, (unsigned int*)&msg_length);
     EVP_MD_CTX_free (mdctx);
     out[msg_length] = 0; // place null after useful data anyway
+
+#if OPENSSL_VERSION_MAJOR  >= 3
+    EVP_MD_free(md); // EVP_get_digestbyname doesn't need freeing
+#endif    
 
     // if binary the output is done, set the output length
     if (binary) { gg_mem_set_len (id, msg_length+1); return out; }
@@ -112,19 +178,11 @@ char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_c
     GG_TRACE("");
     // +1 as 0 is placed after each
     unsigned char *key = gg_malloc (key_len + 1);
-#if OPENSSL_VERSION_MAJOR  >= 3
-// in OpenSSL3, only if the implementation of digest exists, it will be non-NULL, while EV_get_digestbyname may return non-NULL
-// even if not existing
-    EVP_MD *dgst = NULL;
-    dgst = EVP_MD_fetch(NULL, digest_name, NULL);
-#else
-    const EVP_MD *dgst = NULL;
-    dgst = EVP_get_digestbyname(digest_name);
-#endif
-    if(!dgst) { 
-        GG_TRACE("Digest name [%s]", digest_name);
-        gg_sec_err ("Digest not found");
-    }
+
+    // get digest
+    EVP_MD *dgst = gg_get_digest(digest_name);
+
+
     if (iter_count == -1) iter_count=1000; 
     if (salt != NULL) 
     {
@@ -211,19 +269,8 @@ gg_num gg_get_enc_key(char *password, char *salt, gg_num salt_len, gg_num iter_c
         gg_sec_err ("Cipher not found");
     }
 
-#if OPENSSL_VERSION_MAJOR  >= 3
-// in OpenSSL3, only if the implementation of digest exists, it will be non-NULL, while EV_get_digestbyname may return non-NULL
-// even if not existing
-    EVP_MD *dgst = NULL;
-    dgst = EVP_MD_fetch(NULL, digest_name, NULL);
-#else
-    const EVP_MD *dgst = NULL;
-    dgst = EVP_get_digestbyname(digest_name);
-#endif
-    if(!dgst) { 
-        GG_TRACE("Digest name [%s]", digest_name);
-        gg_sec_err ("Digest not found");
-    }
+    // get digest
+    EVP_MD *dgst = gg_get_digest(digest_name);
 
     if (salt != NULL && salt_len == 0) salt_len = gg_mem_get_len(gg_mem_get_id(salt));
     if (iter_count == -1) iter_count=1000; 

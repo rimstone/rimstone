@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "44"
+#define GG_VERSION "48"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -117,6 +117,7 @@
 #   include "openssl/bio.h"
 #   include "openssl/buffer.h"
 #   include "openssl/rand.h"
+#   include <openssl/hmac.h>
 #endif
 
 // Fcgi calls (new-fcgi)
@@ -1085,6 +1086,7 @@ void gg_get_insert_id(char *val, gg_num sizeVal);
 void gg_select_table (char *s, gg_num *arow, gg_num *nrow, gg_num *ncol, char ***col_names, char ***data, gg_num **dlen, char **er, char **errm, char is_prep, void **prep, gg_num paramcount, char **params, char erract);
 void _gg_trace(gg_num trace_level, const char *fromFile, gg_num fromLine, const char *fromFun, char *format, ...) __attribute__((format(printf, 5, 6)));
 char *gg_hash_data( char *val, char *digest_name, bool binary);
+char *gg_hmac (char *key, char *data, char *digest_name, bool binary);
 char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_count, char *salt, gg_num salt_len, gg_num key_len, bool binary );
 gg_num gg_ws_util_read (void * rp, char *content, gg_num len);
 gg_num gg_main (void *r);

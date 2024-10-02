@@ -302,7 +302,7 @@ void gg_mem_release(gg_num r)
 //
 // Set length of memory. ptr is the memory alloc'd by Gliimly.
 // Memory in Gliimly is always sized exactly as needed
-// len is useful data, we add 1 for nullbyte
+// len is useful data plus 1 for nullbyte, so for "ab", it's 3
 //
 inline void gg_mem_set_len (gg_num r, gg_num len)
 {

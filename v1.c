@@ -5233,6 +5233,39 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
+                    else if ((newI=recog_statement(line, i, "hmac-string", &mtext, &msize, 0, &gg_is_inline)) != 0)
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        char *key = find_keyword (mtext, GG_KEYKEY, 1);
+                        char *to = find_keyword (mtext, GG_KEYTO, 1);
+                        char *digest = find_keyword (mtext, GG_KEYDIGEST, 1);
+                        char *binary = find_keyword (mtext, GG_KEYBINARY, 1);
+
+                        carve_statement (&key, "hmac-string", GG_KEYKEY, 1, 1);
+                        carve_statement (&to, "hmac-string", GG_KEYTO, 1, 1);
+                        carve_statement (&digest, "hmac-string", GG_KEYDIGEST, 0, 1);
+                        carve_statement (&binary, "hmac-string", GG_KEYBINARY, 0, 2);
+                        carve_stmt_obj (&mtext, true);
+                        make_mem (&digest);
+                        make_mem (&key);
+
+                        define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_hash_data
+                        char *binaryc = opt_clause(binary, "true", "false", GG_DEFBOOL);
+                        //
+                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&key, GG_DEFSTRING, NULL);
+                        check_var (&digest, GG_DEFSTRING, NULL);
+                        check_var (&binaryc, GG_DEFBOOL, NULL);
+
+                        oprintf ("%s=gg_hmac (%s, %s, %s, %s);\n", to, key, mtext, digest==NULL?GG_DEF_DIGEST:digest, binaryc);
+                        gg_free(binaryc);
+
+
+
+                        continue;
+                    }
                     else if ((newI=recog_statement(line, i, "hash-string", &mtext, &msize, 0, &gg_is_inline)) != 0)
                     {
                         GG_GUARD

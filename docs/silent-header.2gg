@@ -15,7 +15,9 @@ silent-header
 .RE
 
 .SH DESCRIPTION
-silent-header will suppress the output of HTTP headers, such as with \fBout-header\fP, or in any other case where headers are output. The effect applies to current \fBrequest\fP only; if you use it conditionally, then you can have it on or off dynamically. If you want to suppres the headers across the entire \fBcommand-line\fP program, set GG_SILENT_HEADER environment variable to value of "yes" prior to running it.
+silent-header will suppress the output of HTTP headers, such as with \fBout-header\fP, or in any other case where headers are output. The effect applies to current \fBrequest\fP only; if you use it conditionally, then you can have it on or off dynamically. 
+
+If you want to suppress the headers for all \fBservice handlers\fP (as if silent-header were implied at the beginning of each), then for a \fBcommand-line\fP program, use "--silent-header" option in "gg -r" when runnign it; to suppress the headers in \fBservice\fPs, use "-z" option in \fBmgrg\fP.
 
 silent-header must be used prior to outputting headers, meaning either prior to any output (if out-header is not used) or prior to first out-header.
 
