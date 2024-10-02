@@ -75,7 +75,7 @@ The following are subclauses that allow setting any custom header:
 
 .RS 4
 \[bu]    
-If "download" is used without boolean expression <download>, or if <download> evaluates to true, then the file is sent to a client for downloading - otherwise the default is to display file in client.
+If "download" is used without boolean variable <download>, or if <download> evaluates to true, then the file is sent to a client for downloading - otherwise the default is to display file in client.
 
 .RE
 
@@ -102,7 +102,7 @@ send-file "somepic.jpg" headers cache-control "max-age: 3600"
 
 .RS 4
 \[bu]    
-If "etag" is used without boolean expression <etag>, or if <etag> evaluates to true, then "ETAG" header will be generated (a timestamp) and included, otherwise it is not. The time stamp is of last modification date of the file (and typically used to cache a file on client if it hasn't changed on the server). "etag" is useful to let the client know to download the file only once if it hasn't changed, thus saving network and computing resources. ETAG header is used only for \fBsend-file\fP.
+If "etag" is used without boolean variable <etag>, or if <etag> evaluates to true, then "ETAG" header will be generated (a timestamp) and included, otherwise it is not. The time stamp is of last modification date of the file (and typically used to cache a file on client if it hasn't changed on the server). "etag" is useful to let the client know to download the file only once if it hasn't changed, thus saving network and computing resources. ETAG header is used only for \fBsend-file\fP.
 
 .RE
 

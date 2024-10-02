@@ -33,9 +33,9 @@ The number of found or found/replaced patterns can be obtained in number <status
 
 If "replace-with" is not specified, then the number of matched <pattern>s within <target> is given in <status> number, which in this case must be specified.
 
-If "case-insensitive" is used without boolean expression <case-insensitive>, or if <case-insensitive> evaluates to true, then searching for pattern is case insensitive. By default, it is case sensitive.
+If "case-insensitive" is used without boolean variable <case-insensitive>, or if <case-insensitive> evaluates to true, then searching for pattern is case insensitive. By default, it is case sensitive.
 
-If "single-match" is specified without boolean expression <single-match>, or if <single-match> evaluates to true, then only the very first occurrence of <pattern> in <target> is processed. Otherwise, all occurrences are processed.
+If "single-match" is specified without boolean variable <single-match>, or if <single-match> evaluates to true, then only the very first occurrence of <pattern> in <target> is processed. Otherwise, all occurrences are processed.
 
 If "utf8" is used, then the pattern itself and all data strings used for matching are treated as UTF-8 strings.
 

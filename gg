@@ -803,7 +803,7 @@ function read_modules() {
 #
 
 #first look for all possible statements
-    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-index \|hash-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.gliim>$GG_BLD/.findmod || true
+    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-index \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.gliim>$GG_BLD/.findmod || true
 #then from occurrances, look for curl
     if [[ $(grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod) != "" ]]; then _ISMOD_CURL="1"; fi
 #then from occurrances, look for index
@@ -813,7 +813,7 @@ function read_modules() {
 #then from occurrances, look for fcgi
     if [[ $(grep -m 1 -o "^[[:space:]]*[a-z]\+-remote " $GG_BLD/.findmod) != "" ]]; then _ISMOD_SERVICE="1"; fi
 #then from occurrances, look for crypto
-    if [[ $(grep -m 1 -o "^[[:space:]]*\(hash-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \)" $GG_BLD/.findmod) != "" ]]; then _ISMOD_CRYPTO="1"; fi
+    if [[ $(grep -m 1 -o "^[[:space:]]*\(hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \)" $GG_BLD/.findmod) != "" ]]; then _ISMOD_CRYPTO="1"; fi
 
 
 #

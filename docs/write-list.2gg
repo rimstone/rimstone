@@ -21,7 +21,7 @@ write-list adds a pair of key/value strings to the linked <list>, specified with
 
 The key/value pair is added just prior to the list's current position, thus becoming a current element. 
 
-If "append" clause is used without boolean expression <append>, or if <append> evaluates to true, then the element is added at the end of the list, and the list's current element becomes the newly added one.
+If "append" clause is used without boolean variable <append>, or if <append> evaluates to true, then the element is added at the end of the list, and the list's current element becomes the newly added one.
 
 .SH EXAMPLES
 Add a key/value pair to the end of the list:

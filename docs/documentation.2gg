@@ -4,7 +4,7 @@ documentation \- Gliimly documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GLIIMLY VERSION 44
+.B REFERENCE FOR GLIIMLY VERSION 48
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -144,6 +144,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 \fBderive-key\fP  
 \fBencrypt-data\fP  
 \fBhash-string\fP  
+\fBhmac-string\fP  
 \fBrandom-crypto\fP  
 \fBrandom-string\fP   
 .RE
