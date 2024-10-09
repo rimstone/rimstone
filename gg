@@ -515,6 +515,18 @@ function setup_highlighting() {
 }
 
 
+#
+#
+#Get last part of a path
+#Fast, without using subshells
+#
+#
+function last_path_seg() {
+    P="$1"
+    P="${P%/}"          
+    GG_LAST_PATH_SEG="${P##*/}"
+}
+
 
 #
 #
@@ -524,6 +536,8 @@ function setup_highlighting() {
 #
 #
 function show_run_program() {
+    #GG_C_RESTPATH is set and restored from .blds file, so even if it's not in gg -r, it was in gg -q
+    #and here it is now - this is so we don't have to remember the path set if we're in development build directory
     if [ "$GG_C_RESTPATH" == "" ];  then
         _APATH="/$GG_C_NAME"
     else
@@ -535,13 +549,16 @@ function show_run_program() {
         _APATH="$_REQ_APP"
     fi
 #get app name from _APATH, it's the last path segment, since _APATH is application path
-    _ANAME=$(echo "$_APATH" | awk -F "/" '{print $NF}')
+    last_path_seg "$_APATH"
+    _ANAME="$GG_LAST_PATH_SEG"
     _REQ_PATH="/<request name><url payload>"
     _REQ_QUERY="<request query>"
     if [ "$_REQ_URL" != "" ]; then
         if [[ "$_REQ_URL" =~ ^.*\?.*$ ]]; then
-            _REQ_PATH=$(echo "$_REQ_URL" | cut -d "?" -f 1)
-            _REQ_QUERY=$(echo "$_REQ_URL" | cut -d "?" -f 2)
+            #fast parsing of path without using subshells
+            IFS='?' read -ra PQ <<< "$_REQ_URL"
+            _REQ_PATH="${PQ[0]}"
+            _REQ_QUERY="${PQ[1]}"
         else
             _REQ_PATH="$_REQ_URL"
             _REQ_QUERY=""
@@ -556,6 +573,12 @@ function show_run_program() {
     _SHEADER="export GG_SILENT_HEADER=no"
     if [ "$_REQ_SILENT_HEADER" == "1" ]; then
         _SHEADER="export GG_SILENT_HEADER=yes"
+    else
+#unset" means it's not set in bash. This is used to override any already exising yes or no in the user's environment. If that was no or yes
+#then it would control, and we don't want that. Explicit silent-header will set to yes, but if not set, then server will decide what to do because
+#now we have -z flag in mgrg that can do that or a request can use silent-header.
+        _SHEADER="unset GG_SILENT_HEADER
+export GG_SILENT_HEADER"
     fi
     if [[ "$_REQ_CONTENT_TYPE" != "" && "$_REQ_CONTENT" == "" ]]; then
         error "Cannot use --content-type without --content"
