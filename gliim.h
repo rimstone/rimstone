@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "54"
+#define GG_VERSION "56"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -1182,8 +1182,8 @@ void gg_SERVICE_Finish (void);
 gg_num gg_SERVICE_Accept (void);
 void gg_exit_request(gg_num retval);
 void gg_error_request(gg_num retval);
-void after_service();
-void before_service ();
+void after_handler();
+void before_handler ();
 char *gg_basename (char *path);
 char *gg_realpath (char *path);
 void gg_end_connection(gg_num close_db);

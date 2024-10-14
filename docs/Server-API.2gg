@@ -181,7 +181,7 @@ Run it:
 .RS 4
 .EX
 
-gg -r --req="/example" --exec --silent
+gg -r --req="/example" --exec --silent-header
 
 .EE
 .RE

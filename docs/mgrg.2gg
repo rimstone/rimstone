@@ -142,7 +142,7 @@ Specify any command-line arguments for your application (see "arg-count" and "ar
 .RS 4
 \[bu]    
 -z
-Suppress HTTP headers in all \fBservice\fP handlers in the application. This is equivalent to having \fBsilent-header\fP implied at the beginning of each \fBservice handler\fP.
+Suppress HTTP headers in all \fBservice\fP handlers in the application. This is equivalent to having \fBsilent-header\fP implied at the beginning of each \fBservice handler\fP. Use this option only if service is not used as a web service (i.e. the output will not have HTTP headers), or for testing or elsewhere where such headers may not be needed. Otherwise, you can use "--silent-header" option in \fBgg\fP or "GG_SILENT_HEADER" environment variable in \fBClient-API\fP to control from command-line or a client if headers are output or not.
 
 .RE
 

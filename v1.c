@@ -6744,11 +6744,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //GG_GUARD
                         i = newI;
                         carve_stmt_obj (&mtext, false);
-                        match_file (file_name, "after_service");
+                        match_file (file_name, "after_handler");
                         if (after_ended || after_started) gg_report_error ("after-handler already found");
                         after_started = true;
                         done_handler = true; // avoid no request handler implemented error
-                        oprintf ("void after_service () {\n");
+                        oprintf ("void after_handler () {\n");
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "before-handler", &mtext, &msize, 1, &gg_is_inline)) != 0)
@@ -6756,11 +6756,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //GG_GUARD
                         i = newI;
                         carve_stmt_obj (&mtext, false);
-                        match_file (file_name, "before_service");
+                        match_file (file_name, "before_handler");
                         if (before_ended || before_started) gg_report_error ("before-handler already found");
                         before_started = true;
                         done_handler = true; // avoid no request handler implemented error
-                        oprintf ("void before_service () {\n");
+                        oprintf ("void before_handler () {\n");
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "end-after-handler", &mtext, &msize, 1, &gg_is_inline)) != 0)
