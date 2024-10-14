@@ -205,7 +205,7 @@ mgrg -w 1 app
 .RS 4
 .EX
 
-gg -r --req="/srv" --exec --silent
+gg -r --req="/srv" --exec --silent-header
 
 .EE
 .RE

@@ -167,7 +167,9 @@ env[4] = NULL;
 .EE
 .RE
 
-Thus, if you are passing N environment variables to the service, you must size "env" as "char*" array with 2*N+1 elements.
+Thus, if you are passing N environment variables to the service, you must size "env" as "char*" array with 2*N+1 elements. 
+
+Note that in order to suppress output of HTTP headers from the service, you can include environment variable "GG_SILENT_HEADER" with value "yes"; to let the service control headers output (either by default, with "-z" option of \fBmgrg\fP or with \fBsilent-header\fP) simply omit this environment variable.
 
 
 .B - Timeout

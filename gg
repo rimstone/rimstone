@@ -1110,7 +1110,7 @@ function gen_src() {
     echo "    if (ret_val != 0) goto end_point_exit;" >>$GG_BLD/$_T.new
     echo "    gg_done_setjmp = 1;" >>$GG_BLD/$_T.new
 #right now the return value is always 0 (directly or called from longjmp)
-#the jump will work because all we do is go to after_service() function, which doesn't depend on any
+#the jump will work because all we do is go to after_handler() function, which doesn't depend on any
 #automatic variables from gg_dispatch_request, and after that function exits
 #
 #
@@ -1135,7 +1135,7 @@ function gen_src() {
     fi
 #before handler executes only IF req found a handler, that's why it's not in front of if()
     echo "      if (found == GG_OKAY) {" >>$GG_BLD/$_T.new
-    echo "        .before_service();" >>$GG_BLD/$_T.new
+    echo "        .before_handler();" >>$GG_BLD/$_T.new
     echo "        .req_done = 1;" >>$GG_BLD/$_T.new
     echo "        ._gg_req_handler();" >>$GG_BLD/$_T.new
     echo "    } else {" >>$GG_BLD/$_T.new
@@ -1146,15 +1146,15 @@ function gen_src() {
 #when exit-handler is done, this is where we must end up. Since this code is executed after
 #gg_dispatch_request, we can't longjump here. We long jump to a prior point and then go to here.
     echo ".end_point_exit:" >>$GG_BLD/$_T.new
-#set gg_done_setjmp to 0, because if we do exit-handler in after_service(), it would go into infinite loop, coming back to after.
-#this way, exit-handler in after_service, or anywhere afterwards, will do nothing. Only when the next request comes along, and gg_done_setjmp is set to 1
+#set gg_done_setjmp to 0, because if we do exit-handler in after_handler(), it would go into infinite loop, coming back to after.
+#this way, exit-handler in after_handler, or anywhere afterwards, will do nothing. Only when the next request comes along, and gg_done_setjmp is set to 1
 #in the beginning of this function, we will actually jump to end_point_exit:
     echo "    .gg_done_setjmp = 0;" >>$GG_BLD/$_T.new
 #regardless of whether a request normally ended, or had exit-handler, it would come here, and before anything else, memory handling must be set back
-#to Gliimly, or otherwise, and gg_* memory function will fail if set to true. after_service() should not be affected by type of memory used.
+#to Gliimly, or otherwise, and gg_* memory function will fail if set to true. after_handler() should not be affected by type of memory used.
 
-#cannot do exit-handler in after_service - must simply do return(s)
-    echo "    .if (req_done == 1) { after_service(); }" >>$GG_BLD/$_T.new
+#cannot do exit-handler in after_handler - must simply do return(s)
+    echo "    .if (req_done == 1) { after_handler(); }" >>$GG_BLD/$_T.new
 #
 #There can be NOTHING after .after() that uses any automatic variables from gg_dispatch_request() or
 #exit-handler (and longjmp) will not work
@@ -1176,17 +1176,17 @@ function gen_src() {
 #that has only the minimal set of code - and this program uses Gliimly's shared library. Hence, all is shared 
 #(the program between different instance and all the shared libs).
 #GG_EVENT_STUBS is all the stubs used.
-#So, GG_EVENT_STUBS could be "/usr/lib/gliim/stub_after.o" but then available after vmakefile will be "$GG_BLD/before_service.o $GG_BLD/startup.o"
+#So, GG_EVENT_STUBS could be "/usr/lib/gliim/stub_after.o" but then available after vmakefile will be "$GG_BLD/before_handler.o $GG_BLD/startup.o"
 #and all three will be present (one empty and two implemented)
 #
 #
 #
 function stub_events() {
     GG_EVENT_STUBS=
-    if [ ! -f "before_service.gliim" ]; then
+    if [ ! -f "before_handler.gliim" ]; then
         GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/stub_before.o"
     fi
-    if [ ! -f "after_service.gliim" ]; then
+    if [ ! -f "after_handler.gliim" ]; then
         GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/stub_after.o"
     fi
     export GG_EVENT_STUBS

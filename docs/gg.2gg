@@ -263,25 +263,6 @@ gg -r -app="/my_app" --req="/some_request?par1=val1&par2=20&par3=4" --method=PAT
 .EE
 .RE
 
-When "--exec" is not used, the output may look like this:
-
-.RS 4
-.EX
-
-export CONTENT_TYPE=
-export CONTENT_LENGTH=
-export GG_SILENT_HEADER=no
-export REQUEST_METHOD=GET
-export SCRIPT_NAME="/enc"
-export PATH_INFO="/encrypt/data/somedata"
-export QUERY_STRING="method=aes256"
-/var/lib/gg/bld/enc/enc
-
-.EE
-.RE
-
-If you copy the above and paste into bash shell, it will execute the command line program which handles the request specified (which gg would do when "--exec" is specified). Note that SCRIPT_NAME will be set to whatever application path you use (i.e. the default or if set with "--path" option when making the application; or with "--app" option here), see \fBrequest\fP. 
-
 Examples of using "-r" option to execute \fBcommand-line\fP program or to call a \fBservice\fP:
 
 .RS 4
@@ -305,6 +286,46 @@ gg -r --req="/json/act=perf" --app="/app_name" --service --remote="192.168.0.21:
 .RE
 
 
+.B - Performance
+
+"gg -r" can be used both for testing and in production, however for maximum performance, skip "--exec" option to display direct bash code that you can copy and paste to use in production. This direct code is about 300% faster than using "gg -r"; keep this in mind if performance of using "gg -r" is important. When "--exec" is not used, the output may look like this:
+
+.RS 4
+.EX
+
+export CONTENT_TYPE=
+export CONTENT_LENGTH=
+unset GG_SILENT_HEADER
+export GG_SILENT_HEADER
+export REQUEST_METHOD=GET
+export SCRIPT_NAME="/enc"
+export PATH_INFO="/encrypt/data/somedata"
+export QUERY_STRING="method=aes256"
+/var/lib/gg/bld/enc/enc
+
+.EE
+.RE
+
+If you copy the above and paste into bash shell, it will execute the command line program which handles the request specified (which gg would do when "--exec" is specified, but not as fast). Note that SCRIPT_NAME will be set to whatever application path you use (i.e. the default or if set with "--path" option when making the application; or with "--app" option here), see \fBrequest\fP. 
+
+If you need to have run-time parameter(s) to "gg -r", escape them when displaying the direct bash code and run with "eval", for instance:
+
+.RS 4
+.EX
+
+COMM=$(gg -r --req="/func_test/update-data/key=\e$i/value=d_\e$i" --service --remote="127.0.0.1:2301")
+\[char46]..
+for i in {1..1000}; do
+    ...
+    RES=$(eval "$COMM")
+    ...
+    echo "Result is $RES"
+done
+
+.EE
+.RE
+
+In this example, the code with "$i" variable is created, and then evaluated in a bash loop of 1000 iterations, with each execution of your service using dynamic run-time input parameter "$i", but without executing "gg -r" 1000 times.
 
 .RE
 

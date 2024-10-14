@@ -11,7 +11,7 @@
 #include "gliim.h"
 
 
-void after_service ()  
+void after_handler ()  
 {
     GG_TRACE("");
 }
