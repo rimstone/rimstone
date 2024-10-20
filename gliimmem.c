@@ -328,7 +328,7 @@ inline void *gg_mem_get_data (gg_num r)
 //
 // Increase memory ref count for memory src
 // tgt is memory where src used to point, and is_tgt is 1 if tgt was just created, 0 if it existed
-// we will delete reference from tgt only if it existed
+// we will delete reference from tgt only if it existed, if it was just created, then it has no references
 //
 inline void gg_mem_add_ref (gg_num is_tgt, char *tgt, char *src)
 {

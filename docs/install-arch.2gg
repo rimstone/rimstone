@@ -29,7 +29,7 @@ sudo pacman --noconfirm -Sy --overwrite "*" git
 
 git clone https://github.com/gliimly/gliimly.git
 cd gliimly
-git checkout 54
+git checkout 56
 
 .EE
 .RE

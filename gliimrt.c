@@ -33,6 +33,7 @@ void gg_write_ereport(char *errtext, gg_config *pc);
 void gg_read_child (int ofd, char **out_buf);
 void gg_gen_header_end ();
 void gg_check_set_cookie (char *name, char *val, char *secure, char *samesite, char *httponly, char *safety_clause, size_t safety_clause_len);
+gg_num gg_find_par (char *n); 
 inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num nbyte);
 // write-string macros
 #define GG_WRSTR_CUR (gg_get_config()->ctx.req->curr_write_to_string)
@@ -52,10 +53,25 @@ static FCGX_Stream *gg_fcgi_in = NULL, *gg_fcgi_out = NULL, *gg_fcgi_err = NULL;
 static FCGX_ParamArray gg_fcgi_envp;
 #endif
 static char finished_output = 0;
-static gg_num found_input_param = -1; // the id of found input param in gg_get_input_param (in ipars[]),
-                                   // we return char *, this set the id which is needed in set-input
 
 extern gg_num gg_end_program;
+extern int _gg_sprm_run_tot;
+extern gg_ipar _gg_sprm_par[];
+extern gg_num _gg_run_version;
+
+//
+//
+//Find the index in global set-params for name n. Return -1 if not found.
+//
+//
+gg_num gg_find_par (char *n)
+{
+    gg_num found;
+    gg_num *i = gg_find_hash (&gg_paramhash, n, NULL, 0, &found);
+    if (found != GG_OKAY) return -1;
+    return *i;
+}
+
 
 // 
 // Initialize gg_input_req structure for fetching input URL data
@@ -80,8 +96,6 @@ void gg_init_input_req (gg_input_req *req)
     req->if_none_match = NULL;
     req->cookies = NULL;
     req->num_of_cookies = 0;
-    req->ip.ipars = NULL;
-    req->ip.num_of_input_params = 0;
     req->sent_header = 0;
     req->data_was_output = 0;
     req->silent = 0;
@@ -553,7 +567,6 @@ void gg_write_ereport(char *errtext, gg_config *pc)
     // This is to display the request itself that is associated with the error
     //
     //
-    gg_input_req *req = pc->ctx.req;
 
     // Static variables are fine (for keeping the stack reserved), but
     // ONLY if they do not initialize! If they do, next time around (for 
@@ -584,16 +597,6 @@ void gg_write_ereport(char *errtext, gg_config *pc)
     fprintf (fout, "%ld: %s: -------- BEGIN REPORT -------- \n", gg_getpid(), time);
     GG_TRACE ("Writing PID");
     fprintf (fout, "%ld: %s: URL: [%s][%s][%s]\n", gg_getpid(), time, gg_getenv("SCRIPT_NAME"), gg_getenv("PATH_INFO"), gg_getenv("QUERY_STRING"));
-    gg_num i;
-    if (req != NULL && req->ip.ipars != NULL)
-    {
-        GG_TRACE ("Writing input params");
-        for (i = 0; i < req->ip.num_of_input_params; i++)
-        {
-            fprintf (fout, "%ld: %s:   Param #%ld, [%s]\n", gg_getpid(), time, i, 
-                req->ip.ipars[i].name == NULL ? "NULL" : req->ip.ipars[i].name);
-        }
-    }
     GG_TRACE ("Writing error information");
     fprintf (fout, "%ld: %s: The trace of where the problem occurred:\n", gg_getpid(), time);
     fclose (fout); // close because we will be writing to backtrace (which is fout) in gg_get_stack
@@ -883,7 +886,6 @@ void gg_subs(char *s)
 // 
 // Get input parameters from web input in the form of
 // name/value pairs, meaning from a GET, POST, PUT, PATCH or DELETE (with OPTIONS to support for CORS).  
-// req is an input request
 // If 'method' if NULL, environment REQUEST_METHOD is read, otherwise 'input' must be specified as input for query string.
 // this is useful for passing URL from command line.
 // For any method we read both body and query string. For some like GET, body is unusual but not forbidden.
@@ -908,8 +910,6 @@ void gg_subs(char *s)
 gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 {
     GG_TRACE("");
-    req->ip.num_of_input_params = 0;
-    req->ip.ipars = NULL;
 
     gg_config *pc = gg_get_config();
     char *req_method = NULL;
@@ -919,7 +919,11 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     gg_num cont_len_byte = 0; // default zero if content-length not specified
     char *content = NULL;
     char *cookie = NULL;
-    req->ip.num_of_input_params = 0;
+
+    _gg_run_version++; //current version of request, used to determine if value in parameters (_gg_sprm_par[]) is actually set in this request
+                       //because otherwise we'd have to set .type of each unset to GG_DEFNONE, which is difficult. Rather, we set 'version' in gg_ipar
+                       //to _gg_run_version. Any variable that doesn't match it, isn't set here and is empty. If we don't do this, then we don't know
+                       //what param is set and what is not, resulting is random value that are left over from previous request execution.
 
     // some env vars are obtained right away, other are rarely used
     // and are obtaineable from $$ variables
@@ -1504,6 +1508,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     gg_num i;
     gg_num had_equal = 0;
     bool isname = true;
+    gg_num num_of_input_params = 0;
     for (j = i = 0; content[i]; i++)
     {
         content[i] = (content[i] == '+' ? ' ' : content[i]);
@@ -1530,7 +1535,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
             else if (content[i] == '=')
             {
                 had_equal = 1;
-                (req->ip.num_of_input_params)++;
+                num_of_input_params++;
                 content[j++] = 0;
                 isname = false;
             }
@@ -1543,37 +1548,30 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     content[j] = 0;
 
 
-    // We don't do  calloc because it may memset (doesn't always do that, but still),
-    // we initialize everything below, including 'found' member. This is generally faster.
-    // NOTE: +1 below is if there are no input params, in which case we would malloc 0 bytes. Given
-    // mem_ functions place zero byte in debug mode when memory is freed, that would be SIGSEG here, and it does 
-    // happen in do_once functional test.
-    req->ip.ipars = (gg_ipar*)gg_malloc (req->ip.num_of_input_params * sizeof (gg_ipar)+1);
-
     j = 0;
     gg_num name_length;
     gg_num value_len;
-    for (i = 0; i < req->ip.num_of_input_params; i++)
+    for (i = 0; i < num_of_input_params; i++)
     {
-        name_length = strlen (content + j); 
-        (req->ip.ipars)[i].name = content +j;
-        (req->ip.ipars)[i].found = 0; // init since we're not doing calloc to allocate ipars
-        if (gg_is_valid_param_name (req->ip.ipars[i].name, true, true) != 1) // any hyphens are converted to underscores in this call
-        {
-            gg_bad_request();
-            gg_report_error ("Invalid input parameter name [%s], can contain alphanumeric characters, hyphens or underscores only; it must start with an alphabet character", req->ip.ipars[i].name);
-        }
+        char *n, *v;
+        name_length = strlen (n = content + j); 
+        gg_num par_ind = gg_find_par (n); // n is already converted from - to _, and the param hash holds _ only, so total match
         j += name_length+1;
-        value_len = strlen (content + j); 
-        (req->ip.ipars)[i].tval.value = content +j;
-        gg_num trimmed_len = value_len;
-        (req->ip.ipars)[i].tval.value = gg_trim_ptr ((req->ip.ipars)[i].tval.value, &trimmed_len);// trim the input parameter for whitespaces (both left and right)
-        // add as partial, parent is always  non-delete, so no need to set it
-        req->ip.ipars[i].type = GG_DEFSTRING;
-        req->ip.ipars[i].alloc = false;
+
+        value_len = strlen (v = content + j); 
         j += value_len+1;
 
-        GG_TRACE ("Index: %ld, Name: %s", i, (req->ip.ipars)[i].name);
+        if (par_ind != -1)
+        {
+            _gg_sprm_par[par_ind].version = _gg_run_version;
+            gg_num trimmed_len = value_len;
+            _gg_sprm_par[par_ind].tval.value = gg_trim_ptr (v, &trimmed_len);// trim the input parameter for whitespaces (both left and right)
+            // add as partial, parent is always  non-delete, so no need to set it
+            _gg_sprm_par[par_ind].type = GG_DEFSTRING;
+            _gg_sprm_par[par_ind].alloc = false;
+        }
+
+        GG_TRACE ("Index: %ld, Name: %s", i, _gg_sprm_par[par_ind].name);
     }
 
     // 
@@ -1621,8 +1619,6 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
         char *p = full_path+gg_app_path_len;
         gg_num p_len = full_path_len - gg_app_path_len;
         // find all path segments
-        gg_num iplen = req->ip.num_of_input_params; // currently how many name/value allocated
-        gg_num block_ip = 10; // how many input params to add to memory reserved, so it's not realloc-ed for each new one
         //
         // Anything after app-path is the request path until = path
         // p is now /all/after/app-path
@@ -1706,21 +1702,16 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
             GG_UNUSED(val_len);
 #endif
             // this is /param/val
-            req->ip.num_of_input_params++; // new param
-            if (iplen <= req->ip.num_of_input_params) // add memory if needed
+            gg_num par_ind = gg_find_par (name); // compares by accounting for all hyphen or underscore, but not mix?
+            if (par_ind != -1)
             {
-                iplen += block_ip;
-                block_ip += 4; // increase each new block by a fixed amount to avoid runaway realloc
-                req->ip.ipars = (gg_ipar*)gg_realloc (gg_mem_get_id(req->ip.ipars), iplen*sizeof (gg_ipar));
+                // this name/value must be added
+                _gg_sprm_par[par_ind].version = _gg_run_version;
+                gg_num trimmed_len = val_len;
+                _gg_sprm_par[par_ind].tval.value = gg_trim_ptr (value, &trimmed_len);// trim the input parameter for whitespaces (both left and right)
+                _gg_sprm_par[par_ind].type = GG_DEFSTRING;
+                _gg_sprm_par[par_ind].alloc = false;
             }
-            // this name/value must be added
-            req->ip.ipars[req->ip.num_of_input_params-1].name = name;
-            req->ip.ipars[req->ip.num_of_input_params-1].tval.value = value;
-            // add as partial, parent is always  non-delete, so no need to set it
-            req->ip.ipars[req->ip.num_of_input_params-1].type = GG_DEFSTRING;
-            req->ip.ipars[req->ip.num_of_input_params-1].alloc = false;
-            req->ip.ipars[req->ip.num_of_input_params-1].found = 0; // must set to 0 before the request starts,
-                                                                    // means name was not yet asked for in input-param
         }
     }
     else
@@ -1739,28 +1730,26 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 // Returns >=0 index where it is in ip.ipars[].tval.value array 
 // Value is set, and no copy of it is made. Use copy-string to make a copy if needed.
 //
-gg_num gg_set_input (gg_input_req *req, char *name, void *val, gg_num type)
+gg_num gg_set_input (gg_num name_id, void *val, gg_num type)
 {
     GG_TRACE("");
 
-    GG_TRACE ("Number of input data [%ld], looking for [%s]", req->ip.num_of_input_params, name);
-    gg_get_input_param (req, name,GG_DEFUNKN); // we don't care about current value, just index found_input_param
-    if (found_input_param != -1)
+    if (_gg_sprm_par[name_id].version == _gg_run_version)
     {
-        GG_TRACE ("Found input [%s] at [%ld]", req->ip.ipars[found_input_param].name, found_input_param);
+        GG_TRACE ("Found input [%s] at [%ld]", _gg_sprm_par[name_id].name, name_id);
         // set-input can be assigned any type (tree, boolean, string etc)
         // If it is string, it is always assigned allocated memory, so we must increase its refcount (unless it's already there)
         // in that way, params are like an index, array or a list
         // check if they are equal first of course, then assign (or they'd be equal always)
         //
         // If string, if current param is alloc'd, delete reference to it because the existing value (that comes from outside caller) may not be allocated
-        if (req->ip.ipars[found_input_param].alloc == true) 
+        if (_gg_sprm_par[name_id].alloc == true) 
         {
             // regardless of old and new param type, if they are equal, do nothing
-            if (gg_optmem && val != req->ip.ipars[found_input_param].tval.value)
+            if (gg_optmem && val != _gg_sprm_par[name_id].tval.value)
             {
                 // If old param alloc'd and string, delete its reference
-                if (cmp_type(req->ip.ipars[req->ip.num_of_input_params-1].type, GG_DEFSTRING)) gg_mem_del_ref (gg_mem_get_id(req->ip.ipars[found_input_param].tval.value));
+                if (cmp_type(_gg_sprm_par[name_id].type, GG_DEFSTRING)) gg_mem_del_ref (gg_mem_get_id(_gg_sprm_par[name_id].tval.value));
                 // if new param is string and not equal old one, add reference
                 if (cmp_type (type, GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val);
             }
@@ -1769,133 +1758,88 @@ gg_num gg_set_input (gg_input_req *req, char *name, void *val, gg_num type)
         {
             if (gg_optmem && cmp_type (type, GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val); // existing is not allocated, nothing to delete ref
         }
-        if (cmp_type (type, GG_DEFNUMBER)) req->ip.ipars[found_input_param].tval.numval = *(gg_num*)val;
-        else req->ip.ipars[found_input_param].tval.value = val;
-        // The end result here is if val and req->ip.ipars[found_input_param].tval.value are equal, then no refcount change as it should be
+        if (cmp_type (type, GG_DEFNUMBER)) _gg_sprm_par[name_id].tval.numval = *(gg_num*)val;
+        else _gg_sprm_par[name_id].tval.value = val;
+        // The end result here is if val and _gg_sprm_par[name_id].tval.value are equal, then no refcount change as it should be
         //
-        req->ip.ipars[found_input_param].type = type;
-        req->ip.ipars[found_input_param].alloc = true;
-        req->ip.ipars[found_input_param].found = 0; // set to 0, because likely the whole purpose of set-input
-                                                    // is to find it again. This way it will be found much quicker.
-                                                    // this is because gg_get_input_param would set it to 1 when found.
-        return found_input_param;
+        _gg_sprm_par[name_id].type = type;
+        _gg_sprm_par[name_id].alloc = true;
     }
-    GG_TRACE ("Did not find input, create new one");
-    // increase storage for input-params
-    req->ip.num_of_input_params++;
-    req->ip.ipars = (gg_ipar*)gg_realloc (gg_mem_get_id(req->ip.ipars), req->ip.num_of_input_params*sizeof (gg_ipar));
-    // add new input param from some variable, so now it's like another variable that points to it, add refcount
-    req->ip.ipars[req->ip.num_of_input_params-1].name = name;
-    // assign special for number b/c number loses scope after set-param leaves the code block
-    if (cmp_type (type, GG_DEFNUMBER)) req->ip.ipars[req->ip.num_of_input_params-1].tval.numval = *(gg_num*)val;
-    else req->ip.ipars[req->ip.num_of_input_params-1].tval.value = val;
-    //
-    if (gg_optmem && cmp_type(type,GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val); // no target since there was nothing there, but only if string
-    req->ip.ipars[req->ip.num_of_input_params-1].type = type;
-    req->ip.ipars[req->ip.num_of_input_params-1].alloc = true;
-    req->ip.ipars[req->ip.num_of_input_params-1].found = 0; // presumably not found yet or will be asked for in input-param soon
-    return req->ip.num_of_input_params-1;
+    else
+    {
+        GG_TRACE ("Did not find input, create new one");
+        // assign special for number b/c number loses scope after set-param leaves the code block
+        if (cmp_type (type, GG_DEFNUMBER)) _gg_sprm_par[name_id].tval.numval = *(gg_num*)val;
+        else _gg_sprm_par[name_id].tval.value = val;
+        //
+        if (gg_optmem && cmp_type(type,GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val); // no target since there was nothing there, but only if string
+        _gg_sprm_par[name_id].version = _gg_run_version;
+        _gg_sprm_par[name_id].type = type;
+        _gg_sprm_par[name_id].alloc = true;
+    }
+    _gg_sprm_par[name_id].version = _gg_run_version;
+    return name_id;
 }
 
 
 // 
-// In URL list of inputs, find an index for an input with a given name
-// req is input request. 'name' is the name of input parameters. Search is
-// case sensitive.
-// Returns value of parameters, or "" if not found. found_input_param global is set to -1
-// if not found, or index in ipars[] if found.
+// In URL list of inputs, find an index for an input with a given name-id, which is predetermined by source code 
+// (static compilation for performance)
+// Returns value of parameters, or "" if not found.
 // input parameter is supposed to be of type 'type' unless type is GG_DEFUNKN, in which case there's no
 // error message if 'type' isn't the actual type of input param.
 // GG_DEFUNKN is used to just obtain the index of a parameter - this is the ONLY time GG_DEFUNKN should be used - 
 // we MUST always know the type of what we're requesting!
 //
-void *gg_get_input_param (gg_input_req *req, char *name, gg_num type)
+void *gg_get_input_param (gg_num name_id, gg_num type)
 {
     GG_TRACE("");
 
-    gg_num i;
-    GG_TRACE ("Number of input data [%ld], looking for [%s]", req->ip.num_of_input_params, name);
-    // 
-    // The following relies on an assumption that input-params will not often look for the same param
-    // But rather will keep searching for the ones not looked for yet. That's pretty reasonable optimization,
-    // and even if not true, the number of strcmp's remains constant even in a worst-case scenario.
-    // So first we look for those ipars[] where found is 0 (i.e. not looked at yet). Once found, set found to 1.
-    // Next time, assuming we look for a different input param, we skip the one we just found (since found is 1 
-    // for it), and thus avoid one strcmp. Going further, each following input-param searches one less string comparison.
-    // If we look for the one already found, then the inner for loop finishes, and now comp_found is 1. So now
-    // we look for those that have been found only. This way our second loop is now complementary to the first
-    // and we will find it (assuming it's there), but still do only the same number of strcmp's.
-    // If a param name isn't there at all, then we will go through both comp_found 0 and 1, and still do only the
-    // same number of strcmp's, with a valid result (i.e. not found). 
-    // When found, we just return from the inner loop, and next time start the process again. 
-    // There is no need to reset .found for the life of a request. Programmer should do input-param for one
-    // parameter just a single time (i.e. do not do input-param on the same one many times), as that causes the 
-    // looping every time. That's unlikely, and would be a bad practice.
-    // Number of strcmp's without this optimization is n times the average strcmp's per single input-param.
-    // In before case, it's (n+n+..+n)/2 (n-times), so n^2/2. In after case it's (n+(n-1)+(n-2)+...)/2 so n*(n-1)/2/2
-    // or (n^2-n)/4, which is less than half the strcmp's than before. So this should speed up input-param more than twice. 
-    //
-    char comp_found;
-    // try for found 0, then if not found, for 1
-    for (comp_found = 0; comp_found < 2; comp_found++)
+    if (_gg_sprm_par[name_id].version != _gg_run_version)
     {
-        for (i = 0; i < req->ip.num_of_input_params; i++)
+        GG_TRACE ("Did not find input");
+        // other than strings, if we're getting some other type and not found, that cannot be handled, it must be there
+        // also check if not GG_DEFUNKN, this is if called from gg_set_input() and index not found
+        if (type != GG_DEFUNKN && type != GG_DEFSTRING) gg_report_error ("Parameter [%s] of type [%s] is not found", _gg_sprm_par[name_id].name, typename(type));
+        return GG_EMPTY_STRING;
+    }
+
+    char *v = (char*)(_gg_sprm_par[name_id].tval.value);
+    if (type != GG_DEFUNKN) 
+    {
+        gg_num act = _gg_sprm_par[name_id].type; // act is the actual type of data, 'type' is type we're asked to provide
+        if (act == GG_DEFSTRING)
         {
-            // look for those found and then not found
-            if (req->ip.ipars[i].found == comp_found)
+            if (cmp_type (GG_DEFBOOL, type))
             {
-                if (!strcmp (req->ip.ipars[i].name, name))
-                {
-                    GG_TRACE ("Found input [%s] at [%ld]", req->ip.ipars[i].name, i);
-                    req->ip.ipars[i].found = 1; // input-param found it, likely not to be asked for again
-                                               // which makes the search space for future input-params one lesser
-                    found_input_param = i;
-                    char *v = (char*)(req->ip.ipars[i].tval.value);
-                    if (type != GG_DEFUNKN) 
-                    {
-                        gg_num act = req->ip.ipars[i].type; // act is the actual type of data, 'type' is type we're asked to provide
-                        if (act == GG_DEFSTRING)
-                        {
-                            if (cmp_type (GG_DEFBOOL, type))
-                            {
-                                if (!strcmp (v, "true")) return &gg_true;
-                                if (!strcmp (v, "false")) return &gg_false;
-                            }
-                            else if (cmp_type (GG_DEFNUMBER, type))
-                            {
-                                gg_num st;
-                                static gg_num retnum;
-                                retnum = gg_str2num (v, 0, &st);
-                                if (st == GG_OKAY) return &retnum;
-                            }
-                        }
-                        if (type != act) gg_report_error ("Parameter [%s] is supposed to be of type [%s], but the value is of type [%s]", req->ip.ipars[i].name, typename(type), typename(req->ip.ipars[i].type));
-                        if (cmp_type (GG_DEFSTRING, type)) 
-                        {
-                            if (!req->ip.ipars[i].alloc ) 
-                            {
-                                v = req->ip.ipars[i].tval.value = gg_strdup (v); 
-                                req->ip.ipars[i].alloc = true; // so it's strdup'd only once even if requested many times
-                            } 
-                            // note that deletion of reference of target is done in v1.c, as well as adding reference to variable assigned to it.
-                            return v;
-                        } else 
-                        {
-                            // number is a special case, we have a value for it.
-                            if (cmp_type (GG_DEFNUMBER, type)) return (void*)&(req->ip.ipars[i].tval.numval);
-                            else return v; // otherwise it's just a pointer
-                        }
-                    } else { return GG_EMPTY_STRING; }  // we found index of param via GG_DEFUNKN, return
-                }
+                if (!strcmp (v, "true")) return &gg_true;
+                if (!strcmp (v, "false")) return &gg_false;
+            }
+            else if (cmp_type (GG_DEFNUMBER, type))
+            {
+                gg_num st;
+                static gg_num retnum;
+                retnum = gg_str2num (v, 0, &st);
+                if (st == GG_OKAY) return &retnum;
             }
         }
-    }
-    GG_TRACE ("Did not find input");
-    found_input_param = -1; // meaning not found
-    // other than strings, if we're getting some other type and not found, that cannot be handled, it must be there
-    // also check if not GG_DEFUNKN, this is if called from gg_set_input() and index not found
-    if (type != GG_DEFUNKN && type != GG_DEFSTRING) gg_report_error ("Parameter [%s] of type [%s] is not found", name, typename(type));
-    return GG_EMPTY_STRING;
+        if (type != act) gg_report_error ("Parameter [%s] is supposed to be of type [%s], but the value is of type [%s]", _gg_sprm_par[name_id].name, typename(type), typename(_gg_sprm_par[name_id].type));
+        if (cmp_type (GG_DEFSTRING, type)) 
+        {
+            if (!_gg_sprm_par[name_id].alloc ) 
+            {
+                v = _gg_sprm_par[name_id].tval.value = gg_strdup (v); 
+                _gg_sprm_par[name_id].alloc = true; // so it's strdup'd only once even if requested many times
+            } 
+            // note that deletion of reference of target is done in v1.c, as well as adding reference to variable assigned to it.
+            return v;
+        } else 
+        {
+            // number is a special case, we have a value for it.
+            if (cmp_type (GG_DEFNUMBER, type)) return (void*)&(_gg_sprm_par[name_id].tval.numval);
+            else return v; // otherwise it's just a pointer
+        }
+    } else { return GG_EMPTY_STRING; }  // we found index of param via GG_DEFUNKN, return
 }
 
 
