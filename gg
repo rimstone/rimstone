@@ -46,6 +46,10 @@ export GG_DATA="/var/lib/gg"
 
 export GG_C_RESTPATH=""
 export GG_C_MAXUPLOAD="25000000"
+export GG_C_CPUS=$(grep -c '^processor' /proc/cpuinfo)
+if (( GG_C_CPUS < 1 )); then
+    export GG_C_CPUS="4"
+fi
 export GG_C_MAXERRORS="5"
 #plain diagnostics must have value, as it's passed in a script (vdiag) in vmakefile
 export GG_C_PLAINDIAG="0"
@@ -94,6 +98,7 @@ OPTIONS:
             --max-errors=<max errors>
             --plain-diag
             --optimize-memory
+            --parallel=<compiling threads>
 -i      display build flags for FastCGI client
             --include
                 displays C compile flags
@@ -112,7 +117,7 @@ function main() {
 #list of Gliimly options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o e:t:,q,o,l,m,i,h,c,v,s,u,r --long db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o e:t:,q,o,l,m,i,h,c,v,s,u,r --long parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit -1
@@ -295,6 +300,15 @@ _DO_QUICK=0
 #quick setup
             _DO_QUICK="1"
             shift 
+            ;;
+        --parallel )
+#db vendor
+            CPUS="$2"
+            if (( CPUS >= 1 && CPUS < GG_C_CPUS * 3 )); then
+                export GG_C_CPUS=$CPUS
+            fi
+            _DEVOPT=1
+            shift 2
             ;;
         --db )
 #db vendor
@@ -826,6 +840,7 @@ function read_modules() {
 #
 
 #first look for all possible statements
+#TODO: there could be a comment prior to statement, as in /*haha*/call-web, and this wouldn't work!
     grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-index \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.gliim>$GG_BLD/.findmod || true
 #then from occurrances, look for curl
     if [[ $(grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod) != "" ]]; then _ISMOD_CURL="1"; fi
@@ -997,6 +1012,14 @@ function gen_src() {
 #
 #Files generated here are $GG_BLD/source.gliim,gliimapp.h,gg_dispatch_request.gliim.
 #
+
+#
+#Setup directory for set-param'eters where all parameter names for application will go to
+#
+    if [ ! -d $GG_BLD/.setparam ]; then
+        rm -rf $GG_BLD/.setparam || true
+        mkdir -p $GG_BLD/.setparam
+    fi
 
 #
 #Generate source.gliim, all the source files needed for Gliimly app
@@ -1213,8 +1236,14 @@ function build_app() {
     stub_events
 #create file that tells make to recompile if options changed
     mkset
-#make the application (compile and link)
-    make $GG_SHOW_MAKE  -f "$GG_LIBRARY_PATH"/vmakefile all
+#make the application (compile and link) in parallel
+#if GG_SHOW_MAKE is not "-s", then it's not silent, and display what it's doing
+#otherwise use -s for silent
+    if [ "$GG_SHOW_MAKE" == "" ]; then
+        make -j $GG_C_CPUS SHELL="bash -x -e" -f "$GG_LIBRARY_PATH"/vmakefile all
+    else
+        make -j $GG_C_CPUS $GG_SHOW_MAKE  -f "$GG_LIBRARY_PATH"/vmakefile all
+    fi
 }
 
 #

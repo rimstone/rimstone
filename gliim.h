@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "56"
+#define GG_VERSION "65"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -264,6 +264,7 @@ typedef void (*gg_request_handler)(); // request handler in gliim dispatcher
 #define GG_DB_POSTGRES 1
 #define GG_DB_SQLITE 2
 // Type for 'define' statements
+#define GG_DEFNONE 0
 #define GG_DEFSTRING 1
 #define GG_DEFNUMBER 4
 #define GG_DEFBROKEN 8
@@ -486,8 +487,6 @@ typedef struct s_gg_args
 // Single name/value pair
 typedef struct s_gg_ipar 
 {
-    char found; // when using input-param, it's 0 if not asked for yet, 1 if was. Speeds up finding params.
-                // it must be either 0 or 1, nothing else; if so, input-param won't work
     char *name; // URL names for GET/POST request
     union {
         void *value; // URL values for GET/POST request, or any param set with set-param
@@ -496,13 +495,8 @@ typedef struct s_gg_ipar
     } tval; // it's either value or numval, both are 8 bytes
     gg_num type; // type of variable
     bool alloc; // is allocated? true if so. it means it's gliimmem; say input from web isn't alloc'd
+    gg_num version; // current version of parameter, any parameter that doesn't match global _gg_run_version wasn't set
 } gg_ipar;
-// List of input params
-typedef struct s_gg_input_params
-{
-    gg_ipar *ipars;
-    gg_num num_of_input_params; // # of name/values in GET/POST request
-} gg_input_params;
 // 
 // Write string (write-string markup) information
 typedef struct gg_write_string_t
@@ -556,7 +550,6 @@ typedef struct gg_input_req_s
     gg_cookies *cookies;
     gg_num num_of_cookies;
     gg_args args; // main() input params to SERVICE program 
-    gg_input_params ip; // URL input params
     char *referring_url; // where we came from 
     gg_num from_here; // did the current request come from this web server? 0 if not, 1 if yes.
     gg_num is_shut; // 1 if gg_shut already called
@@ -1022,7 +1015,7 @@ void gg_output_http_header(gg_input_req *iu);
 void _gg_report_error (char *format, ...) __attribute__ ((format (printf, 1, 2)));
 gg_num gg_encode (gg_num enc_type, char *v, gg_num vlen, char **res, bool alloc);
 gg_num gg_get_input(gg_input_req *req, char *method, char *input);
-void *gg_get_input_param (gg_input_req *iu, char *name, gg_num type);
+void *gg_get_input_param (gg_num name_id, gg_num type);
 gg_num gg_is_positive_num (char *s);
 void gg_copy_string (char *src, gg_num from, char **dst, gg_num len);
 void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bool begin);
@@ -1216,7 +1209,7 @@ char *gg_text_to_utf8 (char *val, char quoted, char **o_errm, char dec, bool all
 gg_num gg_utf8_to_text (char *val, gg_num len, char **res, char **err);
 char *gg_getheader(char *h);
 void gg_bad_request ();
-gg_num gg_set_input (gg_input_req *req, char *name, void *val, gg_num type);
+gg_num gg_set_input (gg_num name_id, void *val, gg_num type);
 char *gg_getpath ();
 int gg_fcgi_client_request (char *fcgi_server, char *req_method, char *path_info, char *script_name, char *content_type, int content_len, char *payload);
 void gg_flush_out(void);
@@ -1341,6 +1334,7 @@ extern bool gg_mem_process;
 extern bool gg_mem_process_key;
 extern bool gg_mem_process_data;
 extern gg_hash gg_dispatch;
+extern gg_hash gg_paramhash;
 extern gg_tree_cursor *gg_cursor;
 extern bool gg_true;
 extern bool gg_false;

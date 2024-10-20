@@ -17,7 +17,7 @@ end-after-handler
 .RE
 
 .SH DESCRIPTION
-Every Gliimly request goes through a request dispatcher (see \fBrequest\fP()). In order to specify your code to execute after a request is handled, create source file "after_request.gliim" and implement a handler that starts with "after-handler" and ends with "end-after-handler", which will be automatically picked up and compiled with your application. 
+Every Gliimly request goes through a request dispatcher (see \fBrequest\fP()). In order to specify your code to execute after a request is handled, create source file "after_handler.gliim" and implement a handler that starts with "after-handler" and ends with "end-after-handler", which will be automatically picked up and compiled with your application. 
 
 If no request executes (for example if your application does not handle a given \fBrequest\fP), after-handler handler does not execute either. If you use \fBexit-handler\fP to exit current request handling, after-handler handler still executes.
 

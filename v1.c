@@ -239,9 +239,6 @@
 #define GG_KEYCOUNT "count "
 #define GG_KEYHOPS "hops "
 #define GG_KEYARGVALUE "arg-value "
-#define GG_KEYINPUTCOUNT "input-count"
-#define GG_KEYINPUTVALUE "input-value "
-#define GG_KEYINPUTNAME "input-name "
 #define GG_KEYREFERRINGURL "referring-url"
 #define GG_KEYPROCESSID "process-id"
 #define GG_KEYCOOKIECOUNT "cookie-count"
@@ -540,7 +537,7 @@ void name_query (gg_gen_ctx *gen_ctx);
 void free_query (char *qryname, bool skip_data);
 void convert_puts(char *pline);
 void do_numstr (char *to, char *num0, char *olen, char *base);
-void setup_reqhash();
+void setup_internal_hash(char *fname, char *hash, bool is_req);
 void deprecated (char **old, char **new, char *oldkey, char *newkey);
 void gg_report_warning (char *format, ...)  __attribute__ ((format (printf, 1, 2)));
 gg_num carve_stmt_obj (char **mtext, bool has_value);
@@ -575,12 +572,38 @@ bool find_var (char *name, gg_num *type, gg_num *line, char **realname);
 void make_var (char **v, gg_num type);
 void check_c (char *mtext);
 char *check_exp (char *e, bool *found, bool *err);
+void save_param (char *pname);
 
 //
 //
 // Implementation of functions used in GLIIMLY alone
 //
 //
+
+
+//
+//
+// Save the name of a parameter for an application-wide list of parameters, which then will be indexed in a fixed fashion,
+// so that there's no "searching" for a parameter, rather we compile it as a direct memory access, making it very very fast.
+// The index list will be generated in gg
+// pname is the name of a parameter. A parameter with the same name can be used unrelated in different requests, but a process
+// does only one request at a time, so each such parameter can have just one index in the list of params.
+//
+//
+void save_param (char *pname)
+{
+    gg_num plen = strlen (pname);
+    if (pname[0] == '(') *pname = ' ';
+    if (pname[plen-1] == ')') pname[plen-1] = ' ';
+    gg_trim (pname, &plen, false);
+    char gg_sparam_file[300];
+    snprintf (gg_sparam_file, sizeof(gg_sparam_file), "%s/.setparam/%s.sp", gg_bld_dir, src_file_name);
+    FILE *f = fopen (gg_sparam_file, "a");
+    if (f == NULL) gg_report_error ("Cannot open file [%s]", gg_sparam_file);
+    fprintf (f, "%s\n", pname);
+    fclose(f);
+}
+
 
 //
 // Recursively parse number expression for validity, and check if number variables in it are proper
@@ -1651,6 +1674,7 @@ gg_num carve_stmt_obj (char **mtext, bool has_value)
 //
 // Make variable out of expression *v of type 'type'. *v contains the name of newly generated variable name.
 // This prevents double evaluation, as whatever is used is assigned once (and only if it's an expression).
+// This is for input params only.
 //
 void make_var (char **v, gg_num type)
 {
@@ -1861,21 +1885,24 @@ void deprecated (char **old, char **new, char *oldkey, char *newkey)
 // being loaded with large memcpy, and then used. So there is no loading of hash, only querying. There is
 // also no deleting, resizing etc. - this method is for hash table that stay loaded and *unchanged* for
 // the life of the process.
+// fname is the file containing the list of names to hash, one line at a time
+// hash is the name of the hash generated.
+// is_req is true if this is a list of requests for dispatcher
 // Here we also check that all file names in the app have proper names. We do another check in v1 input to 
 // see if the source file name is proper named.
 //
-void setup_reqhash()
+void setup_internal_hash(char *fname, char *hash, bool is_req)
 {
     // Build request list file name. This file is built in gg -q prior to calling v1 for processing.
     // The first line of this file is the number of request names that follow, each in a separate line.
     char gg_req_file[300];
-    snprintf (gg_req_file, sizeof(gg_req_file), "%s/.reqlist", gg_bld_dir);
+    snprintf (gg_req_file, sizeof(gg_req_file), "%s/%s", gg_bld_dir, fname);
 
     FILE *f = fopen (gg_req_file, "r");
     if (f == NULL) gg_report_error( "Error [%s] opening file [%s]", strerror (errno), gg_req_file);
 
-    char line[GG_MAX_REQ_NAME_LEN]; // line to read from .reqlist
-    gg_hash *gg_dispatch; // hash we will build at compile time, and then make a memory representation of it
+    char line[GG_MAX_REQ_NAME_LEN]; // line to read from fname
+    gg_hash *gg_hardhash; // hash we will build at compile time, and then make a memory representation of it
     bool done_count = false; // true when first line (count of requests) read
                              //
     while (1)
@@ -1894,16 +1921,23 @@ void setup_reqhash()
         if (!done_count) 
         {
             done_count = true;
-            gg_create_hash (&gg_dispatch, atol (req), NULL, false); // create hash, first line is the
+            gg_create_hash (&gg_hardhash, atol (req), NULL, false); // create hash, first line is the
                                                           // number of elements in the hash
         }
         else
         {
             // check if file name is proper, as it's converted into request name
-            if (gg_is_valid_param_name (req, false, false) != 1) gg_report_error (GG_MSG_SRC_NAME, req);
+            if (is_req && gg_is_valid_param_name (req, false, false) != 1) gg_report_error (GG_MSG_SRC_NAME, req);
             // must use gg_strdup() so that each new element is new memory, otherwise
             // new req would override all previous additions
-            gg_add_hash (gg_dispatch, gg_strdup(req), NULL, GG_EMPTY_STRING, NULL, NULL);
+            if (is_req) gg_add_hash (gg_hardhash, gg_strdup(req), NULL, GG_EMPTY_STRING, NULL, NULL);
+            else 
+            {
+                // this is the address of index into param array added as value associated with hash key (which is the name of param), _gg_sprm_xxxx is generated in vmakefile
+                char hdata[300];
+                snprintf(hdata, sizeof(hdata), "(void*)&_gg_sprm_%s", req);
+                gg_add_hash (gg_hardhash, gg_strdup(req), NULL, gg_strdup(hdata), NULL, NULL);
+            }
         }
     }
     // Now that we have the hash, we need to generate the code that unwinds this process into a 
@@ -1911,37 +1945,37 @@ void setup_reqhash()
     // hash is deterministic; the buckets we get here is what gets computed at run time
     // we're just saving time precomputing them at compile time, i.e. here.
 
-    // gg_dispatch is a global hash ptr variable, we declare a pointer to it as hash ops expect a pointer
-    oprintf ("gg_hash *gg_dispatch_ptr = &(gg_dispatch);\n");
+    // gg_hardhash is a global hash ptr variable, we declare a pointer to it as hash ops expect a pointer
+    oprintf ("gg_hash *%s_ptr = &(%s);\n", hash, hash);
     gg_num i;
     // Calculate how many hash buckets are empty. We still need to have a representation for them, as they
     // are part of the hash image we want to recreate in a running Gliimly program.
     gg_num empty = 0;
-    for (i = 0; i < gg_dispatch->num_buckets; i++)
+    for (i = 0; i < gg_hardhash->num_buckets; i++)
     {
-        if (gg_dispatch->table[i] == NULL) empty++;
+        if (gg_hardhash->table[i] == NULL) empty++;
     }
 
     // harr is the total number of entries we must declare. There's ->tot (total number of elements stored
     // in the hash) plus the empty buckets, plus one for the ending.
-    gg_num harr = gg_dispatch->tot+1+empty;
+    gg_num harr = gg_hardhash->tot+1+empty;
 
     // Declare internal hash table. Normally, this is allocated at run-time for a hash, but Gliimly API allows
     // for it to be provided as a fixed array. We generate the code for it with the initializator (not an assignment)
     // so that it can be linked as a data segment and copied extremely fast into a running program for use.
-    oprintf ("gg_hash_table _gg_req_hash[%ld] = { ", harr);
+    oprintf ("gg_hash_table _%s_arr[%ld] = { ", hash,harr);
     // We do not allocate memory. Instead, any overflow bucket elements are stored as the trailing element in the 
     // array, and we manipulate the ->next to point to them. So the hash structure is NOT exactly the same as it would
     // have been with the normal hash. This is faster, since there's no allocation, and memory is in a single contiguous block.
-    gg_num bottom = gg_dispatch->num_buckets; 
+    gg_num bottom = gg_hardhash->num_buckets; 
     gg_num nx;
     // Go through all buckets
-    for (i = 0; i < gg_dispatch->num_buckets; i++)
+    for (i = 0; i < gg_hardhash->num_buckets; i++)
     {
         char *next;
         char next_s[300];
         // Start with each leading bucket element
-        gg_hash_table *t = gg_dispatch->table[i];
+        gg_hash_table *t = gg_hardhash->table[i];
         gg_num curr_i = i;
         // Go through the list of next element with the same hash
         while (t != NULL) 
@@ -1957,11 +1991,12 @@ void setup_reqhash()
                 // this way there is no pointer translation and memory fetching is very fast.
                 // nx is the ->next element. It is at the current bottom of the array, which we advance with each added ->next
                 // we will process that one (nx) next, by setting curr_i, and t=t->next, which refer to the same element.
-                snprintf (next_s, sizeof(next_s), "&(_gg_req_hash[%ld])", nx=bottom++);
+                snprintf (next_s, sizeof(next_s), "&(_%s_arr[%ld])", hash,nx=bottom++);
                 next = next_s; // [].next for the current element
             }
             // initialize the current hash element
-            oprintf ("[%ld].key = \"%s\", [%ld].data=%s, [%ld].next = %s,\n", curr_i, t->key, curr_i, t->key, curr_i, next);
+            if (is_req) oprintf ("[%ld].key = \"%s\", [%ld].data=%s, [%ld].next = %s,\n", curr_i, t->key, curr_i, t->key, curr_i, next);
+            else oprintf ("[%ld].key = \"%s\", [%ld].data=%s, [%ld].next = %s,\n", curr_i, t->key, curr_i, (char*)(t->data), curr_i, next);
             // set the -> element which is processed next, and nx and t refer to the same element. We do this until end of list,
             // then move on to the next bucket
             curr_i = nx;
@@ -1971,21 +2006,22 @@ void setup_reqhash()
     }
     // add the final one as an end of list (not used for now)
     oprintf ("[%ld].key = \"\", [%ld].data=NULL, [%ld].next = NULL\n", harr-1, harr-1, harr-1);
-    oprintf(" };\n"); // finish the list
+    // unused is because if the project doesn't have any params, then this causes unused variable error
+    oprintf(" };\nGG_UNUSED(_%s_arr);\n", hash); // finish the list
     // What we created so far is the entire hash bucket structure, including overflow elements
     // What hash API expects is a list of pointers that point to buckets.
     // That's what we initialize here, an array of pointers to buckets, and that's what we use
     // to create a request hash, which then can be queried
-    oprintf ("gg_hash_table *_gg_req_hash_ptr[%ld] = { ", harr-1);
-    for (i = 0; i < gg_dispatch->num_buckets; i++) 
+    oprintf ("gg_hash_table *_%s_arr_ptr[%ld] = { ", hash,harr-1);
+    for (i = 0; i < gg_hardhash->num_buckets; i++) 
     {
         // for those buckets that are NULL, we must have NULL too in runtime hash table, or otherwise
         // the key in such a non-NULL bucket would be NULL, causing Gliimly to crash in hash.c(142) when comparing a key
-        if (gg_dispatch->table[i] == NULL) oprintf ("%s NULL \n", i!=0?",":""); else oprintf ("%s &(_gg_req_hash[%ld]) \n", i!=0?",":"", i);
+        if (gg_hardhash->table[i] == NULL) oprintf ("%s NULL \n", i!=0?",":""); else oprintf ("%s &(_%s_arr[%ld]) \n", i!=0?",":"", hash, i);
     }
     oprintf ("};\n");
     // generate create hash
-    oprintf ("gg_create_hash (&gg_dispatch_ptr, %ld, _gg_req_hash_ptr, false);\n", gg_dispatch->tot); 
+    oprintf ("gg_create_hash (&%s_ptr, %ld, _%s_arr_ptr, false);\n", hash, gg_hardhash->tot, hash); 
     
 
     // hash is typically a fairly small structure. We do not delete it here, as it would just slow down processing.
@@ -4012,6 +4048,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
     // Include gliim.h so it's not necessary, doubles are prevented with ifdefs inside
     oprintf("#include \"gliim.h\"\n");
+    oprintf("#include \"gg_sparam_%s.h\"\n",gg_basename(file_name));
 
     // 
     // Main loop in which lines are read from the source file
@@ -6265,9 +6302,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *tracefile = find_keyword (mtext, GG_KEYTRACEFILE, 1);
                         char *argnum = find_keyword (mtext, GG_KEYARGCOUNT, 1);
                         char *argval = find_keyword (mtext, GG_KEYARGVALUE, 1);
-                        char *numinput = find_keyword (mtext, GG_KEYINPUTCOUNT, 1);
-                        char *inputval = find_keyword (mtext, GG_KEYINPUTVALUE, 1);
-                        char *inputname = find_keyword (mtext, GG_KEYINPUTNAME, 1);
                         char *ref = find_keyword (mtext, GG_KEYREFERRINGURL, 1);
                         char *numcookie = find_keyword (mtext, GG_KEYCOOKIECOUNT, 1);
                         char *cookie = find_keyword (mtext, GG_KEYCOOKIE, 1);
@@ -6284,9 +6318,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&tracefile, "get-req", GG_KEYTRACEFILE, 0, 0);
                         carve_statement (&argnum, "get-req", GG_KEYARGCOUNT, 0, 0);
                         carve_statement (&argval, "get-req", GG_KEYARGVALUE, 0, 1);
-                        carve_statement (&numinput, "get-req", GG_KEYINPUTCOUNT, 0, 0);
-                        carve_statement (&inputval, "get-req", GG_KEYINPUTVALUE, 0, 1);
-                        carve_statement (&inputname, "get-req", GG_KEYINPUTNAME, 0, 1);
                         carve_statement (&ref, "get-req", GG_KEYREFERRINGURL, 0, 0);
                         carve_statement (&numcookie, "get-req", GG_KEYCOOKIECOUNT, 0, 0);
                         carve_statement (&cookie, "get-req", GG_KEYCOOKIE, 0, 1);
@@ -6300,8 +6331,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&header);
 
                         // result can be defined
-                        if (numinput != NULL || numcookie != NULL || argnum != NULL || method != NULL ) define_statement (&to, GG_DEFNUMBER, false);
-                        else if (ctype != NULL || inputval != NULL || inputname != NULL || argval != NULL || cookie != NULL || header != NULL || name != NULL ) 
+                        if (numcookie != NULL || argnum != NULL || method != NULL ) define_statement (&to, GG_DEFNUMBER, false);
+                        else if (ctype != NULL || argval != NULL || cookie != NULL || header != NULL || name != NULL ) 
                         {
                             define_statement (&to, GG_DEFSTRING, false); // exact length set with strdup below
                         }
@@ -6312,22 +6343,17 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             define_statement (&to, GG_DEFSTRING, false); // exact length set with strdup below
                         }
                         check_var (&argval, GG_DEFNUMBER, NULL);
-                        check_var (&inputval, GG_DEFNUMBER, NULL);
-                        check_var (&inputname, GG_DEFNUMBER, NULL);
                         check_var (&header, GG_DEFSTRING, NULL);
 
-                        gg_num tot_opt = (tracefile!=NULL?1:0)+(numinput!=NULL?1:0)+(argval!=NULL?1:0)+(argnum!=NULL?1:0)+(inputval!=NULL?1:0)+(inputname!=NULL?1:0)+(ref!=NULL?1:0)+(numcookie!=NULL?1:0)+(cookie!=NULL?1:0)+(header!=NULL?1:0)+(process_id!=NULL?1:0)+(eno!=NULL?1:0)+(err!=NULL?1:0)+(method!=NULL?1:0)+(ctype!=NULL?1:0)+(name!=NULL?1:0);
+                        gg_num tot_opt = (tracefile!=NULL?1:0)+(argval!=NULL?1:0)+(argnum!=NULL?1:0)+(ref!=NULL?1:0)+(numcookie!=NULL?1:0)+(cookie!=NULL?1:0)+(header!=NULL?1:0)+(process_id!=NULL?1:0)+(eno!=NULL?1:0)+(err!=NULL?1:0)+(method!=NULL?1:0)+(ctype!=NULL?1:0)+(name!=NULL?1:0);
                         if (tot_opt != 1)
                         {
                             gg_report_error( "Exactly one option must be in get-req statement (%ld)", tot_opt);
                         }
 
                         if (tracefile !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->trace.fname);\n", to); 
-                        if (numinput !=NULL) oprintf ("%s=gg_get_config()->ctx.req->ip.num_of_input_params;\n", to); 
                         if (argval !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->args.args[%s-1]);\n", to, argval); 
                         if (argnum !=NULL) oprintf ("%s=gg_get_config()->ctx.req->args.num_of_args;\n", to); // not alloced
-                        if (inputval !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->ip.ipars[%s-1].tval.value);\n", to, inputval); 
-                        if (inputname !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->ip.ipars[%s-1].name);\n", to, inputname); 
                         if (ref !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->referring_url);\n", to); 
                         if (numcookie !=NULL) oprintf ("%s=gg_get_config()->ctx.req->num_of_cookies;\n", to); 
                         if (cookie !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->cookies[%s-1].data);\n", to, cookie); 
@@ -6700,21 +6726,24 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
 
-                        carve_statement (&eq, "set-param", GG_KEYEQUALSHORT, 1, 1);
+                        carve_statement (&eq, "set-param", GG_KEYEQUALSHORT, 0, 1);
                         carve_stmt_obj (&mtext, true);
                         if (gg_is_valid_param_name(mtext, false, false) != 1) gg_report_error( "parameter name [%s] is not valid, it can have only alphanumeric characters and underscores, and must start with an alphabet character", mtext);
+                        save_param (mtext);
 
+                        if (eq == NULL) eq = gg_strdup (mtext); // if no =, assume it's the variable with the same name
                         make_mem(&eq);
                         gg_num type = check_var (&eq, GG_DEFUNKN, NULL);
                         if (type == GG_DEFUNKN) gg_report_error (GG_VAR_NOT_EXIST, eq);
 
 
  
-                        oprintf("gg_set_input (gg_get_config()->ctx.req, \"%s\", ", mtext);
+                        oprintf("gg_set_input (_gg_sprm_%s, ", mtext);
                         if (cmp_type(type, GG_DEFNUMBER)) oprintf ("&(%s)", eq);
                         else if (cmp_type(type, GG_DEFBOOL)) oprintf ("((%s)?&gg_true:&gg_false)", eq);
                         else oprintf ("%s", eq);
                         oprintf (", %ld);\n", type);
+
 
                         continue;
                     }
@@ -7085,6 +7114,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *type = find_keyword (mtext, GG_KEYTYPE, 1);
                         carve_statement (&type, "get-param", GG_KEYTYPE, 0, 1);
                         carve_stmt_obj (&mtext, true);
+                        save_param (mtext);
 
                         gg_num t;
                         gg_num is_def;
@@ -7099,7 +7129,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf("{ typeof(%s) _gg_param = " , mtext);
                             if (t == GG_DEFNUMBER) oprintf ("*(gg_num*)");
                             else if (t == GG_DEFBOOL) oprintf ("*(bool*)");
-                            oprintf("gg_get_input_param (gg_get_config()->ctx.req, \"%s\", %ld);\n", mtext, t);
+                            oprintf("gg_get_input_param (_gg_sprm_%s, %ld);\n", mtext, t);
                             //
                             if (optmem)
                             {
@@ -7115,6 +7145,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // we used to forbid non-string/bool/number in non-sub-handler. But we should be able to create say index in sub-handler and pass it back
                         // to caller. In gliimrt.c, we error out if such param with such type is not found.
                         // if ((t != GG_DEFNUMBER && t != GG_DEFBOOL && t != GG_DEFSTRING) && !gg_is_sub) gg_report_error ("get-param type [%s] can only be used within sub-handler", typename(t));
+
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "delete-string", &mtext, &msize, 0, &gg_is_inline)) != 0)
@@ -9237,6 +9268,7 @@ int main (int argc, char* argv[])
         GG_VERBOSE(0,"Generating main code");
 
         oprintf("#include \"gliim.h\"\n");
+        oprintf("#include \"gg_sparam.h\"\n");
         oprintf("extern gg_num gg_end_program;\n");
 
         // 
@@ -9258,7 +9290,9 @@ int main (int argc, char* argv[])
         oprintf("char * gg_app_path=\"%s\";\n", app_path); // app-path cannot have quotes
         oprintf("unsigned long gg_app_path_len=%lu;\n", strlen(app_path)); 
         oprintf("gg_num gg_is_trace=%ld;\n", gg_is_trace);
+        oprintf("gg_num _gg_run_version=0;\n");
         oprintf ("gg_hash gg_dispatch;\n");
+        oprintf ("gg_hash gg_paramhash;\n");
         oprintf ("bool gg_true = true;\n");
         oprintf ("bool gg_false = false;\n");
         oprintf("gg_num gg_max_upload=%ld;\n", gg_max_upload);
@@ -9282,7 +9316,8 @@ int main (int argc, char* argv[])
         //
         oprintf("if (gg_s_pc->debug.trace_level != 0) gg_open_trace();\n");
 
-        setup_reqhash(); // setup request hash for near-instant request routing
+        setup_internal_hash(".reqlist","gg_dispatch", true); // setup request hash for near-instant request routing
+        setup_internal_hash(".gg_sparam","gg_paramhash", false); // setup hash for list of set-params
 
         oprintf ("while(gg_SERVICE_Accept() >= 0) {\n");
         oprintf ("gg_in_request = 1;\n");

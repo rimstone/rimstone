@@ -35,15 +35,10 @@ CC=gcc
 
 #get build version and release
 PACKAGE_VERSION=$(shell . .version; echo $${PACKAGE_VERSION})
-BUILDVER=$(shell echo $(PACKAGE_VERSION)|sed "s/\(.*\)\.\(.*\)\.\(.*\)/\1.\2/g")
-BUILDREL=$(shell echo $(PACKAGE_VERSION)|sed "s/\(.*\)\.\(.*\)\.\(.*\)/\3/g")
 
 
-ifeq ($(strip $(BUILDVER)),)
-BUILDVER=2
-endif
-ifeq ($(strip $(BUILDREL)),)
-BUILDREL=100
+ifeq ($(strip $(PACKAGE_VERSION)),)
+PACKAGE_VERSION=2
 endif
 
 ifeq ($(strip $(SYSTEMTYPE)),fedora)
@@ -169,8 +164,8 @@ install:
 	sed -i "s|^[ ]*export[ ]*GG_LIBRARY_PATH[ ]*=.*|export GG_LIBRARY_PATH=$(V_LIB)|g" $(DESTDIR)$(V_LIB)/sys
 	sed -i "s|^[ ]*export[ ]*GG_LIBRARY_PATH[ ]*=.*|export GG_LIBRARY_PATH=$(V_LIB)|g" $(DESTDIR)$(V_BIN)/gg
 	sed -i "s|^[ ]*export[ ]*GG_INCLUDE_PATH[ ]*=.*|export GG_INCLUDE_PATH=$(V_INC)|g" $(DESTDIR)$(V_LIB)/sys
-	sed -i "s|^[ ]*export[ ]*GG_VERSION[ ]*=.*|export GG_VERSION=$(BUILDVER).$(BUILDREL)|g" $(DESTDIR)$(V_LIB)/sys
-	if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$VERSION/$(BUILDVER).$(BUILDREL)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi
+	sed -i "s|^[ ]*export[ ]*GG_VERSION[ ]*=.*|export GG_VERSION=$(PACKAGE_VERSION)|g" $(DESTDIR)$(V_LIB)/sys
+	if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi
 	if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$DATE/$(DATE)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi
 	for i in $$(ls $(DESTDIR)$(V_MAN)/*.2gg); do gzip -f $$i; done
 	install -m 0755 -d $(DESTDIR)$(V_GG_DOCS)
@@ -199,7 +194,7 @@ binary:build
 
 .PHONY: build
 build: libsrvcgliim.so libgliimcli.so libgliimscli.so libgliim.so libgliimdb.so libgliimsec.so libgliimmys.so libgliimlylite.so libgliimpg.so libgliimcurl.so libgliimtree.so libgliimpcre2.so libgliimpcre2glibc.so v1.o stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg 
-	@echo "Building version $(BUILDVER).$(BUILDREL)"
+	@echo "Building version $(PACKAGE_VERSION)"
 	$(CC) -o v1 v1.o chandle.o gliimrtc.o gliimmemc.o hash.o $(LDFLAGS) 
 
 .PHONY: clean
