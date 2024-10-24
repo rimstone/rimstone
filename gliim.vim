@@ -1,7 +1,7 @@
 " Language: Gliimly
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2024-October-14
+" Latest Revision: 2024-October-23
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link gliimConstruct Statement
@@ -1110,11 +1110,6 @@ syn region gg_r_construct_get_req start="^[[:space:]]*get-req" skip="\\[[:space:
     syn match gg_h_clause_get_req " errno$" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " error \@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " header \@=" contained containedin=gg_r_construct_get_req
-    syn match gg_h_clause_get_req " input-count \@=" contained containedin=gg_r_construct_get_req
-    syn match gg_h_clause_get_req " input-count,\@=" contained containedin=gg_r_construct_get_req
-    syn match gg_h_clause_get_req " input-count$" contained containedin=gg_r_construct_get_req
-    syn match gg_h_clause_get_req " input-name \@=" contained containedin=gg_r_construct_get_req
-    syn match gg_h_clause_get_req " input-value \@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " method \@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " name \@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " name,\@=" contained containedin=gg_r_construct_get_req

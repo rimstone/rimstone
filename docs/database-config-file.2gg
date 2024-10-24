@@ -86,85 +86,19 @@ The contents of a configuration file depends on the database used:
 
 .RS 4
 \[bu]    
-MariaDB: configuration file is written as a MariaDB client options file. You can see the parameters available at 
-
-.RS 4
-.EX
-
-https://mariadb.com/kb/en/configuring-mariadb-connectorc-with-option-files/#options
-
-.EE
-.RE
-
-Most of the time, though, you would likely use only a few of those options, as in (for local connection):
-
-.RS 4
-.EX
-
-[client]
-user=myuser
-password=mypwd 
-database=mydb
-socket=/run/mysqld/mysqld.sock
-
-.EE
-.RE
-
-The above file has fields "user" (MariaDB user), "password" (the password for MariaDB user), "database" (the MariaDB database name) and MariaDB communication "socket" location (assuming your database is local to your computer - if the database is across network you would not use sockets!). 
-
-If you use passwordless MariaDB login (such as when the MariaDB user name is the same as your Operating System user name and where unix socket plugin is used for authentication), the password would be empty.
-
-To get the location of the socket, you might use:
-
-.RS 4
-.EX
-
-sudo mysql -u root -e "show variables like 'socket'"
-
-.EE
-.RE
-
+MariaDB: see \fBmariadb-database\fP
 
 .RE
 
 .RS 4
 \[bu]    
-Postgres: configuration file has a Postgres connection string. You can see the parameters available at 
-
-.RS 4
-.EX
-
-https://www.postgresql.org/docs/14/libpq-connect.html#LIBPQ-CONNSTRING
-
-.EE
-.RE
-
-Most of the time, though, you may be using only a few of those options, as in:
-
-.RS 4
-.EX
-
-user=myuser password=mypwd dbname=mydb
-
-.EE
-.RE
-
-The above file has parameters "user" (Postgres user), "password" (the password for Postgres user), "dbname" (the Postgres database name). If you use peer-authenticated (i.e. passwordless) login, then omit "password" - this is when the Postgres user name is the same as your Operating System user name and where local unix domain socket is used for authentication.
+Postgres: see \fBpostgresql-database\fP
 
 .RE
 
 .RS 4
 \[bu]    
-SQLite: configuration file should contain a single line of text, and it must be the full path to the SQLite database file used, for example (if you keep it in Gliimly's application directory):
-
-.RS 4
-.EX
-
-/var/lib/gg/<app name>/app/<db name>.db
-
-.EE
-.RE
-
+SQLite: see \fBsqlite-database\fP
 
 .RE
 
@@ -258,7 +192,10 @@ In this case the database name is "my$database".
 \fBcurrent-row\fP  
 \fBdatabase-config-file\fP  
 \fBdb-error\fP  
+\fBmariadb-database\fP  
+\fBpostgresql-database\fP  
 \fBrollback-transaction\fP  
-\fBrun-query\fP   
+\fBrun-query\fP  
+\fBsqlite-database\fP   
 See all 
 \fBdocumentation\fP

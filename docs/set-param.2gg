@@ -9,18 +9,40 @@ Set or create a parameter.
 .RS 4
 .EX
 
-set-param <name> = <value>
+set-param <name> [ = <value> ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
-set-param sets or creates a parameter (see \fBget-param\fP). 
+set-param sets or creates parameter <name> (see \fBget-param\fP). 
 
 If parameter <name> does not exist, it's created with <value>. If it does exist, its value is replaced with <value>. Note that <value> can be of any type. 
 
+If equal sign ("=") and <value> are omitted, then <value> is the same as <name>, so:
+
+.RS 4
+.EX
+
+set-param something
+
+.EE
+.RE
+
+is the same as:
+
+.RS 4
+.EX
+
+set-param something = something
+
+.EE
+.RE
+
+where the first "something" is the parameter set/created, and the second "something" is an actual variable in your code. In this example, the two just happen to have the same name; this generally happens often, so this form is a shortcut for that.
+
 .SH EXAMPLES
-Set the value of parameter quantity" to "10", which is also the output:
+Set the value of parameter "quantity" to "10", which is also the output:
 
 .RS 4
 .EX
