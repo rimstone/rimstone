@@ -11,8 +11,7 @@ Obtain data that describes the input request.
 
 get-req \\
         errno | error | cookie-count | cookie <cookie index> \\
-        | arg-count | arg-value <arg index> | input-count | \\
-        | input-value <input index> | input-name <input index> \\
+        | arg-count | arg-value <arg index> \\
         | header <header> | referring-url | method \\
         | content-type | trace-file | process-id | name \\
     to <variable>
@@ -91,43 +90,6 @@ end-loop
 .RE
 
 This code will display the number of input arguments (as passed to main() function of your program, excluding the first argument which is the name of the program), and then all the arguments. If there are no arguments, then variable 'ac' would be 0. 
-
-
-.RE
-
-.RS 4
-\[bu]    
-"input-count" is the number of input parameters (from a \fBrequest\fP URL). Together with input-name and input-value, this lets you examine all input parameters in a \fBrequest\fP, especially in situations where the parameters are dynamic in nature.
-
-
-.RE
-
-.RS 4
-\[bu]    
-"input-name" is the value of a single element from the array of input parameter names (from a \fBrequest\fP), specified by <input_index>. This array is indexed from 1 to "input-count". See "input-value" for an example.
-
-
-.RE
-
-.RS 4
-\[bu]    
-"input-value" is the string value of a single element from the array of input parameter values (from a \fBrequest\fP), specified by <input_index>. This array is indexed from 1 to "input-count". For example:
-
-.RS 4
-.EX
-
-get-req input-count to input_c
-start-loop repeat input_c use i
-    get-req input-name i to input_n
-    get-req input-value i to input_v
-    pf-web "Input parameter #%ld, name is %s, value is %s\en", i, input_n, input_v
-    @<br/>
-end-loop
-
-.EE
-.RE
-
-In this example, we get the number of input parameters, and then print out each. 
 
 
 .RE

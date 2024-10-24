@@ -4,7 +4,7 @@ documentation \- Gliimly documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GLIIMLY VERSION 56
+.B REFERENCE FOR GLIIMLY VERSION 65
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -80,8 +80,11 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 \fBcurrent-row\fP  
 \fBdatabase-config-file\fP  
 \fBdb-error\fP  
+\fBmariadb-database\fP  
+\fBpostgresql-database\fP  
 \fBrollback-transaction\fP  
-\fBrun-query\fP   
+\fBrun-query\fP  
+\fBsqlite-database\fP   
 .RE
 
 

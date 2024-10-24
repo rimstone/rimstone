@@ -1,4 +1,4 @@
-Gliimly is a web programming language that's:
+Gliimly is a programming language for web services\. It's:
 * service\-oriented, 
 * modeling, 
 * declarative, 

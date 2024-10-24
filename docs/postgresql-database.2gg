@@ -1,0 +1,35 @@
+.TH GLIIM 2gg $VERSION $DATE Development Tools
+.SH NAME
+postgresql-database \- Gliimly documentation (database)
+.SH DESCRIPTION
+Postgres database configuration file has a Postgres connection string. 
+
+You can see the parameters available at \fBhttps://www.postgresql.org/docs/14/libpq-connect.html#LIBPQ-CONNSTRING\fP. 
+
+Most of the time, though, you may be using only a few of those options, as in:
+
+.RS 4
+.EX
+
+user=myuser password=mypwd dbname=mydb
+
+.EE
+.RE
+
+The above file has parameters "user" (Postgres user), "password" (the password for Postgres user), "dbname" (the Postgres database name). If you use peer-authenticated (i.e. passwordless) login, then omit "password" - this is when the Postgres user name is the same as your Operating System user name and where local unix domain socket is used for authentication.
+.SH SEE ALSO
+ 
+.B - Database
+
+\fBbegin-transaction\fP  
+\fBcommit-transaction\fP  
+\fBcurrent-row\fP  
+\fBdatabase-config-file\fP  
+\fBdb-error\fP  
+\fBmariadb-database\fP  
+\fBpostgresql-database\fP  
+\fBrollback-transaction\fP  
+\fBrun-query\fP  
+\fBsqlite-database\fP   
+See all 
+\fBdocumentation\fP

@@ -88,7 +88,7 @@ Specify maximum upload size for a file (in bytes). The default is approximately 
 .RS 4
 \[bu]    
 --max-errors=<max errors>
-During building of an application, emit a maxium of <max errors> diagnostic messages. The default is 5.
+During building of an application, emit a maximum of <max errors> diagnostic messages per .gliim source file. The default is 5.
 
 
 .RE
@@ -113,6 +113,14 @@ Skip generating line information when compiling .gliim files. By default line in
 \[bu]    
 --optimize-memory
 Use memory-optimizing garbage collection, which counts memory references and frees memory as soon as possible. Default is without memory optimization, which frees memory at the end of the request. Do not use this option unless your system is seriously starved for memory because it imposes a performance penatly (in some tests 15-25%).
+
+
+.RE
+
+.RS 4
+\[bu]    
+--parallel=<threads>
+Use <threads> number of threads to compile application. By default, the number of threads is equal to the number of CPUs (including virtual), allowing each CPU to compile one source files at a time; this is usually the fastest way. You can serialize compilation with "--parallel=1"; or you can set <threads> to any number between 1 and three time the number of CPUs in order to reach your performance and CPU utilization goals.
 
 
 .RE

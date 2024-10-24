@@ -218,7 +218,10 @@ run-prepared-query @db = qry no-loop \\
 \fBcurrent-row\fP  
 \fBdatabase-config-file\fP  
 \fBdb-error\fP  
+\fBmariadb-database\fP  
+\fBpostgresql-database\fP  
 \fBrollback-transaction\fP  
-\fBrun-query\fP   
+\fBrun-query\fP  
+\fBsqlite-database\fP   
 See all 
 \fBdocumentation\fP

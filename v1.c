@@ -1438,6 +1438,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         caseins = find_keyword (cm, GG_KEYCASEINSENSITIVE, 1);
         len = find_keyword (cm, GG_KEYLENGTH, 1);
 
+        if (gg_mode != GG_MODE_INTERNAL && (eq == NULL && neq == NULL && less == NULL && lesseq == NULL && gr == NULL && mod == NULL && notmod == NULL && greq == NULL && cont == NULL && notcont == NULL && caseins == NULL && len == NULL)) gg_report_error ("conditional clause is missing or empty");
+
         gg_num eq_pos = INT_MAX;
         gg_num neq_pos = INT_MAX;
         gg_num less_pos = INT_MAX;
@@ -1468,7 +1470,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
 
         if (eq_pos == m) 
         { 
-            carve_statement (&eq, "if-true", GG_KEYEQUAL, 0, 1); 
+            carve_statement (&eq, "if-true", GG_KEYEQUAL, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1489,7 +1491,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         }
         else if (neq_pos == m) 
         { 
-            carve_statement (&neq, "if-true", GG_KEYNOTEQUAL, 0, 1); 
+            carve_statement (&neq, "if-true", GG_KEYNOTEQUAL, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1509,7 +1511,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         }
         else if (lesseq_pos == m) 
         { 
-            carve_statement (&lesseq, "if-true", GG_KEYLESSEREQUAL, 0, 1); 
+            carve_statement (&lesseq, "if-true", GG_KEYLESSEREQUAL, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1523,7 +1525,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         }
         else if (greq_pos == m) 
         { 
-            carve_statement (&greq, "if-true", GG_KEYGREATEREQUAL, 0, 1); 
+            carve_statement (&greq, "if-true", GG_KEYGREATEREQUAL, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1537,7 +1539,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         }
         else if (less_pos == m) 
         {
-            carve_statement (&less, "if-true", GG_KEYLESSERTHAN, 0, 1); 
+            carve_statement (&less, "if-true", GG_KEYLESSERTHAN, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1551,7 +1553,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         }
         else if (notmod_pos == m) 
         { 
-            carve_statement (&notmod, "if-true", GG_KEYNOTEVERY, 0, 1); 
+            carve_statement (&notmod, "if-true", GG_KEYNOTEVERY, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1563,7 +1565,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         }
         else if (mod_pos == m) 
         { 
-            carve_statement (&mod, "if-true", GG_KEYEVERY, 0, 1); 
+            carve_statement (&mod, "if-true", GG_KEYEVERY, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1575,7 +1577,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         }
         else if (gr_pos == m) 
         { 
-            carve_statement (&gr, "if-true", GG_KEYGREATERTHAN, 0, 1); 
+            carve_statement (&gr, "if-true", GG_KEYGREATERTHAN, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1589,7 +1591,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         }
         else if (cont_pos == m) 
         { 
-            carve_statement (&cont, "if-true", GG_KEYCONTAIN, 0, 1); 
+            carve_statement (&cont, "if-true", GG_KEYCONTAIN, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1602,7 +1604,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         }
         else if (notcont_pos == m) 
         { 
-            carve_statement (&notcont, "if-true", GG_KEYNOTCONTAIN, 0, 1); 
+            carve_statement (&notcont, "if-true", GG_KEYNOTCONTAIN, 1, 1); 
             // n_cm is so that cm is preserved for the next loop of search for the next or/and
             // make_mem for n_cm must be repeated for each condition b/c it must be after carve_statements
             char *n_cm = cm;
@@ -1629,6 +1631,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
 
         }
         gvar++;
+        if (op == INT_MAX) break;
     }
     gg_num i;
     for (i = 0; i < tot_open; i++) 
@@ -3146,7 +3149,7 @@ gg_num find_connection(char *conn)
             return i;
         }
     }
-    gg_report_error ("Database connection [%s] not found. Every database connection must have a configuration file in [%s] directory", db, gg_dbconf_dir);
+    gg_report_error ("Database connection [%s] not found. There must be file [%s] in current directory describing the database, and you must use --db option to specify what kind of database it is", db, db);
     return -1;
 }
 
@@ -4137,14 +4140,18 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
         // Comments: both // and /**/ are handled here
         // Not trivial. Matches gcc behavior as best as possible. Generally /**/
         // takes precedence over //, unless /* is after //
+        // /**/ at the beginning of statement is not allowed
         //
         //
         // Check for // comment, if found (and not in quotes), anything after that is ignored
         //
         // // comment: if not quoted, everyting after it is blanked out
         gg_num op_i = 0;
+        bool line_comm = false; // true if line starts with /**/ comment, we disallow those before beginning of statement as it's hard to read
+                                    // and also detecting statements include/libs in gg become way more difficult
         gg_num ccomm_pos = -1; // position of /* that starts multiline comment
         while (isspace (line[op_i])) op_i++; // find beginning of line (ignore whitespace)
+        bool linebeg = op_i; // this is where non-space of line begins
         // if this is @ or !, all comments are ignore, this is whole-line output statement
         if (ccomm_open || (memcmp(line+op_i, "@",1) && memcmp(line+op_i, "!",1))) 
         {
@@ -4163,7 +4170,19 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                 gg_num l_pos = -1;
                 gg_num r_pos = -1;
                 if (cl_comment != NULL) l_pos = cl_comment - line;
-                if (cr_comment != NULL) r_pos = cr_comment - line;
+                //
+                // Processing right */ MUST be after processing left /* because l_pos is necessary below
+                //
+                if (cr_comment != NULL) 
+                {
+                    r_pos = cr_comment - line;
+                    // either this */ with /* being on prior line OR the /* is the first that starts on line
+                    // so below if the actual statement starts after either one of these, it's an error
+                    // note that if neither has start of useful code afterward, then it won't matter, for instance
+                    // if some comments continues to next line, then that line will be the one to judge, or if there's more /*...*/
+                    // continuing on the same line we do memmove to make it look like it was the beginning.
+                    if (!line_comm && (ccomm_open || linebeg == l_pos)) line_comm = true;
+                }
                 // If /* started at some point and not */ here, then ignore line
                 if (ccomm_open)
                 {
@@ -4257,14 +4276,19 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
         gg_is_inline = 0; 
 
 
+        // check if line is empty, if not, and if there was /**/ prior to it, that's not allowed (see above comments)
+        op_i = 0;
+        while (isspace (line[op_i])) op_i++; // find beginning of line (ignore whitespace)
+        if (line[op_i] != 0 && line_comm) gg_report_error ("Statement cannot start with /**/ comment");
 
         //
         // In this loop, a line is examined char by char. However, once certain patterns are recognized, parsing
         // progresses more rapidly. Basically, recog_statement() is called to recognized the beginning of the GLIIMLY statement,
         // and from there the rest is parsed in a more rapid fashion. Each statement is checked, and once recognized and
         // processed, the next line is read in the outer loop.
+        // Skip whitespaces
         //
-        for (i = 0; i < len; i++)
+        for (i = op_i; i < len; i++)
         {
             gg_num newI = 0;
             gg_num newI1 = 0;
@@ -4789,13 +4813,14 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "p-path", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "p-path", &mtext, &msize, 1, &gg_is_inline)) != 0
+                     || (newI1=recog_statement(line, i, "p-path", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
-                        i = newI;
+                        i = newI+newI1;
                         char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
 
-                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
+                        carve_statement (&nl, "p-path", GG_KEYNEWLINE, 0, 0);
                         carve_stmt_obj (&mtext, false);
                         oprintf("gg_puts (GG_WEB, gg_app_path, gg_app_path_len, false);\n"); // optimized to compute strlen at compile time
                         if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd

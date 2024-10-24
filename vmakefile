@@ -103,7 +103,7 @@ _OBJ_FILES=$(GG_SOURCE_FILES:%.gliim=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG
 #when making source, start with compiling; then if error, check if plain diagnostic; if not, recompile with error processed by vdiag script to produce highlights (in which
 #case we don't use caret, we produce one ourselves instead of gcc)
 define make_source
-	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) -plain-diag "1" -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$$(basename $@).c 
+	rm -f $(GG_BLD)/.setparam/$$(basename $<).sp; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) -plain-diag "1" -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$$(basename $@).c 
 	echo "">$(GG_BLD)/gg_sparam_$$(basename $<).h; if [ -f "$(GG_BLD)/.setparam/$$(basename $<).sp" ]; then for i in $$(cat $(GG_BLD)/.setparam/$$(basename $<).sp|sort -k 1|uniq); do echo "extern gg_num _gg_sprm_$$i;">>$(GG_BLD)/gg_sparam_$$(basename $<).h; done; echo "extern void **_gg_sprm_run; extern gg_num _gg_sprm_run_tot;">>$(GG_BLD)/gg_sparam_$$(basename $<).h ; fi
 	GG_DIAG_OUT="" ; $(_CC) -c $(GG_BLD)/__$$(basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr ; if [ "$$?" != "0" ]; then if [ "$$GG_C_PLAINDIAG" == "1" ]; then cat $(GG_BLD)/.comperr; exit -1; else GG_DIAG_OUT="-fno-diagnostics-show-caret"; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) -plain-diag "$(GG_C_PLAINDIAG)" -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$$(basename $@).c; $(_CC) -c $(GG_BLD)/__$$(basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr; cat $(GG_BLD)/.comperr | $(GG_LIBRARY_PATH)/vdiag "$(GG_C_NAME)" $(GG_C_PLAINDIAG) ; fi ; fi
 endef

@@ -155,7 +155,7 @@ Note that all statements are always left-trimmed for whitespace. Thus the result
 .B COMMENTS
 .LP
 
-You can use both C style (i.e. /* ... */) and C++ style (i.e. //) comments with Gliimly statements, including within statements, for example:
+You can use both C style (i.e. /* ... */) and C++ style (i.e. //) comments with Gliimly statements, including within statements (with the exception of /*..*/ before statement name for readability), for example:
 
 .RS 4
 .EX
