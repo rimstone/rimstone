@@ -1424,7 +1424,7 @@ char *gg_find_keyword0(char *str, char *find, gg_num has_spaces, gg_num paren)
 
 //
 // Decorate a hierarchical request path.
-// Substitute / with __  and - with _. Leading / (if any) is ignored.
+// Substitute / with __  and - with _. Leading / (if any) is ignored and omitted from result.
 // Path must end with path segment with = in it, or by ending string.
 // reqname is the fixed buffer that will hold the decorated path, reqname_len is its size,
 // p is the path to convert, p_len is its string length. Path is not checked for validity,
