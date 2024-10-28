@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "70"
+#define GG_VERSION "76"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -173,7 +173,7 @@ typedef void (*gg_request_handler)(); // request handler in gliim dispatcher
 // (that is, if the default changes)
 // for gg_<memory handling> inline or not?  Currently not, otherwise would be 'inline' instead of empty
 #define GG_TRACE_LEN 12000 // max length of line in trace file and max length of line in verbose output of 
-#define GG_MAX_REQ_NAME_LEN 256 // max length of request name
+#define GG_MAX_REQ_NAME_LEN 512 // max length of request name
 #define GG_MAX_NESTED_WRITE_STRING 5 // max # of nests of write-string
 // max # of custom header a programmer can add to custom reply when replying with a file
 #define GG_MAX_HTTP_HEADER 32

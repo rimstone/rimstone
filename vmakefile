@@ -50,6 +50,15 @@ else
 endif
 
 
+#If --public is used, then all request handlers are publicly accessible unless private
+#Without --public, they are all private unless public
+GG_PUBLIC_FLAG=
+ifeq ($(strip $(GG_C_PUBLIC)),1)
+    GG_PUBLIC_FLAG=-public
+else
+    GG_PUBLIC_FLAG=
+endif
+
 #If opt-mem is used, then optimize memory (lower speed!)
 GG_OPTMEM_FLAG=
 ifeq ($(strip $(GG_C_OPTMEM)),1)
@@ -103,9 +112,9 @@ _OBJ_FILES=$(GG_SOURCE_FILES:%.gliim=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG
 #when making source, start with compiling; then if error, check if plain diagnostic; if not, recompile with error processed by vdiag script to produce highlights (in which
 #case we don't use caret, we produce one ourselves instead of gcc)
 define make_source
-	rm -f $(GG_BLD)/.setparam/$$(basename $<).sp; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) -plain-diag "1" -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$$(basename $@).c 
+	rm -f $(GG_BLD)/.setparam/$$(basename $<).sp; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) $(GG_PUBLIC_FLAG) -plain-diag "1" -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$$(basename $@).c 
 	echo "">$(GG_BLD)/gg_sparam_$$(basename $<).h; if [ -f "$(GG_BLD)/.setparam/$$(basename $<).sp" ]; then for i in $$(cat $(GG_BLD)/.setparam/$$(basename $<).sp|sort -k 1|uniq); do echo "extern gg_num _gg_sprm_$$i;">>$(GG_BLD)/gg_sparam_$$(basename $<).h; done; echo "extern void **_gg_sprm_run; extern gg_num _gg_sprm_run_tot;">>$(GG_BLD)/gg_sparam_$$(basename $<).h ; fi
-	GG_DIAG_OUT="" ; $(_CC) -c $(GG_BLD)/__$$(basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr ; if [ "$$?" != "0" ]; then if [ "$$GG_C_PLAINDIAG" == "1" ]; then cat $(GG_BLD)/.comperr; exit -1; else GG_DIAG_OUT="-fno-diagnostics-show-caret"; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) -plain-diag "$(GG_C_PLAINDIAG)" -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$$(basename $@).c; $(_CC) -c $(GG_BLD)/__$$(basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr; cat $(GG_BLD)/.comperr | $(GG_LIBRARY_PATH)/vdiag "$(GG_C_NAME)" $(GG_C_PLAINDIAG) ; fi ; fi
+	GG_DIAG_OUT="" ; $(_CC) -c $(GG_BLD)/__$$(basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr ; if [ "$$?" != "0" ]; then if [ "$$GG_C_PLAINDIAG" == "1" ]; then cat $(GG_BLD)/.comperr; exit -1; else GG_DIAG_OUT="-fno-diagnostics-show-caret"; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) $(GG_PUBLIC_FLAG) -plain-diag "$(GG_C_PLAINDIAG)" -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$$(basename $@).c; $(_CC) -c $(GG_BLD)/__$$(basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr; cat $(GG_BLD)/.comperr | $(GG_LIBRARY_PATH)/vdiag "$(GG_C_NAME)" $(GG_C_PLAINDIAG) ; fi ; fi
 endef
 
 #the rest if compilation of source files and producing object files and libraries needed for apache,
@@ -124,7 +133,7 @@ $(GG_BLD)/%.oc: %.c $(GG_INCLUDE_PATH)/gliim.h $(GG_HEADER_FILES) $(GG_BLD)/glii
 #the next next time something changes on the gg command line! /dev/null is used to suppress error message if there are no parameters in project.
 $(GG_BLD)/gliimsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
 	rm -f $(GG_BLD)/gg_sparam.h.new; GG_SPAR_LIST=$$(cat $(GG_BLD)/.setparam/* 2>/dev/null|sort -k 1|uniq); tot_sprm=0; for i in $$GG_SPAR_LIST; do ((tot_sprm=tot_sprm+1)); done; echo "$$tot_sprm" > $(GG_BLD)/.gg_sparam; for i in $$GG_SPAR_LIST; do echo "$$i" >> $(GG_BLD)/.gg_sparam; done; echo "gg_ipar _gg_sprm_par[$$tot_sprm] = {">>$(GG_BLD)/gg_sparam.h.new; j=0; for i in $$GG_SPAR_LIST; do if [ "$$j" != "0" ]; then echo ",">>$(GG_BLD)/gg_sparam.h.new; fi; echo "{.name=\"$$i\", .type=GG_DEFNONE}">>$(GG_BLD)/gg_sparam.h.new; ((j=j+1)); done; echo "};">>$(GG_BLD)/gg_sparam.h.new; j=0; for i in $$GG_SPAR_LIST; do echo "gg_num _gg_sprm_$$i=$$j;">>$(GG_BLD)/gg_sparam.h.new; ((j=j+1)); done; echo "void *_gg_sprm_run[$$j];">>$(GG_BLD)/gg_sparam.h.new; echo "gg_num _gg_sprm_run_tot=$$j;">>$(GG_BLD)/gg_sparam.h.new; _ISDIFF=$$(diff $(GG_BLD)/gg_sparam.h.new $(GG_BLD)/gg_sparam.h 2>/dev/null) || true ; if [[ "$$_ISDIFF" != "" || ! -f $(GG_BLD)/gg_sparam.h ]]; then mv $(GG_BLD)/gg_sparam.h.new $(GG_BLD)/gg_sparam.h ; else rm -rf $(GG_BLD)/gg_sparam.h.new; fi
-	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) -plain-diag "$(GG_C_PLAINDIAG)" -main -name "$(GG_C_NAME)" -max-upload "$(GG_C_MAXUPLOAD)" -app-path "$(GG_C_RESTPATH)" -trace "$(GG_C_TRACE)" -out $(GG_BLD)/gliimsrvcapp.c
+	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_OPTMEM_FLAG) $(GG_PUBLIC_FLAG) -plain-diag "$(GG_C_PLAINDIAG)" -main -name "$(GG_C_NAME)" -max-upload "$(GG_C_MAXUPLOAD)" -app-path "$(GG_C_RESTPATH)" -trace "$(GG_C_TRACE)" -out $(GG_BLD)/gliimsrvcapp.c
 	$(_CC) -c $(GG_BLD)/gliimsrvcapp.c  $(_CFLAGS) -DCMOD -o $@ -I`pwd` 
 
 _LDFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) $(_ASAN)

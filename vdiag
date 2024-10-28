@@ -22,6 +22,9 @@ NORMAL="\033[0;39m"
 APP="$1"
 PLAIN="$2"
 
+#in parallel compiling each invocation of vdiag must own temp files, differentiated by pid, so all files used muse be PID'd or it will be a mess of overwriting between processes
+MYPID=$$
+
 if [ "$PLAIN" == "1" ]; then
 #push standard input to stderr and exit with status
     cat - 1>&2 
@@ -29,9 +32,9 @@ if [ "$PLAIN" == "1" ]; then
 fi
 
 #clear temp files used further down
-rm -f /var/lib/gg/bld/$APP/.vdiag1
-rm -f /var/lib/gg/bld/$APP/.vdiag2
-rm -f /var/lib/gg/bld/$APP/.GG_TMP_DIAG81_*
+rm -f /var/lib/gg/bld/$APP/.vdiag1_$MYPID || true
+rm -f /var/lib/gg/bld/$APP/.vdiag2_$MYPID || true
+rm -f /var/lib/gg/bld/$APP/.GG_TMP_DIAG${MYPID}_* || true
 
 
 #
@@ -88,35 +91,41 @@ function displ() {
 
 #from stdin, look in gcc diag output for xxx.gliim:yyy:zzz:wwww (source code name xxx with line yyy), but take out last 4 digits (from x10000 when creating #line numbers)
 #zzz and www are details about error. Replace with _GG_COLOR, which will be the color in output, gliim file name, skip the 4 digits that are artificially added to line
-#numbers, put in zzz and wwww and end color; then add _GG_TMP_DIAG81_ constant which will be substituted with generated C code diagnostic later
-#what's added to this constant is line number in gen C code, error and file name to processed later, so GG_TMP_DIAG81_line_column_file
-#all goes to temp file .vdiag1 in build scratch pad
-cat - | sed 's/^\([_a-zA-Z0-9]\+\)\.gliim:\([0-9]\+\)\([0-9]\{4\}\):[[:space:]]*\([^:]\+\)[[:space:]]*:\(.*\)$/__GG_COLOR*** \1.gliim:\2:\4:\5__GG_END_COLOR\n.GG_TMP_DIAG81_\2_\3_\4_\1/g' >  /var/lib/gg/bld/$APP/.vdiag1
+#numbers, put in zzz and wwww and end color; then add _GG_TMP_DIAG${MYPID}_ constant which will be substituted with generated C code diagnostic later
+#what's added to this constant is line number in gen C code, error and file name to processed later, so GG_TMP_DIAG${MYPID}_line_column_file
+#all goes to temp file .vdiag1_$MYPID in build scratch pad
+#since we print a/b/c as source file in v1.c, make sure / is included in a-z etc
+cat - | sed 's|^\([_a-zA-Z0-9/]\+\)\.gliim:\([0-9]\+\)\([0-9]\{4\}\):[[:space:]]*\([^:]\+\)[[:space:]]*:\(.*\)$|__GG_COLOR*** \1.gliim:\2:\4:\5__GG_END_COLOR\n.GG_TMP_DIAG'${MYPID}'_\2_\3_\4_\1|g' >  /var/lib/gg/bld/$APP/.vdiag1_$MYPID
 
 #if there is no error somehow, then exit with success
-if [ "$(cat /var/lib/gg/bld/$APP/.vdiag1)" == "" ]; then exit 0; fi
+if [ -f "/var/lib/gg/bld/$APP/.vdiag1_$MYPID" ]; then
+    if [ "$(</var/lib/gg/bld/$APP/.vdiag1_$MYPID)" == "" ]; then exit 0; fi
+fi
 
-#now get data added to constant _GG_TMP_DIAG81_ and process it in displ function, which will output color coded gliim source line, gen C line, and caret to point out the error
-#the output goes to .vdiag2, which is a short bash script that will echo the error message to .GG_TMP_DIAG81_line_column_file
-sed -n 's/.GG_TMP_DIAG81_\([0-9]\+\)_\([0-9]\+\)_\([^_]\+\)_\(.*\)/echo "$(displ \1\2 \3 \4)">\/var\/lib\/gg\/bld\/$APP\/.GG_TMP_DIAG81_\1_\2_\3_\4/gp' /var/lib/gg/bld/$APP/.vdiag1 >/var/lib/gg/bld/$APP/.vdiag2
+#now get data added to constant _GG_TMP_DIAG${MYPID}_ and process it in displ function, which will output color coded gliim source line, gen C line, and caret to point out the error
+#the output goes to .vdiag2_$MYPID, which is a short bash script that will echo the error message to .GG_TMP_DIAG${MYPID}_line_column_file
+sed -n 's/.GG_TMP_DIAG'${MYPID}'_\([0-9]\+\)_\([0-9]\+\)_\([^_]\+\)_\(.*\)/echo "$(displ \1\2 \3 \4)">\/var\/lib\/gg\/bld\/$APP\/.GG_TMP_DIAG'${MYPID}'_\1_\2_\3_\4/gp' /var/lib/gg/bld/$APP/.vdiag1_$MYPID >/var/lib/gg/bld/$APP/.vdiag2_$MYPID
 
-#execute .vdiag2 to produce output to .GG_TMP_DIAG81_line_column_file
-chmod +x /var/lib/gg/bld/$APP/.vdiag2
-. /var/lib/gg/bld/$APP/.vdiag2
+#execute .vdiag2_$MYPID to produce output to .GG_TMP_DIAG${MYPID}_line_column_file
+if [ -f "/var/lib/gg/bld/$APP/.vdiag2_$MYPID" ]; then 
+    chmod +x /var/lib/gg/bld/$APP/.vdiag2_$MYPID
+    . /var/lib/gg/bld/$APP/.vdiag2_$MYPID 
+fi
 
-#now substitute the .GG_TMP_DIAG81_line_column_file  constant with the contents of the file with the same name generated above, for each error
+#now substitute the .GG_TMP_DIAG${MYPID}_line_column_file  constant with the contents of the file with the same name generated above, for each error
 CDIR=$(pwd)
 cd /var/lib/gg/bld/$APP/
-#prevent error message if no .GG_TMP_DIAG81 found
-for i in $(ls .GG_TMP_DIAG81_* 2>/dev/null); do
-    sed -e $"/$i/{r $i" -e 'd}' /var/lib/gg/bld/$APP/.vdiag1 > /var/lib/gg/bld/$APP/.vdiag3
-    mv /var/lib/gg/bld/$APP/.vdiag3 /var/lib/gg/bld/$APP/.vdiag1
+#prevent error message if no .GG_TMP_DIAG${MYPID} found
+for i in $(ls .GG_TMP_DIAG${MYPID}_* 2>/dev/null); do
+    sed -e $"/$i/{r $i" -e 'd}' /var/lib/gg/bld/$APP/.vdiag1_$MYPID > /var/lib/gg/bld/$APP/.vdiag3
+    mv /var/lib/gg/bld/$APP/.vdiag3 /var/lib/gg/bld/$APP/.vdiag1_$MYPID
 done
 cd "$CDIR"
 
 #make sure stdout goes to stderr, since this is diagnostics
 #and also make colors for top diagnostic error
-cat /var/lib/gg/bld/$APP/.vdiag1|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/''|cat - 1>&2
+#use sed 10 times to convert __ to / - this assumes directory structure is 10 levels deep at most, this is when flat structure is used
+cat /var/lib/gg/bld/$APP/.vdiag1_$MYPID|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/''| sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | cat - 1>&2
 
 #make sure exit code is failure for these errors
 exit -1

@@ -21,7 +21,7 @@
 // get refcount of 1 when assigned to variable (get-param, request-body); set-param will decrease old param's refcount by 1 and increase
 // new one's by 1. When refcount is 0 and we decrease it, memory is freed. When a scope exits (like {} or start/end-loop) all local variables
 // are freed - the actual memory may still be there is memory has refcount>0 such as if assigned to process-scope variable. 
-// Scope also means sub-handler and before/after handlers. Note that process-scope memory, even if refcount is 0, won't be freed until the end of
+// Scope also means call-handler and before/after handlers. Note that process-scope memory, even if refcount is 0, won't be freed until the end of
 // the request.
 //
 //

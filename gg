@@ -57,10 +57,16 @@ export GG_C_PLAINDIAG="0"
 #defaults for quick install
 _PROXYPORT="80"
 
+#flat dir is not enabled by default (used for testing), if GG_FLAT_DIR is set (exported) in the caller shell, then switch it
+#GG_FLAT_DIR set to 1 will cause compilation to use only flat directory (i.e. ignore any subdirectories)
+if [ "$GG_FLAT_DIR" == "1" ]; then GG_C_FLAT_DIR="1"; else GG_C_FLAT_DIR="0"; fi
+
 #display Gliimly usage
-#Internal: 
+#
+#Internal options that may go away:
 #--asan build with ASAN
 #--asan-opt print out ASAN option to prefix the execution with, also works with prefix mgrg for better coverage of SERVICE program
+#
 function use_message() {
     echo "Usage: $0  OPTIONS 
 OPTIONS:
@@ -99,6 +105,7 @@ OPTIONS:
             --plain-diag
             --optimize-memory
             --parallel=<compiling threads>
+            --public
 -i      display build flags for FastCGI client
             --include
                 displays C compile flags
@@ -117,7 +124,7 @@ function main() {
 #list of Gliimly options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o e:t:,q,o,l,m,i,h,c,v,s,u,r --long parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o e:t:,q,o,l,m,i,h,c,v,s,u,r --long public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit -1
@@ -148,6 +155,11 @@ _DO_QUICK=0
             ;;
         --optimize-memory  )
             export GG_C_OPTMEM="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --public  )
+            export GG_C_PUBLIC="1"
             _DEVOPT=1
             shift 
             ;;
@@ -405,7 +417,8 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
 
 #application name created with mgrg in .vappname, which must exist
     if [ -f ".vappname" ]; then
-        export GG_C_NAME=$(cat .vappname)
+        #this is special $() which doesn't create subshell, but just reads contents into a variable
+        export GG_C_NAME=$(<.vappname)
     else
         error "Gliimly application was not created yet. Please use mgrg to create an application first"
     fi
@@ -438,6 +451,10 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
 
     if [ "$_COMMRUN" != "" ]; then
         _TOEXEC="$GG_BLD/.reqexec"
+        #this is if running gg -r from outside source directory
+        if [ ! -f $GG_BLD/.blds ]; then
+            error "Cannot find application, use --app option."
+        fi
         . $GG_BLD/.blds
         show_run_program
         exit 0
@@ -515,15 +532,15 @@ function setup_highlighting() {
     if [ ! -f "$HOME/.vimrc" ]; then
         echo "$_USEV" > $HOME/.vimrc
     else
-        _HERE=$(grep -F "$_USEV" $HOME/.vimrc |wc -l)
-        if [ "$_HERE" == "0" ]; then
+        E=0; grep -F "$_USEV" $HOME/.vimrc >/dev/null || E=$?
+        if [ "$E" != "0" ]; then
             echo "$_USEV" >> $HOME/.vimrc
         fi
     fi
 #make sure syntax is on
     _SYNON="syntax on"
-    _HERE=$(grep -F "$_SYNON" $HOME/.vimrc |wc -l)
-    if [ "$_HERE" == "0" ]; then
+    E=0; grep -F "$_SYNON" $HOME/.vimrc >/dev/null||E=$?
+    if [ "$E" != "0" ]; then
         echo "$_SYNON" >> $HOME/.vimrc
     fi
 }
@@ -695,7 +712,7 @@ function getdbs() {
 
     _DBL="$1"
     _j=0
-    for _i in $(echo "$_DBL"); do
+    for _i in $_DBL; do
 #-n says do not print non-matches, p says print matches only
         _DBV[$_j]=$(sed -n 's/\(.*\):\(.*\)/\1/p' <<<$_i)
         _DBN[$_j]=$(sed -n 's/\(.*\):\(.*\)/\2/p' <<<$_i)
@@ -727,11 +744,14 @@ function mkset() {
     echo "GG_C_TRACE='$GG_C_TRACE'
 GG_C_SKIPLINES='$GG_C_SKIPLINES'
 GG_C_ASAN='$GG_C_ASAN'
+GG_C_FLAT_DIR='$GG_C_FLAT_DIR'
 GG_C_DEBUG='$GG_C_DEBUG'
+GG_C_PUBLIC='$GG_C_PUBLIC'
 GG_C_OPTMEM='$GG_C_OPTMEM'
 GG_C_MAXUPLOAD='$GG_C_MAXUPLOAD'
 GG_C_RESTPATH='$GG_C_RESTPATH'
 GG_C_CFLAGS='$GG_C_CFLAGS'
+GG_C_LFLAGS='$GG_C_LFLAGS'
 GG_C_LFLAGS='$GG_C_LFLAGS'
 GG_C_POSIXREGEX='$GG_C_POSIXREGEX'
 GG_C_MODULES='$GG_C_MODULES'
@@ -811,7 +831,7 @@ function error() {
 function read_modules() {
 
 #Set _ISMOD_* variables and call set_modules to set variables for building of application. This is for databases only.
-    for _i in $(echo "$GG_C_MODULES"); do
+    for _i in $GG_C_MODULES; do
         if [ "$_i" == "mariadb" ]; then
             _ISMOD_MARIADB="1"
         elif [ "$_i" == "postgres" ]; then
@@ -843,15 +863,20 @@ function read_modules() {
 #TODO: there could be a comment prior to statement, as in /*haha*/call-web, and this wouldn't work!
     grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-index \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.gliim>$GG_BLD/.findmod || true
 #then from occurrances, look for curl
-    if [[ $(grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod) != "" ]]; then _ISMOD_CURL="1"; fi
+    E=0;grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod >/dev/null||E=$?
+    if [ "$E" == "0" ]; then _ISMOD_CURL="1"; fi
 #then from occurrances, look for index
-    if [[ $(grep -m 1 -o "^[[:space:]]*[a-z]\+-index " $GG_BLD/.findmod) != "" ]]; then _ISMOD_TREE="1"; fi
+    E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-index " $GG_BLD/.findmod > /dev/null||E=$?
+    if [ "$E" == "0" ]; then _ISMOD_TREE="1"; fi
 #then from occurrances, look for pcre2
-    if [[ $(grep -m 1 -o "^[[:space:]]*match-regex " $GG_BLD/.findmod) != "" ]]; then _ISMOD_PCRE2="1"; fi
+    E=0;grep -m 1 -o "^[[:space:]]*match-regex " $GG_BLD/.findmod > /dev/null||E=$?
+    if [ "$E" == "0" ]; then _ISMOD_PCRE2="1"; fi
 #then from occurrances, look for fcgi
-    if [[ $(grep -m 1 -o "^[[:space:]]*[a-z]\+-remote " $GG_BLD/.findmod) != "" ]]; then _ISMOD_SERVICE="1"; fi
+    E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-remote " $GG_BLD/.findmod > /dev/null||E=$?
+    if [ "$E" == "0" ]; then _ISMOD_SERVICE="1"; fi
 #then from occurrances, look for crypto
-    if [[ $(grep -m 1 -o "^[[:space:]]*\(hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \)" $GG_BLD/.findmod) != "" ]]; then _ISMOD_CRYPTO="1"; fi
+    E=0;grep -m 1 -o "^[[:space:]]*\(hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \)" $GG_BLD/.findmod > /dev/null||E=$?
+    if [ "$E" == "0" ]; then _ISMOD_CRYPTO="1"; fi
 
 
 #
@@ -1068,14 +1093,14 @@ function gen_src() {
     echo "#define _GLIIMLYAPP" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     if [ "$_HFILES" != "" ]; then
-        for i in $(echo "$_HFILES"); do
+        for i in $_HFILES; do
             sed 's/\(.*\)/#include "\1"/g' <<< $i >> $GG_BLD/$_T.new
         done
         echo >> $GG_BLD/$_T.new
     fi
     echo "// function prototypes of your code" >> $GG_BLD/$_T.new
 #declare all functions, including non-request ones (whether implemented or not)
-    for _F in $(echo $_SRCF); do
+    for _F in $_SRCF; do
         _FN=${_F%.*}
         #if main, cannot have that, since we have main() already. Must delete $_T.new in order to regenerate, otherwise main would remain
         if [ "${_FN}" == "main" ]; then rm -f $GG_BLD/$_T.new ; error "Service handler name cannot be 'main'" ; fi
@@ -1110,7 +1135,7 @@ function gen_src() {
     echo >>$GG_BLD/$_T.new
     echo "// GLIIMLY auto-generated request dispatcher" >>$GG_BLD/$_T.new
     echo >>$GG_BLD/$_T.new
-    echo "begin-handler /gg_dispatch_request" >>$GG_BLD/$_T.new
+    echo "begin-handler /gg_dispatch_request public" >>$GG_BLD/$_T.new
 
 
 #req_done used to skip before/after execution if no handler used
@@ -1143,7 +1168,7 @@ function gen_src() {
 #first line is the number of lines that follow, to make code generation easier
     echo $_NUMF > $GG_BLD/.reqlist.new
     _F_FIRST=""
-    for _F in $(echo $_SRCF); do
+    for _F in $_SRCF; do
         _FN=${_F%.*}
         if [ "$_F_FIRST" == "" ]; then _F_FIRST="$_FN"; fi
         echo "$_FN " >>$GG_BLD/.reqlist.new
@@ -1163,6 +1188,7 @@ function gen_src() {
     echo "        ._gg_req_handler();" >>$GG_BLD/$_T.new
     echo "    } else {" >>$GG_BLD/$_T.new
     echo "        gg_bad_request();" >>$GG_BLD/$_T.new
+    echo "        gg_replace_string (req, strlen(req), \"__\", \"/\", 1, NULL, 1);" >>$GG_BLD/$_T.new # subst makes for smaller string, so okay, this is to show proper path in error
     echo "        gg_report_error (\"Request [%s] not found\", req);" >>$GG_BLD/$_T.new
     echo "    }" >>$GG_BLD/$_T.new
 
@@ -1219,11 +1245,65 @@ function stub_events() {
 #
 #
 #
+#Turn path-based source into a flat __ based source files 
+#Cannot remove and then copy b/c this would cause make to re-make all files
+#each time since their timestamp would change. So we must use -p flag of cp
+#to preserve source file's timestamps.
+#This converts x/y/z into x__y__z files and a-b.gliim into a_b.gliim
+#So we can do full path URL based structure and "flatten" it as it
+#always was prior to this
+#
+#
+#
+function flatten_source() {
+#directory where we build is .flatsrc
+    if [ ! -d $GG_BLD/.flatsrc ]; then
+        mkdir -p $GG_BLD/.flatsrc
+    fi
+#delete all, b/c what happens when renaming, deleting files - they
+#would still hang in .flatsrc directory, and we can copy without recompiling
+#if no changes, because we use ln -s which preserves timestamps for make
+    rm -f $GG_BLD/.flatsrc/* || true
+
+#use find, with maxdepth of 1 for flat dir
+    if [ "$GG_C_FLAT_DIR" == "1" ]; then
+        AF=$(find . -maxdepth 1 -type f  -name '*' 2>/dev/null)
+    else
+        AF=$(find . -type f  -name '*' 2>/dev/null)
+    fi
+
+#for each file remove leading ./, then convert all / to __ and
+#all - to _
+    for i in $AF; do
+        OF=${i/#\.\//}
+        OF=${OF//\//__}
+        OF=${OF//-/_}
+        ln -s $PWD/$i $GG_BLD/.flatsrc/$OF 2>/dev/null || true
+    done
+#make sure app name is there too, || true is b/c find will find it and it will exist
+#    ln -s .vappname $GG_BLD/.flatsrc || true
+}
+
+
+#
+#
+#
 #Build Gliimly app
 #
 #
 #
 function build_app() {
+    if [ ! -d $GG_BLD ]; then
+        error "Application does not exist, use mgrg to create it"
+    fi
+    flatten_source
+
+#once source is flattened, go there, but in a new shell ()
+#so we can switch to .flatsrc directory, and no matter where this 
+#compilation ends, we end up in current dir after it's done, because
+#were' in subshell
+    ( 
+    cd $GG_BLD/.flatsrc
     _VFILES=$(ls *.gliim 2>/dev/null|wc -l) 
     if [ "$_VFILES" == "0" ]; then error "Your project must have at least one .gliim file"; fi
 #set .dbvendors for v1 to pickup
@@ -1244,6 +1324,7 @@ function build_app() {
     else
         make -j $GG_C_CPUS $GG_SHOW_MAKE  -f "$GG_LIBRARY_PATH"/vmakefile all
     fi
+    )
 }
 
 #

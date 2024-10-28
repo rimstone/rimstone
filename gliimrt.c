@@ -876,7 +876,7 @@ void gg_subs(char *s)
     gg_request_handler gg_req_handler = gg_find_hash (&gg_dispatch, reqname, NULL, 0, &found);
     if (found != GG_OKAY) gg_report_error( "request path in sub-service is not found (service does not exist)");
     gg_input_req *req = gg_get_config()->ctx.req;
-    // save sub-handler status, call sub-handler, restore status
+    // save call-handler status, call call-handler, restore status
     bool c_sub = req->sub;
     req->sub = true;
     gg_req_handler();

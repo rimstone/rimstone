@@ -100,7 +100,8 @@
 #define GG_KEYREPEAT "repeat "
 #define GG_KEYREWIND "rewind "
 #define GG_KEYPASSWORD "password "
-#define GG_KEYSUBHANDLER "sub-handler"
+#define GG_KEYPRIVATE "private"
+#define GG_KEYPUBLIC "public"
 #define GG_KEYINPUTLENGTH "input-length "
 #define GG_KEYITERATIONS "iterations "
 #define GG_KEYSALT "salt "
@@ -407,6 +408,7 @@ typedef struct s_gg_if {
 //
 //
 
+bool gg_public = false; // by default all request handlers are private unless made public, with --public this flag will be switched to true
 bool optmem = false; // true if to optimize memory (global for all files, comes from gg)
 bool do_once_open = false; // true if do-once open
 gg_num do_once_level; // the scope level at the beginning of do-once
@@ -417,7 +419,7 @@ gg_num oline_len = 0; // length of buffer
 gg_num oline_prev_line_beg = 0; // beginning of prev line
 gg_num oline_size = 0; // size in bytes written 
 gg_num oline_written = 0; // current # of bytes written 
-bool gg_is_sub = false; // true if this is request handler with sub-handler clause
+bool gg_is_sub = false; // true if this is request handler with call-handler clause
 // Resurrection count for a level: each time code block level drops, resurr count increases
 // this is to make sure "old" level N does not interfere with "new" level N
 gg_num gg_resurr[GG_MAX_CODE_LEVEL+1];
@@ -573,6 +575,8 @@ void make_var (char **v, gg_num type);
 void check_c (char *mtext);
 char *check_exp (char *e, bool *found, bool *err);
 void save_param (char *pname);
+void check_sub (char *sub);
+char *undecorate (char *src);
 
 //
 //
@@ -580,6 +584,62 @@ void save_param (char *pname);
 //
 //
 
+
+//
+//
+//
+// Replace __ with / and then _ with - in string, result should be freed by caller
+//
+//
+char *undecorate (char *src)
+{
+    char *r_src = gg_strdup(src);
+    gg_num len = gg_replace_string (r_src, strlen(r_src)+1, "__", "/", 1, NULL, 1);
+    gg_replace_string (r_src, len+1, "_", "-", 1, NULL, 1);
+    return r_src;
+}
+
+//
+//
+// Check if this sub is a constant and if it is, check if it exists
+// sub is the name of request handler
+//
+//
+void check_sub (char *sub)
+{
+    // trim request path 
+    gg_num ml = strlen (sub);
+    sub = gg_trim_ptr(sub,  &ml);
+    // check if string - TODO: this won't take "xx" "yy", must be single constant!
+    if (is_constant_string (sub) == GG_CONST_OK)
+    {
+        char rn[GG_MAX_REQ_NAME_LEN];
+        // check length of request
+        size_t len = strlen (sub)-1; // -1 to account that we will skip leading "
+        // skip " in the beginning
+        char *p = sub+1;
+        // 
+        // remove trailing ", we will restore it
+        size_t zero;
+        p[zero = len-1] = 0; // remove last ", we will restore it
+        len--; // account we take out the last "
+        //
+        // get file name without .gliim
+        char *q = p; // p may be NULL after decorating below
+        if (gg_decorate_path (rn, sizeof(rn), &q, len) != 1) gg_report_error( "request path [%s] is not valid", p);
+        //
+        // restore "
+        p[zero] = '"'; // restore last "" because we don't want sub changed after this function
+        //
+        // append  .gliim
+        len = strlen (rn);
+        if (len + sizeof(".gliim") +1 > sizeof(rn) ) gg_report_error ("Request path [%s] too long", sub);
+        memcpy (rn+len, ".gliim", sizeof(".gliim"));
+        //
+        // see if exists, checks if directory
+        if (gg_file_type (rn) != GG_FILE) gg_report_error ("Request [%s] does not exist", sub);
+    }
+}
 
 //
 //
@@ -703,8 +763,8 @@ void check_c (char *m)
 }
 
 //
-// Frees all memory in sub-handler. It helps isolate memory usage which is then automatically release at the end of sub-handler
-// UNLESS the memory is saved with set-param (or added to index, array which are not released in sub-handler). This basically releases
+// Frees all memory in call-handler. It helps isolate memory usage which is then automatically release at the end of call-handler
+// UNLESS the memory is saved with set-param (or added to index, array which are not released in call-handler). This basically releases
 // all variables such as set-string or results from statements like random-string etc.
 //
 void free_handle_sub ()
@@ -1653,7 +1713,10 @@ void match_file (char *file_name, char *reqname)
     char *dot = strchr (base, '.');
     if (dot == NULL)  gg_report_error( "Source file name [%s] must have .gliim extension", file_name);
     *dot = 0; // cut file_name short for easy comparison
-    if (strcmp (reqname, base)) gg_report_error( "Source file name [%.*s] does not match request handler name [%s]", (int)(dot-file_name), file_name, reqname);
+    // do not use source file name b/c gg_report_error will print it properly
+    char *r = undecorate (reqname);
+    if (strcmp (reqname, base)) gg_report_error( "Source file name does not match request handler name [%s]", r);
+    gg_free (r);
     gg_free (base);
 }
 
@@ -3690,7 +3753,10 @@ void gg_report_warning (char *format, ...)
     fprintf (stdout, "%s%sWarning: %s", GG_COLOR_BOLD, GG_COLOR_PINK, wrntext);
     if (src_file_name != NULL)
     {
-        fprintf (stdout, ", reading file [%s], line [%ld]", src_file_name, lnum);
+        // make sure path is displayed
+        char *r_src = undecorate(src_file_name);
+        fprintf (stdout, ", reading file [%s], line [%ld]", r_src, lnum);
+        gg_free(r_src);
     }
     if (wrntext[0] != 0 && wrntext[strlen (wrntext) - 1] != '.')  fprintf(stdout, ".");
     fprintf (stdout, "%s\n",GG_COLOR_NORMAL);
@@ -3715,7 +3781,10 @@ void _gg_report_error (char *format, ...)
     fprintf (stderr, "%s%s%s", GG_COLOR_BOLD, GG_COLOR_BLUE, errtext);
     if (src_file_name != NULL)
     {
-        fprintf (stderr, ", reading file [%s], line [%ld]", src_file_name, lnum);
+        // make sure path is displayed
+        char *r_src = undecorate(src_file_name);
+        fprintf (stderr, ", reading file [%s], line [%ld]", r_src, lnum);
+        gg_free(r_src);
     }
     if (errtext[0] != 0 && errtext[strlen (errtext) - 1] != '.')  fprintf(stderr, ".");
     fprintf (stderr, "%s\n",GG_COLOR_NORMAL);
@@ -4813,16 +4882,23 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "p-path", &mtext, &msize, 1, &gg_is_inline)) != 0
-                     || (newI1=recog_statement(line, i, "p-path", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "p-path", &mtext, &msize, 0, &gg_is_inline)) != 0)
                     {
                         GG_GUARD
-                        i = newI+newI1;
+                        i = newI;
                         char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
 
                         carve_statement (&nl, "p-path", GG_KEYNEWLINE, 0, 0);
-                        carve_stmt_obj (&mtext, false);
+                        check_sub (mtext); // this must be BEFORE carve_stmt_obj as it may create temp variable which is just some generated var name
+                                           // it trims mtext, but we're about to do that anyway
+                        carve_stmt_obj (&mtext, true);
+
+                        // mtext is mandatory request path
+                        make_mem(&mtext);
+                        check_var (&mtext, GG_DEFSTRING, NULL);
+
                         oprintf("gg_puts (GG_WEB, gg_app_path, gg_app_path_len, false);\n"); // optimized to compute strlen at compile time
+                        oprintf("gg_puts (GG_WEB, %s, gg_mem_get_len(gg_mem_get_id(%s)), false);\n", mtext, mtext); // optimized to compute strlen at compile time
                         if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
 
                         continue;
@@ -6019,10 +6095,13 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "sub-handler", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "call-handler", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
+                        //if sub name is a constant, check there's actually a source file to run it
+                        check_sub (mtext); // this must be BEFORE carve_stmt_obj as it may create temp variable which is just some generated var name
+                                           // it trims mtext, but we're about to do that anyway
                         carve_stmt_obj (&mtext, true);
                         check_var (&mtext, GG_DEFSTRING, NULL);
                         oprintf ("gg_subs(%s);\n", mtext);
@@ -6850,12 +6929,24 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                             gg_report_error( ".gliim file can have only a single begin-handler");
                         }
-                        char *sub = find_keyword (mtext, GG_KEYSUBHANDLER, 0);
-                        carve_statement (&sub, "begin-handler", GG_KEYSUBHANDLER, 0, 0);
+                        char *priv = find_keyword (mtext, GG_KEYPRIVATE, 0);
+                        char *pub = find_keyword (mtext, GG_KEYPUBLIC, 0);
+                        carve_statement (&priv, "begin-handler", GG_KEYPRIVATE, 0, 0);
+                        carve_statement (&pub, "begin-handler", GG_KEYPUBLIC, 0, 0);
+
 
                         done_handler = true;
                         gg_num mlen = carve_stmt_obj (&mtext, true);
                         static char reqname[GG_MAX_REQ_NAME_LEN];
+
+                        if (mtext[0] != '/') gg_report_error ("request path must start with forward slash ('/')");
+                        if (priv != NULL && pub != NULL) gg_report_error("Service handler [%s] cannot be both public and private", mtext);
+                        // this handles what if neither public nor private specified
+                        if (priv == NULL && pub == NULL)
+                        {
+                            if (gg_public == false) priv="private"; // private handler is by default
+                            else pub = "public";  // this is if gg_public is true, which is --public in gg, so then it's public
+                        }
 
                         char *p = mtext; // because gg_decorate_path() will set it to NULL if there's /
                         char decres = gg_decorate_path (reqname, sizeof(reqname), &p, mlen);
@@ -6869,9 +6960,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         match_file (file_name, reqname);
 
                         oprintf ("void %s () {\n", reqname);
-                        if (sub != NULL)
+                        if (priv != NULL)
                         {
-                            oprintf ("if (!gg_get_config()->ctx.req->sub) gg_report_error(\"This service [%s] can only be called as sub-handler\");\n", mtext);
+                            oprintf ("if (!gg_get_config()->ctx.req->sub) gg_report_error(\"This service [%s] can only be called as call-handler\");\n", mtext);
                             gg_is_sub = true;
                         }
                         continue;
@@ -7167,9 +7258,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
 
-                        // we used to forbid non-string/bool/number in non-sub-handler. But we should be able to create say index in sub-handler and pass it back
+                        // we used to forbid non-string/bool/number in non-call-handler. But we should be able to create say index in call-handler and pass it back
                         // to caller. In gliimrt.c, we error out if such param with such type is not found.
-                        // if ((t != GG_DEFNUMBER && t != GG_DEFBOOL && t != GG_DEFSTRING) && !gg_is_sub) gg_report_error ("get-param type [%s] can only be used within sub-handler", typename(t));
+                        // if ((t != GG_DEFNUMBER && t != GG_DEFBOOL && t != GG_DEFSTRING) && !gg_is_sub) gg_report_error ("get-param type [%s] can only be used within call-handler", typename(t));
 
                         continue;
                     }
@@ -9066,6 +9157,10 @@ int main (int argc, char* argv[])
         else if (!strcmp (argv[i], "-x"))
         {
             no_gg_line = 1;
+        }
+        else if (!strcmp (argv[i], "-public"))
+        {
+            gg_public = true;
         }
         else if (!strcmp (argv[i], "-optmem"))
         {

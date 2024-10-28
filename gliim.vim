@@ -1,7 +1,7 @@
 " Language: Gliimly
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2024-October-23
+" Latest Revision: 2024-October-27
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link gliimConstruct Statement
@@ -806,9 +806,12 @@ syn region gg_r_construct___ start="^[[:space:]]*%%" skip="\\[[:space:]]*$" end=
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct___,gg_r_inline___,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct___,gg_r_inline___,gg_r_at
     syn match gg_h_construct___ "^[[:space:]]*%%" contained containedin=gg_r_construct___
-    syn match gg_h_clause___ " sub-handler \@=" contained containedin=gg_r_construct___
-    syn match gg_h_clause___ " sub-handler,\@=" contained containedin=gg_r_construct___
-    syn match gg_h_clause___ " sub-handler$" contained containedin=gg_r_construct___
+    syn match gg_h_clause___ " private \@=" contained containedin=gg_r_construct___
+    syn match gg_h_clause___ " private,\@=" contained containedin=gg_r_construct___
+    syn match gg_h_clause___ " private$" contained containedin=gg_r_construct___
+    syn match gg_h_clause___ " public \@=" contained containedin=gg_r_construct___
+    syn match gg_h_clause___ " public,\@=" contained containedin=gg_r_construct___
+    syn match gg_h_clause___ " public$" contained containedin=gg_r_construct___
     hi def link gg_h_clause___    gliimClause
     hi def link gg_h_clause_output___    gliimClauseOutput
     hi def link gg_h_construct___    gliimConstruct
@@ -817,9 +820,12 @@ syn region gg_r_construct_begin_handler start="^[[:space:]]*begin-handler" skip=
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_begin_handler,gg_r_inline_begin_handler,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_begin_handler,gg_r_inline_begin_handler,gg_r_at
     syn match gg_h_construct_begin_handler "^[[:space:]]*begin-handler" contained containedin=gg_r_construct_begin_handler
-    syn match gg_h_clause_begin_handler " sub-handler \@=" contained containedin=gg_r_construct_begin_handler
-    syn match gg_h_clause_begin_handler " sub-handler,\@=" contained containedin=gg_r_construct_begin_handler
-    syn match gg_h_clause_begin_handler " sub-handler$" contained containedin=gg_r_construct_begin_handler
+    syn match gg_h_clause_begin_handler " private \@=" contained containedin=gg_r_construct_begin_handler
+    syn match gg_h_clause_begin_handler " private,\@=" contained containedin=gg_r_construct_begin_handler
+    syn match gg_h_clause_begin_handler " private$" contained containedin=gg_r_construct_begin_handler
+    syn match gg_h_clause_begin_handler " public \@=" contained containedin=gg_r_construct_begin_handler
+    syn match gg_h_clause_begin_handler " public,\@=" contained containedin=gg_r_construct_begin_handler
+    syn match gg_h_clause_begin_handler " public$" contained containedin=gg_r_construct_begin_handler
     hi def link gg_h_clause_begin_handler    gliimClause
     hi def link gg_h_clause_output_begin_handler    gliimClauseOutput
     hi def link gg_h_construct_begin_handler    gliimConstruct
@@ -1229,17 +1235,14 @@ syn region gg_r_construct_uniq_file start="^[[:space:]]*uniq-file" skip="\\[[:sp
     hi def link gg_h_clause_output_uniq_file    gliimClauseOutput
     hi def link gg_h_construct_uniq_file    gliimConstruct
     hi def link gg_h_print_inline_uniq_file    gliimConstruct
-syn region gg_r_construct_sub_handler start="^[[:space:]]*sub-handler" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_sub_handler,gg_r_inline_sub_handler,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_sub_handler,gg_r_inline_sub_handler,gg_r_at
-    syn match gg_h_construct_sub_handler "^[[:space:]]*sub-handler" contained containedin=gg_r_construct_sub_handler
-    syn region gg_r_inline_sub_handler start="<<[[:space:]]*sub-handler \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
-    syn match gg_h_print_inline_sub_handler '<<[[:space:]]*sub-handler \@=' contained containedin=gg_r_inline_sub_handler
-    syn match gg_h_print_inline_sub_handler '>>' contained containedin=gg_r_inline_sub_handler
-    hi def link gg_h_clause_sub_handler    gliimClause
-    hi def link gg_h_clause_output_sub_handler    gliimClauseOutput
-    hi def link gg_h_construct_sub_handler    gliimConstruct
-    hi def link gg_h_print_inline_sub_handler    gliimConstruct
+syn region gg_r_construct_call_handler start="^[[:space:]]*call-handler" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_call_handler,gg_r_inline_call_handler,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_call_handler,gg_r_inline_call_handler,gg_r_at
+    syn match gg_h_construct_call_handler "^[[:space:]]*call-handler" contained containedin=gg_r_construct_call_handler
+    hi def link gg_h_clause_call_handler    gliimClause
+    hi def link gg_h_clause_output_call_handler    gliimClauseOutput
+    hi def link gg_h_construct_call_handler    gliimConstruct
+    hi def link gg_h_print_inline_call_handler    gliimConstruct
 syn region gg_r_construct_call_remote start="^[[:space:]]*call-remote" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_call_remote,gg_r_inline_call_remote,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_call_remote,gg_r_inline_call_remote,gg_r_at
