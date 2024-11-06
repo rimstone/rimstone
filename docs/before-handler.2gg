@@ -17,7 +17,7 @@ end-before-handler
 .RE
 
 .SH DESCRIPTION
-Every Gliimly request goes through a request dispatcher (see \fBrequest\fP()), which is auto-generated. In order to specify your code to execute before a request is handled, create source file "before_handler.gliim" and implement code that starts with "before-handler" and ends with "end-before-handler", which will be automatically picked up and compiled with your application. 
+Every Gliimly request goes through a request dispatcher (see \fBrequest\fP()), which is auto-generated. In order to specify your code to execute before a request is handled, create source file "before-handler.gliim" and implement code that starts with "before-handler" and ends with "end-before-handler", which will be automatically picked up and compiled with your application. 
 
 If no request executes (for example if your application does not handle a given \fBrequest\fP), before-handler handler does not execute either. 
 
@@ -41,6 +41,6 @@ end-before-handler
 \fBafter-handler\fP  
 \fBbefore-handler\fP  
 \fBbegin-handler\fP  
-\fBsub-handler\fP   
+\fBcall-handler\fP   
 See all 
 \fBdocumentation\fP

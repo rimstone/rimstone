@@ -24,7 +24,7 @@ All pieces produced will be trimmed both on left and right. If a piece is double
 .RS 4
 .EX
 
-%% parse
+%% /parse public
     set-string clist = "a , b, \[char92]"c , d\[char92]" , e"
     split-string clist with "," to res count tot
     start-loop repeat tot use i
@@ -70,7 +70,7 @@ The following will parse a string containing name/value pairs (such as "name=val
 .RS 4
 .EX
 
-%% /parse-url
+%% /parse-url public
     // Data to parse - data/value pairs delimited by "&amp;" string, and data and value delimited by equal sign:
     set-string url ="x=23&amp;y=good&amp;z=hello_world"
 

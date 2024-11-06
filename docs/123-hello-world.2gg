@@ -18,7 +18,7 @@ Create Hello World source file (hello.gliim) in a new directory; note it's all o
 .RS 4
 .EX
 
-echo 'begin-handler /hello
+echo 'begin-handler /hello public
     @Hello World!
 end-handler' > hello.gliim
 

@@ -17,7 +17,7 @@ Inline Gliimly code in an output statement.
 .SH DESCRIPTION
 You can write Gliimly statements within an \fBoutput-statement\fP by using them between << and >> delimiters. 
 
-The following statements can be inlined: \fBp-path\fP,\fBp-out\fP, \fBp-web\fP, \fBp-url\fP, \fBpf-out\fP, \fBpf-web\fP, \fBpf-url\fP, \fBp-num\fP, \fBcurrent-row\fP, \fBnumber-string\fP, \fBstring-length\fP, \fBsub-handler\fP.
+The following statements can be inlined: \fBp-path\fP,\fBp-out\fP, \fBp-web\fP, \fBp-url\fP, \fBpf-out\fP, \fBpf-web\fP, \fBpf-url\fP, \fBp-num\fP, \fBcurrent-row\fP, \fBnumber-string\fP, \fBstring-length\fP, \fBcall-handler\fP.
 
 .SH EXAMPLES
 \fBp-out\fP statement displays a string, and in the following code it's used to display a result within an \fBoutput-statement\fP (i.e. within "@" statement):
@@ -44,17 +44,17 @@ In the code below, "some_req" is a request handler that outputs some text, and i
 .RS 4
 .EX
 
-@Hello <<sub-handler "/some-req">> 
+@Hello <<call-handler "/some-req">> 
 
 .EE
 .RE
 
-\fBsub-handler\fP "some-req" would simply output "world":
+\fBcall-handler\fP "some-req" would simply output "world":
 
 .RS 4
 .EX
 
-%% /some-req
+%% /some-req public
     @world 
 %%
 

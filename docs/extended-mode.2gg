@@ -24,7 +24,7 @@ extended-mode, when specified as a very first statement in .gliim source file, a
 
 extended-mode 
 
-begin-handler /my-handler
+begin-handler /my-handler public
     ...
     call-extended factorial (10, &fact)
     ...

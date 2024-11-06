@@ -95,7 +95,8 @@ function displ() {
 #what's added to this constant is line number in gen C code, error and file name to processed later, so GG_TMP_DIAG${MYPID}_line_column_file
 #all goes to temp file .vdiag1_$MYPID in build scratch pad
 #since we print a/b/c as source file in v1.c, make sure / is included in a-z etc
-cat - | sed 's|^\([_a-zA-Z0-9/]\+\)\.gliim:\([0-9]\+\)\([0-9]\{4\}\):[[:space:]]*\([^:]\+\)[[:space:]]*:\(.*\)$|__GG_COLOR*** \1.gliim:\2:\4:\5__GG_END_COLOR\n.GG_TMP_DIAG'${MYPID}'_\2_\3_\4_\1|g' >  /var/lib/gg/bld/$APP/.vdiag1_$MYPID
+#$(cat -) doesn't quite work
+sed 's|^\([_a-zA-Z0-9/]\+\)\.gliim:\([0-9]\+\)\([0-9]\{4\}\):[[:space:]]*\([^:]\+\)[[:space:]]*:\(.*\)$|__GG_COLOR*** \1.gliim:\2:\4:\5__GG_END_COLOR\n.GG_TMP_DIAG'${MYPID}'_\2_\3_\4_\1|g' >  /var/lib/gg/bld/$APP/.vdiag1_$MYPID <&0
 
 #if there is no error somehow, then exit with success
 if [ -f "/var/lib/gg/bld/$APP/.vdiag1_$MYPID" ]; then
@@ -117,8 +118,8 @@ CDIR=$(pwd)
 cd /var/lib/gg/bld/$APP/
 #prevent error message if no .GG_TMP_DIAG${MYPID} found
 for i in $(ls .GG_TMP_DIAG${MYPID}_* 2>/dev/null); do
-    sed -e $"/$i/{r $i" -e 'd}' /var/lib/gg/bld/$APP/.vdiag1_$MYPID > /var/lib/gg/bld/$APP/.vdiag3
-    mv /var/lib/gg/bld/$APP/.vdiag3 /var/lib/gg/bld/$APP/.vdiag1_$MYPID
+    sed -e $"/$i/{r $i" -e 'd}' /var/lib/gg/bld/$APP/.vdiag1_$MYPID > /var/lib/gg/bld/$APP/.vdiag3_$MYPID
+    mv /var/lib/gg/bld/$APP/.vdiag3_$MYPID /var/lib/gg/bld/$APP/.vdiag1_$MYPID
 done
 cd "$CDIR"
 
@@ -126,6 +127,11 @@ cd "$CDIR"
 #and also make colors for top diagnostic error
 #use sed 10 times to convert __ to / - this assumes directory structure is 10 levels deep at most, this is when flat structure is used
 cat /var/lib/gg/bld/$APP/.vdiag1_$MYPID|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/''| sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | cat - 1>&2
+
+rm -f /var/lib/gg/bld/$APP/.vdiag1_$MYPID
+rm -f var/lib/gg/bld/$APP/.vdiag3_$MYPID
+rm -f /var/lib/gg/bld/$APP/.vdiag2_$MYPID
+rm -f .GG_TMP_DIAG'${MYPID}'
 
 #make sure exit code is failure for these errors
 exit -1

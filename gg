@@ -57,10 +57,6 @@ export GG_C_PLAINDIAG="0"
 #defaults for quick install
 _PROXYPORT="80"
 
-#flat dir is not enabled by default (used for testing), if GG_FLAT_DIR is set (exported) in the caller shell, then switch it
-#GG_FLAT_DIR set to 1 will cause compilation to use only flat directory (i.e. ignore any subdirectories)
-if [ "$GG_FLAT_DIR" == "1" ]; then GG_C_FLAT_DIR="1"; else GG_C_FLAT_DIR="0"; fi
-
 #display Gliimly usage
 #
 #Internal options that may go away:
@@ -106,6 +102,8 @@ OPTIONS:
             --optimize-memory
             --parallel=<compiling threads>
             --public
+            --single-file
+            --exclude-dir=<dir list>
 -i      display build flags for FastCGI client
             --include
                 displays C compile flags
@@ -124,7 +122,7 @@ function main() {
 #list of Gliimly options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o e:t:,q,o,l,m,i,h,c,v,s,u,r --long public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o e:t:,q,o,l,m,i,h,c,v,s,u,r --long exclude-dir:,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit -1
@@ -160,6 +158,11 @@ _DO_QUICK=0
             ;;
         --public  )
             export GG_C_PUBLIC="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --single-file  )
+            export GG_C_SINGLE_FILE="1"
             _DEVOPT=1
             shift 
             ;;
@@ -313,8 +316,14 @@ _DO_QUICK=0
             _DO_QUICK="1"
             shift 
             ;;
+        --exclude-dir )
+#exclude directories for compilation
+            GG_DIR_EXCLUDE="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
         --parallel )
-#db vendor
+#parallel compilation override
             CPUS="$2"
             if (( CPUS >= 1 && CPUS < GG_C_CPUS * 3 )); then
                 export GG_C_CPUS=$CPUS
@@ -432,8 +441,8 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
 
 #check for source only if compiling or cleaning up
     if [[ "$_DO_QUICK" == "1" || "$_DO_CLEAN" == "1" ]]; then
-        _SRCC=$(ls *.gliim 2>/dev/null|wc -l)
-        if [ "$_SRCC" == "0" ]; then
+        GLIST_C=$(ls *.gliim 2>/dev/null|wc -l)
+        if [ "$GLIST_C" == "0" ]; then
             error "No Gliimly source source code found."
         fi
         if [[ ! -d "$GG_A" || ! -d "$GG_BLD" ]]; then
@@ -744,9 +753,9 @@ function mkset() {
     echo "GG_C_TRACE='$GG_C_TRACE'
 GG_C_SKIPLINES='$GG_C_SKIPLINES'
 GG_C_ASAN='$GG_C_ASAN'
-GG_C_FLAT_DIR='$GG_C_FLAT_DIR'
 GG_C_DEBUG='$GG_C_DEBUG'
 GG_C_PUBLIC='$GG_C_PUBLIC'
+GG_C_SINGLE_FILE='$GG_C_SINGLE_FILE'
 GG_C_OPTMEM='$GG_C_OPTMEM'
 GG_C_MAXUPLOAD='$GG_C_MAXUPLOAD'
 GG_C_RESTPATH='$GG_C_RESTPATH'
@@ -860,7 +869,7 @@ function read_modules() {
 #
 
 #first look for all possible statements
-#TODO: there could be a comment prior to statement, as in /*haha*/call-web, and this wouldn't work!
+#there can't be a comment prior to statement, v1.c will prohibit that
     grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-index \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.gliim>$GG_BLD/.findmod || true
 #then from occurrances, look for curl
     E=0;grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod >/dev/null||E=$?
@@ -1047,13 +1056,36 @@ function gen_src() {
     fi
 
 #
+#Setup directory for where we record all request handlers called and who called them
+#
+    if [ ! -d $GG_BLD/.calledreq ]; then
+        rm -rf $GG_BLD/.calledreq || true
+        mkdir -p $GG_BLD/.calledreq
+    fi
+
+
+#
 #Generate source.gliim, all the source files needed for Gliimly app
 #
     _T="source.gliim"
 #this is all source files, including C files
-    _SRCC=$(ls *.c 2>/dev/null) || true
-    _SRCF=$(ls *.gliim 2>/dev/null) || true
-    _HDRF=$(ls *.h 2>/dev/null) || true
+    GG_CLIST=$(ls *.c 2>/dev/null) || true
+    GG_GLIIMLIST=$(ls *.gliim 2>/dev/null) || true
+    GG_HLIST=$(ls *.h 2>/dev/null) || true
+#GG_REQLIST is really a list of requests, which we get from the list of source files
+#GG_GLIIMLIST is the list of gliim files - note these are "flattened" so that any directory structure works in a flat directory with / substituted for __
+    GG_REQLIST=""
+    for i in $GG_GLIIMLIST; do
+#we can do this since we prohibit line splitting for begin-handler or %%
+        RS=$(sed -n 's/^\s*\(%%\|begin\-handler\) \s*\([^ \t]\+\).*/\2/gp' $i)
+        for OF in $RS; do #take request paths and turn them into flat files
+            OF=${OF/#\//}
+            OF=${OF//\//__}
+            OF=${OF//-/_}
+            GG_REQLIST="$GG_REQLIST
+$OF"
+        done
+    done
 
     echo "#SPDX-License-Identifier: Apache-2.0" >> $GG_BLD/$_T.new
     echo "#Copyright 2019 Gliim LLC. " >> $GG_BLD/$_T.new
@@ -1063,12 +1095,12 @@ function gen_src() {
     echo "#" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     echo "#Include files here:" >> $GG_BLD/$_T.new
-    _HFILES=$(echo "$_HDRF" | grep -a -v gliimapp.h | xargs)
+    _HFILES=$(grep -a -v gliimapp.h <<<"$GG_HLIST" | xargs)
     echo "GG_HEADER_FILES=$(echo $_HFILES)" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     echo "#Source files here:" >> $GG_BLD/$_T.new
-    echo "GG_SOURCE_FILES=$(echo $_SRCF)" >> $GG_BLD/$_T.new
-    echo "GG_SOURCE_C_FILES=$(echo $_SRCC)" >> $GG_BLD/$_T.new
+    echo "GG_SOURCE_FILES=$(echo $GG_GLIIMLIST)" >> $GG_BLD/$_T.new
+    echo "GG_SOURCE_C_FILES=$(echo $GG_CLIST)" >> $GG_BLD/$_T.new
 
     _ISDIFF=$(diff $GG_BLD/$_T.new $GG_BLD/$_T 2>/dev/null) || true
     if [[ "$_ISDIFF" != "" || ! -f "$GG_BLD/$_T" ]]; then
@@ -1100,11 +1132,11 @@ function gen_src() {
     fi
     echo "// function prototypes of your code" >> $GG_BLD/$_T.new
 #declare all functions, including non-request ones (whether implemented or not)
-    for _F in $_SRCF; do
-        _FN=${_F%.*}
+    for _F in $GG_REQLIST; do
+        RN=${_F%.*}
         #if main, cannot have that, since we have main() already. Must delete $_T.new in order to regenerate, otherwise main would remain
-        if [ "${_FN}" == "main" ]; then rm -f $GG_BLD/$_T.new ; error "Service handler name cannot be 'main'" ; fi
-        echo "void ${_FN}();" >> $GG_BLD/$_T.new
+        if [ "${RN}" == "main" ]; then rm -f $GG_BLD/$_T.new ; error "Service handler name cannot be 'main'" ; fi
+        echo "void ${RN}();" >> $GG_BLD/$_T.new
     done
     echo >> $GG_BLD/$_T.new
     echo "#endif" >> $GG_BLD/$_T.new
@@ -1124,7 +1156,7 @@ function gen_src() {
     _T="gg_dispatch_request.gliim"
 #Generate request files, this is used for a dispatcher
 #and for a dispatcher, only request files matter 
-    _NUMF=$(echo $_SRCF | wc -w)
+    _NUMF=$(echo $GG_REQLIST | wc -w)
 
     if [ "$_NUMF" == "0" ]; then
         error "Application must have at least one .gliim file, none found"
@@ -1163,15 +1195,15 @@ function gen_src() {
 #
 #
 #
-    echo "    .req_done = 0;" >>$GG_BLD/$_T.new #must be initialized separately (not as int req_done=0;) because longjmp may return to the same function and won't be initialized again
+    echo "    req_done = 0;" >>$GG_BLD/$_T.new #must be initialized separately (not as int req_done=0;) because longjmp may return to the same function and won't be initialized again
 #create file with all request names for v1 to process for the main function code. This way all request info is stored as constants to be loaded as program's data, meaning the fastest possible in huge memory blocks, without having to set up each individually
 #first line is the number of lines that follow, to make code generation easier
     echo $_NUMF > $GG_BLD/.reqlist.new
     _F_FIRST=""
-    for _F in $_SRCF; do
-        _FN=${_F%.*}
-        if [ "$_F_FIRST" == "" ]; then _F_FIRST="$_FN"; fi
-        echo "$_FN " >>$GG_BLD/.reqlist.new
+    for _F in $GG_REQLIST; do
+        RN=${_F%.*}
+        if [ "$_F_FIRST" == "" ]; then _F_FIRST="$RN"; fi
+        echo "$RN" >>$GG_BLD/.reqlist.new
     done
     echo "  gg_request_handler _gg_req_handler;" >>$GG_BLD/$_T.new
     echo "  gg_num found = GG_OKAY;" >>$GG_BLD/$_T.new
@@ -1183,9 +1215,9 @@ function gen_src() {
     fi
 #before handler executes only IF req found a handler, that's why it's not in front of if()
     echo "      if (found == GG_OKAY) {" >>$GG_BLD/$_T.new
-    echo "        .before_handler();" >>$GG_BLD/$_T.new
-    echo "        .req_done = 1;" >>$GG_BLD/$_T.new
-    echo "        ._gg_req_handler();" >>$GG_BLD/$_T.new
+    echo "        before_handler();" >>$GG_BLD/$_T.new
+    echo "        req_done = 1;" >>$GG_BLD/$_T.new
+    echo "        _gg_req_handler();" >>$GG_BLD/$_T.new
     echo "    } else {" >>$GG_BLD/$_T.new
     echo "        gg_bad_request();" >>$GG_BLD/$_T.new
     echo "        gg_replace_string (req, strlen(req), \"__\", \"/\", 1, NULL, 1);" >>$GG_BLD/$_T.new # subst makes for smaller string, so okay, this is to show proper path in error
@@ -1194,16 +1226,16 @@ function gen_src() {
 
 #when exit-handler is done, this is where we must end up. Since this code is executed after
 #gg_dispatch_request, we can't longjump here. We long jump to a prior point and then go to here.
-    echo ".end_point_exit:" >>$GG_BLD/$_T.new
+    echo "end_point_exit:" >>$GG_BLD/$_T.new
 #set gg_done_setjmp to 0, because if we do exit-handler in after_handler(), it would go into infinite loop, coming back to after.
 #this way, exit-handler in after_handler, or anywhere afterwards, will do nothing. Only when the next request comes along, and gg_done_setjmp is set to 1
 #in the beginning of this function, we will actually jump to end_point_exit:
-    echo "    .gg_done_setjmp = 0;" >>$GG_BLD/$_T.new
+    echo "    gg_done_setjmp = 0;" >>$GG_BLD/$_T.new
 #regardless of whether a request normally ended, or had exit-handler, it would come here, and before anything else, memory handling must be set back
 #to Gliimly, or otherwise, and gg_* memory function will fail if set to true. after_handler() should not be affected by type of memory used.
 
 #cannot do exit-handler in after_handler - must simply do return(s)
-    echo "    .if (req_done == 1) { after_handler(); }" >>$GG_BLD/$_T.new
+    echo "    if (req_done == 1) { after_handler(); }" >>$GG_BLD/$_T.new
 #
 #There can be NOTHING after .after() that uses any automatic variables from gg_dispatch_request() or
 #exit-handler (and longjmp) will not work
@@ -1260,22 +1292,35 @@ function flatten_source() {
     if [ ! -d $GG_BLD/.flatsrc ]; then
         mkdir -p $GG_BLD/.flatsrc
     fi
+
+    if [ "$GG_DIR_EXCLUDE" != "" ]; then
+        #make a list of directories we can iterate over, it's decorated as well so we can easily compare with
+        #eligible files
+        GG_DIR_EXCLUDE_F=${GG_DIR_EXCLUDE//,/ }
+    fi
+
+
 #delete all, b/c what happens when renaming, deleting files - they
 #would still hang in .flatsrc directory, and we can copy without recompiling
 #if no changes, because we use ln -s which preserves timestamps for make
     rm -f $GG_BLD/.flatsrc/* || true
 
 #use find, with maxdepth of 1 for flat dir
-    if [ "$GG_C_FLAT_DIR" == "1" ]; then
-        AF=$(find . -maxdepth 1 -type f  -name '*' 2>/dev/null)
-    else
-        AF=$(find . -type f  -name '*' 2>/dev/null)
-    fi
+    AF=$(find . -type f  -name '*' 2>/dev/null)
 
 #for each file remove leading ./, then convert all / to __ and
 #all - to _
     for i in $AF; do
         OF=${i/#\.\//}
+        EXCL=0
+        for k in $GG_DIR_EXCLUDE_F; do
+            k="${k}/"
+            if [[ "$OF" == "$k"* ]]; then
+                EXCL=1
+                break
+            fi
+        done
+        if [ "$EXCL" == "1" ]; then continue; fi
         OF=${OF//\//__}
         OF=${OF//-/_}
         ln -s $PWD/$i $GG_BLD/.flatsrc/$OF 2>/dev/null || true

@@ -80,7 +80,7 @@ In this example, a million key/value pairs are inserted into an index, and then 
 .RS 4
 .EX
 
-%% /index-example
+%% /index-example public
 
     new-index myindex key-as "positive integer" // create new index
 

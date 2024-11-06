@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "76"
+#define GG_VERSION "87"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -966,9 +966,6 @@ typedef struct gg_tree_cursor_s {
 #define GG_TREE_GREATER_LIST 1
 #define gg_cur_key_len (gg_cursor->key_len)
 #define gg_cur_key (gg_cursor->key)
-// File and lines
-#define gg_source_file __FILE__
-#define gg_source_line __LINE__
 
 
 // 

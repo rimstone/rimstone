@@ -26,7 +26,7 @@ If new-message is used without "from" clause, data can be added to <message> wit
 .RS 4
 .EX
 
-begin-handler /msg
+begin-handler /msg public
     new-message msg
     write-message msg key "weather" value "nice"
     write-message msg key "distance" value "near"

@@ -1,7 +1,7 @@
 " Language: Gliimly
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2024-October-27
+" Latest Revision: 2024-November-05
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link gliimConstruct Statement
@@ -659,57 +659,6 @@ syn region gg_r_construct_delete_string start="^[[:space:]]*delete-string" skip=
     hi def link gg_h_clause_output_delete_string    gliimClauseOutput
     hi def link gg_h_construct_delete_string    gliimConstruct
     hi def link gg_h_print_inline_delete_string    gliimConstruct
-syn region gg_r_construct_get_param start="^[[:space:]]*get-param" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_param,gg_r_inline_get_param,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_param,gg_r_inline_get_param,gg_r_at
-    syn match gg_h_construct_get_param "^[[:space:]]*get-param" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " bool \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " bool,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " bool$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " encrypt-decrypt \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " encrypt-decrypt,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " encrypt-decrypt$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " fifo \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " fifo,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " fifo$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " file \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " file,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " file$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " array \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " array,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " array$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " lifo \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " lifo,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " lifo$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " list \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " list,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " list$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " message \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " message,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " message$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " number \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " number,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " number$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " service \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " service,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " service$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " split-string \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " split-string,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " split-string$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " string \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " string,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " string$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " index \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " index,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " index$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " index-cursor \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " index-cursor,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " index-cursor$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " type \@=" contained containedin=gg_r_construct_get_param
-    hi def link gg_h_clause_get_param    gliimClause
-    hi def link gg_h_clause_output_get_param    gliimClauseOutput
-    hi def link gg_h_construct_get_param    gliimConstruct
-    hi def link gg_h_print_inline_get_param    gliimConstruct
 syn region gg_r_construct_end_if start="^[[:space:]]*end-if" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_end_if,gg_r_inline_end_if,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_end_if,gg_r_inline_end_if,gg_r_at
@@ -874,10 +823,98 @@ syn region gg_r_construct_set_param start="^[[:space:]]*set-param" skip="\\[[:sp
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_set_param,gg_r_inline_set_param,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_set_param,gg_r_inline_set_param,gg_r_at
     syn match gg_h_construct_set_param "^[[:space:]]*set-param" contained containedin=gg_r_construct_set_param
+    syn match gg_h_clause_set_param " , \@=" contained containedin=gg_r_construct_set_param
+    syn match gg_h_clause_set_param " ,,\@=" contained containedin=gg_r_construct_set_param
+    syn match gg_h_clause_set_param " ,$" contained containedin=gg_r_construct_set_param
     hi def link gg_h_clause_set_param    gliimClause
     hi def link gg_h_clause_output_set_param    gliimClauseOutput
     hi def link gg_h_construct_set_param    gliimConstruct
     hi def link gg_h_print_inline_set_param    gliimConstruct
+syn region gg_r_construct_get_param start="^[[:space:]]*get-param" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_param,gg_r_inline_get_param,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_param,gg_r_inline_get_param,gg_r_at
+    syn match gg_h_construct_get_param "^[[:space:]]*get-param" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " , \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " ,,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " ,$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " bool \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " bool,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " bool$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " encrypt-decrypt \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " encrypt-decrypt,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " encrypt-decrypt$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " fifo \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " fifo,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " fifo$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " file \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " file,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " file$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " array \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " array,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " array$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " lifo \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " lifo,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " lifo$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " list \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " list,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " list$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " message \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " message,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " message$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " number \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " number,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " number$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " service \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " service,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " service$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " split-string \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " split-string,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " split-string$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " string \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " string,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " string$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " index \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " index,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " index$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " index-cursor \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " index-cursor,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " index-cursor$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " type \@=" contained containedin=gg_r_construct_get_param
+    hi def link gg_h_clause_get_param    gliimClause
+    hi def link gg_h_clause_output_get_param    gliimClauseOutput
+    hi def link gg_h_construct_get_param    gliimConstruct
+    hi def link gg_h_print_inline_get_param    gliimConstruct
+syn region gg_r_construct_get_cookie start="^[[:space:]]*get-cookie" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_cookie,gg_r_inline_get_cookie,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_cookie,gg_r_inline_get_cookie,gg_r_at
+    syn match gg_h_construct_get_cookie "^[[:space:]]*get-cookie" contained containedin=gg_r_construct_get_cookie
+    syn match gg_h_clause_get_cookie " , \@=" contained containedin=gg_r_construct_get_cookie
+    syn match gg_h_clause_get_cookie " ,,\@=" contained containedin=gg_r_construct_get_cookie
+    syn match gg_h_clause_get_cookie " ,$" contained containedin=gg_r_construct_get_cookie
+    hi def link gg_h_clause_get_cookie    gliimClause
+    hi def link gg_h_clause_output_get_cookie    gliimClauseOutput
+    hi def link gg_h_construct_get_cookie    gliimConstruct
+    hi def link gg_h_print_inline_get_cookie    gliimConstruct
+syn region gg_r_construct_set_cookie start="^[[:space:]]*set-cookie" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_set_cookie,gg_r_inline_set_cookie,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_set_cookie,gg_r_inline_set_cookie,gg_r_at
+    syn match gg_h_construct_set_cookie "^[[:space:]]*set-cookie" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " , \@=" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " ,,\@=" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " ,$" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " expires \@=" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " no-http-only \@=" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " no-http-only,\@=" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " no-http-only$" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " path \@=" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " same-site \@=" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " secure \@=" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " secure,\@=" contained containedin=gg_r_construct_set_cookie
+    syn match gg_h_clause_set_cookie " secure$" contained containedin=gg_r_construct_set_cookie
+    hi def link gg_h_clause_set_cookie    gliimClause
+    hi def link gg_h_clause_output_set_cookie    gliimClauseOutput
+    hi def link gg_h_construct_set_cookie    gliimConstruct
+    hi def link gg_h_print_inline_set_cookie    gliimConstruct
 syn region gg_r_construct_request_body start="^[[:space:]]*request-body" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_request_body,gg_r_inline_request_body,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_request_body,gg_r_inline_request_body,gg_r_at
@@ -899,31 +936,6 @@ syn region gg_r_construct_delete_cookie start="^[[:space:]]*delete-cookie" skip=
     hi def link gg_h_clause_output_delete_cookie    gliimClauseOutput
     hi def link gg_h_construct_delete_cookie    gliimConstruct
     hi def link gg_h_print_inline_delete_cookie    gliimConstruct
-syn region gg_r_construct_get_cookie start="^[[:space:]]*get-cookie" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_cookie,gg_r_inline_get_cookie,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_cookie,gg_r_inline_get_cookie,gg_r_at
-    syn match gg_h_construct_get_cookie "^[[:space:]]*get-cookie" contained containedin=gg_r_construct_get_cookie
-    hi def link gg_h_clause_get_cookie    gliimClause
-    hi def link gg_h_clause_output_get_cookie    gliimClauseOutput
-    hi def link gg_h_construct_get_cookie    gliimConstruct
-    hi def link gg_h_print_inline_get_cookie    gliimConstruct
-syn region gg_r_construct_set_cookie start="^[[:space:]]*set-cookie" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_set_cookie,gg_r_inline_set_cookie,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_set_cookie,gg_r_inline_set_cookie,gg_r_at
-    syn match gg_h_construct_set_cookie "^[[:space:]]*set-cookie" contained containedin=gg_r_construct_set_cookie
-    syn match gg_h_clause_set_cookie " expires \@=" contained containedin=gg_r_construct_set_cookie
-    syn match gg_h_clause_set_cookie " no-http-only \@=" contained containedin=gg_r_construct_set_cookie
-    syn match gg_h_clause_set_cookie " no-http-only,\@=" contained containedin=gg_r_construct_set_cookie
-    syn match gg_h_clause_set_cookie " no-http-only$" contained containedin=gg_r_construct_set_cookie
-    syn match gg_h_clause_set_cookie " path \@=" contained containedin=gg_r_construct_set_cookie
-    syn match gg_h_clause_set_cookie " same-site \@=" contained containedin=gg_r_construct_set_cookie
-    syn match gg_h_clause_set_cookie " secure \@=" contained containedin=gg_r_construct_set_cookie
-    syn match gg_h_clause_set_cookie " secure,\@=" contained containedin=gg_r_construct_set_cookie
-    syn match gg_h_clause_set_cookie " secure$" contained containedin=gg_r_construct_set_cookie
-    hi def link gg_h_clause_set_cookie    gliimClause
-    hi def link gg_h_clause_output_set_cookie    gliimClauseOutput
-    hi def link gg_h_construct_set_cookie    gliimConstruct
-    hi def link gg_h_print_inline_set_cookie    gliimConstruct
 syn region gg_r_construct_copy_string start="^[[:space:]]*copy-string" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_copy_string,gg_r_inline_copy_string,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_copy_string,gg_r_inline_copy_string,gg_r_at
@@ -1822,6 +1834,38 @@ syn region gg_r_construct_p_num start="^[[:space:]]*p-num" skip="\\[[:space:]]*$
     hi def link gg_h_clause_output_p_num    gliimClauseOutput
     hi def link gg_h_construct_p_num    gliimConstruct
     hi def link gg_h_print_inline_p_num    gliimConstruct
+syn region gg_r_construct_p_source_file start="^[[:space:]]*p-source-file" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_source_file,gg_r_inline_p_source_file,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_source_file,gg_r_inline_p_source_file,gg_r_at
+    syn match gg_h_construct_p_source_file "^[[:space:]]*p-source-file" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " new-line \@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " new-line,\@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " new-line$" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_print_inline_p_source_file " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_print_inline_p_source_file " new-line \@=" contained containedin=gg_r_inline_p_source_file
+    syn region gg_r_inline_p_source_file start="<<[[:space:]]*p-source-file" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_p_source_file '<<[[:space:]]*p-source-file' contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_print_inline_p_source_file '>>' contained containedin=gg_r_inline_p_source_file
+    hi def link gg_h_clause_p_source_file    gliimClause
+    hi def link gg_h_clause_output_p_source_file    gliimClauseOutput
+    hi def link gg_h_construct_p_source_file    gliimConstruct
+    hi def link gg_h_print_inline_p_source_file    gliimConstruct
+syn region gg_r_construct_p_source_line start="^[[:space:]]*p-source-line" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_source_line,gg_r_inline_p_source_line,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_source_line,gg_r_inline_p_source_line,gg_r_at
+    syn match gg_h_construct_p_source_line "^[[:space:]]*p-source-line" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " new-line \@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " new-line,\@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " new-line$" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_print_inline_p_source_line " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_print_inline_p_source_line " new-line \@=" contained containedin=gg_r_inline_p_source_line
+    syn region gg_r_inline_p_source_line start="<<[[:space:]]*p-source-line" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_p_source_line '<<[[:space:]]*p-source-line' contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_print_inline_p_source_line '>>' contained containedin=gg_r_inline_p_source_line
+    hi def link gg_h_clause_p_source_line    gliimClause
+    hi def link gg_h_clause_output_p_source_line    gliimClauseOutput
+    hi def link gg_h_construct_p_source_line    gliimConstruct
+    hi def link gg_h_print_inline_p_source_line    gliimConstruct
 syn region gg_r_construct_p_path start="^[[:space:]]*p-path" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_path,gg_r_inline_p_path,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_path,gg_r_inline_p_path,gg_r_at
@@ -1831,8 +1875,8 @@ syn region gg_r_construct_p_path start="^[[:space:]]*p-path" skip="\\[[:space:]]
     syn match gg_h_clause_p_path " new-line$" contained containedin=gg_r_construct_p_path
     syn match gg_h_print_inline_p_path " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_path
     syn match gg_h_print_inline_p_path " new-line \@=" contained containedin=gg_r_inline_p_path
-    syn region gg_r_inline_p_path start="<<[[:space:]]*p-path" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
-    syn match gg_h_print_inline_p_path '<<[[:space:]]*p-path' contained containedin=gg_r_inline_p_path
+    syn region gg_r_inline_p_path start="<<[[:space:]]*p-path \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_p_path '<<[[:space:]]*p-path \@=' contained containedin=gg_r_inline_p_path
     syn match gg_h_print_inline_p_path '>>' contained containedin=gg_r_inline_p_path
     hi def link gg_h_clause_p_path    gliimClause
     hi def link gg_h_clause_output_p_path    gliimClauseOutput

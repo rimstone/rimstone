@@ -17,7 +17,7 @@ The following code will first print out "outside" and then "inside" twice, illus
 .RS 4
 .EX
 
-begin-handler /scope
+begin-handler /scope public
     @<<p-out s1>>
     set-string s1="outside"
     {

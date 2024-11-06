@@ -1,6 +1,6 @@
 .TH GLIIM 2gg $VERSION $DATE Development Tools
 .SH NAME
-sub-handler \-  (service-processing)
+call-handler \-  (service-processing)
 .SH PURPOSE
 Call another handler within the same process.
 
@@ -9,7 +9,7 @@ Call another handler within the same process.
 .RS 4
 .EX
 
-sub-handler <request path>
+call-handler <request path>
 
 .EE
 .RE
@@ -21,38 +21,38 @@ Calls another handler within the same request in the same process. You can call 
 
 Use \fBset-param\fP and \fBget-param\fP to pass parameters between the caller and callee handlers.
 
-sub-handler uses the same high-performance hash table used by a \fBrequest\fP to route requests by name.
+call-handler uses the same high-performance hash table used by a \fBrequest\fP to route requests by name.
 
 .SH EXAMPLES
-The following example demonstrate calling a sub-handler twice, and also using its output inline in the caller. An input parameter is passed to it, and an output obtained:
+The following example demonstrate calling a call-handler twice, and also using its output inline in the caller. An input parameter is passed to it, and an output obtained:
 
 Copy to file "callsub.gliim":
 
 .RS 4
 .EX
 
-%% /callsub
+%% /callsub public
     //
-    // First call to sub-handler
+    // First call to call-handler
     //
-    // Set input for sub-handler
+    // Set input for call-handler
     set-param inp = "some string"
     (( s
-    sub-handler "/sub/service"
+    call-handler "/sub/service"
     ))
-    // Get output from sub-handler
+    // Get output from call-handler
     get-param out type string
     @<<p-out s>> with output [<<p-out out>>]
 
     //
-    // Second call to sub-handler
+    // Second call to call-handler
     //
-    // Set input for sub-handler called as inline code
+    // Set input for call-handler called as inline code
     set-param inp = "new string"
     (( s
-    @Output: <<sub-handler "/sub/service">>
+    @Output: <<call-handler "/sub/service">>
     ))
-    // Get output from sub-handler
+    // Get output from call-handler
     get-param out type string
     @<<p-out s>> with output [<<p-out out>>]
 %%
@@ -60,12 +60,12 @@ Copy to file "callsub.gliim":
 .EE
 .RE
 
-And in "sub__service.gliim" file:
+And in "sub/service.gliim" file (meaning file "service.gliim" in subdirectory "sub"):
 
 .RS 4
 .EX
 
-%% /sub/service
+%% /sub/service public
     @This is sub!
     get-param inp
     (( out
@@ -116,6 +116,6 @@ Output: This is sub! with output [got input: new string]
 \fBafter-handler\fP  
 \fBbefore-handler\fP  
 \fBbegin-handler\fP  
-\fBsub-handler\fP   
+\fBcall-handler\fP   
 See all 
 \fBdocumentation\fP
