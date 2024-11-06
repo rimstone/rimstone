@@ -30,7 +30,7 @@ In this example, a LIFO list is created, and two key/value pairs added. They are
 .RS 4
 .EX
 
-%% /lifo
+%% /lifo public
     new-lifo mylist
 
     // Add data to the list

@@ -9,7 +9,7 @@ Define a request handler.
 .RS 4
 .EX
 
-begin-handler <request path> [ sub-handler ]
+begin-handler <request path> [ private | public ]
     <any code>
 end-handler
 
@@ -19,23 +19,33 @@ end-handler
 .SH DESCRIPTION
 begin-handler starts the implementation of a \fBrequest\fP handler for <request path> (see \fBrequest\fP), which is <any code> up to end-handler. <request path> is not quoted.
 
-A <request path> can be a request name (i.e. without any forward slashes) or a path consisting of any number of path segments. A request path can have alphanumeric characters, hyphens, underscores and forward slashes, and can start only with an alphabetic character or a forward slash.
+A <request path> is a path consisting of any number of path segments. A request path can have alphanumeric characters, hyphens and forward slashes, and can start only with a forward slash.
 
-For example, a <request path> can be "wine_items" or "/wine-items" "/items/wine" etc. In general, it represents the nature of a request, such as an action on an object, a resource path handled by it etc. There is no specific way to interpret a request path, and you can construct it in a way that works for you.
+For example, a <request path> can be "/wine-items" or "/items/wine" etc. In general, it represents the nature of a request, such as an action on an object, a resource path handled by it etc. There is no specific way to interpret a request path, and you can construct it in a way that works for you.
 
-If "sub-handler" clause is used, then this handler can only be called from another handler by using \fBsub-handler\fP statement; it cannot be called from an outside caller, be it a \fBservice\fP call or \fBcommand-line\fP program. This mechanism automatically guards direct execution by outside callers of such handlers for safety, for instance by checking user credentials first. 
+The source .gliim file name that implements a given begin-handler matches its path and name. For example, <request path> of "/items/wine" would be implemented in  "items/wine.gliim" file (meaning in file "wine.gliim" in subdirectory "items").
 
 Note that you can also use "%%" instead of either begin-handler or end-handler or both. 
 
-The source .gliim file name that implements a given begin-handler is a decorated request path, by substituting inner forward slashes with double underscores, and hyphens with a single underscore. For example, <request path> of "/items/wine" would be implemented in  "items__wine.gliim" file.
+.LP
+.B SECURITY OF REQUEST CALLS
+.LP
+
+If "public" clause is used, then a handler can be called from an outside caller, be it a web browser, some web service, \fBservice\fP call or \fBcommand-line\fP program. 
+
+If "private" clause is used, then a handler cannot be called from an outside caller; it can only be called from another handler by using \fBcall-handler\fP statement. 
+
+If neither "public" nor "private" is used, then the default is "private". This default mechanism automatically guards direct execution by outside callers of all handlers not marked "public"; it provides automatic safety guard. 
+
+You can change this default behavior with "--public" option in \fBgg\fP, in which case the default is "public". This is useful if either all request handlers should be public, or if only a handful fixed ones are private.
 
 .SH EXAMPLES
-The following begin-handler is implemented in file "items__wines__red_wine.gliim":
+The following begin-handler is implemented in file "items/wines/red-wine.gliim":
 
 .RS 4
 .EX
 
-begin-handler  /items/wines/red-wine
+begin-handler  /items/wines/red-wine public
     @This is a request handler to display a list of red wines!
 end-handler
 
@@ -47,7 +57,7 @@ Another way to write this is:
 .RS 4
 .EX
 
-%%  /items/wines/red-wine
+%%  /items/wines/red-wine public
     @This is a request handler to display a list of red wines!
 %%
 
@@ -61,6 +71,6 @@ Another way to write this is:
 \fBafter-handler\fP  
 \fBbefore-handler\fP  
 \fBbegin-handler\fP  
-\fBsub-handler\fP   
+\fBcall-handler\fP   
 See all 
 \fBdocumentation\fP

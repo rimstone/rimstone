@@ -5,29 +5,7 @@ request \- Gliimly documentation (requests)
 Gliimly applications run by processing requests. A request always takes form of an HTTP request, meaning a URL, an optional HTTP request body, and any environment variables. This is regardless of whether it's a \fBservice\fP or a \fBcommand-line\fP program. 
 
 .LP
-.B HANDLING OF REQUESTS
-.LP
-
-Each requests is handled with \fBbegin-handler\fP statement, which implements its functionality. This handling of requests is based on the names of .gliim source files. The request name must match the file name that implements it. 
-
-For example, file "buy_item.gliim" handles request "buy-item" by implementing a \fBbegin-handler\fP "/buy-item" in it. A leading forward slash is optional, but usually specified. Note that an underscore in .gliim source file can be replaced with hyphen ("-") in the begin-handler name. Also, a double underscore in .gliim source file name can be replaced with forward slash ("/") in the begin-handler name.
-
-Here is an example of implementing a request "buy-item":
-
-.RS 4
-.EX
-
-begin-handler /buy-item
-    get-param some_param
-    @Bought item: <<p-out some_param>>
-end-handler
-
-.EE
-.RE
-
-
-.LP
-.B MAKE A REQUEST WITH URL
+.B REQUEST URL
 .LP
 
 A "request URL" is a URL that an outside caller (such as a web browser) uses to execute your Gliimly code. Aside from the scheme, domain and port, it's made up of:
@@ -59,22 +37,23 @@ Here's a breakdown of URL structure:
 .EE
 .RE
 
-For example, in the following URL, "/my_app" is application path, "/my-request" is request path and "/par1=val1/par2=val2" are parameters "par1" and "par2" with values "val1" and "val2":
+For example, in the following URL:
 
 .RS 4
 .EX
 
-https://your.website.com/my_app/my-request/par1=val1/par2=val2
+https://your.website.com/my-app/my-request/par1=val1/par2=val2
 
 .EE
 .RE
 
-Together, application path, request path are called URL path.
+"/my-app" is application path, "/my-request" is request path and "/par1=val1/par2=val2" are parameters "par1" and "par2" with values "val1" and "val2". Together, application path, request path are called URL path.
 
+.LP
+.B APPLICATION PATH
+.LP
 
-.B - Application path
-
-The leading part of URL's path is called "application path". By default, application path is the application name (see \fBmgrg\fP with "-i" option); if it's "shopping", then the default application path is:
+The leading part of URL's path is called "application path". By default, application path is the application name (see \fBmgrg\fP with "-i" option) preceded by forward slash ("/"); if it's "shopping", then the default application path is:
 
 .RS 4
 .EX
@@ -84,7 +63,8 @@ The leading part of URL's path is called "application path". By default, applica
 .EE
 .RE
 
-Application name can contain alphanumerical characters, underscores and hyphens.
+Application name can contain alphanumerical characters and hyphens.
+
 
 .B - Customizing application path
 
@@ -113,7 +93,7 @@ gg -q --path="/api/v2/shopping"
 .B REQUEST PATH
 .LP
 
-Request path follows the application path, and by default it's the request name preceded with a forward slash, for instance:
+Request path follows the application path, for instance:
 
 .RS 4
 .EX
@@ -123,18 +103,27 @@ https://some.web.site/shopping/buy-item
 .EE
 .RE
 
-In this case the application path is "/shopping" and the request path is "/buy-item" (which means the request name is "buy-item"). The source file name must match the request name (with a hyphen converted to underscore ("_")), thus the .gliim file that implements this request would be "buy_item.gliim".
+In this case the application path is "/shopping" and the request path is "/buy-item". It means that file "buy-item.gliim" handles request "/buy-item" by implementing a \fBbegin-handler\fP "/buy-item" in it. As another example, file "services/manage-home.gliim" (meaning "manage-home.gliim" file in subdirectory "services") handles request "/service/manage-home" etc.
 
-A request name can be made up of alphanumeric characters, hyphen or underscore ("_") only, and can start only with an alphabet character.
-
-.B - Hierarchical request path
-
-A request path can reflect a hierarchy, such as for example a hierarchy of resources, methods etc. For instance, if your \fBbegin-handler\fP is:
+The request path must match the path of the file name that implements it, with source directory being the root ("/"). Here is an example of implementing a request "/buy-item":
 
 .RS 4
 .EX
 
-begin-handler /items/wine-collection/red-wine/buy-item
+begin-handler /buy-item public 
+    get-param some_param
+    @Bought item: <<p-out some_param>>
+end-handler
+
+.EE
+.RE
+
+As an example of a path hierarchy, such as for example a hierarchy of resources, methods etc, \fBbegin-handler\fP may be:
+
+.RS 4
+.EX
+
+begin-handler /items/wine-collection/red-wine/buy-item public
     ...
 end-handler
 
@@ -151,13 +140,14 @@ https://some.web.site/shopping/items/wine-collection/red-wine/buy-item
 .EE
 .RE
 
-and would be implemented in file "items__wine_collection__red_wine__buy_item.gliim". Note that, while hyphens are converted to an underscore, forward slashes are converted to two underscores for a .gliim source code file name.
+and would be implemented in file "items/wine-collection/red-wine/buy-item.gliim", meaning under subdirectory "items", then subdirectory "wine-collection", then subdirectory "red-wine", then file "buy-item.gliim".
 
 .LP
 .B URL PARAMETERS
 .LP
 
 The actual input parameters follow after the request path, and can be specified in a number of ways. A parameter value is generally URL encoded in any case.
+
 
 .B - Path segments
 
@@ -173,7 +163,8 @@ https://some.web.site/shopping/buy-item/sku=4811/price=600/
 
 This way, you have a readable representation of parameter names and values, while still maintaining the hierarchical form which conveys how are the parameters structured.
 
-Here, the required request name is "buy_item" and there are two other parameters ("sku" and "price") with values of "4811" and "600" respectively. 
+Here, the required request name is "buy-item" and there are two other parameters ("sku" and "price") with values of "4811" and "600" respectively. 
+
 
 .B - Query string
 
@@ -203,14 +194,14 @@ https://some.web.site/shopping/buy-item/sku=4811?price=600
 
 .B - Parameters
 
-A parameter name can be comprised of alphanumeric characters, hyphens and underscores, and it must start with an alphabet character. Any hyphens are converted to underscores for the purpose of obtaining parameter value, see \fBget-param\fP.
+A parameter name can be comprised of alphanumeric characters, hyphens and underscores, and it must start with an alphabet character. Any hyphens are converted to underscores for the purpose of obtaining parameter value, see \fBget-param\fP. Do not use double underscore ("__") in parameter names. 
 
-Structuring your parameters, i.e. the order in a query path or path segments, and which ones (if any) are in a query string, is determined by you. Regardless of your choices, the code that handles a request is the same. In the example used here, you can obtain the parameters in request handler source file "buy_item.gliim":
+Structuring your parameters, i.e. the order in a query path or path segments, and which ones (if any) are in a query string, is determined by you. Regardless of your choices, the code that handles a request is the same. In the example used here, you can obtain the parameters in request handler source file "buy-item.gliim":
 
 .RS 4
 .EX
 
-begin-handler /buy-item
+begin-handler /buy-item public
     get-param sku
     get-param price
 
@@ -226,7 +217,7 @@ For a hierarchical URL path, you would write the same:
 .RS 4
 .EX
 
-begin-handler /items/wine-collection/red-wine/buy-item
+begin-handler /items/wine-collection/red-wine/buy-item public
     get-param sku
     get-param price
 
@@ -269,9 +260,11 @@ You can implement two hooks into request handling: one that executes before each
 
 At the end of the request, all request memory and all file handles allocated by Gliimly will be freed, except for process-scoped memory (see \fBmemory-handling\fP).
 
+
 .B - Performance
 
-Gliimly uses a hash table to match a request with a handler function. Typically, it takes only a single lookup to find the handler function, regardless of the number of possible request names a process may serve (be it 10 or 10,000 different request names). Gliimly pre-generates a hash table at compile time, so no run-time cycles are spent on creating it. Also, the hash table is created as a continuous block of memory in the program's data segment, which loads as a part of the program (as a single memory copy) and is very fast because accessing the data needs no pointer translations. As a result, Gliimly dispatcher is extremely fast.
+Gliimly uses a hash table to match a request with a handler function, as well to match parameters. Typically, it takes only a single lookup to find the handler function/parameters, regardless of the number of possible request names/parameters a process may serve (be it 10 or 10,000 different names). Gliimly pre-generates a hash table at compile time, so no run-time cycles are spent on creating it. Also, the hash table is created as a continuous block of memory in the program's data segment, which loads as a part of the program (as a single memory copy) and is very fast because accessing the data needs no pointer translations. As a result, Gliimly dispatcher is extremely fast.
+
 
 .B - Unrecognized requests
 

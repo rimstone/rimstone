@@ -119,6 +119,14 @@ Use memory-optimizing garbage collection, which counts memory references and fre
 
 .RS 4
 \[bu]    
+--public
+Change the default behavior of request handler safety; see \fBbegin-handler\fP for more details.
+
+
+.RE
+
+.RS 4
+\[bu]    
 --parallel=<threads>
 Use <threads> number of threads to compile application. By default, the number of threads is equal to the number of CPUs (including virtual), allowing each CPU to compile one source files at a time; this is usually the fastest way. You can serialize compilation with "--parallel=1"; or you can set <threads> to any number between 1 and three time the number of CPUs in order to reach your performance and CPU utilization goals.
 

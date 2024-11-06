@@ -34,7 +34,7 @@ You can use any file name (likely choose a name that signifies the purpose of a 
 .RS 4
 .EX
 
-%% /locktest
+%% /locktest public
     // Get application home directory
     get-app directory to dir
     // Create lock file name

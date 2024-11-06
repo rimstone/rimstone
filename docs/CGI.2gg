@@ -29,16 +29,16 @@ The following script sets up an application named "func_test" (any kind of appli
     sudo sed -i '1c\e/usr/lib/cgi-bin/gg' /etc/apache2/suexec/www-data
 
 \[char35]copy your program to "gg" directory
-    sudo mv /var/lib/gg/bld/func_test/func_test /usr/lib/cgi-bin/gg
-    sudo chown $(whoami):$(whoami)  /usr/lib/cgi-bin/gg/func_test
-    sudo chmod 700  /usr/lib/cgi-bin/gg/func_test
+    sudo mv /var/lib/gg/bld/func-test/func-test /usr/lib/cgi-bin/gg
+    sudo chown $(whoami):$(whoami)  /usr/lib/cgi-bin/gg/func-test
+    sudo chmod 700  /usr/lib/cgi-bin/gg/func-test
 
 \[char35]add user/group of Gliim application user to suexec    
     sudo sed -i "/SuexecUserGroup/d" /etc/apache2/sites-enabled/000-default.conf
     sudo sed -i "s/<\e/VirtualHost>/SuexecUserGroup $(whoami) $(whoami)\en<\e/VirtualHost>/g" /etc/apache2/sites-enabled/000-default.conf
     sudo service apache2 restart
 
-\[char35]the application is at http://127.0.0.1/cgi-bin/gg/func_test?...
+\[char35]the application is at http://127.0.0.1/cgi-bin/gg/func-test?...
 \[char35]substitute 127.0.0.1 for your web address
 
 .EE

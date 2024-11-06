@@ -4,7 +4,7 @@ documentation \- Gliimly documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GLIIMLY VERSION 70
+.B REFERENCE FOR GLIIMLY VERSION 76
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -502,7 +502,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 \fBafter-handler\fP  
 \fBbefore-handler\fP  
 \fBbegin-handler\fP  
-\fBsub-handler\fP   
+\fBcall-handler\fP   
 .RE
 
 

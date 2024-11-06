@@ -121,7 +121,7 @@ if-true can be nested, which can be up to 30 levels deep.
 .RS 4
 .EX
 
-%% i
+%% /if-test public
     get-param inp
 
     if-true inp equal "1"

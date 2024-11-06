@@ -408,6 +408,7 @@ typedef struct s_gg_if {
 //
 //
 
+bool gg_single_file = false; // by default request handlers can be grouped in same-prefix files, with this being true, each must be in own file
 bool gg_public = false; // by default all request handlers are private unless made public, with --public this flag will be switched to true
 bool optmem = false; // true if to optimize memory (global for all files, comes from gg)
 bool do_once_open = false; // true if do-once open
@@ -613,6 +614,7 @@ void check_sub (char *sub)
     // check if string - TODO: this won't take "xx" "yy", must be single constant!
     if (is_constant_string (sub) == GG_CONST_OK)
     {
+        // .reqlist file contains the list of all requests and we check to see if this request is there
         char rn[GG_MAX_REQ_NAME_LEN];
         // check length of request
         size_t len = strlen (sub)-1; // -1 to account that we will skip leading "
@@ -631,13 +633,36 @@ void check_sub (char *sub)
         // restore "
         p[zero] = '"'; // restore last "" because we don't want sub changed after this function
         //
-        // append  .gliim
-        len = strlen (rn);
-        if (len + sizeof(".gliim") +1 > sizeof(rn) ) gg_report_error ("Request path [%s] too long", sub);
-        memcpy (rn+len, ".gliim", sizeof(".gliim"));
-        //
-        // see if exists, checks if directory
-        if (gg_file_type (rn) != GG_FILE) gg_report_error ("Request [%s] does not exist", sub);
+        char gg_req_file[300];
+        snprintf (gg_req_file, sizeof(gg_req_file), "%s/.reqlist", gg_bld_dir);
+        FILE *f = fopen (gg_req_file, "r");
+        if (f == NULL) gg_report_error( "Error [%s] opening file [%s]", strerror (errno), gg_req_file);
+    
+        char line[GG_MAX_REQ_NAME_LEN]; // line to read from fname
+        bool done_count = false; // true when first line (count of requests) read
+        bool exist = false;
+        while (1)
+        {
+            char *req = fgets (line, sizeof (line), f);
+            if (req == NULL) // either end or error
+            {
+                gg_num err = ferror (f);
+                if (err) gg_report_error( "Error [%s] reading file [%s]", strerror (errno), gg_req_file);
+                break; // nothing read in, done 
+            }
+            trimit (req);     
+            if (!done_count) 
+            {
+                done_count = true; // atol(req) is # of lines
+                continue;
+            }
+            else
+            {
+                if (!strcmp (req, rn)) { exist = true; break;}
+            }
+        }
+        fclose(f);
+        if (!exist) gg_report_error ("Request [%s] does not exist", sub);
     }
 }
 
@@ -754,9 +779,12 @@ void check_c (char *m)
         trimit (lp);
         if (lp[0] == '&') lp++;
         trimit (lp);
-        // if input variable, check it
-        check_var (&lp, GG_DEFUNKN_CHECK, NULL);
-        oprintf("GG_UNUSED (%s);\n", lp);
+        if (lp[0] != 0) // make sure it works for fun() meaning no arguments
+        {
+            // if input variable, check it
+            check_var (&lp, GG_DEFUNKN_CHECK, NULL);
+            oprintf("GG_UNUSED (%s);\n", lp);
+        }
         lp = nc;
         if (lp == NULL) break;
     }
@@ -1705,18 +1733,30 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
 
 
 //
-// Check if currently processed file name (file_name) matches request naem (reqname). Error out if not.
+// Check if currently processed file name (file_name) matches request name (reqname). Error out if not.
 //
 void match_file (char *file_name, char *reqname)
 {
+    // file_name and reqname are decorated, so no /, they are just plain flattened names, no need for basename. So in most cases just a copy of file_name would suffice. HOWEVER, in some cases, like for dispatcher, the actual /var/lib/gg/lib/... file name is passed as file_name - this is JUST for generated files - and reqname is just the name, so getting basename works for that. But for regular source files, it just makes a copy
     char *base = gg_basename (file_name);
     char *dot = strchr (base, '.');
     if (dot == NULL)  gg_report_error( "Source file name [%s] must have .gliim extension", file_name);
     *dot = 0; // cut file_name short for easy comparison
     // do not use source file name b/c gg_report_error will print it properly
     char *r = undecorate (reqname);
-    if (strcmp (reqname, base)) gg_report_error( "Source file name does not match request handler name [%s]", r);
+    char *b = undecorate (base);
+    if (gg_single_file) // must be a full match for --single-file in gg
+    {
+        if (strcmp (reqname, base)) gg_report_error( "Source file name does not match request handler name [%s]", r);
+    }
+    else
+    {
+        gg_num base_len = strlen(base);
+        // request name has to match the base in the beginning and either end there, or have __ afterwards for / (since these are undecorated names)
+        if (strncmp (reqname, base, base_len) || (!strncmp (reqname, base, base_len) && !(reqname[base_len] == 0 || (reqname[base_len] == '_' && reqname[base_len+1] == '_')))) gg_report_error( "Request handler name [%s] does not begin with source file path [%s]", r, b);
+    }
     gg_free (r);
+    gg_free (b);
     gg_free (base);
 }
 
@@ -1724,6 +1764,7 @@ void match_file (char *file_name, char *reqname)
 // Check the result of parsing (after last carve_statement()), so that mtext is trimmed,
 // and if has_value is true, check that it's not empty
 // Returns length of mtext
+// This MUST ALWAYS be after ALL other carve_statement calls!!!!! Or otherwise junk may just pass parsing as okay (even if it doesn't do anything)!
 //
 gg_num carve_stmt_obj (char **mtext, bool has_value)
 {
@@ -4085,12 +4126,14 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 {
     FILE *f;
 
+
     f = gg_fopen (file_name, "r");
     GG_VERBOSE(0,"Starting");
     if (f == NULL)
     {
         gg_report_error( "Error opening file [%s]", file_name);
     }
+
 
     //
     // Start reading line by line from the source file
@@ -4121,6 +4164,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
     // Include gliim.h so it's not necessary, doubles are prevented with ifdefs inside
     oprintf("#include \"gliim.h\"\n");
     oprintf("#include \"gg_sparam_%s.h\"\n",gg_basename(file_name));
+
+    bool line_split = false;
 
     // 
     // Main loop in which lines are read from the source file
@@ -4189,6 +4234,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
             // continuation of the line
             line[len - 1] = 0;
             line_len = len - 1;
+            line_split = true;
             continue; // read more
         }
         line_len = 0;
@@ -4221,7 +4267,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
         gg_num ccomm_pos = -1; // position of /* that starts multiline comment
         while (isspace (line[op_i])) op_i++; // find beginning of line (ignore whitespace)
         bool linebeg = op_i; // this is where non-space of line begins
-        // if this is @ or !, all comments are ignore, this is whole-line output statement
+        // if this is @ or !, all comments are ignored, this is whole-line output statement
         if (ccomm_open || (memcmp(line+op_i, "@",1) && memcmp(line+op_i, "!",1))) 
         {
             // Check for /**/ comment
@@ -4423,6 +4469,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
+                        carve_stmt_obj (&mtext, false);
 
                         end_query (gen_ctx,  1);
 
@@ -4853,14 +4900,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (line[i] == '!') is_verbatim = 1;
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, ".", &mtext, &msize, 0, &gg_is_inline)) != 0)
-                    {
-                        i = newI;
-                        // C code
-                        oprintf("%s\n", mtext); 
-
-                        continue;
-                    }
                     else if ((newI=recog_statement(line, i, "p-out", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
@@ -4903,6 +4942,44 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
+                    else if ((newI1=recog_statement(line, i, "p-source-line", &mtext, &msize, 1, &gg_is_inline)) != 0 ||
+                          (newI=recog_statement(line, i, "p-source-line", &mtext, &msize, 0, &gg_is_inline)) != 0)
+                    {
+                        GG_GUARD
+                        i = newI+newI1;
+                        char *nl = NULL;
+                        if (newI != 0)
+                        {
+                            nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
+                            carve_statement (&nl, "p-source-line", GG_KEYNEWLINE, 0, 0);
+                        }
+                        carve_stmt_obj (&mtext, false);
+
+                        do_numstr (NULL, "__LINE__", NULL, NULL);
+                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
+
+                        continue;
+                    }
+                    else if ((newI1=recog_statement(line, i, "p-source-file", &mtext, &msize, 1, &gg_is_inline)) != 0 ||
+                        (newI=recog_statement(line, i, "p-source-file", &mtext, &msize, 0, &gg_is_inline)) != 0)
+                    {
+                        GG_GUARD
+                        i = newI+newI1;
+                        char *nl = NULL;
+                        if (newI != 0)
+                        {
+                            nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
+                            carve_statement (&nl, "p-source-file", GG_KEYNEWLINE, 0, 0);
+                        }
+                        carve_stmt_obj (&mtext, false);
+
+                        char *osrc = undecorate (src_file_name);
+                        oprintf("gg_puts (GG_NOENC, \"%s\", %ld, false);\n", osrc, strlen(osrc)); // optimized to compute strlen at compile time
+                        gg_free (osrc);
+                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
+
+                        continue;
+                    }
                     else if ((newI=recog_statement(line, i, "p-num", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
@@ -4910,7 +4987,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
 
-                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
+                        carve_statement (&nl, "p-num", GG_KEYNEWLINE, 0, 0);
                         carve_stmt_obj (&mtext, true);
                         check_var (&mtext, GG_DEFNUMBER, NULL);
 
@@ -6721,70 +6798,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "set-cookie", &mtext, &msize, 0, &gg_is_inline)) != 0)  
-                    {
-                        GG_GUARD
-                        i = newI;
-
-                        char *exp = find_keyword (mtext, GG_KEYEXPIRES, 1);
-                        char *path = find_keyword (mtext, GG_KEYPATH, 1);
-                        char *samesite = find_keyword (mtext, GG_KEYSAMESITE, 1);
-                        char *nohttponly = find_keyword (mtext, GG_KEYNOHTTPONLY, 1);
-                        char *secure = find_keyword (mtext, GG_KEYSECURE, 1);
-                        char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
-
-                        carve_statement (&exp, "set-cookie", GG_KEYEXPIRES, 0, 1);
-                        carve_statement (&path, "set-cookie", GG_KEYPATH, 0, 1);
-                        carve_statement (&samesite, "set-cookie", GG_KEYSAMESITE, 0, 1);
-                        carve_statement (&nohttponly, "set-cookie", GG_KEYNOHTTPONLY, 0, 2);
-                        carve_statement (&secure, "set-cookie", GG_KEYSECURE, 0, 2); // may have data
-                        carve_statement (&eq, "set-cookie", GG_KEYEQUALSHORT, 1, 1);
-                        carve_stmt_obj (&mtext, true);
-                        make_mem(&exp);
-                        make_mem(&path);
-                        make_mem(&eq);
-                        make_mem(&samesite);
-                        char *secc = opt_clause(secure, "\"Secure; \"", "\"\"", GG_DEFSTRING);
-                        char *httpc = opt_clause(nohttponly, "\"\"", "\"HttpOnly; \"", GG_DEFSTRING);
-                        //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&eq, GG_DEFSTRING, NULL);
-                        check_var (&exp, GG_DEFSTRING, NULL);
-                        check_var (&path, GG_DEFSTRING, NULL);
-                        check_var (&samesite, GG_DEFSTRING, NULL);
-                        check_var (&httpc, GG_DEFSTRING, NULL);
-                        check_var (&secc, GG_DEFSTRING, NULL);
-
-
-                        // enforce that Strict is the default for SameSite and HttpOnly is the default
-                        // set-cookie creates its own memory, so no need to increase refcount of mtext
-                        oprintf("gg_set_cookie (gg_get_config()->ctx.req, %s, %s, %s, %s, %s, %s, %s);\n", mtext, eq,
-                            path == NULL ? "NULL" : path, exp == NULL ? "NULL" : exp, samesite == NULL ? "\"Strict\"" : samesite,
-                            httpc, secc);
-
-                        gg_free(secc);
-                        gg_free(httpc);
-
-                        continue;
-                    }
-                    else if ((newI=recog_statement(line, i, "get-cookie", &mtext, &msize, 0, &gg_is_inline)) != 0)  
-                    {
-                        GG_GUARD
-                        i = newI;
-                        char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
-                        if (eq != NULL) carve_statement (&eq, "get-cookie", GG_KEYEQUALSHORT, 1, 1);
-                        carve_stmt_obj (&mtext, true);
-                        make_mem(&eq);
-
-                        define_statement (&mtext, GG_DEFSTRING, false); // exact length set via strdup in gg_find_cookie
-                        check_var (&eq, GG_DEFSTRING, NULL);
-
-                        // memory assigned is created in gg_find_cookie, so it has refcount of 0 to begin with, just like
-                        // any other statement
-                        oprintf("%s = gg_find_cookie (gg_get_config()->ctx.req, %s, NULL, NULL, NULL);\n", mtext, eq); 
-
-                        continue;
-                    }
                     else if ((newI=recog_statement(line, i, "delete-cookie", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
@@ -6823,30 +6836,171 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
+                    else if ((newI=recog_statement(line, i, "set-cookie", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        while (1) 
+                        {
+                            char *comma = find_keyword (mtext, GG_KEYCOMMA, 0);
+                            carve_statement (&comma, "set-cookie", GG_KEYCOMMA, 0, 1); // separate entries with comma first, so
+                                                                                      // this find/carve MUST come before the rest below!
+                                                                                      //
+                            char *exp = find_keyword (mtext, GG_KEYEXPIRES, 1);
+                            char *path = find_keyword (mtext, GG_KEYPATH, 1);
+                            char *samesite = find_keyword (mtext, GG_KEYSAMESITE, 1);
+                            char *nohttponly = find_keyword (mtext, GG_KEYNOHTTPONLY, 1);
+                            char *secure = find_keyword (mtext, GG_KEYSECURE, 1);
+                            char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
+
+                            carve_statement (&exp, "set-cookie", GG_KEYEXPIRES, 0, 1);
+                            carve_statement (&path, "set-cookie", GG_KEYPATH, 0, 1);
+                            carve_statement (&samesite, "set-cookie", GG_KEYSAMESITE, 0, 1);
+                            carve_statement (&nohttponly, "set-cookie", GG_KEYNOHTTPONLY, 0, 2);
+                            carve_statement (&secure, "set-cookie", GG_KEYSECURE, 0, 2); // may have data
+                            carve_statement (&eq, "set-cookie", GG_KEYEQUALSHORT, 1, 1);
+                            carve_stmt_obj (&mtext, true);
+                            make_mem(&exp);
+                            make_mem(&path);
+                            make_mem(&eq);
+                            make_mem(&samesite);
+                            char *secc = opt_clause(secure, "\"Secure; \"", "\"\"", GG_DEFSTRING);
+                            char *httpc = opt_clause(nohttponly, "\"\"", "\"HttpOnly; \"", GG_DEFSTRING);
+                            //
+                            check_var (&mtext, GG_DEFSTRING, NULL);
+                            check_var (&eq, GG_DEFSTRING, NULL);
+                            check_var (&exp, GG_DEFSTRING, NULL);
+                            check_var (&path, GG_DEFSTRING, NULL);
+                            check_var (&samesite, GG_DEFSTRING, NULL);
+                            check_var (&httpc, GG_DEFSTRING, NULL);
+                            check_var (&secc, GG_DEFSTRING, NULL);
+
+
+                            // enforce that Strict is the default for SameSite and HttpOnly is the default
+                            // set-cookie creates its own memory, so no need to increase refcount of mtext
+                            oprintf("gg_set_cookie (gg_get_config()->ctx.req, %s, %s, %s, %s, %s, %s, %s);\n", mtext, eq,
+                                path == NULL ? "NULL" : path, exp == NULL ? "NULL" : exp, samesite == NULL ? "\"Strict\"" : samesite,
+                                httpc, secc);
+
+                            gg_free(secc);
+                            gg_free(httpc);
+                            if (comma == NULL) break; else mtext = comma;
+                        }
+
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "get-cookie", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+                        while (1) 
+                        {
+                            char *comma = find_keyword (mtext, GG_KEYCOMMA, 0);
+                            carve_statement (&comma, "get-cookie", GG_KEYCOMMA, 0, 1); // separate entries with comma first, so
+                                                                                      // this find/carve MUST come before the rest below!
+                                                                                      //
+                            char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
+                            if (eq != NULL) carve_statement (&eq, "get-cookie", GG_KEYEQUALSHORT, 1, 1);
+                            carve_stmt_obj (&mtext, true);
+                            make_mem(&eq);
+
+                            define_statement (&mtext, GG_DEFSTRING, false); // exact length set via strdup in gg_find_cookie
+                            check_var (&eq, GG_DEFSTRING, NULL);
+
+                            // memory assigned is created in gg_find_cookie, so it has refcount of 0 to begin with, just like
+                            // any other statement
+                            oprintf("%s = gg_find_cookie (gg_get_config()->ctx.req, %s, NULL, NULL, NULL);\n", mtext, eq); 
+                            if (comma == NULL) break; else mtext = comma;
+                        }
+
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "get-param", &mtext, &msize, 0, &gg_is_inline)) != 0)
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        while (1) 
+                        {
+                            char *comma = find_keyword (mtext, GG_KEYCOMMA, 0);
+                            carve_statement (&comma, "get-param", GG_KEYCOMMA, 0, 1); // separate entries with comma first, so
+                                                                                      // this find/carve MUST come before the rest below!
+                                                                                      //
+                            char *type = find_keyword (mtext, GG_KEYTYPE, 1);
+                            carve_statement (&type, "get-param", GG_KEYTYPE, 0, 1);
+                            if (type != NULL) trimit (type); // type has to match
+                            carve_stmt_obj (&mtext, true);
+                            save_param (mtext);
+
+                            gg_num t;
+                            gg_num is_def;
+                            if (type == NULL) is_def = define_statement (&mtext, (t=GG_DEFSTRING), false);
+                            else is_def = define_statement (&mtext, (t=typeid(type)), false);
+                            //
+                            // No need to check_var when define_statement is with "true" as the second argument, since it
+                            // means the variable is created of that type for sure, and it can't have been or will be created before or after.
+                            //
+                            //
+                            {
+                                oprintf("{ typeof(%s) _gg_param = " , mtext);
+                                if (t == GG_DEFNUMBER) oprintf ("*(gg_num*)");
+                                else if (t == GG_DEFBOOL) oprintf ("*(bool*)");
+                                oprintf("gg_get_input_param (_gg_sprm_%s, %ld);\n", mtext, t);
+                                //
+                                if (optmem)
+                                {
+                                    if (cmp_type(t,GG_DEFSTRING)) oprintf ("if (_gg_param != %s)  gg_mem_add_ref (%ld, %s, _gg_param);\n", mtext, is_def, mtext);
+                                }
+                                oprintf ("%s = _gg_param;}\n", mtext);
+                            }
+                            //
+                            // Make vim recognize type names
+                            //
+                            // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
+
+                            // we used to forbid non-string/bool/number in non-call-handler. But we should be able to create say index in call-handler and pass it back
+                            // to caller. In gliimrt.c, we error out if such param with such type is not found.
+                            // if ((t != GG_DEFNUMBER && t != GG_DEFBOOL && t != GG_DEFSTRING) && !gg_is_sub) gg_report_error ("get-param type [%s] can only be used within call-handler", typename(t));
+
+                            if (comma == NULL) break; else mtext = comma;
+                        }
+
+                        continue;
+                    }
                     else if ((newI=recog_statement(line, i, "set-param", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
 
-                        char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
+                        while (1) 
+                        {
+                            char *comma = find_keyword (mtext, GG_KEYCOMMA, 0);
+                            carve_statement (&comma, "get-param", GG_KEYCOMMA, 0, 1); // separate entries with comma first, so
+                                                                                      // this find/carve MUST come before the rest below!
+                                                                                      //
+                            char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
 
-                        carve_statement (&eq, "set-param", GG_KEYEQUALSHORT, 0, 1);
-                        carve_stmt_obj (&mtext, true);
-                        if (gg_is_valid_param_name(mtext, false, false) != 1) gg_report_error( "parameter name [%s] is not valid, it can have only alphanumeric characters and underscores, and must start with an alphabet character", mtext);
-                        save_param (mtext);
+                            carve_statement (&eq, "set-param", GG_KEYEQUALSHORT, 0, 1);
+                            carve_stmt_obj (&mtext, true);
+                            if (gg_is_valid_param_name(mtext, false, false) != 1) gg_report_error( "parameter name [%s] is not valid, it can have only alphanumeric characters and underscores, and must start with an alphabet character", mtext);
+                            save_param (mtext);
 
-                        if (eq == NULL) eq = gg_strdup (mtext); // if no =, assume it's the variable with the same name
-                        make_mem(&eq);
-                        gg_num type = check_var (&eq, GG_DEFUNKN, NULL);
-                        if (type == GG_DEFUNKN) gg_report_error (GG_VAR_NOT_EXIST, eq);
+                            if (eq == NULL) eq = gg_strdup (mtext); // if no =, assume it's the variable with the same name
+                            make_mem(&eq);
+                            gg_num type = check_var (&eq, GG_DEFUNKN, NULL);
+                            if (type == GG_DEFUNKN) gg_report_error (GG_VAR_NOT_EXIST, eq);
 
 
- 
-                        oprintf("gg_set_input (_gg_sprm_%s, ", mtext);
-                        if (cmp_type(type, GG_DEFNUMBER)) oprintf ("&(%s)", eq);
-                        else if (cmp_type(type, GG_DEFBOOL)) oprintf ("((%s)?&gg_true:&gg_false)", eq);
-                        else oprintf ("%s", eq);
-                        oprintf (", %ld);\n", type);
+     
+                            oprintf("gg_set_input (_gg_sprm_%s, ", mtext);
+                            if (cmp_type(type, GG_DEFNUMBER)) oprintf ("&(%s)", eq);
+                            else if (cmp_type(type, GG_DEFBOOL)) oprintf ("((%s)?&gg_true:&gg_false)", eq);
+                            else oprintf ("%s", eq);
+                            oprintf (", %ld);\n", type);
+
+                            if (comma == NULL) break; else mtext = comma;
+                        }
 
 
                         continue;
@@ -6863,7 +7017,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                             gg_report_error( "end-handler without begin-handler found");
                         }
-                        if (done_end_handler)
+                        if (gg_single_file && done_end_handler)
                         {
                             gg_report_error( "end-handler found the second time");
                         }
@@ -6925,7 +7079,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //GG_GUARD
                         i = newI+newI1;
 
-                        if (done_handler)
+                        // do not allow splitting of begin-handler, because this allows us to quickly get .h file which contains
+                        // all prototypes of handlers in gg (in gen_src) - without this we'd have to make a mess and detect \ and concatenate lines in bash
+                        if (line_split) gg_report_error ("begin-handler (or %%) statement cannot be split on multiple lines");
+
+                        if (gg_single_file && done_handler)
                         {
                             gg_report_error( ".gliim file can have only a single begin-handler");
                         }
@@ -6952,6 +7110,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char decres = gg_decorate_path (reqname, sizeof(reqname), &p, mlen);
                         // 1 means good hierarchical path, reqname is it; or 3 means no /, so reqname is a copy of mtext
                         if (decres != 1) gg_report_error( "request path in begin-handler is not valid");
+                        gg_num plen = strlen (reqname); // otherwise whitespace at the end would cause mismatch
+                        gg_trim (reqname, &plen, false);
 
                         if (gg_is_valid_param_name(reqname, false, false) != 1) gg_report_error( "request path in begin-handler is not valid, it can have only alphanumeric characters, hyphens, underscores and forward slashes, and must start with an alphabet character");
 
@@ -6965,6 +7125,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf ("if (!gg_get_config()->ctx.req->sub) gg_report_error(\"This service [%s] can only be called as call-handler\");\n", mtext);
                             gg_is_sub = true;
                         }
+
                         continue;
                     }
                     else if ((newI=recog_statement (line, i, "set-bool", &mtext, &msize, 0, &gg_is_inline)) != 0)
@@ -7220,48 +7381,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         gg_num k;
                         for (k = 0; k < if_nest[open_ifs].num_elses; k++) oprintf("}\n");
                         if_nest[open_ifs].num_elses = 0;
-                        continue;
-                    }
-                    else if ((newI=recog_statement(line, i, "get-param", &mtext, &msize, 0, &gg_is_inline)) != 0)
-                    {
-                        GG_GUARD
-                        i = newI;
-
-                        char *type = find_keyword (mtext, GG_KEYTYPE, 1);
-                        carve_statement (&type, "get-param", GG_KEYTYPE, 0, 1);
-                        carve_stmt_obj (&mtext, true);
-                        save_param (mtext);
-
-                        gg_num t;
-                        gg_num is_def;
-                        if (type == NULL) is_def = define_statement (&mtext, (t=GG_DEFSTRING), false);
-                        else is_def = define_statement (&mtext, (t=typeid(type)), false);
-                        //
-                        // No need to check_var when define_statement is with "true" as the second argument, since it
-                        // means the variable is created of that type for sure, and it can't have been or will be created before or after.
-                        //
-                        //
-                        {
-                            oprintf("{ typeof(%s) _gg_param = " , mtext);
-                            if (t == GG_DEFNUMBER) oprintf ("*(gg_num*)");
-                            else if (t == GG_DEFBOOL) oprintf ("*(bool*)");
-                            oprintf("gg_get_input_param (_gg_sprm_%s, %ld);\n", mtext, t);
-                            //
-                            if (optmem)
-                            {
-                                if (cmp_type(t,GG_DEFSTRING)) oprintf ("if (_gg_param != %s)  gg_mem_add_ref (%ld, %s, _gg_param);\n", mtext, is_def, mtext);
-                            }
-                            oprintf ("%s = _gg_param;}\n", mtext);
-                        }
-                        //
-                        // Make vim recognize type names
-                        //
-                        // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
-
-                        // we used to forbid non-string/bool/number in non-call-handler. But we should be able to create say index in call-handler and pass it back
-                        // to caller. In gliimrt.c, we error out if such param with such type is not found.
-                        // if ((t != GG_DEFNUMBER && t != GG_DEFBOOL && t != GG_DEFSTRING) && !gg_is_sub) gg_report_error ("get-param type [%s] can only be used within call-handler", typename(t));
-
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "delete-string", &mtext, &msize, 0, &gg_is_inline)) != 0)
@@ -8766,7 +8885,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                      {
                         GG_GUARD
                         i = newI+newI1+newI2+newI3;
-                        carve_stmt_obj (&mtext, newI!=0||newI2!=0?false:true); 
                         // end-write-string, being string writing within string writing, can NOT be within <<..>>
                         if (within_inline == 1)
                         {
@@ -8780,6 +8898,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             notrim = find_keyword (mtext, GG_KEYNOTRIM, 1);
                             carve_statement (&notrim, "end-write-string", GG_KEYNOTRIM, 0, 0);
                         }
+                        carve_stmt_obj (&mtext, false); 
                         if (notrim != NULL)
                         {
                             oprintf("gg_write_to_string_notrim();\n");
@@ -8938,6 +9057,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
             }
         
         }
+
+        line_split = false;
+
         // check if clause that should have no data, indeed has no data
         gg_num e;
         for (e = 0; e < emptyc_c; e++)
@@ -9157,6 +9279,10 @@ int main (int argc, char* argv[])
         else if (!strcmp (argv[i], "-x"))
         {
             no_gg_line = 1;
+        }
+        else if (!strcmp (argv[i], "-single-file"))
+        {
+            gg_single_file = true;
         }
         else if (!strcmp (argv[i], "-public"))
         {
@@ -9405,7 +9531,7 @@ int main (int argc, char* argv[])
         oprintf("volatile gg_num gg_in_fatal_exit=0;\n");
         oprintf("sigjmp_buf gg_jmp_buffer;\n");
         oprintf("sigjmp_buf gg_err_jmp_buffer;\n");
-        oprintf("char * gg_app_name=\"%s\";\n", gg_app_name);
+        oprintf("char *gg_app_name=\"%s\";\n", gg_app_name);
         // default application path is /<app name>
         oprintf("char * gg_app_path=\"%s\";\n", app_path); // app-path cannot have quotes
         oprintf("unsigned long gg_app_path_len=%lu;\n", strlen(app_path)); 

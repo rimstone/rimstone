@@ -211,16 +211,16 @@ No message
 .RE
 
 
-.B - Using sub-handlers calls inside
+.B - Using call-handlers calls inside
 
-The following uses a sub-handler inside write-string:
+The following uses a call-handler inside write-string:
 
 .RS 4
 .EX
 
 set-string result_str=""
 write-string result_str
-    @<<p-out "Result from other-service">> is <<sub-handler "/other-service">>
+    @<<p-out "Result from other-service">> is <<call-handler "/other-service">>
 end-write-string
 p-out result_str
 
@@ -232,7 +232,7 @@ The "other-service" may be:
 .RS 4
 .EX
 
-begin-handler /other-service
+begin-handler /other-service public
     @"Hello from other service"
 end-handler
 

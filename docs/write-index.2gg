@@ -41,7 +41,7 @@ In a new directory, create file indexsrv.gliim and copy to it:
 .RS 4
 .EX
 
-%% /indexsrv
+%% /indexsrv public
     do-once
     new-index t process-scope
     end-do-once

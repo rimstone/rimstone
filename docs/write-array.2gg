@@ -59,7 +59,7 @@ The following is an array key/value service, where a process-scoped array is cre
 .RS 4
 .EX
 
-%% /arraysrv
+%% /arraysrv public
     do-once
     new-array h hash-size 1024 process-scope
     end-do-once

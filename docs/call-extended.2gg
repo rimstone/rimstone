@@ -115,7 +115,7 @@ Use these in your Gliimly code with call-extended statement, for instance to use
 
 extended-mode
 
-begin-handler /fact
+begin-handler /fact public
     set-number fact
     call-extended factorial (10, &fact)
     p-num fact
@@ -133,7 +133,7 @@ To use macro "mod10()":
 
 extended-mode
 
-begin-handler /mod
+begin-handler /mod public
     set-number mod
     call-extended mod10(103, mod)
     p-num mod

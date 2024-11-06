@@ -25,7 +25,7 @@ Returning status of 20:
 .RS 4
 .EX
 
-begin-handler /req-handler
+begin-handler /req-handler public
     ...
     handler-status 20
     ...
@@ -41,7 +41,7 @@ Returning status of 0:
 .RS 4
 .EX
 
-begin-handler /req-handler
+begin-handler /req-handler public
     ...
     exit-handler
     ...
@@ -55,7 +55,7 @@ Returning status of 10:
 .RS 4
 .EX
 
-begin-handler /req-handler
+begin-handler /req-handler public
     ...
     exit-handler 10
     ...

@@ -40,7 +40,7 @@ The following is a list that is process-scoped, i.e. it is a linked-list server,
 .RS 4
 .EX
 
-%% /llsrv
+%% /llsrv public
     // Create linked list just once for the life of the process
     do-once
     new-list t process-scope  

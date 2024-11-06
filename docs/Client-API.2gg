@@ -579,7 +579,7 @@ In this case, you're using a Unix socket to communicate with the Gliimly service
 .RS 4
 .EX
 
-begin-handler /hello_simple
+begin-handler /hello_simple public
    silent-header
    @Hi there!
 end-handler
@@ -728,7 +728,7 @@ To test it, you can create a Gliimly application. Copy this to "hello.gliim" fil
 .RS 4
 .EX
 
-begin-handler /hello
+begin-handler /hello public
     silent-header
 
     // Get request body
