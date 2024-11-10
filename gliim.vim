@@ -1,7 +1,7 @@
 " Language: Gliimly
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2024-November-05
+" Latest Revision: 2024-November-08
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link gliimConstruct Statement
@@ -1251,6 +1251,9 @@ syn region gg_r_construct_call_handler start="^[[:space:]]*call-handler" skip="\
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_call_handler,gg_r_inline_call_handler,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_call_handler,gg_r_inline_call_handler,gg_r_at
     syn match gg_h_construct_call_handler "^[[:space:]]*call-handler" contained containedin=gg_r_construct_call_handler
+    syn region gg_r_inline_call_handler start="<<[[:space:]]*call-handler \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_call_handler '<<[[:space:]]*call-handler \@=' contained containedin=gg_r_inline_call_handler
+    syn match gg_h_print_inline_call_handler '>>' contained containedin=gg_r_inline_call_handler
     hi def link gg_h_clause_call_handler    gliimClause
     hi def link gg_h_clause_output_call_handler    gliimClauseOutput
     hi def link gg_h_construct_call_handler    gliimConstruct

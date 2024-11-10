@@ -48,7 +48,7 @@ export GG_C_RESTPATH=""
 export GG_C_MAXUPLOAD="25000000"
 export GG_C_CPUS=$(grep -c '^processor' /proc/cpuinfo)
 if (( GG_C_CPUS < 1 )); then
-    export GG_C_CPUS="4"
+    export GG_C_CPUS="1"
 fi
 export GG_C_MAXERRORS="5"
 #plain diagnostics must have value, as it's passed in a script (vdiag) in vmakefile

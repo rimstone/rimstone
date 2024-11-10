@@ -32,7 +32,7 @@ if [ -d "/var/lib/gg" ]; then
         if (( $EUID == 0 )); then
             load_policy
             restorecon -R /var/lib/gg
-            restorecon -R $BDIR/vf
+            restorecon -R $BDIR/mgrg
         fi
     fi
 fi
