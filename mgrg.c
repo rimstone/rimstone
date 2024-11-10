@@ -435,7 +435,7 @@ static pid_t whatisprocess(pid_t p) {
 
 
 //
-// Stop processes. If sig is GG_QUIT, all srvc processes and vf stop (total quit). If GG_STOP, vf continues running,
+// Stop processes. If sig is GG_QUIT, all srvc processes and mgrg stop (total quit). If GG_STOP, mgrg continues running,
 // while srvc processes are stopped. If GG_STOPONE, stop one srvc process only (for adaptive downsizing).
 //
 static void handlestop(gg_num sig) {
