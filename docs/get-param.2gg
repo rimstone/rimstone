@@ -9,7 +9,7 @@ Get a parameter value.
 .RS 4
 .EX
 
-get-param <name> [ type <type> ]
+get-param ( <name> [ type <type> ] ) , ...
 
 .EE
 .RE
@@ -28,7 +28,7 @@ by the caller in \fBrequest URL\fP, or
 with \fBset-param\fP statement anywhere during request's execution, including in \fBcall-handler\fP.
 .RE
 
-If a parameter is a string, it is  trimmed for whitespaces (both on left and right).
+If parameter is a string, it is  trimmed for whitespaces (both on left and right). You can specify any number of parameters, separated by a comma.
 
 .LP
 .B TYPES
@@ -66,8 +66,7 @@ you can get these parameters and print out their values by using:
 .RS 4
 .EX
 
-get-param param1
-get-param param2
+get-param param1, param2
 
 .EE
 .RE

@@ -1,32 +1,30 @@
 .TH GLIIM 2gg $VERSION $DATE Development Tools
 .SH NAME
-p-num \-  (output)
+p-source-line \-  (output)
 .SH PURPOSE
-Outputs a number.
+Outputs current line number in the source file.
 
 .SH SYNTAX
 
 .RS 4
 .EX
 
-p-num <number>  [ new-line ]
+p-source-line [ new-line ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
-p-num outputs a number given by <number> variable. 
+p-source-line outputs the line number in the source file where the statement is located. It is often used for debugging purposes.
 
-If "new-line" clause is used, then a new line ("\en") is output after <number>.
+If "new-line" clause is used, then a new line ("\en") is output afterwards.
 
 .SH EXAMPLES
-To output a number to a client:
 
 .RS 4
 .EX
 
-set-number x = 100
-p-num x
+@This line is #<<p-source-line>>
 
 .EE
 .RE

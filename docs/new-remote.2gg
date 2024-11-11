@@ -56,7 +56,7 @@ for a TCP socket, a host name and a port number in the form of "<host name>:<por
 
 If "url-path" is used, then it's a \fBURL path\fP to a service. 
 
-If "url-path" is not used, then you must use "app-path" and "request-path" clauses with optional "url-params" clause. <app path> string (in "app-path" clause) is the application path used to access a URL resource in service <location>, <request path> string (in "request-path" clause) is the request path used to access a URL resource in service <location>, while <url params> string (in "url-params" clause) is the URL parameters, see \fBrequest\fP.
+If "url-path" is not used, then you must use "app-path" and "request-path" clauses with optional "url-params" clause. <app path> string (in "app-path" clause) is the application path used to access a URL resource in service <location>, <request path> string (in "request-path" clause) is the \fBrequest\fP path used to access a URL resource in service <location>, while <url params> string (in "url-params" clause) is the URL parameters, see \fBrequest\fP.
 
 .LP
 .B OPTIONAL

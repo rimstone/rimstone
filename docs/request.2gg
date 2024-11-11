@@ -47,7 +47,7 @@ https://your.website.com/my-app/my-request/par1=val1/par2=val2
 .EE
 .RE
 
-"/my-app" is application path, "/my-request" is request path and "/par1=val1/par2=val2" are parameters "par1" and "par2" with values "val1" and "val2". Together, application path, request path are called URL path.
+"/my-app" is application path, "/my-request" is request path and "/par1=val1/par2=val2" are parameters "par1" and "par2" with values "val1" and "val2". Together, application path and request path are called URL path.
 
 .LP
 .B APPLICATION PATH
@@ -103,9 +103,9 @@ https://some.web.site/shopping/buy-item
 .EE
 .RE
 
-In this case the application path is "/shopping" and the request path is "/buy-item". It means that file "buy-item.gliim" handles request "/buy-item" by implementing a \fBbegin-handler\fP "/buy-item" in it. As another example, file "services/manage-home.gliim" (meaning "manage-home.gliim" file in subdirectory "services") handles request "/service/manage-home" etc.
+In this case the application path is "/shopping" and the request path is "/buy-item". It means that file "buy-item.gliim" handles request "/buy-item" by implementing a \fBbegin-handler\fP "/buy-item" in it. As another example, file "services/manage-home.gliim" (meaning "manage-home.gliim" file in subdirectory "services") handles request "/services/manage-home" etc.
 
-The request path must match the path of the file name that implements it, with source directory being the root ("/"). Here is an example of implementing a request "/buy-item":
+The request path must match (fully or partially) the path of the file name that implements it, with source directory being the root ("/"). Here is an example of implementing a request "/buy-item" in file "buy-item.gliim":
 
 .RS 4
 .EX
@@ -140,7 +140,22 @@ https://some.web.site/shopping/items/wine-collection/red-wine/buy-item
 .EE
 .RE
 
-and would be implemented in file "items/wine-collection/red-wine/buy-item.gliim", meaning under subdirectory "items", then subdirectory "wine-collection", then subdirectory "red-wine", then file "buy-item.gliim".
+and might be implemented in file "items/wine-collection/red-wine/buy-item.gliim", meaning under subdirectory "items", then subdirectory "wine-collection", then subdirectory "red-wine", then file "buy-item.gliim".
+
+
+.B - File/path naming conventions
+
+By default, a request handler would be implemented in a source file whose path matches the request path, either fully or partially. 
+
+The simplest example is that "/buy-item" request must be implemented in file "buy-item.gliim". 
+
+As a more involved example, request handler for "/items/wine-collection/red-wine/buy-item" can be implemented in file "items.gliim" or file "items/wine-collection.gliim" or file "items/wine-collection/red-wine.gliim" or file "items/wine-collection/red-wine/buy-item.gliim". 
+
+Each of these source files can contain any number of matching requests. For instance, file "items.gliim" can contain request handlers for both "/items/wine-collection/red-wine/buy-item" and "/items/beer-collection/ipa-beer/buy-item"; while file "items/wine-collection.gliim" can contain request handlers for both "items/wine-collection/red-wine" and "items/wine-collection/white-wine". 
+
+By the same token, file "items/wine-collection/red-wine/buy-item.gliim" can implement both "/items/wine-collection/red-wine/buy-item" and "/items/wine-collection/red-wine/buy-item/sale" requests, as both requests match the file path.
+
+Note that if you use "--single-file" option in \fBgg\fP, then each source ".gliim" file must contain only a single request, and its request path must match the file path fully. So in this case, request handler for "/items/wine-collection/red-wine/buy-item" must be in file "items/wine-collection/red-wine/buy-item.gliim", and no other request can be implemented in it.
 
 .LP
 .B URL PARAMETERS
@@ -163,7 +178,7 @@ https://some.web.site/shopping/buy-item/sku=4811/price=600/
 
 This way, you have a readable representation of parameter names and values, while still maintaining the hierarchical form which conveys how are the parameters structured.
 
-Here, the required request name is "buy-item" and there are two other parameters ("sku" and "price") with values of "4811" and "600" respectively. 
+Here, the required request path is "/buy-item" and there are two input parameters ("sku" and "price") with values of "4811" and "600" respectively. 
 
 
 .B - Query string
@@ -173,7 +188,7 @@ Parameters can be specified after a question mark in a "name=value" form. For ex
 .RS 4
 .EX
 
-https://some.web.site/shopping/buy-items?sku=4811&price=600
+https://some.web.site/shopping/buy-item?sku=4811&price=600
 
 .EE
 .RE
@@ -181,7 +196,7 @@ https://some.web.site/shopping/buy-items?sku=4811&price=600
 
 .B - Mixed
 
-You can specify some or a mix of the above ways to write parameters, for instance the above URL can be written as:
+You can specify a mix of the above ways to write parameters, for instance the above URL can be written as:
 
 .RS 4
 .EX
@@ -268,7 +283,7 @@ Gliimly uses a hash table to match a request with a handler function, as well to
 
 .B - Unrecognized requests
 
-If no request has been recognized (i.e. request name does not match any request-handling .gliim source file), then 
+If no request has been recognized (i.e. request name does not match any request-handling ".gliim" source file), then 
 
 .RS 4
 \[bu]    

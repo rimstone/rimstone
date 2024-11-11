@@ -9,12 +9,12 @@ Set cookie.
 .RS 4
 .EX
 
-set-cookie <cookie name>=<cookie value> \\
+set-cookie ( <cookie name>=<cookie value> \\
     [ expires <expiration> ] \\
     [ path <path> ] \\
     [ same-site "Lax"|"Strict"|"None" ] \\
     [ no-http-only [ <no-http-only> ] ] \\
-    [ secure [ <secure> ] ]
+    [ secure [ <secure> ] ] ) ,...
 
 .EE
 .RE
@@ -33,6 +33,18 @@ By default a cookie is not accessible to client scripting (i.e. "HttpOnly") -you
 Use "secure" if a secure connection (https) is used, in order to specify this cookie is available only with a secure connection. That will be the case if "secure" is used without bool expression <secure>, or if <secure> evaluates to true.
 
 Cookies are commonly used for session maintenance, tracking and other purposes. Use \fBget-cookie\fP and \fBdelete-cookie\fP together with set-cookie to manage cookies.
+
+You can set multiple cookies separated by a comma:
+
+.RS 4
+.EX
+
+get-time to tm year 1
+set-cookie "mycookie1"="4900" expires tm path "/", "mycookie2"="900" expires tm  path "/my-app" same-site "Strict"
+
+.EE
+.RE
+
 
 .SH EXAMPLES
 To set a cookie named "my_cookie_name" to value "XYZ", that will go with the reply and expire in 1 year and 2 months from now, use:

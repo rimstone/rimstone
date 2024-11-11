@@ -9,7 +9,7 @@ Set or create a parameter.
 .RS 4
 .EX
 
-set-param <name> [ = <value> ]
+set-param ( <name> [ = <value> ] ) , ...
 
 .EE
 .RE
@@ -40,6 +40,18 @@ set-param something = something
 .RE
 
 where the first "something" is the parameter set/created, and the second "something" is an actual variable in your code. In this example, the two just happen to have the same name; this generally happens often, so this form is a shortcut for that.
+
+You can specify any number of parameters separated by a comma, for instance in this case par1 is a boolean, par2 is a number and par3 is a string:
+
+.RS 4
+.EX
+
+set-number par2 = 10
+set-param par1=true, par, par3="hi"
+
+.EE
+.RE
+
 
 .SH EXAMPLES
 Set the value of parameter "quantity" to "10", which is also the output:

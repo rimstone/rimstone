@@ -23,7 +23,7 @@ A <request path> is a path consisting of any number of path segments. A request 
 
 For example, a <request path> can be "/wine-items" or "/items/wine" etc. In general, it represents the nature of a request, such as an action on an object, a resource path handled by it etc. There is no specific way to interpret a request path, and you can construct it in a way that works for you.
 
-The source .gliim file name that implements a given begin-handler matches its path and name. For example, <request path> of "/items/wine" would be implemented in  "items/wine.gliim" file (meaning in file "wine.gliim" in subdirectory "items").
+The source ".gliim" file name that implements a given begin-handler matches its path and name, fully or partially (see \fBrequest\fP). For example, <request path> of "/items/wine" might be implemented in  "items/wine.gliim" file (meaning in file "wine.gliim" in subdirectory "items").
 
 Note that you can also use "%%" instead of either begin-handler or end-handler or both. 
 

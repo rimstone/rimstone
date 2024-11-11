@@ -4,7 +4,7 @@ documentation \- Gliimly documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GLIIMLY VERSION 76
+.B REFERENCE FOR GLIIMLY VERSION 91
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -373,6 +373,8 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 \fBp-num\fP  
 \fBp-out\fP  
 \fBp-path\fP  
+\fBp-source-file\fP  
+\fBp-source-line\fP  
 \fBp-url\fP  
 \fBp-web\fP   
 .RE
