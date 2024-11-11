@@ -40,6 +40,6 @@ Gliimly is a programming language for web services\. It's:
 2024\-09\-17 [Hello World in Gliimly](https://gliimly.blogspot.com/2024/09/hello-world-in-gliimly.html)
 2024\-09\-13 [Introduction to Gliimly](https://gliimly.blogspot.com/2024/09/introduction-to-gliim-body-html.html)
 2024\-09\-12 [Initial Gliimly release](https://gliimly.blogspot.com/2024/09/12-is-initial-gliim-release-formerly.html)
----
+
 Visit [official Gliimly home page](http://gliimly.github.io).
 
