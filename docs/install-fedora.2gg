@@ -29,7 +29,7 @@ sudo dnf -y install git
 
 git clone https://github.com/gliimly/gliimly.git
 cd gliimly
-git checkout 95
+git checkout 97
 
 .EE
 .RE
