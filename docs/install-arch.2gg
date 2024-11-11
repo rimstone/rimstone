@@ -29,7 +29,7 @@ sudo pacman --noconfirm -Sy --overwrite "*" git
 
 git clone https://github.com/gliimly/gliimly.git
 cd gliimly
-git checkout 76
+git checkout 91
 
 .EE
 .RE
@@ -41,7 +41,7 @@ git checkout 76
 .RS 4
 .EX
 
-sudo pacman --noconfirm -Sy --overwrite "*" make gcc openssl curl 'mariadb-connector-c' fcgi 'postgresql-libs' sqlite3 pcre2
+sudo pacman --noconfirm -Sy --overwrite "*" make gcc openssl curl tar 'mariadb-connector-c' fcgi 'postgresql-libs' sqlite3 pcre2
 
 .EE
 .RE
@@ -57,19 +57,6 @@ Use DI=1 to build debug version, leave it as is for production:
 make clean
 make DI=0
 sudo make install
-
-.EE
-.RE
-
-
-.B - Tools and utilities
-
-Install useful tools and utilities, also used in examples (so if you're running examples, you must install these as well):
-
-.RS 4
-.EX
-
-sudo pacman --noconfirm -Sy --overwrite "*" tar curl
 
 .EE
 .RE

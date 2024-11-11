@@ -151,6 +151,8 @@ encrypt-data orig_data input-length 6 \\
 
 Note that all statements are always left-trimmed for whitespace. Thus the resulting string literal in the above example is "mypass", and not "my   pass", as the whitespaces prior to line starting with "pass" are trimmed first. Also, all statements are right-trimmed for white space, except if backslash is used at the end, in which case any spaces prior to backslash are conserved. For that reason, in the above example there is a space prior to a backslash where clauses need to be separated.
 
+Note that \fBbegin-handler\fP statement cannot be split with backsplash, i.e. it must always be on a single line for readability.
+
 .LP
 .B COMMENTS
 .LP

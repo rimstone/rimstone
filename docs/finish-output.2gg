@@ -42,6 +42,8 @@ finish-output
 \fBp-num\fP  
 \fBp-out\fP  
 \fBp-path\fP  
+\fBp-source-file\fP  
+\fBp-source-line\fP  
 \fBp-url\fP  
 \fBp-web\fP   
 See all 

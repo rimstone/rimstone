@@ -120,7 +120,23 @@ Use memory-optimizing garbage collection, which counts memory references and fre
 .RS 4
 \[bu]    
 --public
-Change the default behavior of request handler safety; see \fBbegin-handler\fP for more details.
+Change the default behavior of request handler safety so that request handlers without "public" or "private" clause are by default "public"; see \fBbegin-handler\fP for more details.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--single-file
+A request handler is written in a source file whose path matches fully or partially that of the \fBrequest\fP, and such a file can contain any number of request handlers that match, see \fBrequest\fP. If, however "--single-file" is used, each request has to be in its own file whose path matches fully the request path, and no other request can be implemented in such file. For example, with "--single-file", request "/myreq" has to be in file "myreq.gliim" in the source directory, while request "/other/newreq" has to be in file "other/newreq.gliim" (meaning in file "newreq.gliim" in subdirectory "other" in the source directory).
+
+
+.RE
+
+.RS 4
+\[bu]    
+--exclude-dir
+By default, all ".gliim" files (including in all subdirectories regardless of how many levels there may be), are picked up for compilation. If "--exclude-dir" is used, then you can specify any number of subdirectories, separated by commas, to be excluded. 
 
 
 .RE

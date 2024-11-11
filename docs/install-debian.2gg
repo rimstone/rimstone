@@ -30,7 +30,7 @@ sudo apt -y install git
 
 git clone https://github.com/gliimly/gliimly.git
 cd gliimly
-git checkout 76
+git checkout 91
 
 .EE
 .RE
@@ -42,7 +42,7 @@ git checkout 76
 .RS 4
 .EX
 
-sudo apt -y install make gcc libssl-dev curl libcurl4 libcurl4-openssl-dev libmariadb-dev zlib1g-dev libfcgi-bin libfcgi-dev libpq-dev libsqlite3-dev libpcre2-dev
+sudo apt -y install make gcc libssl-dev curl tar libcurl4 libcurl4-openssl-dev libmariadb-dev zlib1g-dev libfcgi-bin libfcgi-dev libpq-dev libsqlite3-dev libpcre2-dev
 
 .EE
 .RE
@@ -58,19 +58,6 @@ Use DI=1 to build debug version, leave it as is for production:
 make clean
 make DI=0
 sudo make install
-
-.EE
-.RE
-
-
-.B - Tools and utilities
-
-Install useful tools and utilities, also used in examples (so if you're running examples, you must install these as well):
-
-.RS 4
-.EX
-
-sudo apt -y install tar curl libfcgi-bin
 
 .EE
 .RE
