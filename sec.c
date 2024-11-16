@@ -28,7 +28,7 @@ EVP_MD *gg_get_digest(char *digest_name)
 // even if not existing
     md = EVP_MD_fetch(NULL, digest_name, NULL);
 #else
-    md = EVP_get_digestbyname(digest_name);
+    md = (EVP_MD *) EVP_get_digestbyname(digest_name);
 #endif
     if (md == NULL) gg_sec_err ("Unknown digest");
     return md;
