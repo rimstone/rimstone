@@ -113,7 +113,7 @@ ASAN=
 endif
 
 #C flags are as strict as we can do, in order to discover as many bugs as early on
-CFLAGS=-std=gnu89 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -fsigned-char -fpic $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) -DGG_OSNAME_ID=$(OSNAMEID) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5
+CFLAGS=-std=gnu89 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -fsigned-char -fpic $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) -DGG_OSNAME_ID=$(OSNAMEID) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wno-error=implicit-function-declaration
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GLIIMLY with mariadb (LGPL), crypto (OpenSSL)
