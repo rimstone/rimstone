@@ -10,6 +10,12 @@ about-gliim \- Gliimly documentation (general)
 Gliimly is a very high-level modeling language. It's about solving problems by modeling the solution and connecting the components to create high-performance, low-footprint executables; and not about managing memory, manipulating bits and bytes or writing complex code.
 
 .LP
+.B SYNTAX MATTERS
+.LP
+
+Syntax of a language matters, not just for writing code now, but for someone else reading it years later. Gliimly language is designed to be intuitive, easy and rapid in use on both ends, and to be close to the way humans are wired, rather than machines.
+
+.LP
 .B SERVICE ORIENTED
 .LP
 
