@@ -1,4 +1,4 @@
-.TH GLIIM 2gg $VERSION $DATE Development Tools
+.TH GLIIMLY 2gg $VERSION $DATE Development Tools
 .SH NAME
 install-arch \- Gliimly documentation (download-and-build)
 .SH DESCRIPTION
@@ -29,7 +29,7 @@ sudo pacman --noconfirm -Sy --overwrite "*" git
 
 git clone https://github.com/gliimly/gliimly.git
 cd gliimly
-git checkout 101
+git checkout 107
 
 .EE
 .RE

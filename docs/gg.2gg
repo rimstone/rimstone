@@ -1,6 +1,6 @@
-.TH GLIIM 2gg $VERSION $DATE Development Tools
+.TH GLIIMLY 2gg $VERSION $DATE Development Tools
 .SH NAME
-gg \-  (gliim-compiler-and-utility)
+gg \-  (gliimly-compiler-and-utility)
 .SH PURPOSE
 Gliimly general purpose utility: build, test, run, miscellaneous (pronounced "gigi").
 
@@ -435,7 +435,7 @@ gg -q
 
 .SH SEE ALSO
  
-.B - Gliim compiler and utility
+.B - Gliimly compiler and utility
 
 \fBgg\fP   
 See all 

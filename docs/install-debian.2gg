@@ -1,4 +1,4 @@
-.TH GLIIM 2gg $VERSION $DATE Development Tools
+.TH GLIIMLY 2gg $VERSION $DATE Development Tools
 .SH NAME
 install-debian \- Gliimly documentation (download-and-build)
 .SH DESCRIPTION
@@ -30,7 +30,7 @@ sudo apt -y install git
 
 git clone https://github.com/gliimly/gliimly.git
 cd gliimly
-git checkout 101
+git checkout 107
 
 .EE
 .RE

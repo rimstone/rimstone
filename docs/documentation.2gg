@@ -1,10 +1,10 @@
-.TH GLIIM 2gg $VERSION $DATE Development Tools
+.TH GLIIMLY 2gg $VERSION $DATE Development Tools
 .SH NAME
 documentation \- Gliimly documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GLIIMLY VERSION 101
+.B REFERENCE FOR GLIIMLY VERSION 107
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -222,7 +222,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 .RS 4
 \[bu]    
 
-.B - Gliim compiler and utility
+.B - Gliimly compiler and utility
 
 \fBgg\fP   
 .RE

@@ -67,49 +67,50 @@ function use_message() {
     echo "Usage: $0  OPTIONS 
 OPTIONS:
 
--c      clean make artifacts for a rebuild
--v      show version
--s      show detailed execution (script tracing)
--e N    show last N program errors
--t N    show trace files for N most recent processes
--o      show documentation directory
--l      show library directory
--m      setup syntax highlighting for Vim
--u      substitute environment variables in stdin
--r      display shell commands to run a program
-            --req=\"/<request name><url payload>\"
-            --method=\"<request method>\"
-            --content=\"<file name>\"
-            --content-type=\"<content type>\"
-            --exec
-            --app=\"application path\" 
-            --service
-            --remote=\"server IP:port\"
-            --socket=\"socket path\"
-            --arg=\"arguments\"
--q      build application
-            --db=\"mariadb:<db name>|postgres:<db name> ...\" 
-            --lflag=<linker flags> 
-            --cflag=<c flags> 
-            --trace 
-            --c-lines 
-            --posix-regex
-            --debug 
-            --maxupload=<max upload size>
-            --path=\"/some/path\"
-            --max-errors=<max errors>
-            --plain-diag
-            --optimize-memory
-            --parallel=<compiling threads>
-            --public
-            --single-file
-            --exclude-dir=<dir list>
--i      display build flags for FastCGI client
-            --include
-                displays C compile flags
-            --link
-                displays C linking flags
--h      this help
+-k <app> create application <app> with default settings
+-c       clean make artifacts for a rebuild
+-v       show version
+-s       show detailed execution (script tracing)
+-e N     show last N program errors
+-t N     show trace files for N most recent processes
+-o       show documentation directory
+-l       show library directory
+-m       setup syntax highlighting for Vim
+-u       substitute environment variables in stdin
+-r       display shell commands to run a program
+             --req=\"/<request name><url payload>\"
+             --method=\"<request method>\"
+             --content=\"<file name>\"
+             --content-type=\"<content type>\"
+             --exec
+             --app=\"application path\" 
+             --service
+             --remote=\"server IP:port\"
+             --socket=\"socket path\"
+             --arg=\"arguments\"
+-q       build application
+             --db=\"mariadb:<db name>|postgres:<db name> ...\" 
+             --lflag=<linker flags> 
+             --cflag=<c flags> 
+             --trace 
+             --c-lines 
+             --posix-regex
+             --debug 
+             --maxupload=<max upload size>
+             --path=\"/some/path\"
+             --max-errors=<max errors>
+             --plain-diag
+             --optimize-memory
+             --parallel=<compiling threads>
+             --public
+             --single-file
+             --exclude-dir=<dir list>
+-i       display build flags for FastCGI client
+             --include
+                 displays C compile flags
+             --link
+                 displays C linking flags
+-h       this help
 Type 'man gg' for more information.
 "
 }
@@ -122,7 +123,7 @@ function main() {
 #list of Gliimly options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o e:t:,q,o,l,m,i,h,c,v,s,u,r --long exclude-dir:,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o k:e:t:,q,o,l,m,i,h,c,v,s,u,r --long exclude-dir:,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit -1
@@ -280,6 +281,12 @@ _DO_QUICK=0
             _REQ_URL="$2"
             shift 2
             ;;
+        -k  )
+#create new application
+            _NEWAPP="1"
+            _NAME="$2"
+            shift 2
+            ;;
         -r  )
 #display bash to run command-line program
             _COMMRUN="1"
@@ -382,6 +389,24 @@ _DO_QUICK=0
             exit -1
         esac
     done
+
+#we always first check if application is being created, so then afterwards it can be made etc; thus we don't exit 
+    if [ "$_NEWAPP" == "1" ]; then
+        if [ "$_NAME" == "" ]; then
+            error "You must specify application name you wish to create"
+        fi
+        check_name "$_NAME" "application name"
+        ECODE=0
+        sudo mgrg -i -u $(whoami) $_NAME || ECODE=$?
+        #exit immediately if not successful
+        if [ "$ECODE" != "0" ]; then
+            exit $ECODE
+        fi
+        #otherwise check if we want to do -q too
+        if [ "$_DO_QUICK" != "1" ]; then
+            exit $ECODE
+        fi
+    fi
 
     #check if old pcre2 lib, use glibc regex
     if [ "$GG_PCRE2_NEW" == "0" ]; then export GG_C_POSIXREGEX="1"; fi
