@@ -69,6 +69,24 @@ extensible,
 
 .RS 4
 \[bu]    
+2024-11-22 \fBGliimly 109 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-11-22 \fBHow to create Gliimly application\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-11-21 \fBGetting help for Gliimly with man pages\fP
+.RE
+
+
+.RS 4
+\[bu]    
 2024-11-12 \fBMulti-tenant SaaS (Notes web application) in 200 lines of code\fP
 .RE
 

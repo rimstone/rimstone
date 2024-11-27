@@ -23,6 +23,14 @@ gg <options>
 
 .RS 4
 \[bu]    
+-k <app name>
+Create Gliimly application <app name> with default settings (see \fBmgrg\fP with "-i" option on creating applications with non-default settings). The default settings mean that your application is owned by the currently-logged on Operating System user (see "-u" option in mgrg), and that a Unix socket connecting to your application server isn't restricted by any group (see "-r" option in mgrg). You must have sudo privilege to create an application (this is the only option that requires it). This option does nothing if the application already exists. You can combine this option with "-q" to create and then build an application in the same step.
+
+
+.RE
+
+.RS 4
+\[bu]    
 -q Build Gliimly application from source code in the current directory. \fBmgrg\fP must run first in this directory with "-i" option to create the application. You must have at least one Gliimly source file (.gliim file), with each such file implementing a single \fBrequest\fP handler. All application source files must be contained in a flat directory; however, each request handler can handle any hierarchical path, so your API can be fully hierarchical.
 
 The following options can be used when building an application:

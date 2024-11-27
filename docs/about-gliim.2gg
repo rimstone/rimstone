@@ -10,10 +10,10 @@ about-gliim \- Gliimly documentation (general)
 Gliimly is a very high-level modeling language. It's about solving problems by modeling the solution and connecting the components to create high-performance, low-footprint executables; and not about managing memory, manipulating bits and bytes or writing complex code.
 
 .LP
-.B SYNTAX MATTERS
+.B SYNTAX MATTERS: EXPRESSIONLESS
 .LP
 
-Syntax of a language matters, not just for writing code now, but for someone else reading it years later. Gliimly language is designed to be intuitive, easy and rapid in use on both ends, and to be close to the way humans are wired, rather than machines.
+Syntax of a language matters, not just for writing code now, but for someone else reading it years later. Gliimly language is designed to be intuitive, easy and rapid, and to be close to the way humans are wired, rather than machines. Gliimly is near-expressionless, featuring only very limited integer expressions. This is by design: it's simpler to use programmable features to build desired functionality then to build them yourself.
 
 .LP
 .B SERVICE ORIENTED
@@ -126,7 +126,7 @@ Gliimly programming language is memory-safe, meaning it will prevent you from ac
 .B TYPES
 .LP
 
-Gliimly is a strongly-typed language, with only three primitive types (numbers, strings and booleans) and a number of structured types (message, split-string, array, index, index-cursor, fifo, lifo, list, file and service). Gliimly is a declarative language, with a few lines of code implementing large functionalities. Gliimly is also very simple - it does not even have expressions! That's because it's designed to achieve application goals with less coding.
+Gliimly is a strongly-typed language, with only three primitive types (numbers, strings and booleans) and a number of structured types (message, split-string, array, index, index-cursor, fifo, lifo, list, file and service). Gliimly is a declarative language, with a few lines of code implementing large functionalities. Gliimly is also very simple - it's near expression-free! That's because it's designed to achieve application goals with less coding.
 
 The number type is a signed 64-bit integer. The boolean type evaluates to true (non-zero) or false (zero). The string type evaluates to any sequence of bytes (binary or text) that is always trailed with a null character regardless, which is not counted in string's length. All constants follow C rules of formatting.
 

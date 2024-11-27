@@ -233,7 +233,7 @@ function gg_copy(gt, eid, gc) {
 
 
 <div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div>
-<div class='vhub'>Gliimly Single-Page Documentation for version 107</div><hr/>
+<div class='vhub'>Gliimly Single-Page Documentation for version 109</div><hr/>
 This page contains all of Gliimly documentation topics combined into one. It may be easier to search. <!--GLIIMBEGDOC39--><br/><br/>
 <a href='#123-hello-world.html'>123-hello-world</a><br/>
 <a href='#about-gliim.html'>about-gliim</a><br/>
@@ -493,8 +493,8 @@ Hello World!</pre>
 <a id='about-gliim.html'></a>
 <div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;About gliim</div><hr/><div class="vsub"><a id="Modeling language"></a>Modeling language</div>
 Gliimly is a very high-level modeling language. It's about solving problems by modeling the solution and connecting the components to create high-performance, low-footprint executables; and not about managing memory, manipulating bits and bytes or writing complex code.<br/>
-<div class="vsub"><a id="Syntax matters"></a>Syntax matters</div>
-Syntax of a language matters, not just for writing code now, but for someone else reading it years later. Gliimly language is designed to be intuitive, easy and rapid in use on both ends, and to be close to the way humans are wired, rather than machines.<br/>
+<div class="vsub"><a id="Syntax matters: expressionless"></a>Syntax matters: expressionless</div>
+Syntax of a language matters, not just for writing code now, but for someone else reading it years later. Gliimly language is designed to be intuitive, easy and rapid, and to be close to the way humans are wired, rather than machines. Gliimly is near-expressionless, featuring only very limited integer expressions. This is by design: it's simpler to use programmable features to build desired functionality then to build them yourself.<br/>
 <div class="vsub"><a id="Service oriented"></a>Service oriented</div>
 A Gliimly program works as a service provider, meaning it handles service <a href='/request.html'>request</a>s by providing a reply. It can be either a <a href='/service.html'>service</a> or a <a href='/command-line.html'>command-line</a> program that processes GET, POST, PUT, PATCH, DELETE or any other HTTP requests. <br/>
 <br/>
@@ -523,7 +523,7 @@ Gliimly services and command-line programs can implement most back-end applicati
 <div class="vsub"><a id="Language"></a>Language</div>
 Gliimly programming language is memory-safe, meaning it will prevent you from accidentally overwriting memory or freeing it when it shouldn't be. Gliimly's <a href='/memory-handling.html'>memory-handling</a> is not limited to just memory safety; it also includes automatic freeing of memory at the end of a request, preventing memory leaks which can be fatal to long running processes. Similarly, files open with file-handling statements are automatically closed at the end of each request, serving the same purpose. <br/>
 <div class="vsub"><a id="Types"></a>Types</div>
-Gliimly is a strongly-typed language, with only three primitive types (numbers, strings and booleans) and a number of structured types (message, split-string, array, index, index-cursor, fifo, lifo, list, file and service). Gliimly is a declarative language, with a few lines of code implementing large functionalities. Gliimly is also very simple - it does not even have expressions! That's because it's designed to achieve application goals with less coding.<br/>
+Gliimly is a strongly-typed language, with only three primitive types (numbers, strings and booleans) and a number of structured types (message, split-string, array, index, index-cursor, fifo, lifo, list, file and service). Gliimly is a declarative language, with a few lines of code implementing large functionalities. Gliimly is also very simple - it's near expression-free! That's because it's designed to achieve application goals with less coding.<br/>
 <br/>
 The number type is a signed 64-bit integer. The boolean type evaluates to true (non-zero) or false (zero). The string type evaluates to any sequence of bytes (binary or text) that is always trailed with a null character regardless, which is not counted in string's length. All constants follow C rules of formatting.<br/>
 <div class="vsub"><a id="Statements"></a>Statements</div>
@@ -4870,7 +4870,7 @@ ln <span class="Special">-s</span> /home/disk0/file /var/lib/gg/<span class="Sta
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
 <a id='documentation.html'></a>
-<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 107"></a>Reference for Gliimly version 107</div>
+<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 109"></a>Reference for Gliimly version 109</div>
 <span style="font-weight:bold;">Note</span>: All the topics below are available as a <a href='/gliimdoc.html'>single-page documentation</a>. <br/>
 <br/>
 <ul><br/>
@@ -6544,7 +6544,10 @@ gg <span class="Statement">&lt;</span>options<span class="Statement">&gt;</span>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_354, code_354, gliim_copied_354)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
 </div><br/>
 <div class="vsub"><a id="Command-line options"></a>Command-line options</div>
-<ul><li>-q Build Gliimly application from source code in the current directory. <a href='/mgrg.html'>mgrg</a> must run first in this directory with "-i" option to create the application. You must have at least one Gliimly source file (.gliim file), with each such file implementing a single <a href='/request.html'>request</a> handler. All application source files must be contained in a flat directory; however, each request handler can handle any hierarchical path, so your API can be fully hierarchical.<br/>
+<ul><li>-k &lt;app name&gt;<br/>
+Create Gliimly application &lt;app name&gt; with default settings (see <a href='/mgrg.html'>mgrg</a> with "-i" option on creating applications with non-default settings). The default settings mean that your application is owned by the currently-logged on Operating System user (see "-u" option in mgrg), and that a Unix socket connecting to your application server isn't restricted by any group (see "-r" option in mgrg). You must have sudo privilege to create an application (this is the only option that requires it). This option does nothing if the application already exists. You can combine this option with "-q" to create and then build an application in the same step.<br/>
+<br/>
+</li><li>-q Build Gliimly application from source code in the current directory. <a href='/mgrg.html'>mgrg</a> must run first in this directory with "-i" option to create the application. You must have at least one Gliimly source file (.gliim file), with each such file implementing a single <a href='/request.html'>request</a> handler. All application source files must be contained in a flat directory; however, each request handler can handle any hierarchical path, so your API can be fully hierarchical.<br/>
 <br/>
 The following options can be used when building an application:<br/>
 <br/>
@@ -7223,7 +7226,7 @@ sudo pacman <span class="Special">--noconfirm</span> <span class="Special">-Sy</
 <pre id='code_395'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">107</span></pre>
+git checkout <span class="Constant">109</span></pre>
 <span id=gliim_copied_395 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_395' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_395, code_395, gliim_copied_395)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -7274,7 +7277,7 @@ sudo apt <span class="Special">-y</span> install git</pre>
 <pre id='code_399'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">107</span></pre>
+git checkout <span class="Constant">109</span></pre>
 <span id=gliim_copied_399 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_399' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_399, code_399, gliim_copied_399)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -7324,7 +7327,7 @@ sudo dnf <span class="Special">-y</span> install git</pre>
 <pre id='code_403'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">107</span></pre>
+git checkout <span class="Constant">109</span></pre>
 <span id=gliim_copied_403 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_403' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_403, code_403, gliim_copied_403)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -7393,7 +7396,7 @@ sudo zypper <span class="Special">-n</span> install git</pre>
 <pre id='code_407'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">107</span></pre>
+git checkout <span class="Constant">109</span></pre>
 <span id=gliim_copied_407 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_407' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_407, code_407, gliim_copied_407)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -7933,7 +7936,7 @@ Initialize the directory and file structure for application &lt;app name&gt;. If
 </li><li>-u &lt;user&gt;<br/>
 The owner of your application. This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It cannot be root. <br/>
 </li><li>-r &lt;proxy group&gt;<br/>
-The group of proxy web server (such as Apache or Nginx). This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It restricts the ability to connect to your application only to the members of said group (in addition to the user who owns your server), otherwise anyone can connect.<br/>
+The group of proxy web server (such as Apache or Nginx). This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It restricts the ability to connect to your application only to the members of said group (in addition to the user who owns your server) when a Unix socket is used, otherwise anyone can connect.<br/>
 </li><li>-f<br/>
 Run in the foreground. The process does not return to the command line prompt until it is stopped. Useful for debugging and where foreground processing is required.<br/>
 </li><li>-p &lt;port number&gt;<br/>

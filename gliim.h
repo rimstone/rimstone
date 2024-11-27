@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "109"
+#define GG_VERSION "114"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -1017,7 +1017,7 @@ gg_num gg_is_positive_num (char *s);
 void gg_copy_string (char *src, gg_num from, char **dst, gg_num len);
 void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bool begin);
 gg_num gg_exec_program (char *prg, char *argv[], gg_num num_args, FILE *fin, FILE **fout, FILE **ferr, char *inp, gg_num inp_len, char **out_buf, char **err_buf);
-void gg_subs(char *s);
+void gg_subs(char *s, void **call_handler);
 void gg_get_debug_options();
 gg_num gg_flush_printf(gg_num fin);
 void gg_printf_close();

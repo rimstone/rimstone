@@ -6176,12 +6176,27 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
+                        //
+                        // must check if mtext clause is string constant *before* other variable checks below, because
+                        // they may create a temp variable for it
+                        bool is_constant = false;
+                        if (is_constant_string(mtext) == GG_CONST_OK) is_constant = true;
+                        //
+                        //
                         //if sub name is a constant, check there's actually a source file to run it
                         check_sub (mtext); // this must be BEFORE carve_stmt_obj as it may create temp variable which is just some generated var name
                                            // it trims mtext, but we're about to do that anyway
                         carve_stmt_obj (&mtext, true);
                         check_var (&mtext, GG_DEFSTRING, NULL);
-                        oprintf ("gg_subs(%s);\n", mtext);
+                        static gg_num call_handler_c = 0;
+                        if (is_constant)
+                        {
+                            // if this is a constant call, cache the pointer to function, and just call it as such without
+                            // involving hash search
+                            oprintf ("static void *_gg_call_h_%ld = NULL;\n", call_handler_c);
+                            oprintf ("gg_subs(%s, &_gg_call_h_%ld);\n", mtext, call_handler_c);
+                            call_handler_c++;
+                        } else oprintf ("gg_subs(%s, NULL);\n", mtext);
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "uniq-file", &mtext, &msize, 0, &gg_is_inline)) != 0)  

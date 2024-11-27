@@ -12,6 +12,9 @@ Gliimly is a programming language for web services\. It's:
 [Install Gliimly](http://gliimly.github.io//install.html)\. See [Documentation](http://gliimly.github.io//documentation.html)\. Source at [github\.com](https://github.com/gliimly/gliimly)\. 
 
 [Blog](https://gliimly.blogspot.com/) release updates, articles and examples:
+* 2024\-11\-22 [Gliimly 109 released](https://gliimly.blogspot.com/2024/11/gliimly-109-released.html)
+* 2024\-11\-22 [How to create Gliimly application](https://gliimly.blogspot.com/2024/11/how-to-create-gliimly-application.html)
+* 2024\-11\-21 [Getting help for Gliimly with man pages](https://gliimly.blogspot.com/2024/11/getting-help-for-gliimly-with-man-pages.html)
 * 2024\-11\-12 [Multi\-tenant SaaS \(Notes web application\) in 200 lines of code](https://gliimly.blogspot.com/2024/11/multi-tenant-saas-notes-web-application.html)
 * 2024\-11\-10 [Gliimly 91 released](https://gliimly.blogspot.com/2024/11/gliimly-91-released.html)
 * 2024\-11\-05 [Gliimly 87 released](https://gliimly.blogspot.com/2024/11/gliimly-87-released.html)

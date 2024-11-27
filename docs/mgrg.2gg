@@ -44,7 +44,7 @@ The owner of your application. This is only used when initializing directory str
 .RS 4
 \[bu]    
 -r <proxy group>
-The group of proxy web server (such as Apache or Nginx). This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It restricts the ability to connect to your application only to the members of said group (in addition to the user who owns your server), otherwise anyone can connect.
+The group of proxy web server (such as Apache or Nginx). This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It restricts the ability to connect to your application only to the members of said group (in addition to the user who owns your server) when a Unix socket is used, otherwise anyone can connect.
 
 .RE
 

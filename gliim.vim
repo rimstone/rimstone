@@ -1,7 +1,7 @@
 " Language: Gliimly
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2024-November-08
+" Latest Revision: 2024-November-23
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link gliimConstruct Statement

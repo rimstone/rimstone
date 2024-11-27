@@ -122,6 +122,7 @@ if [ "$GG_SYSTEM_DONE" != "1" ]; then
         if [ "$GG_PLATFORM_VERSION" == "8" ]; then export GG_OSNAME_ID="8"; fi
         if [ "$GG_PLATFORM_VERSION" == "9" ]; then export GG_OSNAME_ID="9"; fi
     elif [ "$GG_PLATFORM_ID" == "ubuntu" ]; then
+        if [ "$GG_PLATFORM_VERSION" == "24" ]; then export GG_OSNAME_ID="14"; fi
         if [ "$GG_PLATFORM_VERSION" == "22" ]; then export GG_OSNAME_ID="1"; fi
         if [ "$GG_PLATFORM_VERSION" == "20" ]; then export GG_OSNAME_ID="2"; fi
         if [ "$GG_PLATFORM_VERSION" == "18" ]; then export GG_OSNAME_ID="3"; fi

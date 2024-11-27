@@ -864,22 +864,34 @@ gg_num gg_lockfile(char *filepath, gg_num *lock_fd)
 //'s' can be /request/path and is resolved at run time so
 //it can be a variable. Extremely fast as it used built-in
 //linker-loaded bare-bone set-to-resolution-in-1-lookup function hash.
+//call_handler is a cached (previously computed) pointer to function. If call_handler is NULL
+//then there's no cache (not a constant call). If not NULL, then if *call_handler is NULL it hasn't 
+//been computed yet, if not-NULL, it's been computed and use it.
 //
-void gg_subs(char *s)
+void gg_subs(char *s, void ** call_handler)
 {
     GG_TRACE("");
-    char reqname[GG_MAX_REQ_NAME_LEN];
-    char decres = gg_decorate_path (reqname, sizeof(reqname), &s, gg_mem_get_len (gg_mem_get_id(s)));
-    // 1 means good hierarchical path, reqname is it; or 3 means no /, so reqname is a copy of mtext
-    if (decres != 1) gg_report_error( "request path in sub-service is not a valid name");
-    gg_num found;
-    gg_request_handler gg_req_handler = gg_find_hash (&gg_dispatch, reqname, NULL, 0, &found);
-    if (found != GG_OKAY) gg_report_error( "request path in sub-service is not found (service does not exist)");
-    gg_input_req *req = gg_get_config()->ctx.req;
     // save call-handler status, call call-handler, restore status
+    gg_input_req *req = gg_get_config()->ctx.req;
     bool c_sub = req->sub;
     req->sub = true;
-    gg_req_handler();
+    if (call_handler == NULL || *call_handler == NULL)
+    {
+        gg_request_handler gg_req_handler;
+        char reqname[GG_MAX_REQ_NAME_LEN];
+        char decres = gg_decorate_path (reqname, sizeof(reqname), &s, gg_mem_get_len (gg_mem_get_id(s)));
+        // 1 means good hierarchical path, reqname is it; or 3 means no /, so reqname is a copy of mtext
+        if (decres != 1) gg_report_error( "request path in sub-service is not a valid name");
+        gg_num found;
+        gg_req_handler = gg_find_hash (&gg_dispatch, reqname, NULL, 0, &found);
+        if (found != GG_OKAY) gg_report_error( "request path in sub-service is not found (service does not exist)");
+        if (call_handler != NULL) *call_handler = gg_req_handler;
+        gg_req_handler();
+    }
+    else
+    {
+        ((gg_request_handler)*call_handler)();
+    }
     req->sub = c_sub;
 }
 
