@@ -62,6 +62,7 @@
 #define GG_KEYERRNO "errno"
 #define GG_KEYPREFIX "prefix "
 #define GG_KEYNAME0 "name"
+#define GG_KEYEXTERNALCALL "external-call"
 #define GG_KEYPUT "put"
 #define GG_KEYGET "get "
 #define GG_KEYSET "set "
@@ -6489,6 +6490,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // Look for each option and collect relevant info
                         // First we MUST get each options position
                         //
+                        char *ext = find_keyword (mtext, GG_KEYEXTERNALCALL, 1);
                         char *name = find_keyword (mtext, GG_KEYNAME0, 1);
                         char *method = find_keyword (mtext, GG_KEYMETHOD, 1);
                         char *ctype = find_keyword (mtext, GG_KEYCONTENTTYPE, 1);
@@ -6508,6 +6510,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // After all options positions have been found, we must get the options 
                         // for ALL of them
                         //
+                        carve_statement (&ext, "get-req", GG_KEYEXTERNALCALL, 0, 0);
                         carve_statement (&name, "get-req", GG_KEYNAME0, 0, 0);
                         carve_statement (&method, "get-req", GG_KEYMETHOD, 0, 0);
                         carve_statement (&ctype, "get-req", GG_KEYCONTENTTYPE, 0, 0);
@@ -6527,7 +6530,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&header);
 
                         // result can be defined
-                        if (numcookie != NULL || argnum != NULL || method != NULL ) define_statement (&to, GG_DEFNUMBER, false);
+                        if (ext != NULL ) define_statement (&to, GG_DEFBOOL, false);
+                        else if (numcookie != NULL || argnum != NULL || method != NULL ) define_statement (&to, GG_DEFNUMBER, false);
                         else if (ctype != NULL || argval != NULL || cookie != NULL || header != NULL || name != NULL ) 
                         {
                             define_statement (&to, GG_DEFSTRING, false); // exact length set with strdup below
@@ -6541,7 +6545,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         check_var (&argval, GG_DEFNUMBER, NULL);
                         check_var (&header, GG_DEFSTRING, NULL);
 
-                        gg_num tot_opt = (tracefile!=NULL?1:0)+(argval!=NULL?1:0)+(argnum!=NULL?1:0)+(ref!=NULL?1:0)+(numcookie!=NULL?1:0)+(cookie!=NULL?1:0)+(header!=NULL?1:0)+(process_id!=NULL?1:0)+(eno!=NULL?1:0)+(err!=NULL?1:0)+(method!=NULL?1:0)+(ctype!=NULL?1:0)+(name!=NULL?1:0);
+                        gg_num tot_opt = (tracefile!=NULL?1:0)+(argval!=NULL?1:0)+(ext!=NULL?1:0)+(argnum!=NULL?1:0)+(ref!=NULL?1:0)+(numcookie!=NULL?1:0)+(cookie!=NULL?1:0)+(header!=NULL?1:0)+(process_id!=NULL?1:0)+(eno!=NULL?1:0)+(err!=NULL?1:0)+(method!=NULL?1:0)+(ctype!=NULL?1:0)+(name!=NULL?1:0);
                         if (tot_opt != 1)
                         {
                             gg_report_error( "Exactly one option must be in get-req statement (%ld)", tot_opt);
@@ -6555,6 +6559,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (cookie !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->cookies[%s-1].data);\n", to, cookie); 
                         if (process_id !=NULL) oprintf ("%s=getpid();\n", to); 
                         if (eno !=NULL) oprintf ("%s=gg_errno;\n", to); 
+                        if (ext !=NULL) oprintf ("%s=!(gg_get_config()->ctx.req->sub);\n", to); 
                         if (err !=NULL) oprintf ("%s=gg_strdup(strerror(gg_errno));\n", to); 
                         if (header !=NULL) oprintf ("%s=gg_strdup(gg_getheader(%s));\n", to, header); 
                         if (method !=NULL) oprintf ("%s=gg_get_config()->ctx.req->method;\n", to); 

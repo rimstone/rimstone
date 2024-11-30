@@ -233,10 +233,10 @@ function gg_copy(gt, eid, gc) {
 
 
 <div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div>
-<div class='vhub'>Gliimly Single-Page Documentation for version 109</div><hr/>
+<div class='vhub'>Gliimly Single-Page Documentation for version 114</div><hr/>
 This page contains all of Gliimly documentation topics combined into one. It may be easier to search. <!--GLIIMBEGDOC39--><br/><br/>
 <a href='#123-hello-world.html'>123-hello-world</a><br/>
-<a href='#about-gliim.html'>about-gliim</a><br/>
+<a href='#about-gliimly.html'>about-gliimly</a><br/>
 <a href='#after-handler.html'>after-handler</a><br/>
 <a href='#application-setup.html'>application-setup</a><br/>
 <a href='#before-handler.html'>before-handler</a><br/>
@@ -490,8 +490,8 @@ Hello World!</pre>
 <a href='/123-hello-world.html'>123-hello-world</a> &nbsp; <br/>
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
-<a id='about-gliim.html'></a>
-<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;About gliim</div><hr/><div class="vsub"><a id="Modeling language"></a>Modeling language</div>
+<a id='about-gliimly.html'></a>
+<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;About gliimly</div><hr/><div class="vsub"><a id="Modeling language"></a>Modeling language</div>
 Gliimly is a very high-level modeling language. It's about solving problems by modeling the solution and connecting the components to create high-performance, low-footprint executables; and not about managing memory, manipulating bits and bytes or writing complex code.<br/>
 <div class="vsub"><a id="Syntax matters: expressionless"></a>Syntax matters: expressionless</div>
 Syntax of a language matters, not just for writing code now, but for someone else reading it years later. Gliimly language is designed to be intuitive, easy and rapid, and to be close to the way humans are wired, rather than machines. Gliimly is near-expressionless, featuring only very limited integer expressions. This is by design: it's simpler to use programmable features to build desired functionality then to build them yourself.<br/>
@@ -550,7 +550,7 @@ Gliimly uses well-known and widely used Free Open Source libraries like cURL, Op
 Do not use object names (such as variables and request names) that start with "_gg_", "_gg_", "gg_" or "gg_" (including upper-case variations) as those are reserved by Gliimly.<br/>
 <!--BEFSAL13--><div class="vsub"><a id="See also"></a>See also</div>
  <span style="font-weight:bold;">General</span><br/>
-<a href='/about-gliim.html'>about-gliim</a> &nbsp;<br/>
+<a href='/about-gliimly.html'>about-gliimly</a> &nbsp;<br/>
 <a href='/directories.html'>directories</a> &nbsp;<br/>
 <a href='/SELinux.html'>SELinux</a> &nbsp; <br/>
 <span style="font-weight:bold;">See all</span> <br/>
@@ -2231,7 +2231,7 @@ Calls another handler within the same request in the same process. You can call 
 <br/>
 Use <a href='/set-param.html'>set-param</a> and <a href='/get-param.html'>get-param</a> to pass parameters between the caller and callee handlers.<br/>
 <br/>
-call-handler uses the same high-performance hash table used by a <a href='/request.html'>request</a> to route requests by name.<br/>
+call-handler uses the same high-performance hash table used by a <a href='/request.html'>request</a> to route requests by name; if &lt;request path&gt; is a constant string, then a hash table lookup is performed only once for the life of the process and all subsequent calls use a cached address of the request handler.<br/>
 <div class="vsub"><a id="Examples"></a>Examples</div>
 The following example demonstrate calling a call-handler twice, and also using its output inline in the caller. An input parameter is passed to it, and an output obtained:<br/>
 <br/>
@@ -4864,13 +4864,13 @@ ln <span class="Special">-s</span> /home/disk0/file /var/lib/gg/<span class="Sta
 </div><br/>
 <!--BEFSAL13--><div class="vsub"><a id="See also"></a>See also</div>
  <span style="font-weight:bold;">General</span><br/>
-<a href='/about-gliim.html'>about-gliim</a> &nbsp;<br/>
+<a href='/about-gliimly.html'>about-gliimly</a> &nbsp;<br/>
 <a href='/directories.html'>directories</a> &nbsp;<br/>
 <a href='/SELinux.html'>SELinux</a> &nbsp; <br/>
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
 <a id='documentation.html'></a>
-<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 109"></a>Reference for Gliimly version 109</div>
+<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 114"></a>Reference for Gliimly version 114</div>
 <span style="font-weight:bold;">Note</span>: All the topics below are available as a <a href='/gliimdoc.html'>single-page documentation</a>. <br/>
 <br/>
 <ul><br/>
@@ -4973,7 +4973,7 @@ ln <span class="Special">-s</span> /home/disk0/file /var/lib/gg/<span class="Sta
 <a href='/write-file.html'>write-file</a> &nbsp; </li>
 <br/>
 <li><span style="font-weight:bold;">General</span><br/>
-<a href='/about-gliim.html'>about-gliim</a> &nbsp;<br/>
+<a href='/about-gliimly.html'>about-gliimly</a> &nbsp;<br/>
 <a href='/directories.html'>directories</a> &nbsp;<br/>
 <a href='/SELinux.html'>SELinux</a> &nbsp; </li>
 <br/>
@@ -7226,7 +7226,7 @@ sudo pacman <span class="Special">--noconfirm</span> <span class="Special">-Sy</
 <pre id='code_395'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">109</span></pre>
+git checkout <span class="Constant">114</span></pre>
 <span id=gliim_copied_395 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_395' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_395, code_395, gliim_copied_395)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -7277,7 +7277,7 @@ sudo apt <span class="Special">-y</span> install git</pre>
 <pre id='code_399'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">109</span></pre>
+git checkout <span class="Constant">114</span></pre>
 <span id=gliim_copied_399 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_399' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_399, code_399, gliim_copied_399)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -7327,7 +7327,7 @@ sudo dnf <span class="Special">-y</span> install git</pre>
 <pre id='code_403'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">109</span></pre>
+git checkout <span class="Constant">114</span></pre>
 <span id=gliim_copied_403 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_403' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_403, code_403, gliim_copied_403)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -7396,7 +7396,7 @@ sudo zypper <span class="Special">-n</span> install git</pre>
 <pre id='code_407'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">109</span></pre>
+git checkout <span class="Constant">114</span></pre>
 <span id=gliim_copied_407 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_407' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_407, code_407, gliim_copied_407)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -9209,16 +9209,16 @@ Create a query text string by means of <a href='/write-string.html'>write-string
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
 <a id='p-path.html'></a>
-<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;P path</div><hr/><span style="font-weight:bold;">Purpose</span>: Outputs URL application path.<br/>
+<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;P path</div><hr/><span style="font-weight:bold;">Purpose</span>: Outputs URL application and request path of a request handler.<br/>
 <br/>
 <div class='code'  style='position:relative;padding-right:16px;'>
 <pre id='code_499'>
-<span class="Statement"> p-path</span> [<span class="Identifier"> new-line</span> ]</pre>
+<span class="Statement"> p-path</span> &lt;request path&gt; [<span class="Identifier"> new-line</span> ]</pre>
 <span id=gliim_copied_499 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_499' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_499, code_499, gliim_copied_499)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
 </div><br/>
-p-path outputs a URL application path (see <a href='/request.html'>request</a>), i.e. the leading path segment(s) prior to request name.<br/>
+p-path outputs a URL application path (see <a href='/request.html'>request</a>) with &lt;request path&gt; following immediately afterwards.<br/>
 <br/>
 If no "--path" option in <a href='/gg.html'>gg</a> is used to specify URL application path, then it is the same as application name prepended with a forward slash:<br/>
 <div class='ncode' style='position:relative;padding-right:16px;'>
@@ -9228,14 +9228,14 @@ If no "--path" option in <a href='/gg.html'>gg</a> is used to specify URL applic
 <textarea id='gliimt_501' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_501, code_501, gliim_copied_501)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
 </div><br/>
-p-path provides the leading part of a URL path after which request name and its parameters can be specified. It is used in HTML forms and URLs (either for HTML or API) to refer back to the same application.<br/>
+p-path is used in construction of URLs or HTML forms (either for HTML or API) to refer back to the same application.<br/>
 <br/>
 Use <a href='/p-path.html'>p-path</a> to create the absolute URL path to refer back to your service so you can issue <a href='/request.html'>request</a>s to it. <br/>
 <br/>
 For example, this is a link that specifies request to service "show-notes":<br/>
 <div class='htmlcode' style='position:relative;padding-right:16px;'>
 <pre id='code_500'>
-@<span class="Identifier">&lt;</span><span class="Statement">a</span><span class="Identifier"> </span><span class="Type">href</span><span class="Identifier">=</span><span class="Constant">&quot;&lt;&lt;p-path&gt;&gt;/show-notes?date=yesterday&quot;</span><span class="Identifier">&gt;</span><span class="Underlined">Show Notes</span><span class="Identifier">&lt;/</span><span class="Statement">a</span><span class="Identifier">&gt;</span></pre>
+@<span class="Identifier">&lt;</span><span class="Statement">a</span><span class="Identifier"> </span><span class="Type">href</span><span class="Identifier">=</span><span class="Constant">&quot;&lt;&lt;p-path &quot;</span><span class="Identifier">/show-notes</span><span class="Constant">&quot;&gt;&gt;?date=yesterday&quot;</span><span class="Identifier">&gt;</span><span class="Underlined">Show Notes</span><span class="Identifier">&lt;/</span><span class="Statement">a</span><span class="Identifier">&gt;</span></pre>
 <span id=gliim_copied_500 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_500' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_500, code_500, gliim_copied_500)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -9243,7 +9243,7 @@ For example, this is a link that specifies request to service "show-notes":<br/>
 If you are building HTML forms, you can add a note with:<br/>
 <div class='htmlcode' style='position:relative;padding-right:16px;'>
 <pre id='code_502'>
-@<span class="Identifier">&lt;</span><span class="Statement">form</span><span class="Identifier"> </span><span class="Type">action</span><span class="Identifier">=</span><span class="Constant">&quot;&lt;&lt;p-path&gt;&gt;/add-note&quot;</span><span class="Identifier"> </span><span class="Type">method</span><span class="Identifier">=</span><span class="Constant">&quot;POST&quot;</span><span class="Identifier">&gt;</span>
+@<span class="Identifier">&lt;</span><span class="Statement">form</span><span class="Identifier"> </span><span class="Type">action</span><span class="Identifier">=</span><span class="Constant">'&lt;&lt;p-path &quot;/add-note&quot;&gt;&gt;'</span><span class="Identifier"> </span><span class="Type">method</span><span class="Identifier">=</span><span class="Constant">&quot;POST&quot;</span><span class="Identifier">&gt;</span>
 @<span class="Identifier">&lt;</span><span class="Statement">input</span><span class="Identifier"> </span><span class="Type">type</span><span class="Identifier">=</span><span class="Constant">&quot;text&quot;</span><span class="Identifier"> </span><span class="Type">name</span><span class="Identifier">=</span><span class="Constant">&quot;note&quot;</span><span class="Identifier"> </span><span class="Type">value</span><span class="Identifier">=</span><span class="Constant">&quot;&quot;</span><span class="Identifier">&gt;</span>
 @<span class="Identifier">&lt;/</span><span class="Statement">form</span><span class="Identifier">&gt;</span></pre>
 <span id=gliim_copied_502 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
@@ -9252,7 +9252,7 @@ If you are building HTML forms, you can add a note with:<br/>
 </div><br/>
 See <a href='/request.html'>request</a> for more on URL structure.<br/>
 <br/>
-If "new-line" clause is used, then a new line ("\n") is output after the path.<br/>
+If "new-line" clause is used, then a new line ("\n") is output after the URL path.<br/>
 <!--BEFSAL13--><div class="vsub"><a id="See also"></a>See also</div>
  <span style="font-weight:bold;">Output</span><br/>
 <a href='/finish-output.html'>finish-output</a> &nbsp;<br/>
@@ -11160,7 +11160,7 @@ sudo restorecon <span class="Special">-R</span> /your/new/dir</pre>
 </div><br/>
 <!--BEFSAL13--><div class="vsub"><a id="See also"></a>See also</div>
  <span style="font-weight:bold;">General</span><br/>
-<a href='/about-gliim.html'>about-gliim</a> &nbsp;<br/>
+<a href='/about-gliimly.html'>about-gliimly</a> &nbsp;<br/>
 <a href='/directories.html'>directories</a> &nbsp;<br/>
 <a href='/SELinux.html'>SELinux</a> &nbsp; <br/>
 <span style="font-weight:bold;">See all</span> <br/>

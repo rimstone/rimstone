@@ -1,6 +1,6 @@
 .TH GLIIMLY 2gg $VERSION $DATE Development Tools
 .SH NAME
-about-gliim \- Gliimly documentation (general)
+about-gliimly \- Gliimly documentation (general)
 .SH DESCRIPTION
 
 .LP
@@ -203,7 +203,7 @@ Do not use object names (such as variables and request names) that start with "_
  
 .B - General
 
-\fBabout-gliim\fP  
+\fBabout-gliimly\fP  
 \fBdirectories\fP  
 \fBSELinux\fP   
 See all 

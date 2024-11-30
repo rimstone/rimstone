@@ -125,7 +125,7 @@ sudo restorecon -R /your/new/dir
  
 .B - General
 
-\fBabout-gliim\fP  
+\fBabout-gliimly\fP  
 \fBdirectories\fP  
 \fBSELinux\fP   
 See all 

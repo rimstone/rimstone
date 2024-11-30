@@ -2,20 +2,20 @@
 .SH NAME
 p-path \-  (output)
 .SH PURPOSE
-Outputs URL application path.
+Outputs URL application and request path of a request handler.
 
 .SH SYNTAX
 
 .RS 4
 .EX
 
-p-path [ new-line ]
+p-path <request path> [ new-line ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
-p-path outputs a URL application path (see \fBrequest\fP), i.e. the leading path segment(s) prior to request name.
+p-path outputs a URL application path (see \fBrequest\fP) with <request path> following immediately afterwards.
 
 If no "--path" option in \fBgg\fP is used to specify URL application path, then it is the same as application name prepended with a forward slash:
 
@@ -27,7 +27,7 @@ If no "--path" option in \fBgg\fP is used to specify URL application path, then 
 .EE
 .RE
 
-p-path provides the leading part of a URL path after which request name and its parameters can be specified. It is used in HTML forms and URLs (either for HTML or API) to refer back to the same application.
+p-path is used in construction of URLs or HTML forms (either for HTML or API) to refer back to the same application.
 
 Use \fBp-path\fP to create the absolute URL path to refer back to your service so you can issue \fBrequest\fPs to it. 
 
@@ -36,7 +36,7 @@ For example, this is a link that specifies request to service "show-notes":
 .RS 4
 .EX
 
-@<a href="<<p-path>>/show-notes?date=yesterday">Show Notes</a> 
+@<a href="<<p-path "/show-notes">>?date=yesterday">Show Notes</a> 
 
 .EE
 .RE
@@ -46,7 +46,7 @@ If you are building HTML forms, you can add a note with:
 .RS 4
 .EX
 
-@<form action="<<p-path>>/add-note" method="POST">
+@<form action='<<p-path "/add-note">>' method="POST">
 @<input type="text" name="note" value="">
 @</form>
 
@@ -55,7 +55,7 @@ If you are building HTML forms, you can add a note with:
 
 See \fBrequest\fP for more on URL structure.
 
-If "new-line" clause is used, then a new line ("\en") is output after the path.
+If "new-line" clause is used, then a new line ("\en") is output after the URL path.
 .SH SEE ALSO
  
 .B - Output

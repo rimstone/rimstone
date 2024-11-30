@@ -4,7 +4,7 @@ documentation \- Gliimly documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GLIIMLY VERSION 109
+.B REFERENCE FOR GLIIMLY VERSION 114
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -212,7 +212,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .B - General
 
-\fBabout-gliim\fP  
+\fBabout-gliimly\fP  
 \fBdirectories\fP  
 \fBSELinux\fP   
 .RE

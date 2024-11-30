@@ -21,7 +21,7 @@ Calls another handler within the same request in the same process. You can call 
 
 Use \fBset-param\fP and \fBget-param\fP to pass parameters between the caller and callee handlers.
 
-call-handler uses the same high-performance hash table used by a \fBrequest\fP to route requests by name.
+call-handler uses the same high-performance hash table used by a \fBrequest\fP to route requests by name; if <request path> is a constant string, then a hash table lookup is performed only once for the life of the process and all subsequent calls use a cached address of the request handler.
 
 .SH EXAMPLES
 The following example demonstrate calling a call-handler twice, and also using its output inline in the caller. An input parameter is passed to it, and an output obtained:

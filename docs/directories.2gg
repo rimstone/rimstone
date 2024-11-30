@@ -71,7 +71,7 @@ ln -s /home/disk0/file /var/lib/gg/<app name>/app/file
  
 .B - General
 
-\fBabout-gliim\fP  
+\fBabout-gliimly\fP  
 \fBdirectories\fP  
 \fBSELinux\fP   
 See all 
