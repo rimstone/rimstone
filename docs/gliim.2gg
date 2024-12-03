@@ -65,7 +65,36 @@ extensible,
 
 \fBInstall Gliimly\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP. 
 
+Example of Gliimly code (from \fBSaaS example\fP):
+
+.RS 4
+.EX
+
+// Check that email verification token is the one actually sent to the email address
+begin-handler /session/verify-signup public
+    get-param code, email
+    run-query @db_app = "select verify_token from users where email='%s'" output db_verify : email
+        if-true  code equal db_verify
+            @Your email has been verifed. Please <a href="<<p-path "/session/user/login">>">Login</a>.
+            run-query @db_app no-loop = "update users set verified=1 where email='%s'" : email
+            exit-handler
+        end-if
+    end-query
+    @Could not verify the code. Please try <a href="<<p-path "/session/user/new/verify-form">>">again</a>.
+    exit-handler
+end-handler
+
+.EE
+.RE
+
+
 \fBBlog\fP release updates, articles and examples:
+
+.RS 4
+\[bu]    
+2024-11-29 \fBGliimly 117 released\fP
+.RE
+
 
 .RS 4
 \[bu]    

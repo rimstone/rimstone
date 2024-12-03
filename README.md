@@ -11,7 +11,25 @@ Gliimly is a programming language for web services\. It's:
 * [Apache 2](http://gliimly.github.io//license.html) Free Open Source\.
 [Install Gliimly](http://gliimly.github.io//install.html)\. See [Documentation](http://gliimly.github.io//documentation.html)\. Source at [github\.com](https://github.com/gliimly/gliimly)\. 
 
+Example of Gliimly code \(from [SaaS example](https://gliimly.blogspot.com/2024/11/multi-tenant-saas-notes-web-application.html)\):
+```
+// Check that email verification token is the one actually sent to the email address
+begin-handler /session/verify-signup public
+    get-param code, email
+    run-query @db_app = "select verify_token from users where email='%s'" output db_verify : email
+        if-true  code equal db_verify
+            @Your email has been verifed. Please <a href="<<p-path "/session/user/login">>">Login</a>.
+            run-query @db_app no-loop = "update users set verified=1 where email='%s'" : email
+            exit-handler
+        end-if
+    end-query
+    @Could not verify the code. Please try <a href="<<p-path "/session/user/new/verify-form">>">again</a>.
+    exit-handler
+end-handler
+```
+
 [Blog](https://gliimly.blogspot.com/) release updates, articles and examples:
+* 2024\-11\-29 [Gliimly 117 released](https://gliimly.blogspot.com/2024/11/gliimly-117-released.html)
 * 2024\-11\-26 [Gliimly 114 released](https://gliimly.blogspot.com/2024/11/gliimly-114-released.html)
 * 2024\-11\-22 [Gliimly 109 released](https://gliimly.blogspot.com/2024/11/gliimly-109-released.html)
 * 2024\-11\-22 [How to create Gliimly application](https://gliimly.blogspot.com/2024/11/how-to-create-gliimly-application.html)

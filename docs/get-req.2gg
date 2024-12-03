@@ -14,6 +14,7 @@ get-req \\
         | arg-count | arg-value <arg index> \\
         | header <header> | referring-url | method \\
         | content-type | trace-file | process-id | name \\
+        | external-call
     to <variable>
 
 .EE
@@ -142,6 +143,13 @@ Note that not all HTTP request headers are set by the caller. For example, SERVE
 .RS 4
 \[bu]    
 "process-id" is the "PID" (process ID) number of the currently executing process, as a number.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"external-call" is a boolean that is true if the call to the current request handler is from an external caller, or false if called from another handler.
 
 
 .RE

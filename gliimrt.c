@@ -881,10 +881,10 @@ void gg_subs(char *s, void ** call_handler)
         char reqname[GG_MAX_REQ_NAME_LEN];
         char decres = gg_decorate_path (reqname, sizeof(reqname), &s, gg_mem_get_len (gg_mem_get_id(s)));
         // 1 means good hierarchical path, reqname is it; or 3 means no /, so reqname is a copy of mtext
-        if (decres != 1) gg_report_error( "request path in sub-service is not a valid name");
+        if (decres != 1) gg_report_error( "Request path [%s] is not a valid name",s);
         gg_num found;
         gg_req_handler = gg_find_hash (&gg_dispatch, reqname, NULL, 0, &found);
-        if (found != GG_OKAY) gg_report_error( "request path in sub-service is not found (service does not exist)");
+        if (found != GG_OKAY) gg_report_error( "Request handler not found [%s]", s);
         if (call_handler != NULL) *call_handler = gg_req_handler;
         gg_req_handler();
     }
