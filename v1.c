@@ -8795,6 +8795,15 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("gg_disable_output();\n");
                         continue;
                     }
+                    else if ((newI=recog_statement(line, i, "return-handler", &mtext, &msize, 1, &gg_is_inline)) != 0)
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        // return from handler, no return status, use set/get-param
+                        oprintf("return;\n");
+                        continue;
+                    }
                     else if ((newI=recog_statement(line, i, "exit-handler", &mtext, &msize, 1, &gg_is_inline)) != 0  
                         || (newI1=recog_statement(line, i, "exit-handler", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {

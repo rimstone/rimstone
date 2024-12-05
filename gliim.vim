@@ -1,7 +1,7 @@
 " Language: Gliimly
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2024-November-29
+" Latest Revision: 2024-December-03
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link gliimConstruct Statement
@@ -121,6 +121,14 @@ syn region gg_r_construct_exit_handler start="^[[:space:]]*exit-handler" skip="\
     hi def link gg_h_clause_output_exit_handler    gliimClauseOutput
     hi def link gg_h_construct_exit_handler    gliimConstruct
     hi def link gg_h_print_inline_exit_handler    gliimConstruct
+syn region gg_r_construct_return_handler start="^[[:space:]]*return-handler" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_return_handler,gg_r_inline_return_handler,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_return_handler,gg_r_inline_return_handler,gg_r_at
+    syn match gg_h_construct_return_handler "^[[:space:]]*return-handler" contained containedin=gg_r_construct_return_handler
+    hi def link gg_h_clause_return_handler    gliimClause
+    hi def link gg_h_clause_output_return_handler    gliimClauseOutput
+    hi def link gg_h_construct_return_handler    gliimConstruct
+    hi def link gg_h_print_inline_return_handler    gliimConstruct
 syn region gg_r_construct_finish_output start="^[[:space:]]*finish-output" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_finish_output,gg_r_inline_finish_output,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_finish_output,gg_r_inline_finish_output,gg_r_at

@@ -1184,7 +1184,7 @@ $OF"
     _NUMF=$(echo $GG_REQLIST | wc -w)
 
     if [ "$_NUMF" == "0" ]; then
-        error "Application must have at least one .gliim file, none found"
+        error "Application must have at least one .gliim file, or no begin-handler (or %%) statements found"
     fi
 
     echo "// SPDX-License-Identifier: Apache-2.0" >>$GG_BLD/$_T.new
@@ -1375,7 +1375,7 @@ function build_app() {
     ( 
     cd $GG_BLD/.flatsrc
     _VFILES=$(ls *.gliim 2>/dev/null|wc -l) 
-    if [ "$_VFILES" == "0" ]; then error "Your project must have at least one .gliim file"; fi
+    if [ "$_VFILES" == "0" ]; then error "Your application must have at least one .gliim file"; fi
 #set .dbvendors for v1 to pickup
     db_lib
 #get any modules in use, and generate a list of all modules
