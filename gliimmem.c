@@ -365,16 +365,16 @@ inline void gg_mem_del_ref (gg_num r)
 inline void gg_mem_set_process (char *m, bool force)
 {
     if (m == GG_EMPTY_STRING) return; // no need to set for predefined empty string
-    gg_num r = gg_mem_get_id (m);
+    gg_num r;
     // if not optimized-memory, we only use ref to make process-scoped memory unfreeable until all those that
     // reference it are deleted. For instance a set-string (constant or process-scope) is assigned to 5 other strings, all
     // of which are not process-scope; or it is inserted as value in 10 index records. Deleting any  of those variables or less than
     // all 10 index records should NOT free this variable, not even at the end of the request. In non-optimized-memory, this is the only 
     // reference counting. All other variables will be released at the end of the request, no matter their scope or how they are used, which
     // makes for about 20% speed improvement in highly computational request (probably 5% otherwise), still significant.
-    if (!gg_optmem) vm[r].ref++;
+    if (!gg_optmem) { r = gg_mem_get_id (m); vm[r].ref++; }
     // this below is just if it's actually process-scoped
-    if (gg_mem_process || force) vm[r].status |= GG_MEM_PROCESS;
+    if (gg_mem_process || force) { r = gg_mem_get_id (m); vm[r].status |= GG_MEM_PROCESS; }
 }
 
 // 

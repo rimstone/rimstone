@@ -253,7 +253,9 @@ Maximum length of a request URL is 2500 bytes.
 .B HOW GLIIMLY HANDLES REQUESTS
 .LP
 
-An incoming request is handled by a first available process:
+There are generally two kinds of requests, depending on their origin. If a request comes from outside the process that's serving it, then it's an "external" request (such as from a web browser, a web API client, from command line execution etc). Conversely, if a request comes from inside the process that's serving it, it's an "internal" request - meaning one request handler is calling another within one the process(es) serving an application. Internal requests are made using \fBcall-handler\fP statement.
+
+An external request is handled by a first available process:
 
 .RS 4
 \[bu]    

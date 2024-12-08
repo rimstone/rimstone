@@ -1,4 +1,4 @@
-Gliimly is a programming language for web services\. It's:
+Gliimly is a programming language and a platform for web services\. It's:
 * service\-oriented, 
 * modeling, 
 * declarative, 
@@ -29,6 +29,8 @@ end-handler
 ```
 
 [Blog](https://gliimly.blogspot.com/) release updates, articles and examples:
+* 2024\-12\-04 [Gliimly 121 released](https://gliimly.blogspot.com/2024/12/gliimly-121-released.html)
+* 2024\-12\-02 [Passing parameters between local request handlers](https://gliimly.blogspot.com/2024/12/passing-parameters-between-local.html)
 * 2024\-11\-29 [Gliimly 117 released](https://gliimly.blogspot.com/2024/11/gliimly-117-released.html)
 * 2024\-11\-26 [Gliimly 114 released](https://gliimly.blogspot.com/2024/11/gliimly-114-released.html)
 * 2024\-11\-22 [Gliimly 109 released](https://gliimly.blogspot.com/2024/11/gliimly-109-released.html)

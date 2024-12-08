@@ -15,7 +15,7 @@ call-handler <request path>
 .RE
 
 .SH DESCRIPTION
-Calls another handler within the same request in the same process. You can call any handler within the same application.
+Calls another handler within the same request in the same process. You can call any handler within the same application. "Calling a handler" means executing it solely within the context of the top handler currently running; no before-handler or after-handler will execute for the called handler.
 
 <request path> is the \fBrequest\fP path served by the handler being called. It can be a string variable or a constant.
 
@@ -82,7 +82,7 @@ Create and build an application:
 .RS 4
 .EX
 
-sudo mgrg -i -u $(whoami) subhandler
+gg -k subhandler
 gg -q
 
 .EE

@@ -310,6 +310,7 @@ typedef struct s_gg_var
     char *name; // generated name
     gg_num type;
     gg_num lnum;
+    bool is_process; // true if is process-scoped
     char *rname; // real variable name
 } gg_var;
 
@@ -572,7 +573,7 @@ void check_level(char *prline);
 gg_num typeid (char *type);
 bool add_var (char *var, gg_num type, char *realname);
 void free_handle_sub ();
-bool find_var (char *name, gg_num *type, gg_num *line, char **realname);
+bool find_var (char *name, gg_num *type, gg_num *line, char **realname, bool *is_process);
 void make_var (char **v, gg_num type);
 void check_c (char *mtext);
 char *check_exp (char *e, bool *found, bool *err);
@@ -730,7 +731,7 @@ char *check_exp (char *cur, bool *found, bool *err)
             gg_num vtype;
             gg_num l;
             char *rname;
-            bool found = find_var (name, &vtype, &l, &rname);
+            bool found = find_var (name, &vtype, &l, &rname, NULL);
             if (!found) gg_report_error ("Variable [%s] is not found", rname);
             if (!cmp_type (vtype, GG_DEFNUMBER)) gg_report_error ("Variable [%s] is not a number", rname);
         }
@@ -792,9 +793,13 @@ void check_c (char *m)
 }
 
 //
-// Frees all memory in call-handler. It helps isolate memory usage which is then automatically release at the end of call-handler
+// Frees all memory that's accesible in current scope. It helps isolate memory usage which is then automatically released at the end of call-handler
 // UNLESS the memory is saved with set-param (or added to index, array which are not released in call-handler). This basically releases
 // all variables such as set-string or results from statements like random-string etc.
+// Also, important, do not release memory that's process-scoped - because this is releasing memory automatically and not by
+// user, we certainly don't want to delete such memory automatically; right now this is only set-string with process-scope b/c all other process-scoped
+// memory is tied up in indexes, arrays and lists which cannot be directly freed (by using delete-memory or via automatic cleanup, but only via the 
+// appropriate delete-... statement or such).
 //
 void free_handle_sub ()
 {
@@ -813,7 +818,8 @@ void free_handle_sub ()
         char decname[GG_MAX_DECNAME+1];
         gg_num bw = snprintf (decname, sizeof(decname), "%ld_%ld+", lev, gg_resurr[lev]);
         if (strncmp (var->name, decname, bw)) continue;
-        if (cmp_type (var->type, GG_DEFSTRING))
+        // do not auto free if string is process-scoped
+        if (cmp_type (var->type, GG_DEFSTRING) && var->is_process == false)
         {
             char *n = strchr (var->name, '+');
             if (n != NULL && strncmp (n+1, "gg_", 3) && strncmp (n+1, "_gg", 3)) 
@@ -832,8 +838,10 @@ void free_handle_sub ()
 // Return false if not found, true if exists (i.e. found)
 // Variable is found to exist if it exists on any level outside this one (prior to it)
 // rname is the real name of variable
+// if is_process is not NULL, then varible is set to be either process-scoped or not, based on its value
+// type, line, rname can be NULL if we don't need some of them
 //
-bool find_var (char *name, gg_num *type, gg_num *line, char **rname)
+bool find_var (char *name, gg_num *type, gg_num *line, char **rname, bool *is_process)
 {
     gg_num lev = gg_level;
     while (lev >= 0)
@@ -844,7 +852,8 @@ bool find_var (char *name, gg_num *type, gg_num *line, char **rname)
         gg_var *var = gg_find_hash (gg_varh, decname, NULL, 0, &st);
         if (st == GG_OKAY) 
         { 
-            *type = var->type;
+            if (type) *type = var->type;
+            if (is_process) var->is_process = *is_process; // we SET variable (the other flags are output, this is INPUT)
             if (line) *line = var->lnum;
             if (rname) 
             {
@@ -855,7 +864,7 @@ bool find_var (char *name, gg_num *type, gg_num *line, char **rname)
         }
         lev --;
     }
-    *rname = name; // set it because it's not found
+    if (rname) *rname = name; // set it because it's not found
     return false; // not found
 }
 
@@ -872,7 +881,7 @@ bool add_var (char *var, gg_num type, char *realname)
     gg_num ot;
     gg_num ol;
     char *rname;
-    if (find_var (var, &ot, &ol, &rname)) 
+    if (find_var (var, &ot, &ol, &rname, NULL)) 
     {
         if (!cmp_type (type,ot)) gg_report_error ("Variable [%s] of type [%s] is already defined on line [%ld], cannot create a variable with the same name but of type [%s]", rname, typename(ot), ol, typename(type));
         return true;  
@@ -885,6 +894,7 @@ bool add_var (char *var, gg_num type, char *realname)
     v->rname = (realname == NULL ? "":gg_strdup (realname));
     v->type = type;
     v->lnum = lnum;
+    v->is_process = false;
     gg_add_hash (gg_varh, v->name, NULL, (void*)v, NULL, &st);
     return false;
 }
@@ -1882,7 +1892,7 @@ gg_num check_var (char **var, gg_num type, bool *is_unkn)
             gg_num vtype;
             gg_num l;
             char *rname;
-            bool found = find_var (v, &vtype, &l, &rname);
+            bool found = find_var (v, &vtype, &l, &rname, NULL);
             if (found)
             {
                 if (type != GG_DEFUNKN)
@@ -7302,19 +7312,32 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf("if (_gg_nstat%ld) {\n_gg_nstat%ld = false;\n", gg_pscope, gg_pscope);
                         }
 
-                        // if string is assigned to process-scope string, this string must NOT be made process-scoped too, because it's just reference
-                        // regardless of wheter this is variable creation or not
+                        // if string is assigned to process-scope string, it becomes process-scoped too
                         // delete reference to where mtext was point to, assuming it existed
                         if (optmem) oprintf ("if (%s != %s) {\n gg_mem_add_ref (%ld, %s, %s);\n", mtext, eq, is_def,mtext, eq); // do not increase ref count if it's set-string x=x
+
                         // X(process) = Y(process), X is now process
                         // X(process) = Y(not process), X is now process
                         // X(not process) = Y(process), X is now process
                         // X(not process) = Y(not process), X is NOT process
                         // Basically if either one is process, the lvalue is process.
-                        gg_num vt = check_var (&mtext, GG_DEFUNKN, NULL);
-                        if (vt == GG_DEFSTRINGSTATIC) oprintf ("gg_mem_set_process(%s, true);\n", eq);
+                        gg_num mtext_p = check_var (&mtext, GG_DEFUNKN, NULL);
+                        if (mtext_p == GG_DEFSTRINGSTATIC) oprintf ("gg_mem_set_process(%s, true);\n", eq);
                         if (optmem) oprintf ("%s = %s;}\n", mtext, eq);
                         else oprintf ("%s = %s;\n", mtext, eq);
+
+                        gg_num eq_p = check_var (&eq, GG_DEFUNKN, NULL);
+                        if (eq_p == GG_DEFSTRINGSTATIC || mtext_p == GG_DEFSTRINGSTATIC)
+                        {
+                            //
+                            //Set process flag for variable, so it's not automatically deleted at } or return-handler or such
+                            //
+                            bool is_process = true;
+                            find_var (mtext, NULL, NULL, NULL, &is_process); // set 'mtext' to process in symbol table so we don't auto delete out of scope
+                            //
+                            //
+                        }
+
                     
                         // finish if process-scope
                         if (ps)
@@ -8800,6 +8823,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
+                        free_handle_sub();
                         // return from handler, no return status, use set/get-param
                         oprintf("return;\n");
                         continue;
@@ -8815,6 +8839,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             carve_stmt_obj (&mtext, true);
                             oprintf("gg_get_config ()->ctx.req->ec=(%s);\n", mtext);
                         }
+                        free_handle_sub();
 
                         // return 1 to sigsetjmp so it differs from the first time around
                         oprintf("gg_exit_request(1);\n");

@@ -2,7 +2,7 @@
 .SH NAME
 index \- Gliimly documentation ()
 .SH DESCRIPTION
-Gliimly is a programming language for web services. It's:
+Gliimly is a programming language and a platform for web services. It's:
 
 .RS 4
 \[bu]    
@@ -89,6 +89,18 @@ end-handler
 
 
 \fBBlog\fP release updates, articles and examples:
+
+.RS 4
+\[bu]    
+2024-12-04 \fBGliimly 121 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-12-02 \fBPassing parameters between local request handlers\fP
+.RE
+
 
 .RS 4
 \[bu]    

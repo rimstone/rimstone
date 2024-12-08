@@ -77,6 +77,7 @@ end-loop
 \fBexit-handler\fP  
 \fBif-defined\fP  
 \fBif-true\fP  
+\fBreturn-handler\fP  
 \fBset-bool\fP  
 \fBstart-loop\fP   
 See all 
