@@ -120,7 +120,7 @@ Skip generating line information when compiling .gliim files. By default line in
 .RS 4
 \[bu]    
 --optimize-memory
-Use memory-optimizing garbage collection, which counts memory references and frees memory as soon as possible. Default is without memory optimization, which frees memory at the end of the request. Do not use this option unless your system is seriously starved for memory because it imposes a performance penatly (in some tests 15-25%).
+Use memory-optimizing garbage collection, which counts memory references and frees memory as soon as possible. Default is without memory optimization, which frees memory at the end of the request. Do not use this option unless your system is seriously starved for memory because it imposes a performance penatly.
 
 
 .RE

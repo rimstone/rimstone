@@ -2,93 +2,28 @@
 .SH NAME
 index \- Gliimly documentation ()
 .SH DESCRIPTION
-Gliimly is a programming language and a platform for web services. It's:
-
-.RS 4
-\[bu]    
-service-oriented, 
-
-.RE
-
-.RS 4
-\[bu]    
-modeling, 
-
-.RE
-
-.RS 4
-\[bu]    
-declarative, 
-
-.RE
-
-.RS 4
-\[bu]    
-functional and statically typed, 
-
-.RE
-
-.RS 4
-\[bu]    
-extremely simple,
-
-.RE
-
-.RS 4
-\[bu]    
-memory-safe, 
-
-.RE
-
-.RS 4
-\[bu]    
-high-performance,
-
-.RE
-
-.RS 4
-\[bu]    
-industry-standard Free Open Source libraries,
-
-.RE
-
-.RS 4
-\[bu]    
-extensible,
-
-.RE
-
-.RS 4
-\[bu]    
-\fBApache 2\fP Free Open Source.
-.RE
+Gliimly is a programming language for web services. It includes compiler, application server and tools for a complete web development platform. Gliimly is simple, memory-safe, high-performance, built with industry-standard Free Open Source libraries, extensible, and licensed under \fBApache 2\fP Free Open Source.
 
 \fBInstall Gliimly\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP. 
 
+Current version is 124. Check \fBBlog\fP for change log.
+
 Example of Gliimly code (from \fBSaaS example\fP):
+(Image home-example.png not available in man page, see web page documentation)
+
+\fBBlog\fP release updates, articles and examples:
 
 .RS 4
-.EX
-
-// Check that email verification token is the one actually sent to the email address
-begin-handler /session/verify-signup public
-    get-param code, email
-    run-query @db_app = "select verify_token from users where email='%s'" output db_verify : email
-        if-true  code equal db_verify
-            @Your email has been verifed. Please <a href="<<p-path "/session/user/login">>">Login</a>.
-            run-query @db_app no-loop = "update users set verified=1 where email='%s'" : email
-            exit-handler
-        end-if
-    end-query
-    @Could not verify the code. Please try <a href="<<p-path "/session/user/new/verify-form">>">again</a>.
-    exit-handler
-end-handler
-
-.EE
+\[bu]    
+2024-12-08 \fBWeb file manager in less than 100 lines of code\fP
 .RE
 
 
-\fBBlog\fP release updates, articles and examples:
+.RS 4
+\[bu]    
+2024-12-08 \fBGliimly 124 released\fP
+.RE
+
 
 .RS 4
 \[bu]    
