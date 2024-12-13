@@ -6,12 +6,18 @@ Gliimly is a programming language for web services. It includes compiler, applic
 
 \fBInstall Gliimly\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP. 
 
-Current version is 124. Check \fBBlog\fP for change log.
+Current version is 126. Check \fBBlog\fP for change log.
 
 Example of Gliimly code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
 
 \fBBlog\fP release updates, articles and examples:
+
+.RS 4
+\[bu]    
+2024-12-12 \fBHow is memory organized in Gliimly\fP
+.RE
+
 
 .RS 4
 \[bu]    
