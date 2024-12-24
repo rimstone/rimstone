@@ -740,6 +740,15 @@ char *check_exp (char *cur, bool *found, bool *err)
             *found = true;
             cur++;
             while (isdigit(*cur)) cur++;
+        } 
+        else if (*cur == '\'')
+        {
+            cur++;
+            if (*cur == 0) gg_report_error ("Incomplete character after single quote");
+            cur++;
+            if (*cur != '\'') gg_report_error ("Expected single quote");
+            cur++;
+            *found = true;
         }
     }
     while (isspace(*cur)) cur++;
@@ -7220,10 +7229,35 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         static char empty[] = "0"; //[] so trim will work on it in check_var
                         if (eq == NULL) eq = empty;
 
-                        //
-                        check_var (&eq, GG_DEFNUMBER, NULL);
+                        bool str_assign = false;
+                        char *ind;
+                        char *open_p;
+                        if ((open_p = strchr (eq, '[')) != NULL)
+                        {
+                            str_assign = true;
+                            // this is number = str[index]
+                            ind = open_p + 1;
+                            *open_p = 0;
+                            char *close_p;
+                            if ((close_p = strchr (ind, ']')) == NULL) gg_report_error ("Syntax error in index, expected ']'");
+                            *close_p = 0;
+                            close_p++;
+                            get_passed_whitespace(&close_p);
+                            if (*close_p != 0) gg_report_error ("Extraneous characters after ']'");
+                            // check that index is a number
+                            check_var (&ind, GG_DEFNUMBER, NULL);
+                            oprintf("GG_IS_NUM(%s);\n", ind);
+                            // check that variable is a string
+                            check_var (&eq, GG_DEFSTRING, NULL);
+                            oprintf("GG_IS_STRING(%s);\n", eq);
+                        }
+                        else
+                        {
+                            // this is just number = number
+                            check_var (&eq, GG_DEFNUMBER, NULL);
+                            oprintf("GG_IS_NUM(%s);\n", eq);
+                        }
                         oprintf("GG_IS_NUM(%s);\n", mtext);
-                        oprintf("GG_IS_NUM(%s);\n", eq);
 
 
                         if (ps && is_def != 1) gg_report_error ("process-scope can only be used when variable is created");
@@ -7248,7 +7282,13 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // based on above exclusions, only one will fire
                         // this is in any case, with or without variable creation or if-true
                         // no assignment if process scope (static)
-                        oprintf ("%s = %s;\n", mtext, eq);
+                        if (str_assign) 
+                        {
+                            // check memory bounds for assignment
+                            oprintf ("if (gg_mem_get_len(gg_mem_get_id(%s))-1 < (%s) || (%s) < 0) gg_report_error (\"Cannot access byte [%%ld] in string\", %s);\n", eq, ind, ind, ind);
+                            oprintf ("%s = %s[%s];\n", mtext, eq, ind);
+                        }
+                        else oprintf ("%s = %s;\n", mtext, eq);
 
                         if (ps)
                         {
@@ -7274,9 +7314,45 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&unq, "set-string", GG_KEYUNQUOTED, 0, 0);
                         carve_stmt_obj (&mtext, true);
                         gg_num is_def;
+
+                        // check for str[]
+                        bool num_assign = false;
+                        char *ind;
+                        char *open_p;
+                        if ((open_p = strchr (mtext, '[')) != NULL)
+                        {
+                            num_assign = true;
+                            // this is str[index]=number
+                            ind = open_p + 1;
+                            *open_p = 0;
+                            char *close_p;
+                            if ((close_p = strchr (ind, ']')) == NULL) gg_report_error ("Syntax error in index, expected ']'");
+                            *close_p = 0;
+                            close_p++;
+                            get_passed_whitespace(&close_p);
+                            if (*close_p != 0) gg_report_error ("Extraneous characters after ']'");
+                            // check that index is a number
+                            check_var (&ind, GG_DEFNUMBER, NULL);
+                            oprintf("GG_IS_NUM(%s);\n", ind);
+                            // now mtext has lost [], so it can be checked below for type
+                        }
+
                         if (ps != NULL) is_def = define_statement (&mtext, GG_DEFSTRINGSTATIC, false); 
                         else is_def = define_statement (&mtext, GG_DEFSTRING, false); // correct as it uses GG_EMPTY_STRING for empty init,
                                                                               // otherwise just assigns pointer, so acts as an alias
+
+                        if (is_def == 1 && num_assign) gg_report_error ("Cannot use [] assignment in new variable");
+                        if (eq == NULL && num_assign) gg_report_error ("Must use equal ('=') with [] assignment");
+                        if (ps && num_assign) gg_report_error ("Cannot use process-scope with [] assignment");
+
+                        if (num_assign)
+                        {
+                            check_var (&eq, GG_DEFNUMBER, NULL);
+                            oprintf ("if (gg_mem_get_len(gg_mem_get_id(%s))-1 < (%s) || (%s) < 0) gg_report_error (\"Cannot access byte [%%ld] in string\", %s);\n", mtext, ind, ind, ind);
+                            oprintf ("%s[%s] = (%s);\n", mtext, ind, eq);
+                            continue;
+                        }
+
                         oprintf("GG_IS_STRING(%s);\n", mtext);
                         
                         // Rules:
@@ -7286,6 +7362,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (ps && is_def != 1) gg_report_error ("process-scope can only be used when variable is created");
                         static char empty[] = "GG_EMPTY_STRING"; //[] so trim will work on it in check_var
                         if (eq == NULL) eq = empty;
+
 
                         static gg_num gg_pscope = 0;
                         //
