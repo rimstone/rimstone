@@ -19,6 +19,19 @@ Number variable <var> is either assigned value <number> with "=" clause, or it i
 
 If "process-scope" clause is used, then number is of process scope, meaning its value will persist from one request to another for the life of the process. 
 
+Note that <number> can also be a string character produced by using "[" and "]" to specify the index within a string (with 0 being the first character), as in:
+
+.RS 4
+.EX
+
+set-string my_str = "Some string"
+set-number my_num = my_str[2]
+
+.EE
+.RE
+
+In the above example, "my_num" will be 109, which is the integer representation of character 'm'.
+
 .SH EXAMPLES
 Initialize number "my_num" to 0 and the value of this variable, however it changes, will persist through any number of requests in the same process:
 

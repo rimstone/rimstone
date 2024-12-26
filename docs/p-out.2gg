@@ -15,7 +15,7 @@ p-out <string> [ length <length> ] [ new-line ]
 .RE
 
 .SH DESCRIPTION
-p-out outputs a string expression given by <string>, without any encoding (meaning a string is output exactly as it appears). 
+p-out outputs a <string>, without any encoding (meaning a string is output exactly as it appears). 
 
 If "length" clause is used, then only <length> leading bytes of <string> are output. 
 

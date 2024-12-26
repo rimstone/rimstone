@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "132"
+#define GG_VERSION "136"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -944,7 +944,7 @@ typedef struct gg_tree_cursor_s {
 //
 // Check if type is num, string or bool
 //
-#define GG_IS_NUM(A) _Static_assert(_Generic((A),  gg_num : true, unsigned int:true, int:true, long long:true, char:true, signed char:true, size_t: true, default: false),"Variable " #A " is not a number");
+#define GG_IS_NUM(A) _Static_assert(_Generic((A),  gg_num : true, unsigned int:true, int:true, long long:true, char:true, signed char:true, unsigned char:true, size_t: true, default: false),"Variable " #A " is not a number");
 #define GG_IS_BOOL(A) _Static_assert(_Generic((A),  bool:true, int:true, default: false),"Variable " #A " is not a bool");
 #define GG_IS_STRING(A) _Static_assert(_Generic((A),  char*:true, void*:true, default: false),"Variable " #A " is not a string");
 //

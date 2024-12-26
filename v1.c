@@ -722,18 +722,78 @@ char *check_exp (char *cur, bool *found, bool *err)
         else if (isalpha(*cur) || *cur == '_') 
         {
             *found = true;
-            char *vname = cur;
-            cur++;
-            while (isalnum(*cur) || *cur == '_') cur++;
-            // get var name
-            char *name = gg_strdupl (vname, 0, cur-vname);
-            name[cur-vname] = 0; // end string
             gg_num vtype;
             gg_num l;
             char *rname;
-            bool found = find_var (name, &vtype, &l, &rname, NULL);
-            if (!found) gg_report_error ("Variable [%s] is not found", rname);
-            if (!cmp_type (vtype, GG_DEFNUMBER)) gg_report_error ("Variable [%s] is not a number", rname);
+            // allow string[] notation for an integer expression
+            // if it is, then remove [] and verify that index is integer, and allow this as a valid C expression (that evaluates to int)
+            char *ind;
+            char *open_p;
+            if ((open_p = strchr (cur, '[')) != NULL)
+            {
+                // this is number = str[index]
+                ind = open_p + 1;
+                *open_p = 0;
+                char *close_p = ind;
+                // this now looks for str[str[str[a]]] and such and returns position of only the last ]
+                gg_num p_open = 1; // current [
+                while (*close_p != 0) 
+                {
+                    // skip any 'X', which could be '[' or ']' that can mess up this calculation
+                    if (*close_p == '\'') 
+                    {
+                        close_p++;
+                        if (*close_p == 0) gg_report_error ("Syntax error in character constant");
+                        close_p++;
+                        if (*close_p != '\'') gg_report_error ("Syntax error in character constant");
+                        close_p++;
+                        continue;
+                    }
+                    if (*close_p == '[') p_open ++;
+                    if (*close_p == ']') 
+                    {
+                        p_open --;
+                        if (p_open == 0) break;
+                    }
+                    close_p++;
+                }
+                if (*close_p == 0) gg_report_error ("Syntax error in index, expected ']'");
+                *close_p = 0;
+                // check that index is a number
+                bool sub_found;
+                bool sub_err;
+                check_exp (ind, &sub_found, &sub_err);
+                if (sub_err || !sub_found) 
+                {
+                    // restore text of expression so error reporting shows it
+                    *open_p = '[';
+                    *close_p = ']';
+                    *err =  true; *found = false; return "";
+                }
+                // check that variable is a string
+                bool str_found = find_var (cur, &vtype, &l, &rname, NULL);
+                if (!str_found) gg_report_error ("Variable [%s] is not found", rname);
+                if (!cmp_type (vtype, GG_DEFSTRING)) gg_report_error ("Variable [%s] is not a string", rname);
+                // check at run time accessing this byte is valid memory, this is in order
+                // so the deepest expressions are checked first, as it should be
+                oprintf ("if (gg_mem_get_len(gg_mem_get_id(%s))-1 < (%s) || (%s) < 0) gg_report_error (\"Cannot access byte [%%ld] in string\", (long)(%s));\n", cur, ind, ind, ind);
+                // restore []
+                *open_p = '[';
+                *close_p = ']';
+                cur = close_p + 1; // move passed []
+            }
+            else
+            {
+                char *vname = cur;
+                cur++;
+                while (isalnum(*cur) || *cur == '_') cur++;
+                // get var name
+                char *name = gg_strdupl (vname, 0, cur-vname);
+                name[cur-vname] = 0; // end string
+                bool found = find_var (name, &vtype, &l, &rname, NULL);
+                if (!found) gg_report_error ("Variable [%s] is not found", rname);
+                if (!cmp_type (vtype, GG_DEFNUMBER)) gg_report_error ("Variable [%s] is not a number", rname);
+            }
         }
         else if (isdigit (*cur))
         {
@@ -1114,7 +1174,15 @@ void check_format(char *mtext, char *comma, char **list)
             if (fmt_len == 0) next+=3; else next+=1+fmt_len;
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
-        else gg_report_error ("Only %%s, %%<length>s, %%ld and %%<length>ld are valid placeholders in format string, along with %%%% to output the percent sign, found [%s]", mtext);
+        else if ((*(next+1) == 'c'))
+        {
+            // should be GG_DEFNUMBER (this is character from string)
+            gg_num t = check_var (&par, GG_DEFUNKN, NULL);
+            if (gg_mode != GG_MODE_INTERNAL && (t != GG_DEFNUMBER)) gg_report_error ("Parameter #%ld in format should be of number type", pos);
+            next+=2;
+            clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
+        }
+        else gg_report_error ("Only %%s, %%<length>s, %%ld, %%<length>ld and %%c are valid placeholders in format string, along with %%%% to output the percent sign, found [%s]", mtext);
         par = nc;
     }
 }
@@ -1888,6 +1956,17 @@ gg_num check_var (char **var, gg_num type, bool *is_unkn)
     {
         if (gg_is_valid_param_name (v, false, false) != 1) 
         {
+            // check if this is str[]
+            if (gg_mode != GG_MODE_INTERNAL && strchr (v, '[') != NULL)
+            {
+                bool found;
+                bool err;
+                check_exp (v, &found, &err);
+                if (!err) make_var (var, GG_DEFNUMBER); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
+                else gg_report_error ("Syntax error in number expression [%s]", v);
+                return GG_DEFNUMBER;
+            }
+
             // if the caller wants variable checked, check it
             if (gg_mode != GG_MODE_INTERNAL) gg_report_error ("[%s] is not a valid name for variable or constant", v);
             // if internal, proceed afterwards below outside the parent if() to check for type at gcc compile time
@@ -7229,35 +7308,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         static char empty[] = "0"; //[] so trim will work on it in check_var
                         if (eq == NULL) eq = empty;
 
-                        bool str_assign = false;
-                        char *ind;
-                        char *open_p;
-                        if ((open_p = strchr (eq, '[')) != NULL)
-                        {
-                            str_assign = true;
-                            // this is number = str[index]
-                            ind = open_p + 1;
-                            *open_p = 0;
-                            char *close_p;
-                            if ((close_p = strchr (ind, ']')) == NULL) gg_report_error ("Syntax error in index, expected ']'");
-                            *close_p = 0;
-                            close_p++;
-                            get_passed_whitespace(&close_p);
-                            if (*close_p != 0) gg_report_error ("Extraneous characters after ']'");
-                            // check that index is a number
-                            check_var (&ind, GG_DEFNUMBER, NULL);
-                            oprintf("GG_IS_NUM(%s);\n", ind);
-                            // check that variable is a string
-                            check_var (&eq, GG_DEFSTRING, NULL);
-                            oprintf("GG_IS_STRING(%s);\n", eq);
-                        }
-                        else
-                        {
-                            // this is just number = number
-                            check_var (&eq, GG_DEFNUMBER, NULL);
-                            oprintf("GG_IS_NUM(%s);\n", eq);
-                        }
+                        //
+                        check_var (&eq, GG_DEFNUMBER, NULL);
                         oprintf("GG_IS_NUM(%s);\n", mtext);
+                        oprintf("GG_IS_NUM(%s);\n", eq);
 
 
                         if (ps && is_def != 1) gg_report_error ("process-scope can only be used when variable is created");
@@ -7282,13 +7336,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // based on above exclusions, only one will fire
                         // this is in any case, with or without variable creation or if-true
                         // no assignment if process scope (static)
-                        if (str_assign) 
-                        {
-                            // check memory bounds for assignment
-                            oprintf ("if (gg_mem_get_len(gg_mem_get_id(%s))-1 < (%s) || (%s) < 0) gg_report_error (\"Cannot access byte [%%ld] in string\", %s);\n", eq, ind, ind, ind);
-                            oprintf ("%s = %s[%s];\n", mtext, eq, ind);
-                        }
-                        else oprintf ("%s = %s;\n", mtext, eq);
+                        oprintf ("%s = %s;\n", mtext, eq);
 
                         if (ps)
                         {
@@ -7322,19 +7370,18 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if ((open_p = strchr (mtext, '[')) != NULL)
                         {
                             num_assign = true;
-                            // this is str[index]=number
-                            ind = open_p + 1;
-                            *open_p = 0;
-                            char *close_p;
-                            if ((close_p = strchr (ind, ']')) == NULL) gg_report_error ("Syntax error in index, expected ']'");
-                            *close_p = 0;
-                            close_p++;
-                            get_passed_whitespace(&close_p);
-                            if (*close_p != 0) gg_report_error ("Extraneous characters after ']'");
-                            // check that index is a number
-                            check_var (&ind, GG_DEFNUMBER, NULL);
-                            oprintf("GG_IS_NUM(%s);\n", ind);
-                            // now mtext has lost [], so it can be checked below for type
+                            // this is str[index]=number, so this expression needs
+                            // to evaluate to number
+                            bool sub_found;
+                            bool sub_err;
+                            check_exp (mtext, &sub_found, &sub_err);
+                            if (sub_err || !sub_found) gg_report_error ("Error in syntax (%s)", mtext); 
+                            *open_p = 0; // now mtext has lost [], so it can be checked below for type
+                            ind = open_p + 1; // ind starts after leading [
+                            // now remove last ] so that ind (index of string) is correct for code generation
+                            gg_num il = strlen (ind);
+                            while (il > 0 && ind[il-1] != ']') il--;
+                            if (il > 0) ind[il-1] = 0;
                         }
 
                         if (ps != NULL) is_def = define_statement (&mtext, GG_DEFSTRINGSTATIC, false); 
@@ -7348,7 +7395,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (num_assign)
                         {
                             check_var (&eq, GG_DEFNUMBER, NULL);
-                            oprintf ("if (gg_mem_get_len(gg_mem_get_id(%s))-1 < (%s) || (%s) < 0) gg_report_error (\"Cannot access byte [%%ld] in string\", %s);\n", mtext, ind, ind, ind);
+                            oprintf ("if (gg_mem_get_len(gg_mem_get_id(%s))-1 < (%s) || (%s) < 0) gg_report_error (\"Cannot access byte [%%ld] in string\", (long)(%s));\n", mtext, ind, ind, ind);
                             oprintf ("%s[%s] = (%s);\n", mtext, ind, eq);
                             continue;
                         }

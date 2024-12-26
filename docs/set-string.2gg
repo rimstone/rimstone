@@ -11,6 +11,8 @@ Set value of a string variable.
 
 set-string <variable> [ = <string> ] [ process-scope ] [ unquoted ]
 
+set-string <variable> [ <index> ] = <number>
+
 .EE
 .RE
 
@@ -40,6 +42,20 @@ set-string my_string = "this is \[char92]"some\[char92]" string where there esca
 .RE
 
 "unquoted" clause is useful when writing string literals that would otherwise need lots of escaping.
+
+You can also use set-string to set a byte in it; in this case <index> byte in <variable> string is set to <number>. <index> starts with 0 for the first byte. For instance, the resulting "str" will be "Aome string" since 65 is a number representation of 'A':
+
+.RS 4
+.EX
+
+set-string str = "some string"
+set-string str[0] = 65
+// or using a character constant as a number, to the same effect
+set-string str[0] = 'A'
+
+.EE
+.RE
+
 
 .SH EXAMPLES
 Initialize "my_string" variable to "":

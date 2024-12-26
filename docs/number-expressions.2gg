@@ -13,6 +13,17 @@ set-number n1 = 10+(4*n2-5)%3
 .RE
 
 You can use number expressions anywhere number is expected as an input to any statement.
+
+Note that character constants (such as 'A', 'z' etc.) are considered numbers with the value equal to their single-byte equivalent, for example this will assign 65 to "num":
+
+.RS 4
+.EX
+
+set-number num = 'A'
+
+.EE
+.RE
+
 .SH SEE ALSO
  
 .B - Numbers

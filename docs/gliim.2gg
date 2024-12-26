@@ -4,14 +4,20 @@ index \- Gliimly documentation ()
 .SH DESCRIPTION
 Gliimly is a programming language for web services. It includes compiler, application server and tools for a complete web development platform. Gliimly is simple, memory-safe, high-performance, built with industry-standard Free Open Source libraries, extensible, and licensed under \fBApache 2\fP Free Open Source.
 
-\fBInstall Gliimly\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP. 
+\fBInstall Gliimly\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note version comments are the same as their numbers; each change log is described on \fBGliimly blog\fP). 
 
-Current version is 128. Check \fBBlog\fP for change log.
+Current version is 132. Check \fBBlog\fP for change log.
 
 Example of Gliimly code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
 
 \fBBlog\fP release updates, articles and examples:
+
+.RS 4
+\[bu]    
+2024-12-24 \fBGliimly 132 released\fP
+.RE
+
 
 .RS 4
 \[bu]    

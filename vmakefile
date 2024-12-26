@@ -88,7 +88,8 @@ else
 endif
 
 #even though GG_DIAG_OUT is set to "", at run time it will have value from make_source macro. This is because of how makefile assignments work with = (and not :=)
-_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) -Werror -Wall -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -fsigned-char $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) -DGG_OSNAME_ID=$(GG_OSNAME_ID) $(GG_POSIXREGEX_FLAG) -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) $(_ASAN)
+#ignoring char-subscripts (such as str[str[0]] is fine because gliimly checks for boundaries
+_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) -Werror -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) -DGG_OSNAME_ID=$(GG_OSNAME_ID) $(GG_POSIXREGEX_FLAG) -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) $(_ASAN)
 
 
 
