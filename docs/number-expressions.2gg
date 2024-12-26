@@ -14,12 +14,23 @@ set-number n1 = 10+(4*n2-5)%3
 
 You can use number expressions anywhere number is expected as an input to any statement.
 
-Note that character constants (such as 'A', 'z' etc.) are considered numbers with the value equal to their single-byte equivalent, for example this will assign 65 to "num":
+Note that character constants (such as 'A', 'z' etc.) are considered numbers with the value equal to their single-byte ASCII equivalent (i.e. unsigned numbers 0-255), for example this will assign 65 to "num":
 
 .RS 4
 .EX
 
 set-number num = 'A'
+
+.EE
+.RE
+
+Any subscripted string is also considered a number, for instance "num" would be 117 (since 's' is 115):
+
+.RS 4
+.EX
+
+set-string str = 'some'
+set-number num = str[0] + 2
 
 .EE
 .RE
