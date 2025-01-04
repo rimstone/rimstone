@@ -2,12 +2,13 @@ Gliimly is a programming language for web services\. It includes compiler, appli
 
 [Install Gliimly](http://gliimly.github.io//install.html)\. See [Documentation](http://gliimly.github.io//documentation.html)\. Source at [github\.com](https://github.com/gliimly/gliimly) \(note version comments are the same as their numbers; each change log is described on [Gliimly blog](https://gliimly.blogspot.com)\)\. 
 
-Current version is 138\. Check [Blog](https://gliimly.blogspot.com/) for change log\.
+Current version is 140\. Check [Blog](https://gliimly.blogspot.com/) for change log\.
 
 Example of Gliimly code \(from [SaaS example](https://gliimly.blogspot.com/2024/11/multi-tenant-saas-notes-web-application.html)\):
 ![Gliimly image](http://gliimly.github.io/home-example.png)
 
 [Blog](https://gliimly.blogspot.com/) release updates, articles and examples:
+* 2025\-01\-03 [What is application server?](https://gliimly.blogspot.com/2025/01/what-is-application-server.html)
 * 2024\-12\-26 [Encryption: ciphers, digests, salt, IV](https://gliimly.blogspot.com/2024/12/encryption-ciphers-digests-salt-iv.html)
 * 2024\-12\-25 [Gliimly 136 released](https://gliimly.blogspot.com/2024/12/gliimly-136-released.html)
 * 2024\-12\-24 [Gliimly 132 released](https://gliimly.blogspot.com/2024/12/gliimly-132-released.html)

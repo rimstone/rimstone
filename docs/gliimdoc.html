@@ -233,7 +233,7 @@ function gg_copy(gt, eid, gc) {
 
 
 <div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div>
-<div class='vhub'>Gliimly Single-Page Documentation for version 138</div><hr/>
+<div class='vhub'>Gliimly Single-Page Documentation for version 140</div><hr/>
 This page contains all of Gliimly documentation topics combined into one. It may be easier to search. <!--GLIIMBEGDOC39--><br/><br/>
 <a href='#123-hello-world.html'>123-hello-world</a><br/>
 <a href='#about-gliimly.html'>about-gliimly</a><br/>
@@ -2788,6 +2788,18 @@ No matter how careful you are about writing your web service code, memory safety
 A common issue is one of the security design. Some services are internal (or private), and some are external (or public). This means some are not meant to be called by an end-user from a web browser, or via an API from an outside caller. In fact, calling such service could be huge security hole. Imagine if you had a service that updates your internal application data. Such a service clearly must never be called by an outside actor, rather it should only be accessible to your own services acting on behalf of such outside actors. Be sure that the back-end software you use has simple and clearly-defined ability to handle such scenarios. Even if so, sometimes overly complicated security schemes can be hard to implement correctly and can be just as detrimental.<br/>
 <br/>
 Virtually all web services authenticate their users. It usually means using email address and password for login, as well as cookies for browser users, or tokens otherwise. Never keep passwords in plain text or even obscured, only as a one-way hash. This way even if your user database is stolen, passwords cannot be (easily) recovered. <br/>
+<a id='article-server.html'></a>
+Every Gliimly application is built as both an application server and a command-line program. You can use both, depending on what's the nature of your application. Some programs are meant to be used in scripts, or executed directly from command line. Others need to stay in memory and execute user requests as servers. The nice thing is that they both work the same, meaning you can run from command line anything that an application server does, and vice versa. This is also handy for testing; it makes writing tests for an application server much easier because you can run such tests in a plain bash script.<br/>
+<br/>
+What is an application server? It is a set of background resident processes. Each such process can be contacted via socket with a request, and it will provide a reply. An application server often sits behind a web server which accepts user requests, passes them to the application server, receives its reply and the passes this reply back to the user. This is a "reverse proxy" configuration. Note that this configuration, though typical, isn't a hard rule; end users can talk to an application server directly in some cases, such as on a secure local network.<br/>
+<br/>
+A socket is always opened by an application server and it's listening for user requests. In fact, each application server process listens on the same socket, and an incoming user request will be automatically routed by the Operating System to the first available server process. This reduces contention and makes the serving of processes very fast, without unnecessary delays.<br/>
+<br/>
+The socket used can be a Unix or TCP socket. Unix socket is the default one, and it works locally, meaning the caller and the application server must be on the same physical server. This is the most common scenario, and it's also the fastest method of delivering requests and replies. TCP sockets are used when the caller and the application server are on two separate machines - their performance depends on the bandwidth and especially the latency of network connection. A Unix socket is a kind of a special kernel file, while TCP socket is the the same kind of socket most network/internet programs use.<br/>
+<br/>
+Gliimly application server uses FastCGI protocol over TCP, a fast binary multiplexing protocol built for performance. It doesn't have any built-in security, and for the purpose it's used for it shouldn't have any. Essentially, standard input, output and error streams can be sent simultaneously (but retrieved separately). This makes for sturdier and more streamlined architecture because these are standard streams any program will understand. This protocol is widely supported by web languages and web servers (PHP, Apache, Nginx, HAProxy etc.).<br/>
+<br/>
+A Gliimly server process can serve an unlimited number of requests without having to be restarted and without having to spawn any new processes or threads - meaning lightening fast. Any number of such processes comprises the application server, which can then serve incoming requests truly in parallel. The number of server processes is typically determined by the number of available CPUs.<br/>
 <a id='article-sqlite.html'></a>
 <br/>
 This example will create a service that inserts key and value into SQLite table. It's tested from command line.<br/>
@@ -5912,7 +5924,7 @@ ln <span class="Special">-s</span> /home/disk0/file /var/lib/gg/<span class="Sta
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
 <a id='documentation.html'></a>
-<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 138"></a>Reference for Gliimly version 138</div>
+<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://gliimly.github.io' style='border-bottom:0px'><img src='http://gliimly.github.io/gliim.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Gliimly version 140"></a>Reference for Gliimly version 140</div>
 <span style="font-weight:bold;">Note</span>: All the topics below are available as a <a href='/gliimdoc.html'>single-page documentation</a>. <br/>
 <br/>
 <ul><br/>
@@ -8272,7 +8284,7 @@ sudo pacman <span class="Special">--noconfirm</span> <span class="Special">-Sy</
 <pre id='code_468'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">138</span></pre>
+git checkout <span class="Constant">140</span></pre>
 <span id=gliim_copied_468 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_468' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_468, code_468, gliim_copied_468)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -8323,7 +8335,7 @@ sudo apt <span class="Special">-y</span> install git</pre>
 <pre id='code_472'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">138</span></pre>
+git checkout <span class="Constant">140</span></pre>
 <span id=gliim_copied_472 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_472' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_472, code_472, gliim_copied_472)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -8373,7 +8385,7 @@ sudo dnf <span class="Special">-y</span> install git</pre>
 <pre id='code_476'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">138</span></pre>
+git checkout <span class="Constant">140</span></pre>
 <span id=gliim_copied_476 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_476' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_476, code_476, gliim_copied_476)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -8442,7 +8454,7 @@ sudo zypper <span class="Special">-n</span> install git</pre>
 <pre id='code_480'>
 git clone <a href="https://github.com/gliimly/gliimly.git">https://github.com/gliimly/gliimly.git</a>
 <span class="Statement">cd</span> gliimly
-git checkout <span class="Constant">138</span></pre>
+git checkout <span class="Constant">140</span></pre>
 <span id=gliim_copied_480 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='gliimt_480' style='position: absolute;left: -500%;'></textarea>
 <img src='http://gliimly.github.io/gliim-copy-small-1.png' id='gliimb' onclick='gg_copy(gliimt_480, code_480, gliim_copied_480)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -14756,7 +14768,7 @@ Hi Again!</pre>
 <a href='/documentation.html'>documentation</a><br/>
 <br/><div style='width:100%;clear:both;'>
 <hr/>
-<!--GLIIMFOOT77--><span style='font-size:80%'><a href="/copyright.html">Copyright</a> (c) 2019-2024 Gliim LLC. All contents on this web site is "AS IS" without warranties or guarantees of any kind.</span>
+<!--GLIIMFOOT77--><span style='font-size:80%'><a href="/copyright.html">Copyright</a> (c) 2019-2025 Gliim LLC. All contents on this web site is "AS IS" without warranties or guarantees of any kind.</span>
 </div><br/></body></html>
 
 
