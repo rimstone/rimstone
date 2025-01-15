@@ -2,14 +2,15 @@ Golf is a compiled programming language for web services\. It includes a framewo
 
 [Install Golf](http://golf-lang.github.io//install.html)\. See [Documentation](http://golf-lang.github.io//documentation.html)\. Source at [github\.com](https://github.com/golf-lang/golf) \(note version comments are the same as their numbers; each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
 
-Current version is 142\. Check [Blog](https://golf-lang.blogspot.com/) for change log\.
+Current version is 155\. Check [Blog](https://golf-lang.blogspot.com/) for change log\.
 
 Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to Golf\!
 
-Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application.html)\):
+Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](http://golf-lang.github.io/home-example.png)
 
 [Blog](https://golf-lang.blogspot.com/) release updates, articles and examples:
+* 2025\-01\-14 [Golf 155 released](https://golf-lang.blogspot.com/2025/01/golf-155-released.html)
 * 2025\-01\-03 [What is application server?](https://golf-lang.blogspot.com/2025/01/what-is-application-server_72.html)
 * 2024\-12\-26 [Encryption: ciphers, digests, salt, IV](https://golf-lang.blogspot.com/2024/12/encryption-ciphers-digests-salt-iv_84.html)
 * 2024\-12\-25 [Golf 136 released](https://golf-lang.blogspot.com/2024/12/golf-136-released_25.html)
