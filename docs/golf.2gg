@@ -6,7 +6,7 @@ Golf is a compiled programming language for web services. It includes a framewor
 
 \fBInstall Golf\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note version comments are the same as their numbers; each change log is described on \fBGolf blog\fP). 
 
-Current version is 155. Check \fBBlog\fP for change log.
+Current version is 159. Check \fBBlog\fP for change log.
 
 Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to Golf!
 

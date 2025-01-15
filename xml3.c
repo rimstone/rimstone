@@ -11,7 +11,7 @@
 //
 // https://github.com/tiran/defusedxml SECURITY OF XML, NO DTD, NO ENTITY EXPANSION, NO EXTERNAL RESOLUTION, LIMIT PARSE DEPTH, LIMIT INPUT SIZE, LIMIT PARSE TIME, SAX, NO XPATH NO XSL 
 //<!DOCTYPE note SYSTEM \"Note.dtd\">
-char *xmld = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+/*char *xmld = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
 <countries>\n\
     <country id='1'>\n\
         <name>USA&amp;America</name>\n\
@@ -222,4 +222,4 @@ int main_xml() {
 
 }
 
-//int main() { main_xml(); }
+//int main() { main_xml(); }*/
