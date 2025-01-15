@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework. 
+// On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
 // 
 // Main library used at GLIIMLY runtime. Most of the functions used
-// within markups are implemented here. See also gliimrtc.c which includes
+// within markups are implemented here. See also golfrtc.c which includes
 // common functions shared between GLIIMLY runtime and GLIIMLY preprocessor.
 //
 
-#include "gliim.h"
+#include "golf.h"
 
 
 //  functions (local)
@@ -34,7 +34,7 @@ void gg_read_child (int ofd, char **out_buf);
 void gg_gen_header_end ();
 void gg_check_set_cookie (char *name, char *val, char *secure, char *samesite, char *httponly, char *safety_clause, size_t safety_clause_len);
 gg_num gg_find_par (char *n); 
-inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num nbyte);
+static inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num nbyte);
 // write-string macros
 #define GG_WRSTR_CUR (gg_get_config()->ctx.req->curr_write_to_string)
 #define GG_WRSTR (gg_get_config()->ctx.req->write_string_arr[GG_WRSTR_CUR])
@@ -701,7 +701,7 @@ void _gg_report_error (char *format, ...)
 // Decode string encoded previously (web or url encoding). enc_type is GG_WEB or
 // GG_URL. String v (which is encoded at the entry) holds decoded value on return.
 // inlen is the number of bytes to decode, negative if all until null-char (strlen)
-// alloc is true if this is allocated memory (gliim mem), false otherwise
+// alloc is true if this is allocated memory (golf mem), false otherwise
 // Return value is the length of decoded string.
 // status, if not null, is GG_OKAY if all bytes decoded, or the bytes decoded (and the rest weren't)
 //
@@ -905,7 +905,7 @@ void gg_subs(char *s, void ** call_handler)
 // Returns 1 if ok, 0 if not ok but handled (such as Forbidden), otherwise Errors out.
 // Other information is obtained too such as HTTP_REFERRED that could be used to disallow
 // viewing images unless referred to by this site (not a functionality here, it
-// can be implemented in gliim application).
+// can be implemented in golf application).
 // ETag/If-non-match is obtained for cache management. Cookies are obtained from the client
 // ONLY the first time this is called in a request - we may alter cookies later, so if gg_get_input()
 // is called again in the same request, cookies are NOT obtained again.
@@ -1123,7 +1123,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 
 
     // If client asking for options, present options handled
-    // For better CORS (Cross Origin Resource Sharing), use referrer in your gliim code to determine
+    // For better CORS (Cross Origin Resource Sharing), use referrer in your golf code to determine
     // access or no-access
     if (!strcasecmp(req_method, "OPTIONS")) {
         gg_gen_set_status (204, "No Content");
@@ -2261,7 +2261,7 @@ void gg_disable_output()
 // There are only 2 output functions: gg_puts and gg_printf, and for string output they both
 // call gg_puts_to_string(). NO OTHER way of output should be present and NOTHING
 // else should call gg_puts_to_string.
-// 'alloc' is true if this is gliim-alloced mem, otherwise false.
+// 'alloc' is true if this is golf-alloced mem, otherwise false.
 //
 //
 gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
@@ -2276,7 +2276,7 @@ gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
     GG_UNUSED(buf_pos_start); // used for tracing only
     gg_num vLen;
     if (alloc)
-    { // this is gliim alloc'd
+    { // this is golf alloc'd
         gg_num id = gg_mem_get_id(s);
         if (len != 0)
         {
@@ -2285,7 +2285,7 @@ gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
         } else vLen = gg_mem_get_len(id);
     } 
     else 
-    { // this is non-gliim alloc'd, i.e. internal
+    { // this is non-golf alloc'd, i.e. internal
         if (len != 0) vLen = len; else vLen = strlen(s);
     }
     gg_num res = 0;
@@ -3033,7 +3033,7 @@ char *gg_getenv (char *var)
 }
 
 
-inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num nbyte)
+static inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num nbyte)
 {
     GG_TRACE("");
     // gg_gen_header_end() will set data_was_output to 1
@@ -3044,7 +3044,7 @@ inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num 
 //
 // Write web output. However, if header not sent, error out or output trace warning that header/data MAY NOT be output. 
 // The worst that happens is that headers and/or data are not output (but we trace this). We also document this.
-// pc is gliim configuration. The rest the same as gg_gen_write().
+// pc is golf configuration. The rest the same as gg_gen_write().
 // iserr is true if output goes to stderr, otherwise stdout - this is for web output only.
 // Returns the same as gg_gen_write()
 //
@@ -3323,7 +3323,7 @@ void gg_exit (void)
     if (pc != NULL && pc->ctx.db->conn != NULL) free (pc->ctx.db->conn); // free database list of descriptors
 
     // Gliim memory shutdown and deallocation
-    gg_done(); // clean up all the gliim memory
+    gg_done(); // clean up all the golf memory
 #endif
 
 

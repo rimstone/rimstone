@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 delete-string \-  (strings)
 .SH PURPOSE
@@ -15,11 +15,11 @@ delete-string <string>
 .RE
 
 .SH DESCRIPTION
-delete-string frees <string> variable previously allocated by a Gliimly statement. 
+delete-string frees <string> variable previously allocated by a Golf statement. 
 
-Note that freeing memory is in most cases unnecessary as Gliimly will automatically do so at the end of each request. You should have a good reason for using delete-string otherwise.
+Note that freeing memory is in most cases unnecessary as Golf will automatically do so at the end of each request. You should have a good reason for using delete-string otherwise.
 
-Gliimly keeps count of <string> references. So if <string> is referenced by other Gliimly statements (for instance it was assigned to another string variable in \fBset-string\fP, or was used in statements like \fBwrite-index\fP or \fBwrite-array\fP), then <string> may not be deleted; in such a case, unless string was declared to be of process-scope and still used in such statements, it will be deleted when the \fBrequest\fP ends. Otherwise, <string> becomes an empty string ("") after it was deleted.
+Golf keeps count of <string> references. So if <string> is referenced by other Golf statements (for instance it was assigned to another string variable in \fBset-string\fP, or was used in statements like \fBwrite-index\fP or \fBwrite-array\fP), then <string> may not be deleted; in such a case, unless string was declared to be of process-scope and still used in such statements, it will be deleted when the \fBrequest\fP ends. Otherwise, <string> becomes an empty string ("") after it was deleted.
 
 .SH EXAMPLES
 Allocate and free random string:

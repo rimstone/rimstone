@@ -1,6 +1,6 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-temporary-file \- Gliimly documentation (files)
+temporary-file \- Golf documentation (files)
 .SH DESCRIPTION
 To create a temporary file, use \fBuniq-file\fP with a "temporary" clause. Temporary files are the same as any other files in the \fBfile-storage\fP (and are organized in the same fashion), except that they are all under the subdirectory named "t":
 

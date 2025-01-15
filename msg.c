@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // Message-exchange module
 //
 
-#include "gliim.h"
+#include "golf.h"
 // add 38 for ' equals length', and null at the end
 #define GG_MSG_ADD_LEN 30 
 // buffer size to add when adding items, it increases up to 4K
@@ -144,8 +144,8 @@ gg_num gg_read_msg(gg_msg *msg, char **key, char **value)
 // binary with nulls.
 // Returns pointer to the next 'item', just passed the current one. 'key' is the key. key_len is its length. 'value' is
 // the data and value_len is its length. st is GG_OKAY if okay, or GG_ERR_FORMAT if this simple format is not parsable.
-// All pointers are returned as non-gliim memory. That's because the programmer can skip some records and just use some, so
-// the caller must turn key and equals into gliim memory, when requested.
+// All pointers are returned as non-golf memory. That's because the programmer can skip some records and just use some, so
+// the caller must turn key and equals into golf memory, when requested.
 // len is the length of item
 //
 char *gg_parse_item (char *item, char **key, gg_num *key_len, char **value, gg_num *value_len, gg_num *st, gg_num len)

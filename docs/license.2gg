@@ -1,15 +1,15 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-license \- Gliimly documentation (license)
+license \- Golf documentation (license)
 .SH DESCRIPTION
 
 .LP
 .B LICENSING AND COPYRIGHT
 .LP
 
-Gliimly is Free Open Source software licensed under \fBApache License 2\fP. 
+Golf is Free Open Source software licensed under \fBApache License 2\fP. 
 
-Gliimly is copyright (c) 2019-now Gliim LLC. 
+Golf is copyright (c) 2019-now Gliim LLC. 
 
 .LP
 .B DISCUSSION
@@ -17,7 +17,7 @@ Gliimly is copyright (c) 2019-now Gliim LLC.
 
 The following discussion is not legal advice. 
 
-Gliimly makes use of the following dynamically-linked libraries (with copyright by their respective owners), and only if your application actually uses them:
+Golf makes use of the following dynamically-linked libraries (with copyright by their respective owners), and only if your application actually uses them:
 
 .RS 4
 \[bu]    
@@ -60,11 +60,11 @@ Gliimly makes use of the following dynamically-linked libraries (with copyright 
 \fBOpen Market Licensed\fP FastCGI library (\fBhttps://fastcgi-archives.github.io/FastCGI_Developers_Kit_FastCGI.html\fP).
 .RE
 
-You would install these libraries yourself (they are not distributed with Gliimly) as dependencies for compiling the source code. Gliimly does not link to any outside static libraries. 
+You would install these libraries yourself (they are not distributed with Golf) as dependencies for compiling the source code. Golf does not link to any outside static libraries. 
 
-Gliimly uses FNV-1a hash function, which is released in the public domain (see \fBwikipedia page\fP) and is not patented (see \fBLandon Noll's\fP web page).
+Golf uses FNV-1a hash function, which is released in the public domain (see \fBwikipedia page\fP) and is not patented (see \fBLandon Noll's\fP web page).
 
-Gliimly source code uses \fBSPDX\fP, an open ISO standard for communicating sofware bill of material information (such as licenses), to improve on open source licensing compliance for companies and communities.
+Golf source code uses \fBSPDX\fP, an open ISO standard for communicating sofware bill of material information (such as licenses), to improve on open source licensing compliance for companies and communities.
 .SH SEE ALSO
  
 .B - License

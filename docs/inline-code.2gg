@@ -1,8 +1,8 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 inline-code \-  (language)
 .SH PURPOSE
-Inline Gliimly code in an output statement.
+Inline Golf code in an output statement.
 
 .SH SYNTAX
 
@@ -15,7 +15,7 @@ Inline Gliimly code in an output statement.
 .RE
 
 .SH DESCRIPTION
-You can write Gliimly statements within an \fBoutput-statement\fP by using them between << and >> delimiters. 
+You can write Golf statements within an \fBoutput-statement\fP by using them between << and >> delimiters. 
 
 The following statements can be inlined: \fBp-path\fP,\fBp-out\fP, \fBp-web\fP, \fBp-url\fP, \fBpf-out\fP, \fBpf-web\fP, \fBpf-url\fP, \fBp-num\fP, \fBcurrent-row\fP, \fBnumber-string\fP, \fBstring-length\fP, \fBcall-handler\fP.
 

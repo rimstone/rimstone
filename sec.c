@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // Security-related functions for GLIIMLY and run-time
@@ -9,7 +9,7 @@
 //
 
 
-#include "gliim.h"
+#include "golf.h"
 #include <openssl/err.h>
 
 // Prototypes
@@ -97,7 +97,7 @@ void gg_sec_load_algos(void)
 
 // 
 // Errors out.
-// 'err' is gliim messsage, which is supplemented with crypto-provider's message
+// 'err' is golf messsage, which is supplemented with crypto-provider's message
 // it doesn't return, rather ends with fatal error
 //
 void gg_sec_err (char *err)
@@ -238,10 +238,10 @@ char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_c
 // 'salt' is the salt used. salt_len is the length of salt, if 0 then strlen(salt), also if salt is NULL, salt_len must be 0.
 // iter_count is the number of iterations in generating key and IV, if -1 then it's 1000
 // 'cipher' is the cipher algorithm name. This is something one can see with 'openssl list cipher-algorithm'
-// Gliimly does not restrict what this may be - which depends on what providers are present on the system,
+// Golf does not restrict what this may be - which depends on what providers are present on the system,
 // it only supplies the default, which is currently aes256.
 // 'digest_name' is the digest algo name. This is something one can see with 'openssl list digest-algorithm'
-// Gliimly does not restrict what this may be - which depends on what providers are present on the system,
+// Golf does not restrict what this may be - which depends on what providers are present on the system,
 // it only supplies the default, which is currently sha256
 // Either e_ctx or d_ctx can be NULL (if we're only encrypting or decrypting).
 // Returns 0 if cannot produce the context, 1 if okay.
@@ -346,7 +346,7 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
            
     // reuse the values already set, so same context can be reused for multiple encryptions
     // except nonce (IV), which is unique each time
-    // if iv is NULL, Gliimly allows that only if cache is not used. In that case, the password is
+    // if iv is NULL, Golf allows that only if cache is not used. In that case, the password is
     // computed each time and salt must be different each time, so new iv is generated every time.
     if (iv != NULL)
     {

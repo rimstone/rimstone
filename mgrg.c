@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework. 
+// On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
 // 
-// Gliimly SERVICE process manager. 
+// Golf SERVICE process manager. 
 //
 
 #define _GNU_SOURCE         
@@ -36,7 +36,7 @@
 #include <stdbool.h>
 #include <sys/prctl.h>
 
-// must update this if updating in gliim.h
+// must update this if updating in golf.h
 typedef long gg_num; 
 
 
@@ -133,7 +133,7 @@ static gg_num sockfd; // socket passed down to forked child
 static gg_num num_process; // abs max # of processes, plist is sized on it
 static FILE *logfile = NULL; // this is mgrg.log
 static pid_t sid = 0; // session id of the child group
-static char *gliimapp = ""; // app name
+static char *golfapp = ""; // app name
 static gg_num num_to_start_min = 5; // min-worker
 static gg_num adapt = 0; // adaptive mode
 static gg_num tspike = 30; // number of secs to die down for client srvc process if no demand 
@@ -285,7 +285,7 @@ static void runasuser() {
     if (setuid(0) == 0 || seteuid(0) == 0) exit_error ("Program can never run as root");
 
     char ipath[GG_MAX_FILELEN];
-    snprintf (ipath, sizeof(ipath), GG_RUNNAME "/app", gliimapp);
+    snprintf (ipath, sizeof(ipath), GG_RUNNAME "/app", golfapp);
     if (chdir(ipath) != 0) exit_error ("Cannot set current directory to [%s], [%s]", ipath, GG_FERR);
 }
 
@@ -298,7 +298,7 @@ static void runasuser() {
 static gg_num srvhere(gg_num op) {
     char lpath[GG_MAX_FILELEN];
     if (lfd != -1) return 1; // this is when calling srvhere again in the same process like in sending okay_started/okay_running
-    snprintf (lpath, sizeof(lpath), GG_LOCKNAME, gliimapp);
+    snprintf (lpath, sizeof(lpath), GG_LOCKNAME, golfapp);
     if (lockfile (lpath, &lfd) == 0) {
         log_msg("Another server is running, lock file failed");
         return 1;
@@ -483,7 +483,7 @@ static void getshm() {
     char kname[100];
     key_t shmkey;
     int shmid;
-    snprintf (kname, sizeof(kname), GG_SHNAME, gliimapp);
+    snprintf (kname, sizeof(kname), GG_SHNAME, golfapp);
     // The shared memory segment is created and never destroyed, since daemons can come and go
     if ((shmkey = ftok (kname, 'V')) == (key_t)-1) exit_error ("Cannot create ID for shmem [%s]", GG_FERR);
     shmid = shmget (shmkey, sizeof(shbuf), IPC_CREAT | 0600);
@@ -551,12 +551,12 @@ static void cli_getshm(char *comm, gg_num byserver) {
         exit_error ("Unrecognized command [%s]. Available commands are start, stop, restart and quit", comm);
     }
 
-    snprintf (kname, sizeof(kname), GG_SHNAME, gliimapp);
+    snprintf (kname, sizeof(kname), GG_SHNAME, golfapp);
     if ((shmkey = ftok (kname, 'V')) == (key_t)-1) exit_error ("Cannot create ID for shmem [%s]", GG_FERR);
     shmid = shmget (shmkey, sizeof(shbuf), 0600);
     // don't display error message if the intention was to quit
     if (shmid < 0) {
-        if (strcmp (comm, "quit")) exit_error ("There is no active mgrg server named [%s]", gliimapp);
+        if (strcmp (comm, "quit")) exit_error ("There is no active mgrg server named [%s]", golfapp);
         else exit(0); // quit achieved without error message
     }
     shm = (shbuf*) shmat (shmid, NULL, 0);
@@ -654,7 +654,7 @@ static void start_child (char *command, gg_num pcount) {
 
     pid_t ppid = getpid(); // get process id, used below to set death signal to child if parent dead
     //
-    // Fork for a final child, to prevent daemon processes (Gliimly SERVICE programs) from ever being able to acquire controlling terminal
+    // Fork for a final child, to prevent daemon processes (Golf SERVICE programs) from ever being able to acquire controlling terminal
     fres = fork();
     if (fres == 0) {
         // FINAL CHILD, CANNOT USE LOG_MSG ANYMORE!!!!
@@ -672,7 +672,7 @@ static void start_child (char *command, gg_num pcount) {
         }
 
 
-        // umask to 0. For gliim, it doesn't really matter because it sets own umask. In general, a good idea
+        // umask to 0. For golf, it doesn't really matter because it sets own umask. In general, a good idea
         umask (0);
 
         //restore ignored signals in parent to default in child
@@ -830,7 +830,7 @@ int main(int argc, char **argv)
                 minmaxset = 1;
                 break;
             case 'v':
-                out_msg ("Gliimly Service Manager version [%s].", GG_PKGVERSION);
+                out_msg ("Golf Service Manager version [%s].", GG_PKGVERSION);
                 exit (0);
                 break;
             case 'f':
@@ -935,20 +935,20 @@ int main(int argc, char **argv)
     for (i = 0; i < maxproc; i++) plist[i] = -1; // set as inactive processes
     
     // get app name
-    if (optind <= argc - 1) GG_ANN (gliimapp = strdup (argv[optind++]));
+    if (optind <= argc - 1) GG_ANN (golfapp = strdup (argv[optind++]));
     else {
-        if (gliimapp[0] == 0) exit_error ("Application name must be specified as an argument [%ld,%ld]", optind, argc-1);
+        if (golfapp[0] == 0) exit_error ("Application name must be specified as an argument [%ld,%ld]", optind, argc-1);
     }
     gg_num l;
-    if ((l = strlen (gliimapp)) > 30) exit_error ("Application name [%s] too long", gliimapp);
+    if ((l = strlen (golfapp)) > 30) exit_error ("Application name [%s] too long", golfapp);
     for (i = 0; i < l; i++) 
     {
-        if (isalnum(gliimapp[i])) continue;
-        if (gliimapp[i]=='_') continue;
-        if (gliimapp[i] == '-') { continue; }
-        exit_error ("Application name can be comprised only of underscore, hyphen, digits and characters, found [%s]", gliimapp);
+        if (isalnum(golfapp[i])) continue;
+        if (golfapp[i]=='_') continue;
+        if (golfapp[i] == '-') { continue; }
+        exit_error ("Application name can be comprised only of underscore, hyphen, digits and characters, found [%s]", golfapp);
     }
-    if (!isalpha(gliimapp[0])) exit_error ("Application name must start with alphabetic character, found [%s]", gliimapp);
+    if (!isalpha(golfapp[0])) exit_error ("Application name must start with alphabetic character, found [%s]", golfapp);
 
     // Command line checks
     char ipath[GG_MAX_FILELEN];
@@ -973,7 +973,7 @@ int main(int argc, char **argv)
     run_user_id = pwd->pw_uid;
     run_user_grp_id = pwd->pw_gid; // group of current user
 
-    // Check if -i options, and if it is, initialize app. Every Gliimly app must have this done.
+    // Check if -i options, and if it is, initialize app. Every Golf app must have this done.
     // Recommended for all apps.
     if (initit == 1) {
         //
@@ -987,7 +987,7 @@ int main(int argc, char **argv)
         snprintf (ipath, sizeof(ipath), ".vappname");
         FILE *f = fopen (ipath, "w+");
         if (f != NULL) {
-            fprintf(f, "%s", gliimapp);
+            fprintf(f, "%s", golfapp);
             fclose(f);
             initfile (ipath, 0700, run_user_id, run_user_grp_id);
         } // don't do anything if can't write (no error), just specify name in gg
@@ -996,46 +996,46 @@ int main(int argc, char **argv)
         // create /var/lib/gg/bld is created by install (in Makefile)
         // create /var/lib/gg/bld/<appname>
         //
-        snprintf (ipath, sizeof(ipath), GG_BLDAPPDIR, gliimapp);
+        snprintf (ipath, sizeof(ipath), GG_BLDAPPDIR, golfapp);
         owned (ipath, run_user_id); // make sure no one else already took this
         initdir (ipath, 02700, run_user_id, run_user_grp_id);
 
         //
-        // create /var/lib/gg/<appname> - this is also created by Gliimly in setup_hello() - MUST MATCH IT!!
-        // reason being that depending on what is done first (i.e. mgrg used alone without without Gliimly, or Gliimly using mgrg)
+        // create /var/lib/gg/<appname> - this is also created by Golf in setup_hello() - MUST MATCH IT!!
+        // reason being that depending on what is done first (i.e. mgrg used alone without without Golf, or Golf using mgrg)
         //
-        snprintf (ipath, sizeof(ipath), GG_RUNNAME, gliimapp);
+        snprintf (ipath, sizeof(ipath), GG_RUNNAME, golfapp);
         owned (ipath, run_user_id); // make sure no one else already took this
         initdir (ipath, 0755, run_user_id, run_user_grp_id);
         //
         // create /var/lib/gg/<appname>/mgrglog
         //
-        snprintf (ipath, sizeof(ipath), GG_VFLOGDIR, gliimapp);
+        snprintf (ipath, sizeof(ipath), GG_VFLOGDIR, golfapp);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
         // create /var/lib/gg/<appname>/app 
         //
-        snprintf (ipath, sizeof(ipath), GG_APPDIR, gliimapp);
+        snprintf (ipath, sizeof(ipath), GG_APPDIR, golfapp);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
         // create /var/lib/gg/<appname>/app/file
         //
-        snprintf (ipath, sizeof(ipath), GG_FILEDIR, gliimapp);
+        snprintf (ipath, sizeof(ipath), GG_FILEDIR, golfapp);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
         // create /var/lib/gg/<appname>/app/file/t
         //
-        snprintf (ipath, sizeof(ipath), GG_TMPFILEDIR, gliimapp);
+        snprintf (ipath, sizeof(ipath), GG_TMPFILEDIR, golfapp);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
         // create /var/lib/gg/<appname>/app/trace 
         //
-        snprintf (ipath, sizeof(ipath), GG_TRACEDIR, gliimapp);
+        snprintf (ipath, sizeof(ipath), GG_TRACEDIR, golfapp);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
         // create /var/lib/gg/<appname>/app/db
         //
-        snprintf (ipath, sizeof(ipath), GG_DBDIR, gliimapp);
+        snprintf (ipath, sizeof(ipath), GG_DBDIR, golfapp);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
         // create /var/lib/gg/<appname>/sock (with group ownership of reverse proxy)
@@ -1048,26 +1048,26 @@ int main(int argc, char **argv)
             struct group *grp;
             if ((grp = getgrnam(proxy_grp)) == NULL) exit_error ("Unknown group [%s], [%s]", proxy_grp, GG_FERR);
             proxy_grp_id = grp->gr_gid;
-            snprintf (ipath, sizeof(ipath), GG_SOCKDIR, gliimapp);
+            snprintf (ipath, sizeof(ipath), GG_SOCKDIR, golfapp);
             initdir (ipath, 02750, run_user_id, proxy_grp_id);
-            snprintf (ipath, sizeof(ipath), GG_SOCKNAME, gliimapp);
+            snprintf (ipath, sizeof(ipath), GG_SOCKNAME, golfapp);
             initfile (ipath, 02660, run_user_id, proxy_grp_id);
         } else {
             // allow anyone to create connection
-            snprintf (ipath, sizeof(ipath), GG_SOCKDIR, gliimapp);
+            snprintf (ipath, sizeof(ipath), GG_SOCKDIR, golfapp);
             initdir (ipath, 02755, run_user_id, run_user_id);
-            snprintf (ipath, sizeof(ipath), GG_SOCKNAME, gliimapp);
+            snprintf (ipath, sizeof(ipath), GG_SOCKNAME, golfapp);
             initfile (ipath, 02666, run_user_id, run_user_id);
         }
         //
         //
-        // end of gliim setup_hello() match
+        // end of golf setup_hello() match
         //
         //
         //
         // END ROOT
         //
-        snprintf (ipath, sizeof(ipath), GG_SHNAME, gliimapp);
+        snprintf (ipath, sizeof(ipath), GG_SHNAME, golfapp);
         // do not recreate file, as that leaves current server's memory in a limbo - will never receive anything
         if (stat(ipath, &sbuff) != 0) {
             gg_num f;
@@ -1084,9 +1084,9 @@ int main(int argc, char **argv)
     runasuser(); // make sure mgrg application NEVER runs as root
 
     // check if this app initialized
-    snprintf (ipath, sizeof(ipath), GG_APPDIR, gliimapp);
+    snprintf (ipath, sizeof(ipath), GG_APPDIR, golfapp);
     if (stat(ipath, &sbuff) != 0) exit_error ("Directory [%s] does not exist or cannot be accessed", ipath); 
-    snprintf (ipath, sizeof(ipath), GG_RUNNAME "/mem", gliimapp);
+    snprintf (ipath, sizeof(ipath), GG_RUNNAME "/mem", golfapp);
     if (stat(ipath, &sbuff) != 0) exit_error ("Directory [%s] does not exist or cannot be accessed", ipath); 
 
     // This is if there is -m <command>, run mgrg as client, and exit right away
@@ -1103,22 +1103,22 @@ int main(int argc, char **argv)
     getshm();
 
     // check sanity
-    if ((unix_sock == 0 && port == 0) || gliimapp[0] == 0) {
+    if ((unix_sock == 0 && port == 0) || golfapp[0] == 0) {
         usage(-1);
     }
 
     // use ./command for something in current directory or a full path
     if (command[0] == 0) {
-        // if no command, assume standard Gliimly format - in gliim's bld directory
+        // if no command, assume standard Golf format - in golf's bld directory
         GG_ANN (command = (char*)malloc (GG_MAX_FILELEN));
-        snprintf (command, GG_MAX_FILELEN, GG_BLDAPPDIR "/%s.srvc", gliimapp, gliimapp);
+        snprintf (command, GG_MAX_FILELEN, GG_BLDAPPDIR "/%s.srvc", golfapp, golfapp);
     } else {
         char *s = strchr (command, '/');
         if (s == NULL) {
-            // if command without path, place the file in gliim's bld directory
+            // if command without path, place the file in golf's bld directory
             char *nc;
             GG_ANN (nc = (char*)malloc (GG_MAX_FILELEN));
-            snprintf (nc, GG_MAX_FILELEN, GG_BLDAPPDIR "/%s", gliimapp, command);
+            snprintf (nc, GG_MAX_FILELEN, GG_BLDAPPDIR "/%s", golfapp, command);
             command = nc; // old command is lost, but no big deal; freeing would work but any change in logic might cause sigseg later
         }
     }
@@ -1140,7 +1140,7 @@ int main(int argc, char **argv)
 
     // log file defined outside fork as it must be visible to parent AND child
     char logn[GG_MAX_FILELEN];
-    snprintf (logn, sizeof(logn), GG_VFLOGDIR "/log", gliimapp);
+    snprintf (logn, sizeof(logn), GG_VFLOGDIR "/log", golfapp);
     
     gg_num deadres; // used for first round of forking, which isn't relevant
     // if foreground mode, do not fork
@@ -1149,7 +1149,7 @@ int main(int argc, char **argv)
         // THIS IS THE RESIDENT SERVER PROCESS (child of original)
 
         // create new session so that terminating current logged-on session will not send terminating signals to here
-        // not as important for Gliimly, as it handles all signals, in general a good idea
+        // not as important for Golf, as it handles all signals, in general a good idea
         if (fg == 0) { // create session only if running in background
             if ((sid = setsid()) < 0) {
                 exit_error ("Cannot create new session group [%s]", GG_FERR);
@@ -1161,7 +1161,7 @@ int main(int argc, char **argv)
         if (fg == 0) { // redirect stdin,out,err only if background mode, otherwise print to console
             logfile = fopen (logn, "a+");
             if (logfile == NULL) exit_error ("Cannot open log file [%s]", GG_FERR);
-            // close stdin,stdout,stderror, and redirect them to /var/log/gliim
+            // close stdin,stdout,stderror, and redirect them to /var/log/golf
             close(0);
             close(1);
             close(2);
@@ -1182,11 +1182,11 @@ int main(int argc, char **argv)
         if (srvhere(GG_LOCK) == 1) {
             // if server already running, communicate to front end that it is okay, then exit
             if (fg == 0) cli_getshm ("okay_running", 1); // nobody to communicate with unless forked first
-            exit_error ("The Gliimly process manager for application [%s] is already running", gliimapp);
+            exit_error ("The Golf process manager for application [%s] is already running", golfapp);
         }
 
-        log_msg ("Gliimly Service Manager v%s starting", GG_PKGVERSION);
-        log_msg ("Command [%s], port [%ld], workers [%ld], user [%s], name [%s], sleep [%ld], minmaxset [%ld], min-workers [%ld], max-workers [%ld]", command, port, num_to_start_min, run_user, gliimapp, mslp, minmaxset, num_to_start_min, maxproc);
+        log_msg ("Golf Service Manager v%s starting", GG_PKGVERSION);
+        log_msg ("Command [%s], port [%ld], workers [%ld], user [%s], name [%s], sleep [%ld], minmaxset [%ld], min-workers [%ld], max-workers [%ld]", command, port, num_to_start_min, run_user, golfapp, mslp, minmaxset, num_to_start_min, maxproc);
 
          
         // Binding must be here, because it has to be after locking checked in srvhere. This is especially important
@@ -1209,11 +1209,11 @@ int main(int argc, char **argv)
             struct sockaddr_un servaddr;
             memset(&servaddr, 0, sizeof(struct sockaddr_un));
             servaddr.sun_family = AF_UNIX; 
-            snprintf (servaddr.sun_path, sizeof (servaddr.sun_path), GG_SOCKNAME, gliimapp);
+            snprintf (servaddr.sun_path, sizeof (servaddr.sun_path), GG_SOCKNAME, golfapp);
             if (unlink(servaddr.sun_path) != 0) if (errno != ENOENT) exit_error ("Cannot unlink unix domain socket file [%s]", GG_FERR);
             if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) != 0) exit_error ("Cannot bind unix domain socket [%s], [%s]", servaddr.sun_path, GG_FERR);
             struct stat sbuff;
-            snprintf (ipath, sizeof(ipath), GG_SOCKDIR, gliimapp);
+            snprintf (ipath, sizeof(ipath), GG_SOCKDIR, golfapp);
             if (stat(ipath, &sbuff) != 0) exit_error("Socket directory not found [%s], [%s]", ipath, GG_FERR);
             // check if directory perms are 0750, if so make it 0660 for the socket. If 0755, make it 0666
             if ((sbuff.st_mode & 05) == 05 ) {
@@ -1234,10 +1234,10 @@ int main(int argc, char **argv)
             exit_error("Cannot listen on socket [%s]", GG_FERR);
         }
         if (fg == 0) cli_getshm ("okay_started", 1); // nobody to communicate with unless forked first
-        log_msg ("Gliimly Service Manager v%s successfully started", GG_PKGVERSION);
+        log_msg ("Golf Service Manager v%s successfully started", GG_PKGVERSION);
 
     } else if (deadres == -1) {
-        exit_error ("Could not start Gliimly Service Manager for [%s], [%s]", gliimapp, GG_FERR);
+        exit_error ("Could not start Golf Service Manager for [%s], [%s]", golfapp, GG_FERR);
     } else {
         // ORIGINAL PARENT FROM COMMAND LINE OR A SCRIPT, deadres is the PID of the child process (the resident process)
         // get success message from child (our resident process)
@@ -1249,11 +1249,11 @@ int main(int argc, char **argv)
 
             // check for client commands
             checkshm(); 
-            if (shm->command == GG_DONESTARTUP) {out_msg ("Gliimly Service Manager [%s] for [%s] successfully started", GG_PKGVERSION, gliimapp); exit(0);}
-            else if (shm->command == GG_DONESTARTUP0) {out_msg ("Gliimly Service Manager [%s] for [%s] is already running. If you want to restart it, stop it first (-m quit), then start it", GG_PKGVERSION, gliimapp); exit(1);}
+            if (shm->command == GG_DONESTARTUP) {out_msg ("Golf Service Manager [%s] for [%s] successfully started", GG_PKGVERSION, golfapp); exit(0);}
+            else if (shm->command == GG_DONESTARTUP0) {out_msg ("Golf Service Manager [%s] for [%s] is already running. If you want to restart it, stop it first (-m quit), then start it", GG_PKGVERSION, golfapp); exit(1);}
             sleepabit (mslp);
         }
-        exit_error ("Could not start Gliimly Service Manager for [%s],[%ld],[1], log file [%s]", gliimapp, tries, logn);
+        exit_error ("Could not start Golf Service Manager for [%s],[%ld],[1], log file [%s]", golfapp, tries, logn);
     }
     gg_num pcount = 0;
     num_process = maxproc;

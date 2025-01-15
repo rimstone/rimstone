@@ -1,14 +1,16 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-index \- Gliimly documentation ()
+index \- Golf documentation ()
 .SH DESCRIPTION
-Gliimly is a programming language for web services. It includes compiler, application server and tools for a complete web development platform. Gliimly is simple, memory-safe, high-performance, built with industry-standard Free Open Source libraries, extensible, and licensed under \fBApache 2\fP Free Open Source.
+Golf is a compiled programming language for web services. It includes a framework, application server and tools for a complete web development platform. Golf is simple, memory-safe, high-performance, built with industry-standard Free Open Source libraries, extensible, and licensed under \fBApache 2\fP Free Open Source.
 
-\fBInstall Gliimly\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note version comments are the same as their numbers; each change log is described on \fBGliimly blog\fP). 
+\fBInstall Golf\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note version comments are the same as their numbers; each change log is described on \fBGolf blog\fP). 
 
-Current version is 140. Check \fBBlog\fP for change log.
+Current version is 142. Check \fBBlog\fP for change log.
 
-Example of Gliimly code (from \fBSaaS example\fP):
+Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to Golf!
+
+Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
 
 \fBBlog\fP release updates, articles and examples:
@@ -27,13 +29,13 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-12-25 \fBGliimly 136 released\fP
+2024-12-25 \fBGolf 136 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-12-24 \fBGliimly 132 released\fP
+2024-12-24 \fBGolf 132 released\fP
 .RE
 
 
@@ -45,7 +47,7 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-12-12 \fBHow is memory organized in Gliimly\fP
+2024-12-12 \fBHow is memory organized in Golf\fP
 .RE
 
 
@@ -57,13 +59,13 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-12-08 \fBGliimly 124 released\fP
+2024-12-08 \fBGolf 124 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-12-04 \fBGliimly 121 released\fP
+2024-12-04 \fBGolf 121 released\fP
 .RE
 
 
@@ -75,31 +77,31 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-11-29 \fBGliimly 117 released\fP
+2024-11-29 \fBGolf 117 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-11-26 \fBGliimly 114 released\fP
+2024-11-26 \fBGolf 114 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-11-22 \fBGliimly 109 released\fP
+2024-11-22 \fBGolf 109 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-11-22 \fBHow to create Gliimly application\fP
+2024-11-22 \fBHow to create Golf application\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-11-21 \fBGetting help for Gliimly with man pages\fP
+2024-11-21 \fBGetting help for Golf with man pages\fP
 .RE
 
 
@@ -111,19 +113,19 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-11-10 \fBGliimly 91 released\fP
+2024-11-10 \fBGolf 91 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-11-05 \fBGliimly 87 released\fP
+2024-11-05 \fBGolf 87 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-10-28 \fBGliimly 76 released\fP
+2024-10-28 \fBGolf 76 released\fP
 .RE
 
 
@@ -135,7 +137,7 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-10-23 \fBGliimly 70 released\fP
+2024-10-23 \fBGolf 70 released\fP
 .RE
 
 
@@ -147,7 +149,7 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-10-19 \fBGliimly 65 released\fP
+2024-10-19 \fBGolf 65 released\fP
 .RE
 
 
@@ -159,7 +161,7 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-10-14 \fBGliimly 56 released\fP
+2024-10-14 \fBGolf 56 released\fP
 .RE
 
 
@@ -183,7 +185,7 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-10-08 \fBGliimly 54 released\fP
+2024-10-08 \fBGolf 54 released\fP
 .RE
 
 
@@ -195,13 +197,13 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-10-01 \fBGliimly 50 released\fP
+2024-10-01 \fBGolf 50 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-09-29 \fBSQLite with Gliimly\fP
+2024-09-29 \fBSQLite with Golf\fP
 .RE
 
 
@@ -213,19 +215,19 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-09-27 \fBGliimly 44 released\fP
+2024-09-27 \fBGolf 44 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-09-26 \fBOverview of Gliimly\fP
+2024-09-26 \fBOverview of Golf\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-09-24 \fBGliimly 37 released\fP
+2024-09-24 \fBGolf 37 released\fP
 .RE
 
 
@@ -243,30 +245,30 @@ Example of Gliimly code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-09-20 \fBGliimly 32 released\fP
+2024-09-20 \fBGolf 32 released\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-09-19 \fBUsing Vim color schemes with Gliimly\fP
+2024-09-19 \fBUsing Vim color schemes with Golf\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-09-17 \fBHello World in Gliimly\fP
+2024-09-17 \fBHello World in Golf\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-09-13 \fBIntroduction to Gliimly\fP
+2024-09-13 \fBIntroduction to Golf\fP
 .RE
 
 
 .RS 4
 \[bu]    
-2024-09-12 \fBInitial Gliimly release\fP
+2024-09-12 \fBInitial Golf release\fP
 .RE
 

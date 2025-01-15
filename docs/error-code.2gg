@@ -1,8 +1,8 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-error-code \- Gliimly documentation (error-handling)
+error-code \- Golf documentation (error-handling)
 .SH DESCRIPTION
-Many Gliimly statements return status with GG_ERR_... error codes, which are generally descriptive to a point. Such status may not as detailed as the operating system "errno" variable, however you can use "errno" clause in \fBget-req\fP statement to obtain the last known errno value from aforementioned statements. You should obtain this value as soon as possible after the statement because another statement may set it afterwards.
+Many Golf statements return status with GG_ERR_... error codes, which are generally descriptive to a point. Such status may not as detailed as the operating system "errno" variable, however you can use "errno" clause in \fBget-req\fP statement to obtain the last known errno value from aforementioned statements. You should obtain this value as soon as possible after the statement because another statement may set it afterwards.
 
 In the following example, a directory is attempted to be deleted via \fBdelete-file\fP, which will fail with GG_ERR_DELETE - however you can get a more specific code via "errno" (which in this case is "21", or "EISDIR", which means that it cannot delete a directory with this statement):
 
@@ -19,7 +19,7 @@ end-if
 .EE
 .RE
 
-Note that with some GG_ERR_... codes, the "errno" clause in get-req may return 0. This means the error was detected by Gliimly and not reported by the operating system.
+Note that with some GG_ERR_... codes, the "errno" clause in get-req may return 0. This means the error was detected by Golf and not reported by the operating system.
 .SH SEE ALSO
  
 .B - Error handling

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // sqlite native interface, used by db.c for making of db-specific libs
@@ -10,7 +10,7 @@
 // in order to avoid disorderly rollbacks in case of errors
 //
 
-#include "gliim.h"
+#include "golf.h"
 static int gg_lite_stmt_rows (char ***row, unsigned long **lens);
 static int gg_lite_add_input(gg_num i, char *arg);
 static int gg_lite_prep_stmt(char is_prep, void **prep, char *stmt, gg_num num_of_args);
@@ -354,8 +354,8 @@ int gg_lite_prep_stmt(char is_prep, void **prep, char *stmt, gg_num num_of_args)
         if (prep != NULL) *prep = GG_CURR_DB.dbc->sqlite.stmt;
     }
     GG_CURR_DB.num_inp = num_of_args;
-    // check param count correct before binding as the statement and what gliim says may be different, in which case
-    // mariadb would access memory that doesn't exist if gliim say there's less than really is
+    // check param count correct before binding as the statement and what golf says may be different, in which case
+    // mariadb would access memory that doesn't exist if golf say there's less than really is
     gg_num count = sqlite3_bind_parameter_count(GG_CURR_DB.dbc->sqlite.stmt);
     if (count != GG_CURR_DB.num_inp)
     {

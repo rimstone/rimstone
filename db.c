@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // interface to Postgres
@@ -9,7 +9,7 @@
 // the process. 
 //
 
-#include "gliim.h"
+#include "golf.h"
 
 //
 // Note: we ALWAYS use gg_get_db_connection () explicitly whenever the database
@@ -74,7 +74,7 @@ gg_dbc *gg_get_db_connection (gg_num abort_if_bad)
     // this index is used in GG_CURR_DB
     if (gg_get_config()->ctx.db->ind_current_db == -1) 
     {
-        // this shouldn't happen, as all Gliimly db ops are meant to have db connection. A bug if it gets here.
+        // this shouldn't happen, as all Golf db ops are meant to have db connection. A bug if it gets here.
         gg_report_error ("No active database in use, yet database operation attempted");
     }
 
@@ -350,12 +350,12 @@ gg_dbc *gg_execute_SQL (char *s,  gg_num *arows, char **er, char **err_message, 
     // happened so far would be either rolled back or committed (depending on the db setting)
     // and the rest would also be independently rolled back or committed - because transaction
     // is tied to a *connection* and we have two of those here.
-    // Note that s from Gliimly (as in from gg_begin_transaction) is OKAY
+    // Note that s from Golf (as in from gg_begin_transaction) is OKAY
     if (user_check == 1)
     {
         if (gg_firstword("BEGIN", s) || gg_firstword("START", s) || gg_firstword("COMMIT", s) || gg_firstword("ROLLBACK", s))
         {
-            gg_report_error ( "Use Gliimly begin-transaction, commit-transaction or rollback-transaction instead of direct database SQL for these statements, reading file [%s] at line [%ld]", sname, lnum);
+            gg_report_error ( "Use Golf begin-transaction, commit-transaction or rollback-transaction instead of direct database SQL for these statements, reading file [%s] at line [%ld]", sname, lnum);
         }
     }
 
@@ -391,7 +391,7 @@ gg_dbc *gg_execute_SQL (char *s,  gg_num *arows, char **er, char **err_message, 
         //
         // Error in execution. If we're not in a transaction, try to reconnect ONCE.
         // If we ARE in a transaction, we CANNOT reconnect.
-        // By transaction, I mean usage of Gliimly begin-transaction - no other kind is allowed.
+        // By transaction, I mean usage of Golf begin-transaction - no other kind is allowed.
         //
         if (GG_CURR_DB.is_begin_transaction == 0)
         {
@@ -586,7 +586,7 @@ gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, ch
         }
         // This is only if connection was lost after reconnecting successfully once (so retry is 0, 
         // because we only attempt to reconnect once). In practicality, this is very very unlikely to happen.
-        // So -1/lost connection, really never happens. If we cannot reconnect, gliim will error out the request.
+        // So -1/lost connection, really never happens. If we cannot reconnect, golf will error out the request.
         *er = gg_strdup ("-1"); // connection lost
         char * lostm = "Database connection lost or cannot be (re)established";
         if (err_message!=NULL) *err_message=gg_strdup(lostm); else GG_TRACE ("%s", lostm);
@@ -898,7 +898,7 @@ void gg_select_table (char *s,
             // and we don't know exactly what's in it. However, we could 'register' result variable as mysql and
             // free it at the end. This is TODO for a speedup in obtaining results.
             //
-            // in some cases Gliimly allocates storage, such as prepared for mariadb, so no need to gg_malloc and copy
+            // in some cases Golf allocates storage, such as prepared for mariadb, so no need to gg_malloc and copy
             //
             if (GG_CURR_DB.need_copy == 1)
             {
@@ -1082,7 +1082,7 @@ int gg_db_escape(char *from, char *to, gg_num *len)
 // 'format' can be NULL or otherwise (if NULL it's empty string).
 // In dynamic queries, the SQL text is a run-time variable, so we don't know the number of '%s' in there ahead of time (i.e. # of inp. params).
 // This function makes sure that SQL injection cannot happen by handling single quotes and slashes within strings. 
-// We will also adjust buffer destSize to what's needed, this avoids allocating fixed buffers and allows for unlimited query size. 'dest' is always a gliim string so we will adjust it here.
+// We will also adjust buffer destSize to what's needed, this avoids allocating fixed buffers and allows for unlimited query size. 'dest' is always a golf string so we will adjust it here.
 // The method is not one of binding but of constructing a full SQL text with data in it, but under sterile conditions not conducive to SQL injection.
 // We increase destSize to match what's needed and dest changes too. The caller code will free dest after SQL executes, so if in a loop,
 // it will allocate again and so on.

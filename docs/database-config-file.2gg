@@ -1,10 +1,10 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-database-config-file \- Gliimly documentation (database)
+database-config-file \- Golf documentation (database)
 .SH DESCRIPTION
-Gliimly application can use any number of databases, with each specified by a database configuration file. This file provides database name, login and connection settings and preferences.
+Golf application can use any number of databases, with each specified by a database configuration file. This file provides database name, login and connection settings and preferences.
 
-When making a Gliimly application, you specify a database vendor and the database configuration file for each database your application uses (see \fBgg\fP), for instance:
+When making a Golf application, you specify a database vendor and the database configuration file for each database your application uses (see \fBgg\fP), for instance:
 
 .RS 4
 .EX
@@ -16,9 +16,9 @@ gg ... --db="mariadb:db1 postgres:db2 sqlite:db3"  ...
 
 in which case there are three database configuration files (db1, db2 and db3), with db1 being MariaDB, db2 being PostgreSQL and db3 being SQLite database.
 
-You must create a database configuration file for each database your application uses, and this file must be placed with your source code. Such file will be copied to locations specified and used by Gliimly to connect to database(s) (see \fBdirectories\fP). 
+You must create a database configuration file for each database your application uses, and this file must be placed with your source code. Such file will be copied to locations specified and used by Golf to connect to database(s) (see \fBdirectories\fP). 
 
-Each such file contains connection information and authentication to a database, which Gliimly uses to login. The names of these configuration files are used in queries. There is no limit on how many databases can be used in your application and those from different vendors can be used in the same application.
+Each such file contains connection information and authentication to a database, which Golf uses to login. The names of these configuration files are used in queries. There is no limit on how many databases can be used in your application and those from different vendors can be used in the same application.
 
 An example of database configuration file (in this case MariaDB):
 
@@ -158,7 +158,7 @@ port=3307
 
 Besides making application deployment easier, this also adds to its security as the information such as above (including the database password) does not need to be a part of source code and reside in source code control system (such as git).
 
-Your environment variables can have any names, except that they cannot start with an underscore ("_") or be prefixed by "GG_" or "GG_", because those variable names are reserved by Gliimly.
+Your environment variables can have any names, except that they cannot start with an underscore ("_") or be prefixed by "GG_" or "GG_", because those variable names are reserved by Golf.
 
 Note that if your data actually has a dollar sign and is a part of the configuration file, then you can create a variable for it:
 

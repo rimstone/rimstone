@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 get-app \-  (application-information)
 .SH PURPOSE
@@ -47,7 +47,7 @@ Application-related variables can be obtained with get-app statement. The follow
 
 .RS 4
 \[bu]    
-"file-directory" is the directory where Gliimly file storage system is, i.e. \fBfile-storage\fP.
+"file-directory" is the directory where Golf file storage system is, i.e. \fBfile-storage\fP.
 
 .RE
 
@@ -70,7 +70,7 @@ Application-related variables can be obtained with get-app statement. The follow
 
 
 .SH EXAMPLES
-Get the name of Gliimly application:
+Get the name of Golf application:
 
 .RS 4
 .EX

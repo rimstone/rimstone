@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 //
 // Handling of fatal crashes, or controlled program aborts.
@@ -30,7 +30,7 @@
 #include <time.h>
 #include <link.h>
 #include <sys/resource.h>
-#include "gliim.h"
+#include "golf.h"
 
 // *******************
 // NO CALLS TO CODE OUTSIDE OF THIS MODULE MUST BE MADE AND NO GG_TRACE()!!
@@ -312,8 +312,8 @@ void set_signal_handler()
     // ignore these
     signal(SIGPIPE, SIG_IGN); // ignore broken pipe
     signal(SIGINT, SIG_IGN); // ignore ctrl c and such
-    signal(SIGUSR1, SIG_IGN); // ignore as it has no meaning for Gliimly
-    signal(SIGUSR2, SIG_IGN); // ignore as it has no meaning for Gliimly
+    signal(SIGUSR1, SIG_IGN); // ignore as it has no meaning for Golf
+    signal(SIGUSR2, SIG_IGN); // ignore as it has no meaning for Golf
     // CANNOT ignore SIGCHLD because we DO need status from them
     // DO NOT do anything with SIGALRM - curl uses it for timeouts
 }

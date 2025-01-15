@@ -1,8 +1,8 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-Client-API \- Gliimly documentation (API)
+Client-API \- Golf documentation (API)
 .SH DESCRIPTION
-You can use C API client library to connect to Gliimly:
+You can use C API client library to connect to Golf:
 
 .RS 4
 \[bu]    
@@ -24,7 +24,7 @@ There is a single include file ("gcli.h").
 
 .RS 4
 \[bu]    
-When building your client executable, you can either specify build flags by using the result of "gg -i" (if you have Gliimly installed), or use self-contained source files directly.
+When building your client executable, you can either specify build flags by using the result of "gg -i" (if you have Golf installed), or use self-contained source files directly.
 
 .RE
 
@@ -36,7 +36,7 @@ It is MT-safe, so you can use it in multi-threaded applications, such as to make
 See Examples section below for detailed examples.
 
 .LP
-.B SENDING A REQUEST TO GLIIMLY SERVICE
+.B SENDING A REQUEST TO GOLF SERVICE
 .LP
 
 The following function is used to make a call using C API:
@@ -110,13 +110,13 @@ The following members of "gg_cli" type must be supplied in order to make a call 
 
 .RS 4
 \[bu]    
-for a Unix socket, a fully qualified name to a Unix socket file used to communicate with the service (for a Gliimly service, it's "/var/lib/gg/<app name>/sock/sock", where <app name> is the application name), or
+for a Unix socket, a fully qualified name to a Unix socket file used to communicate with the service (for a Golf service, it's "/var/lib/gg/<app name>/sock/sock", where <app name> is the application name), or
 
 .RE
 
 .RS 4
 \[bu]    
-for a TCP socket, a host name and port name in the form of "<host name>:<port number>", specifying where is the server listening on (for instance "127.0.0.1:2301" if the Gliimly service is local and runs on TCP port 2301).
+for a TCP socket, a host name and port name in the form of "<host name>:<port number>", specifying where is the server listening on (for instance "127.0.0.1:2301" if the Golf service is local and runs on TCP port 2301).
 .RE
 
 
@@ -152,7 +152,7 @@ for a TCP socket, a host name and port name in the form of "<host name>:<port nu
 
 .B - Passing environment to service
 
-"env" is any environment variables that should be passed along to the service. You can access those in Gliimly via "environment" clause of \fBget-sys\fP statement. This is an array of strings, where name/value pairs are specified one after the other, and which always must end with NULL. For example, if you want to use variable "REMOTE_USER" with value "John" and variable "MY_VARIABLE" with value "8000", then it might look like this:
+"env" is any environment variables that should be passed along to the service. You can access those in Golf via "environment" clause of \fBget-sys\fP statement. This is an array of strings, where name/value pairs are specified one after the other, and which always must end with NULL. For example, if you want to use variable "REMOTE_USER" with value "John" and variable "MY_VARIABLE" with value "8000", then it might look like this:
 
 .RS 4
 .EX
@@ -304,7 +304,7 @@ You can obtain service reply when it's ready in its entirety (likely most often 
 .B STATUS OF REQUEST EXECUTION
 .LP
 
-"req_status" member of "gg_cli" type is the request status when a request had executed; it is somewhat similar to an exit status of a program. A Gliimly service request returns status by means of \fBhandler-status\fP statement. Note that "req_status" is valid only if "gg_cli_request()" returned GG_OKAY (or if "return_code" is GG_OKAY for multi-threaded programs).
+"req_status" member of "gg_cli" type is the request status when a request had executed; it is somewhat similar to an exit status of a program. A Golf service request returns status by means of \fBhandler-status\fP statement. Note that "req_status" is valid only if "gg_cli_request()" returned GG_OKAY (or if "return_code" is GG_OKAY for multi-threaded programs).
 
 .LP
 .B GETTING DATA REPLY (STDOUT)
@@ -477,23 +477,23 @@ req.done_hook = &get_complete;
 .B MULTITHREADING
 .LP
 
-The Gliimly client is MT-safe, meaning you can use it both in single-threaded and multi-threaded programs. Note that each thread must have its own copy of "gg_cli" request variable, since it provides both input and output parameters to a request call and as such cannot be shared between the threads.
+The Golf client is MT-safe, meaning you can use it both in single-threaded and multi-threaded programs. Note that each thread must have its own copy of "gg_cli" request variable, since it provides both input and output parameters to a request call and as such cannot be shared between the threads.
 
 .LP
 .B USAGE
 .LP
 
-Do not use this API directly with Gliimly - use \fBcall-remote\fP instead which is made specifically for use in .gliim files. Otherwise, you can use this API with any program.
+Do not use this API directly with Golf - use \fBcall-remote\fP instead which is made specifically for use in .golf files. Otherwise, you can use this API with any program.
 
 .LP
-.B USING API WITHOUT GLIIMLY
+.B USING API WITHOUT GOLF
 .LP
 
-You can use API without installing Gliimly. To do that:
+You can use API without installing Golf. To do that:
 
 .RS 4
 \[bu]    
-get the Gliimly source code,
+get the Golf source code,
 
 .RE
 
@@ -505,7 +505,7 @@ copy source files "gcli.c" and "gcli.h" to where you need to build your program,
 
 .RS 4
 \[bu]    
-add the content of Gliimly's "LICENSE" file to your own in order to include the license for these source files,
+add the content of Golf's "LICENSE" file to your own in order to include the license for these source files,
 
 .RE
 
@@ -574,7 +574,7 @@ gcc -o cli cli.c $(gg -i)
 .EE
 .RE
 
-In this case, you're using a Unix socket to communicate with the Gliimly service. To test with a Gliimly service handler, copy the following code to "hello_simple.gliim" file in a separate directory:
+In this case, you're using a Unix socket to communicate with the Golf service. To test with a Golf service handler, copy the following code to "hello_simple.golf" file in a separate directory:
 
 .RS 4
 .EX
@@ -587,7 +587,7 @@ end-handler
 .EE
 .RE
 
-Create and make the Gliimly application and run it via local Unix socket:
+Create and make the Golf application and run it via local Unix socket:
 
 .RS 4
 .EX
@@ -723,7 +723,7 @@ gcc -o cli1 cli1.c $(gg -i)
 .EE
 .RE
 
-To test it, you can create a Gliimly application. Copy this to "hello.gliim" file in a separate directory:
+To test it, you can create a Golf application. Copy this to "hello.golf" file in a separate directory:
 
 .RS 4
 .EX
@@ -767,7 +767,7 @@ end-handler
 .EE
 .RE
 
-Create and make the Gliimly application and run it on local TCP port 2301 to match the client above:
+Create and make the Golf application and run it on local TCP port 2301 to match the client above:
 
 .RS 4
 .EX
@@ -825,7 +825,7 @@ Some error!
 .EE
 .RE
 
-The output shows service exit code (82, see \fBhandler-status\fP in the Gliimly code above), length of data output, and other information which includes environment variables passed to the service from the client, the PID of server process, the request body from the client, and then the error output. Note that the data output (stdout) and the error output (stderr) are separated, since the protocol does use separate streams over the same connection. This makes working with the output easy, while the data transfer is fast at the same time.
+The output shows service exit code (82, see \fBhandler-status\fP in the Golf code above), length of data output, and other information which includes environment variables passed to the service from the client, the PID of server process, the request body from the client, and then the error output. Note that the data output (stdout) and the error output (stderr) are separated, since the protocol does use separate streams over the same connection. This makes working with the output easy, while the data transfer is fast at the same time.
 .SH SEE ALSO
  
 .B - API

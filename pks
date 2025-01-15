@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2019 Gliim LLC. 
 # Licensed under Apache License v2. See LICENSE file.
-# On the web http://gliimly.github.io/ - this file is part of Gliim framework.
+# On the web http://golf-lang.github.io/ - this file is part of Gliim framework.
 
 #./pks [git-pwd]
 # git-pwd is to run it non-interactively
@@ -22,9 +22,9 @@ if [ ! -d "$(pwd)/rv" ]; then
     mkdir -p rv
     cd rv
     if [ "$1" != "" ]; then
-        git clone https://gliim:$1@bitbucket.org/gliim/private_gliim.git .
+        git clone https://golf:$1@bitbucket.org/golf/private_golf.git .
     else
-        git clone https://gliim@bitbucket.org/gliim/private_gliim.git .
+        git clone https://golf@bitbucket.org/golf/private_golf.git .
     fi
     cd ..
 fi 

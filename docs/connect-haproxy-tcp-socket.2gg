@@ -1,12 +1,12 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-connect-haproxy-tcp-socket \- Gliimly documentation (web-servers)
+connect-haproxy-tcp-socket \- Golf documentation (web-servers)
 .SH DESCRIPTION
 This shows how to connect your application listening on TCP port <port number> (started with "-p" option in \fBmgrg\fP) to HAProxy load balancer.
 
-HAProxy can balance the load between different web servers, which in turn are connected to your applications. Since in this case HAProxy does not directly communicate with a Gliimly application (which is behind a web server), you may lookup examples of this online.
+HAProxy can balance the load between different web servers, which in turn are connected to your applications. Since in this case HAProxy does not directly communicate with a Golf application (which is behind a web server), you may lookup examples of this online.
 
-When you want HAProxy to directly communicate with a Gliimly application server, you may use configuration similar to this (shown is just a bare-bone setup needed to accomplish the goal):
+When you want HAProxy to directly communicate with a Golf application server, you may use configuration similar to this (shown is just a bare-bone setup needed to accomplish the goal):
 
 .RS 4
 .EX
@@ -59,11 +59,11 @@ sudo systemctl restart haproxy
 .EE
 .RE
 
-Note that Gliimly application path is "/func_test" (and the application name may or may not be the same, see \fBrequest\fP). The TCP port of the application is "2301" (could be any port number you choose that's greater than 1000 and lower than 65535). 
+Note that Golf application path is "/func_test" (and the application name may or may not be the same, see \fBrequest\fP). The TCP port of the application is "2301" (could be any port number you choose that's greater than 1000 and lower than 65535). 
 
-HAProxy itself is bound to port 90, and "path_reg" specifies which URLs will be passed to your Gliimly application (i.e. they must have "/func_test/" in the URL). "path-info" specifies SCRIPT_NAME and PATH_INFO (as "()" regular sub-expressions), which are as such passed to your Gliimly application. "docroot" is set to the application home directory (see \fBdirectories\fP).
+HAProxy itself is bound to port 90, and "path_reg" specifies which URLs will be passed to your Golf application (i.e. they must have "/func_test/" in the URL). "path-info" specifies SCRIPT_NAME and PATH_INFO (as "()" regular sub-expressions), which are as such passed to your Golf application. "docroot" is set to the application home directory (see \fBdirectories\fP).
 
-A Gliimly aplication (named "func_test") would have been started with (using the same application name "func_test" and TCP port "2301"):
+A Golf aplication (named "func_test") would have been started with (using the same application name "func_test" and TCP port "2301"):
 
 .RS 4
 .EX
@@ -73,7 +73,7 @@ mgrg -p 2301 func_test
 .EE
 .RE
 
-Now you should be able to connect and load-balance your Gliimly application servers directly from HAProxy.
+Now you should be able to connect and load-balance your Golf application servers directly from HAProxy.
 .SH SEE ALSO
  
 .B - Web servers

@@ -1,6 +1,6 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-mariadb-database \- Gliimly documentation (database)
+mariadb-database \- Golf documentation (database)
 .SH DESCRIPTION
 MariaDB configuration file is written as a MariaDB client options file. 
 

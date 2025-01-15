@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // JSON-related module
@@ -11,7 +11,7 @@
 // See examples of JSON at https://www.json.org/example.html (by douglas@crockford.com)
 
 
-#include "gliim.h"
+#include "golf.h"
 
 
 //
@@ -107,7 +107,7 @@ char *gg_json_fullname (json_node *list, gg_num list_c)
         memcpy (fulln + fullnc, list[i].name, list[i].name_len); fullnc += list[i].name_len;
         memcpy (fulln + fullnc, "\"", 1); fullnc += 1;
         // then if array, add [xxx]
-        if (list[i].index != -1) 
+        if (jloc->noenum == false && list[i].index != -1) 
         {
             memcpy (fulln + fullnc, "[", 1); fullnc += 1;
             // output index number, first check for 0
@@ -137,14 +137,16 @@ char *gg_json_fullname (json_node *list, gg_num list_c)
 
 //
 // Set the end result of json parsing. 'j' is the json object, 
+// noenum is true if no [] in normalized path
 //
-void gg_set_json (gg_json **j)
+void gg_set_json (gg_json **j, bool noenum)
 {
     GG_TRACE("");
     // get json object
     *j = (gg_json*)gg_malloc (sizeof(gg_json));
 
     jloc = *j; // set local processing object
+    jloc->noenum = noenum;
 
 }
 
@@ -213,7 +215,7 @@ char *gg_json_err()
 // To get error, use gg_json_err()
 // if "dec" is 0, do not decode strings, otherwise decode
 //
-gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec) 
+gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
 {
     GG_TRACE("");
 
@@ -314,7 +316,7 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
                 // use previous element because array applies to it
                 list_c--;
                 list[list_c].index++; // if index was -1, now it's 0 (first element in array), otherwise increments it
-                if (gg_json_new (val, i, len,dec ) != -1) { goto endj; }  
+                if (gg_json_new (val, i, len,dec) != -1) { goto endj; }  
                 // no incrementing *i because it's done in gg_json_new()
                 expected_comma_or_end_array = 1;
                 break;

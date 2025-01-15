@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 split-string \-  (strings)
 .SH PURPOSE
@@ -19,7 +19,7 @@ split-string delete <result>
 .SH DESCRIPTION
 split-string will find all instances of string <delimiter> in <string> and then split it into pieces delimited by string <delimiter>. The <result> can be used with \fBread-split\fP to obtain the pieces and with split-string to delete it (use "delete" clause with <result> to delete it).
 
-All pieces produced will be trimmed both on left and right. If a piece is double quoted, then double quotes are removed. For instance save this code in "ps.gliim" in a separate directory:
+All pieces produced will be trimmed both on left and right. If a piece is double quoted, then double quotes are removed. For instance save this code in "ps.golf" in a separate directory:
 
 .RS 4
 .EX

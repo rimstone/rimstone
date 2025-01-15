@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework. 
+// On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
 // 
 // Memory handling, including garbage collector
@@ -28,7 +28,7 @@
 //
 
 
-#include "gliim.h"
+#include "golf.h"
 
 bool gg_mem_process = false; // if set to true, any allocs are process-scoped. Memory is not released with request's end. Process memory.
 
@@ -283,7 +283,7 @@ inline gg_num gg_mem_get_id (void *ptr)
 inline gg_num gg_mem_get_len (gg_num r)
 {
     if (r == -1) return 0; // this is just empty string
-    return vm[r].len-1; // there's always trailing 0 set by all gliim statements, so .len is useful length + 1
+    return vm[r].len-1; // there's always trailing 0 set by all golf statements, so .len is useful length + 1
 }
 
 
@@ -300,8 +300,8 @@ void gg_mem_release(gg_num r)
 }
 
 //
-// Set length of memory. ptr is the memory alloc'd by Gliimly.
-// Memory in Gliimly is always sized exactly as needed
+// Set length of memory. ptr is the memory alloc'd by Golf.
+// Memory in Golf is always sized exactly as needed
 // len is useful data plus 1 for nullbyte, so for "ab", it's 3
 //
 inline void gg_mem_set_len (gg_num r, gg_num len)
@@ -359,7 +359,7 @@ inline void gg_mem_del_ref (gg_num r)
 
 // 
 //
-// Set memory to be process-scoped. ptr is the memory alloc'd by Gliimly.
+// Set memory to be process-scoped. ptr is the memory alloc'd by Golf.
 // This is done only if gg_mem_process is true, or if force is true
 //
 inline void gg_mem_set_process (char *m, bool force)
@@ -391,7 +391,7 @@ inline bool gg_mem_get_process (gg_num r)
 // Input and return the same as for realloc()
 // Checks memory to make sure it's valid block allocated here.
 // if safe is 1, perform additional checks to make sure it's okay memory
-// Gliimly never realloc's existing variable, b/c Gliimly variables reference each other
+// Golf never realloc's existing variable, b/c Golf variables reference each other
 // directly, meaning there's no indirection (first to a structure, then pointer) for performance.
 //
 inline void *gg_realloc(gg_num r, size_t size)
@@ -434,7 +434,7 @@ inline void _gg_free (void *ptr, char check)
 {
     //
     // if programmer mistakenly frees up GG_EMPTY_STRING, just ignore it
-    // this is true whether using gliim mem or OS mem
+    // this is true whether using golf mem or OS mem
     //
     if (ptr == GG_EMPTY_STRING || ptr == NULL) return;
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework. 
+// On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
 //
 // Library used both by GLIIMLY utility and GLIIMLY run-time 
@@ -10,7 +10,7 @@
 //
 
 
-#include "gliim.h"
+#include "golf.h"
 int gg_errno=0;
 bool gg_optmem=false;
 
@@ -204,7 +204,7 @@ gg_config *gg_alloc_config()
     // start /var/log/syslog so that fatal message have a place to go to
     openlog(gg_app_name, LOG_PERROR | LOG_PID, LOG_USER);
 
-    // all of gliim config (sub)structures must be zeroed-out - we rely on this when setting directories, user id and such
+    // all of golf config (sub)structures must be zeroed-out - we rely on this when setting directories, user id and such
     gg_pc = (gg_config*)calloc (1, sizeof(gg_config));
     if (gg_pc == NULL)
     {
@@ -493,7 +493,7 @@ gg_num gg_get_file_size(char *fn)
 
 
 // 
-// Checks if input parameter name (in URL) is valid for gliim.
+// Checks if input parameter name (in URL) is valid for golf.
 // Valid names are considered to have only alphanumeric characters and
 // underscores/hyphens, and must start with an alphabet character.
 // If hyphen is true, then it's allowed, otherwise it's not. If hyphen is allowed and conv_hyphen is true, then each hyphen
@@ -1033,7 +1033,7 @@ gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos
 // web encoding) or GG_URL (for url encoding). Pointer to pointer 'res' is allocated
 // with sufficient memory in the worst case scenario
 // vlen is the length of v, -1 if strlen(), otherwise length
-// alloc is true if v is gliim alloc'd mem
+// alloc is true if v is golf alloc'd mem
 // Returns length of an encoded string.
 //
 gg_num gg_encode (gg_num enc_type, char *v, gg_num vlen, char **res, bool alloc)
@@ -1044,8 +1044,8 @@ gg_num gg_encode (gg_num enc_type, char *v, gg_num vlen, char **res, bool alloc)
     if (alloc) id = gg_mem_get_id(v);
     if (vlen < 0)
     {
-        if (alloc) mlen = gg_mem_get_len(id); // this is used by Gliimly code written by user
-        else mlen = strlen (v); // this is when used internally by Gliimly
+        if (alloc) mlen = gg_mem_get_len(id); // this is used by Golf code written by user
+        else mlen = strlen (v); // this is when used internally by Golf
     }
     else
     {
@@ -1053,7 +1053,7 @@ gg_num gg_encode (gg_num enc_type, char *v, gg_num vlen, char **res, bool alloc)
         {
             if (vlen > (mlen=gg_mem_get_len(id))) gg_report_error ("Cannot encode [%ld] bytes of a string with length [%ld]", vlen, mlen);
             mlen = vlen;
-        } else mlen = vlen; // this is internal use by gliim
+        } else mlen = vlen; // this is internal use by golf
     }
     return gg_encode_base (enc_type, v, mlen , res, 1);
 }
@@ -1183,7 +1183,7 @@ gg_num gg_core_write_file(FILE *f, gg_num content_len, char *content, char ispos
 // exist). If 'content_len' is 0, then write the whole string 'content' (must be 0 terminated).
 // If pos is positive or 0 (and ispos==1), then position there in the file and then write - in this case file is not overwritten.
 // ispos is 0 for no position, 1 otherwise.
-// Cannot have append==1 and ispos==1. Gliimly checks and errors out if append and position are used before calling this.
+// Cannot have append==1 and ispos==1. Golf checks and errors out if append and position are used before calling this.
 // Returns GG_ERR_OPEN is cannot open file, GG_ERR_WRITE if cannot write, GG_ERR_POSITION if cannot
 // position, or number of bytes written, which is always the number of bytes requested (otherwise it's an error).
 // Maximum size of file is in 0..maxlonglong range.
@@ -1219,7 +1219,7 @@ gg_num gg_write_file (char *file_name, char *content, gg_num content_len, char a
 // If 'content_len' is 0, then write the whole string 'content' (must be 0 terminated).
 // If pos is positive or 0 (and ispos 1), then position there in the file and then write - 
 // ispos is 0 for no position, 1 otherwise.
-// Cannot have append==1 and ispos==1. Gliimly checks and errors out if append and position are used before calling this.
+// Cannot have append==1 and ispos==1. Golf checks and errors out if append and position are used before calling this.
 // Returns GG_ERR_OPEN is cannot open file, GG_ERR_WRITE if cannot write, GG_ERR_POSITION if cannot
 // position, or number of bytes written, which is always the number of bytes requested (otherwise it's an error).
 // Maximum size of file is in 0..maxlonglong range.
@@ -1254,9 +1254,9 @@ gg_num gg_write_file_id (FILE *f, char *content, gg_num content_len, char append
 
 
 //
-// Add file to Gliimly's list of files to close. f is the pointer to FILE*.
+// Add file to Golf's list of files to close. f is the pointer to FILE*.
 // When program closes file, it must set *f = NULL in order not to be double freed.
-// Returns memory index for FILE* in Gliimly's mem system.
+// Returns memory index for FILE* in Golf's mem system.
 //
 gg_num gg_reg_file(FILE **f)
 {
@@ -1329,7 +1329,7 @@ char * gg_os_version() {return GG_OS_VERSION;}
 // Find a keyword 'find' in str, making sure the keyword is NOT quoted or with ()
 // () is used to group an expression, which may contain keyword. Quoted string may also contain it.
 // Returns the pointer to keyword in str, or NULL if not there
-// Note: since each keyword has a space before it in the original Gliimly statement
+// Note: since each keyword has a space before it in the original Golf statement
 // we look for either 1) the space or 2) 0 character that may have been put there - that
 // must be the case, unless has_spaces is 0, for example a=b - keyword = does not need space before or after.
 // If find is "", then we're looking for end-of-line (i.e. null character). The purpose of this is for

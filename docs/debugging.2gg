@@ -1,13 +1,13 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-debugging \- Gliimly documentation (debugging)
+debugging \- Golf documentation (debugging)
 .SH DESCRIPTION
 
 .LP
 .B TRACING AND BACKTRACE FILE
 .LP
 
-To see any errors reported by Gliimly, use -e option of \fBgg\fP and check backtrace file. For example, to see the last 3 error messages:
+To see any errors reported by Golf, use -e option of \fBgg\fP and check backtrace file. For example, to see the last 3 error messages:
 
 .RS 4
 .EX
@@ -30,7 +30,7 @@ gg -t 5
 Use \fBget-req\fP to get the trace file location at run-time from your application.
 
 .LP
-.B OUTPUT FROM GLIIMLY APPLICATION WITHOUT WEB SERVER
+.B OUTPUT FROM GOLF APPLICATION WITHOUT WEB SERVER
 .LP
 
 Use \fBgg\fP (see -r option) to send a request from command line, and receive reply from your \fBservice\fPs. This is useful in debugging issues and automating tests.
@@ -72,7 +72,7 @@ If you are using a web server as a reverse proxy, check its error log, which wou
 
 In order to use gdb debugger, you must make your application with "--debug" flag (see \fBgg\fP). Do not use "--debug" in any other case, because performance will be considerably affected.
 
-Ultimately, you can attach a debugger to a running Gliimly process. If your application name is "app_name", first find the PID (process ID) of its process(es):
+Ultimately, you can attach a debugger to a running Golf process. If your application name is "app_name", first find the PID (process ID) of its process(es):
 
 .RS 4
 .EX
@@ -114,7 +114,7 @@ br <request name>
 .EE
 .RE
 
-or in general Gliimly request dispatcher:
+or in general Golf request dispatcher:
 
 .RS 4
 .EX
@@ -126,11 +126,11 @@ br gg_dispatch_request
 
 which would handle any request to your application.
 
-Note that by default, gdb will show Gliimly code and you can step through it as you've written it, which is easy to follow and understand. 
+Note that by default, gdb will show Golf code and you can step through it as you've written it, which is easy to follow and understand. 
 
-However, if you wish to step through the underlying C libraries, use "--c-lines" option in \fBgg\fP when making your application. In addition, you can use "--plain-diag" option to see diagnostics for underlying C code alone. These options should be used only if you're trying to debug issues with Gliimly itself, or to find and report a bug in Gliimly.
+However, if you wish to step through the underlying C libraries, use "--c-lines" option in \fBgg\fP when making your application. In addition, you can use "--plain-diag" option to see diagnostics for underlying C code alone. These options should be used only if you're trying to debug issues with Golf itself, or to find and report a bug in Golf.
 
-Debugging version of Gliimly, as well as using "--debug" option to compile, will considerably slow down run-time performance (in some tests about 50-55%); do not use Gliimly build with debugging symbols (see \fBinstall\fP) nor "--debug" (see \fBgg\fP) in production.
+Debugging version of Golf, as well as using "--debug" option to compile, will considerably slow down run-time performance (in some tests about 50-55%); do not use Golf build with debugging symbols (see \fBinstall\fP) nor "--debug" (see \fBgg\fP) in production.
 .SH SEE ALSO
  
 .B - Debugging

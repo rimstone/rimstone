@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // Hash-table-related module
 //
 
-#include "gliim.h"
+#include "golf.h"
 
 
 // prototypes
@@ -17,9 +17,9 @@ void gg_hash_process (gg_hash_table *el, char *key, void *data);
 
 //
 // Create new hash hres_ptr. size is the size of hash table. The actual object is created here, the caller handlers pointer only.
-// If process is true, then all memory allocated is process-scoped, and all key/data memory must be Gliimly memory.
+// If process is true, then all memory allocated is process-scoped, and all key/data memory must be Golf memory.
 // If in_h is provided, then gg_hash hres_ptr is not allocated, and neither is its gg_hash_table (which is set to in_h).
-// Normally in_h is NULL; it's only non-NULL internally when building Gliimly internal hash values to find string values 
+// Normally in_h is NULL; it's only non-NULL internally when building Golf internal hash values to find string values 
 // quickly with just initialization of the table (see setup_reqhash() in v1.c).
 //
 void gg_create_hash (gg_hash **hres_ptr, gg_num size, gg_hash_table **in_h, bool process)

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // mariadb native interface, used by db.c for making of db-specific libs
@@ -10,7 +10,7 @@
 // in order to avoid disorderly rollbacks in case of errors
 //
 
-#include "gliim.h"
+#include "golf.h"
 static gg_num gg_maria_stmt_exec();
 static int gg_maria_stmt_rows (char ***row, unsigned long **lens);
 static gg_num gg_maria_stmt_exec();
@@ -432,8 +432,8 @@ int gg_maria_prep_stmt(void **prep, char *stmt, gg_num num_of_args)
         *prep = GG_CURR_DB.dbc->maria.stmt;
     }
     GG_CURR_DB.num_inp = num_of_args;
-    // check param count correct before binding as the statement and what gliim says may be different, in which case
-    // mariadb would access memory that doesn't exist if gliim say there's less than really is
+    // check param count correct before binding as the statement and what golf says may be different, in which case
+    // mariadb would access memory that doesn't exist if golf say there's less than really is
     gg_num count = mysql_stmt_param_count(GG_CURR_DB.dbc->maria.stmt);
     if (count != GG_CURR_DB.num_inp)
     {
@@ -463,7 +463,7 @@ void gg_maria_add_input(gg_num i, char *arg)
     GG_CURR_DB.dbc->maria.bind[i].buffer = (char*)(arg == NULL ? "":arg);
     GG_CURR_DB.dbc->maria.bind[i].buffer_length = strlen(arg);
     GG_CURR_DB.dbc->maria.bind[i].length = NULL; // this is for array binding
-    // never null, it's Gliimly's simplification
+    // never null, it's Golf's simplification
     GG_CURR_DB.dbc->maria.bind[i].is_null = 0;
 }
 

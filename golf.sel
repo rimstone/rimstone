@@ -2,7 +2,7 @@
 #SPDX-License-Identifier: Apache-2.0
 #Copyright 2019 Gliim LLC. 
 #Licensed under Apache License v2. See LICENSE file.
-#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+#On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 #generate SELinux policies
 
@@ -14,17 +14,17 @@ BDIR="$3"
 
 cd $LDIR
 mkdir -p tmp
-cp -f gg.te gg.fc gliim.te tmp/
+cp -f gg.te gg.fc golf.te tmp/
 cd tmp
 make -f /usr/share/selinux/devel/Makefile gg.pp 
 install -D -m 0600 gg.pp -t $DDIR/selinux/packages/ 
-checkmodule -M -m -o gliim.mod gliim.te 
-semodule_package -o gliim.pp -m gliim.mod 
-install -D -m 0600 gliim.pp -t $DDIR/selinux/packages/ ;
+checkmodule -M -m -o golf.mod golf.te 
+semodule_package -o golf.pp -m golf.mod 
+install -D -m 0600 golf.pp -t $DDIR/selinux/packages/ ;
 
 if (( $EUID == 0 )); then
     semodule -n -i "$DDIR/selinux/packages/gg.pp"
-    semodule -n -i "$DDIR/selinux/packages/gliim.pp"
+    semodule -n -i "$DDIR/selinux/packages/golf.pp"
 fi
 
 if [ -d "/var/lib/gg" ]; then 

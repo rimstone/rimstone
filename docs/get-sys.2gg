@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 get-sys \-  (system-information)
 .SH PURPOSE
@@ -38,7 +38,7 @@ get-sys environment "QUERY_STRING" to qstr
 
 .RS 4
 \[bu]    
-"directory" is the execution directory of the \fBcommand-line\fP program, i.e. the current working directory when the program was executed. Note that Gliimly will change the current working directory immediately afterwards to the application home directory (see \fBdirectories\fP). You can use this clause to work with files in the directory where the program was started. If your program runs as a \fBservice\fP, then "directory" clause always returns application home directory, regardless of which directory \fBmgrg\fP program manager started your application from.
+"directory" is the execution directory of the \fBcommand-line\fP program, i.e. the current working directory when the program was executed. Note that Golf will change the current working directory immediately afterwards to the application home directory (see \fBdirectories\fP). You can use this clause to work with files in the directory where the program was started. If your program runs as a \fBservice\fP, then "directory" clause always returns application home directory, regardless of which directory \fBmgrg\fP program manager started your application from.
 
 
 .RE

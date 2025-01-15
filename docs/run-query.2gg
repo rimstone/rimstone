@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 run-query \-  (database)
 .SH PURPOSE
@@ -133,7 +133,7 @@ run-query @ db = "select firstName, lastName from employee where employeeId='%s'
 
 run-prepared-query is the same as run-query except that a <query> is prepared. That means it is pre-compiled and its execution plan is created once, instead of each time a query executes. The statement is cached going forward for the life of the process (with the rare exception of re-establishing a lost database connection). It means effectively an unlimited number of requests will be reusing the query statement, which generally implies higher performance. Note that databases do not allow prepared queries for DDL (Data Definition Language), as there is not much benefit in general, hence only DML queries (such as INSERT, DELETE etc.) and SELECT can be prepared.
 
-In order for database to cache a query statement, Gliimly will save query text that actually executes the very first time it runs. Then, regardless of what query text you supply in the following executions, it will not mutate anymore. It means from that moment onward, the query will always execute that very same query text, just with different input parameters. In practicallity it means that <query> should be a string constant if you are using a prepared query (which is usually the case).
+In order for database to cache a query statement, Golf will save query text that actually executes the very first time it runs. Then, regardless of what query text you supply in the following executions, it will not mutate anymore. It means from that moment onward, the query will always execute that very same query text, just with different input parameters. In practicallity it means that <query> should be a string constant if you are using a prepared query (which is usually the case).
 
 In some cases, you might not want to use prepared statements. Some reasons may be: 
 

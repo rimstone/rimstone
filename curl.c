@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // Curl-related module
 //
 
 
-#include "gliim.h"
+#include "golf.h"
 
 // Type that defines curl internal data for a single web-call
 typedef struct s_curlcall 

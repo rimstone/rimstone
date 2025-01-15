@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 write-list \-  (linked-list)
 .SH PURPOSE
@@ -52,7 +52,7 @@ The following is a list that is process-scoped, i.e. it is a linked-list server,
     get-param data
 
     if-true op equal "add" // Add data to list
-        // Make a copy of key,data so they are Gliimly-allocated
+        // Make a copy of key,data so they are Golf-allocated
         write-list t key (key) value data append
         @Added [<<p-out key>>] value [<<p-out data>>]
 

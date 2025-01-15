@@ -2,10 +2,10 @@
 #SPDX-License-Identifier: Apache-2.0
 #Copyright 2019 Gliim LLC. 
 #Licensed under Apache License v2. See LICENSE file.
-#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+#On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 
-# Set variables for building and installing a Gliimly application. 
+# Set variables for building and installing a Golf application. 
 # If your system doesn't conform, you can change these variables to fit
 # GG_OSNAME_ID is 0(archlinux), 1(ubuntu 22), 2(ubuntu 20), 3(ubuntu 18), 4(debian 10), 5(debian 11), 6(fedora 37), 7(fedora 38), 8(redhat 8), 9(redhat 9), 10(opensuse tumbleweed), 11(mageia 8), 12(debian 12), 13(mageia 9)... 10000 (if unknown)
 
@@ -139,13 +139,13 @@ if [ "$GG_SYSTEM_DONE" != "1" ]; then
 #
 
 #the following three should not be changed manually, make tools set them
-    export GG_LIBRARY_PATH=/usr/lib64/gliim
-    export GG_INCLUDE_PATH=/usr/include/gliim
+    export GG_LIBRARY_PATH=/usr/lib64/golf
+    export GG_INCLUDE_PATH=/usr/include/golf
     export GG_VERSION=100.100
 
 #also obtain the libraries to link with for pcre2
 #pcre2_version may not exist until sys is called to produce GG_LIBRARY_PATH, so must guard if it exists
-#we use library path for gliim, because this must work with our without source
+#we use library path for golf, because this must work with our without source
     if [ -f $GG_LIBRARY_PATH/pcre2_version ]; then
         export GG_PCRE2_LIBS=$(cat $GG_LIBRARY_PATH/pcre2_libs)
         if [ "$_GG_PCRE2_LO" == "10.37" ]; then
@@ -225,7 +225,7 @@ fi
 #
 #
 #The following is a hack due to the bug in RH annobin (annotation for binaries)
-#Set HASANNOBIN to nothing (default) to let Gliimly figure it out, or set it to
+#Set HASANNOBIN to nothing (default) to let Golf figure it out, or set it to
 #override: 0 if annobin is enabled and 1 if annobin is disabled (right now we 
 #disable it). This only applies to fedora and such.
 #

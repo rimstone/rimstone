@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 db-error \-  (database
 error-handling)
@@ -18,7 +18,7 @@ db-error [ @<database> ] ( exit | continue )
 .SH DESCRIPTION
 db-error sets the response to the failure of database statements. You can change this response at run-time with each execution of db-error.
 
-When a database statement (like \fBrun-query\fP) fails, Gliimly will either exit request processing if "exit" is used, or continue if "continue" is used. "Exiting" is equivalent to calling \fBreport-error\fP with the message containing details about the error. "Continuing" means that your program will continue but you should examine error code (see for instance "error" clause in \fBrun-query\fP).
+When a database statement (like \fBrun-query\fP) fails, Golf will either exit request processing if "exit" is used, or continue if "continue" is used. "Exiting" is equivalent to calling \fBreport-error\fP with the message containing details about the error. "Continuing" means that your program will continue but you should examine error code (see for instance "error" clause in \fBrun-query\fP).
 
 The default action is "exit". You can switch back and forth between "exit" and "continue". Typically, "exit" is preferable because errors in database statemets generally mean application or setup issues, however "continue" may be used when application wants to attempt to recover from errors or perform other actions.
 

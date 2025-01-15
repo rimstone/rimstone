@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 call-web \-  (web)
 .SH PURPOSE
@@ -185,13 +185,13 @@ call-web "https://<web address>/resource" \\
 
 Note that using "content-type" without the request body may be ignored by the server processing your request or may cause it to consider the request invalid. If "content-type" is not used, the default is "multipart/form-data" if "fields" or "files" subclause(s) are used with "body-request" clause. Otherwise, if you use "content" subclause to send other types of data, you must set content type explicitly via "content-type" subclause of "request-headers" clause.
 
-You can also specify custom request headers with "request-headers" clause, using "custom" subclause with a list of <header name>=<header value> pairs separated by a comma. For example, here custom header "Gliimly-header" has value of "Some_ID", and "Another-Header" a value of "New_ID":
+You can also specify custom request headers with "request-headers" clause, using "custom" subclause with a list of <header name>=<header value> pairs separated by a comma. For example, here custom header "Golf-header" has value of "Some_ID", and "Another-Header" a value of "New_ID":
 
 .RS 4
 .EX
 
 call-web "http://website.com/<app name>/<request name>?act=get_file" response resp response-code rc status len \\
-    request-headers custom "Gliimly-header"="Some_ID", "Another-Header"="New_ID"
+    request-headers custom "Golf-header"="Some_ID", "Another-Header"="New_ID"
 
 .EE
 .RE
@@ -201,7 +201,7 @@ On the receiving side you can get any such custom header by using "header" claus
 .RS 4
 .EX
 
-get-req header "Gliimly-header" to hvh0
+get-req header "Golf-header" to hvh0
 get-req header "Another-Header" to hvh1
 
 .EE

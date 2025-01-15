@@ -1,26 +1,26 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-memory-handling \- Gliimly documentation (memory)
+memory-handling \- Golf documentation (memory)
 .SH DESCRIPTION
-Gliimly is a memory-safe language. 
+Golf is a memory-safe language. 
 
 Your application cannot access memory outside of valid statement results. Trying to do so will result in your program \fBerroring out\fP. 
 
-Memory allocated by Gliimly statements is tracked and freed at the end of the request. You can also use a memory-optimizer (see "--optimize-memory" in \fBgg\fP) which frees memory as soon as possible, however keep in mind that it comes with a performance penalty and is not recommended unless you have very little available memory. 
+Memory allocated by Golf statements is tracked and freed at the end of the request. You can also use a memory-optimizer (see "--optimize-memory" in \fBgg\fP) which frees memory as soon as possible, however keep in mind that it comes with a performance penalty and is not recommended unless you have very little available memory. 
 
-With Gliimly there is no need to free memory manually. Memory is automatically freed even if it is no longer accessible to the program, thus preventing memory leaks; this is important for stability of long-running processes. 
+With Golf there is no need to free memory manually. Memory is automatically freed even if it is no longer accessible to the program, thus preventing memory leaks; this is important for stability of long-running processes. 
 
 Some statements (\fBnew-index\fP, \fBnew-array\fP, \fBnew-list\fP and \fBset-string\fP) have the option of allocating memory that won't get freed at the end of the request and is available to any request served by the same process. This kind of memory is called "process-scoped". A process-scoped string can be manually freed.
 
-Gliimly handles memory references and assignments automatically, preventing dangling memory.
+Golf handles memory references and assignments automatically, preventing dangling memory.
 
-String results of any Gliimly \fBstatements\fP will always create new memory, unless stated otherwise.
+String results of any Golf \fBstatements\fP will always create new memory, unless stated otherwise.
 
 .LP
 .B OPEN FILE DESCRIPTORS
 .LP
 
-Any files opened by \fBopen-file\fP statement are automatically closed by Gliimly at the end of the request. This enhances stability of long-running server processes because Linux system by default offers only about 1000 open files to a process. A bug can quickly exhaust this pool and cause a malfunction or a crash - Gliimly prevents this by closing any such open files when the request ends. 
+Any files opened by \fBopen-file\fP statement are automatically closed by Golf at the end of the request. This enhances stability of long-running server processes because Linux system by default offers only about 1000 open files to a process. A bug can quickly exhaust this pool and cause a malfunction or a crash - Golf prevents this by closing any such open files when the request ends. 
 .SH SEE ALSO
  
 .B - Memory

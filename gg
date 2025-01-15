@@ -2,13 +2,13 @@
 #SPDX-License-Identifier: Apache-2.0
 #Copyright 2019 Gliim LLC.  
 #Licensed under Apache License v2. See LICENSE file.
-#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+#On the web http://golf-lang.com/ - this file is part of Golf framework.
 
-#variable names for Gliimly start with GG_ (GG_C_ being compiling-related) and _ (internal)
+#variable names for Golf start with GG_ (GG_C_ being compiling-related) and _ (internal)
 
 #
 #
-#make script for Gliimly application
+#make script for Golf application
 #
 #
 
@@ -24,24 +24,24 @@ if [ "$HOME" == "" ]; then
 fi
 
 #cannot run as run as it might mess up permissions. 
-if [[ $EUID -eq 0 ]]; then echo "You cannot run gliim as root or sudo"; exit -1; fi
+if [[ $EUID -eq 0 ]]; then echo "You cannot run golf as root or sudo"; exit -1; fi
 
 #enable "extended globs" (such as "parameter expansion" or ${!X}
 shopt -s extglob
 
-#display error context if gliim has a shell error, source file bash only
+#display error context if golf has a shell error, source file bash only
 set -eE -o functrace
 trap 'echo "Error: status $?, $(caller), line ${BASH_SOURCE[0]}/${LINENO}"' ERR
 
 #do not change these values, they are changed here by Makefile per platform when make install is done
-export GG_LIBRARY_PATH=/usr/lib/gliim
+export GG_LIBRARY_PATH=/usr/lib/golf
 . "$GG_LIBRARY_PATH"/sys
 #end of do-not-change
 
-#by default, make is silent (except for messages we emit). For debugging, use -e to see everything that's going on (this shows gliim execution too!)
+#by default, make is silent (except for messages we emit). For debugging, use -e to see everything that's going on (this shows golf execution too!)
 GG_SHOW_MAKE="-s"
 
-#location of Gliimly data
+#location of Golf data
 export GG_DATA="/var/lib/gg"
 
 export GG_C_RESTPATH=""
@@ -57,7 +57,7 @@ export GG_C_PLAINDIAG="0"
 #defaults for quick install
 _PROXYPORT="80"
 
-#display Gliimly usage
+#display Golf usage
 #
 #Internal options that may go away:
 #--asan build with ASAN
@@ -120,7 +120,7 @@ function main() {
 
 
 
-#list of Gliimly options for getop
+#list of Golf options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
 _opts=$(getopt -a -n $0 -o k:e:t:,q,o,l,m,i,h,c,v,s,u,r --long exclude-dir:,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
@@ -133,7 +133,7 @@ fi
 _DEVOPT=0
 _DO_QUICK=0
 
-#if nothing at all passed that is valid: make gliim application - that is just 'gliim'
+#if nothing at all passed that is valid: make golf application - that is just 'golf'
     eval set -- "$_opts"
     while true; do 
     case "$1" in 
@@ -368,7 +368,7 @@ _DO_QUICK=0
             exit
             ;;
         -s )
-#display gliim script's execution in detail
+#display golf script's execution in detail
             export GG_SHOW_MAKE=
             set -x
 #this flag is if -s applies only to -q (i.e. compilation)
@@ -376,7 +376,7 @@ _DO_QUICK=0
             shift 
             ;;
         -v )
-#display version of Gliimly
+#display version of Golf
             gg_version
             exit
             ;;
@@ -454,7 +454,7 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
         #this is special $() which doesn't create subshell, but just reads contents into a variable
         export GG_C_NAME=$(<.vappname)
     else
-        error "Gliimly application was not created yet. Please use mgrg to create an application first"
+        error "Golf application was not created yet. Please use mgrg to create an application first"
     fi
     check_name "$GG_C_NAME" "application name"
     export GG_BLD0=$GG_DATA/bld
@@ -466,12 +466,12 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
 
 #check for source only if compiling or cleaning up
     if [[ "$_DO_QUICK" == "1" || "$_DO_CLEAN" == "1" ]]; then
-        GLIST_C=$(ls *.gliim 2>/dev/null|wc -l)
+        GLIST_C=$(ls *.golf 2>/dev/null|wc -l)
         if [ "$GLIST_C" == "0" ]; then
-            error "No Gliimly source source code found."
+            error "No Golf source source code found."
         fi
         if [[ ! -d "$GG_A" || ! -d "$GG_BLD" ]]; then
-            error "Gliimly application [$GG_C_NAME] does not exist. Use mgrg to create it."
+            error "Golf application [$GG_C_NAME] does not exist. Use mgrg to create it."
         fi
     fi
     if [[ "$_DO_QUICK" == "0" && "$_DEVOPT" == "1" ]]; then
@@ -545,7 +545,7 @@ function show_client_bld() {
         echo -n "-I$GG_INCLUDE_PATH "
     fi
     if [ "$_DO_CLIENT_LINK" == "1" ]; then
-        echo -n "-L$GG_LIBRARY_PATH -lgliimcli -Wl,--rpath=$GG_LIBRARY_PATH "
+        echo -n "-L$GG_LIBRARY_PATH -lgolfcli -Wl,--rpath=$GG_LIBRARY_PATH "
     fi
     echo ""
 }
@@ -560,9 +560,9 @@ function show_client_bld() {
 function setup_highlighting() {
     mkdir -p $HOME/.vim
     mkdir -p $HOME/.vim/syntax
-    cp $GG_LIBRARY_PATH/gliim.vim $HOME/.vim/syntax/gliim.vim
-#set .gliim file type to use gliim.vim above
-    _USEV="autocmd BufRead,BufNewFile *.gliim set filetype=gliim"
+    cp $GG_LIBRARY_PATH/golf.vim $HOME/.vim/syntax/golf.vim
+#set .golf file type to use golf.vim above
+    _USEV="autocmd BufRead,BufNewFile *.golf set filetype=golf"
     if [ ! -f "$HOME/.vimrc" ]; then
         echo "$_USEV" > $HOME/.vimrc
     else
@@ -814,11 +814,11 @@ GG_DBS='$_ALLDB'
 #
 function docdir() {
     if [ "$GG_ISFEDORA" == "1" ]; then
-        echo "$(rpm -E '%{_datadir}')/gliim"
+        echo "$(rpm -E '%{_datadir}')/golf"
     elif [ "$GG_ISDEBIAN" == "1" ]; then
-        echo "/usr/share/gliim"
+        echo "/usr/share/golf"
     elif [ "$GG_ISARCH" == "1" ]; then
-        echo "/usr/share/gliim"
+        echo "/usr/share/golf"
     else
         error "Unknown Operating System"
     fi
@@ -885,9 +885,9 @@ function read_modules() {
 #where during v1 compilation, information was collected and then used later, however that method ended up being either same or 
 #slower than this due to complexities of collecting and manipulating, and having to change (now) simple Makefile rules.
 #Trying to obtain modification times, save and compare later was alone more than double the time of what's below.
-#This gives all files to grep, so avoid slow "for i in $(ls *.gliim)", and checks for file that has other than filename:0, so
+#This gives all files to grep, so avoid slow "for i in $(ls *.golf)", and checks for file that has other than filename:0, so
 #that's where :[1-9] comes from. By far the fastest method.
-#Overall, the slowdown in performance of full recompile with this is only about 0.06% for 67 .gliim files and about 8000 lines of code.
+#Overall, the slowdown in performance of full recompile with this is only about 0.06% for 67 .golf files and about 8000 lines of code.
 #The limit here is about 100,000 file with names of 20 chars long, so unlikely to have that many source files with that long names
 #This approach also scales the best. For example, adding 10 more libs put it at 0.4%, whereas the approach with grepping
 #each lib separately puts it at 0.74%, or almost double.
@@ -895,7 +895,7 @@ function read_modules() {
 
 #first look for all possible statements
 #there can't be a comment prior to statement, v1.c will prohibit that
-    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-index \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.gliim>$GG_BLD/.findmod || true
+    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-index \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.golf>$GG_BLD/.findmod || true
 #then from occurrances, look for curl
     E=0;grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod >/dev/null||E=$?
     if [ "$E" == "0" ]; then _ISMOD_CURL="1"; fi
@@ -928,7 +928,7 @@ function read_modules() {
 #sqlite3.h is installed in include directory, so no need to specify
         #GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE -I /usr/include/sqlite3.h"
         GG_MODULES="$GG_MODULES -lsqlite3"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimlylite"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolflite"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES sqllite"
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_sqlite.o"
@@ -944,7 +944,7 @@ function read_modules() {
             GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE $(pkg-config --cflags libpq)"
         fi
         GG_MODULES="$GG_MODULES -lpq"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimpg"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfpg"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES postgres"
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_postgres.o"
@@ -955,7 +955,7 @@ function read_modules() {
         GG_MARIADB_USED="-DGG_MARIADB_INCLUDE"
         GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE $(mariadb_config --include)"
         GG_MODULES="$GG_MODULES $(mariadb_config --libs)"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimmys"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfmys"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES mariadb"
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_mariadb.o"
@@ -965,7 +965,7 @@ function read_modules() {
     if [ "$_ISMOD_SERVICE" == "1" ]; then
         GG_SERVICE_USED="-DGG_SERVICE_INCLUDE"
         #GG_MODULES="$GG_MODULES -lfcgi" - nothing here since fcgi client implemented from scratch
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimscli"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfscli"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES fcgi"
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_srvc.o"
@@ -977,13 +977,13 @@ function read_modules() {
         if [ "$GG_C_POSIXREGEX" != "1" ]; then
             GG_PCRE2_USED="-DGG_PCRE2_INCLUDE"
             GG_MODULES="$GG_MODULES $GG_PCRE2_LIBS"
-            GG_MOD_LIBS="$GG_MOD_LIBS -lgliimpcre2 -ldl"
+            GG_MOD_LIBS="$GG_MOD_LIBS -lgolfpcre2 -ldl"
             GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
         else
             #pcre is not used, but we still use glibc regex, so include regex.h and compile pcre2.c (which does both
             #glibc and pcre2)
             GG_PCRE2_USED="-DGG_PCRE2_INCLUDE"
-            GG_MOD_LIBS="$GG_MOD_LIBS -lgliimpcre2glibc -ldl"
+            GG_MOD_LIBS="$GG_MOD_LIBS -lgolfpcre2glibc -ldl"
             GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
         fi
     else
@@ -993,7 +993,7 @@ function read_modules() {
 #index module
     if [ "$_ISMOD_TREE" == "1" ]; then
         GG_TREE_USED="-DGG_TREE_INCLUDE"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimtree"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolftree"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES tree"
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_tree.o"
@@ -1003,7 +1003,7 @@ function read_modules() {
     if [ "$_ISMOD_CURL" == "1" ]; then
         GG_CURL_USED="-DGG_CURL_INCLUDE"
         GG_MODULES="$GG_MODULES -lcurl"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimcurl"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfcurl"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES curl"
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_curl.o"
@@ -1013,14 +1013,14 @@ function read_modules() {
     if [ "$_ISMOD_CRYPTO" == "1" ]; then
         GG_CRYPTO_USED="-DGG_CRYPTO_INCLUDE"
         GG_MODULES="$GG_MODULES -lssl -lcrypto"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgliimsec"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfsec"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES crypto"
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_crypto.o"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES crypto"
     fi
     if [[ "$_ISMOD_MARIADB" == "1" || "$_ISMOD_POSTGRES" == "1" || "$_ISMOD_SQLITE" == "1"  ]]; then
-        GG_MOD_LIBS="-lgliimdb $GG_MOD_LIBS"
+        GG_MOD_LIBS="-lgolfdb $GG_MOD_LIBS"
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_gendb.o"
     fi
@@ -1062,14 +1062,14 @@ function copy_if_diff () {
 
 #
 #
-#sets a list of many source code files (source.gliim, gliimapp.h, gg_dispatch_request.gliim etc.)
+#sets a list of many source code files (source.golf, golfapp.h, gg_dispatch_request.golf etc.)
 #takes care of generated vs provided source code: if a certain handler is provided, then don't generate it.
 #
 #
 function gen_src() {
 
 #
-#Files generated here are $GG_BLD/source.gliim,gliimapp.h,gg_dispatch_request.gliim.
+#Files generated here are $GG_BLD/source.golf,golfapp.h,gg_dispatch_request.golf.
 #
 
 #
@@ -1090,15 +1090,15 @@ function gen_src() {
 
 
 #
-#Generate source.gliim, all the source files needed for Gliimly app
+#Generate source.golf, all the source files needed for Golf app
 #
-    _T="source.gliim"
+    _T="source.golf"
 #this is all source files, including C files
     GG_CLIST=$(ls *.c 2>/dev/null) || true
-    GG_GLIIMLIST=$(ls *.gliim 2>/dev/null) || true
+    GG_GLIIMLIST=$(ls *.golf 2>/dev/null) || true
     GG_HLIST=$(ls *.h 2>/dev/null) || true
 #GG_REQLIST is really a list of requests, which we get from the list of source files
-#GG_GLIIMLIST is the list of gliim files - note these are "flattened" so that any directory structure works in a flat directory with / substituted for __
+#GG_GLIIMLIST is the list of golf files - note these are "flattened" so that any directory structure works in a flat directory with / substituted for __
     GG_REQLIST=""
     for i in $GG_GLIIMLIST; do
 #we can do this since we prohibit line splitting for begin-handler or %%
@@ -1120,7 +1120,7 @@ $OF"
     echo "#" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     echo "#Include files here:" >> $GG_BLD/$_T.new
-    _HFILES=$(grep -a -v gliimapp.h <<<"$GG_HLIST" | xargs)
+    _HFILES=$(grep -a -v golfapp.h <<<"$GG_HLIST" | xargs)
     echo "GG_HEADER_FILES=$(echo $_HFILES)" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     echo "#Source files here:" >> $GG_BLD/$_T.new
@@ -1137,9 +1137,9 @@ $OF"
 
 
 #
-#Generate gliimapp.h, a file that has a list of C declarations neeeded to build an app
+#Generate golfapp.h, a file that has a list of C declarations neeeded to build an app
 #
-    _T="gliimapp.h"
+    _T="golfapp.h"
 
     echo "// SPDX-License-Identifier: Apache-2.0"  >> $GG_BLD/$_T.new
     echo "// Copyright 2019 Gliim LLC. ">> $GG_BLD/$_T.new
@@ -1176,15 +1176,15 @@ $OF"
     fi
 
 #
-#Generate gg_dispatch_request.gliim, the main request handler. Based on the source code names of handler files (.gliim files)
+#Generate gg_dispatch_request.golf, the main request handler. Based on the source code names of handler files (.golf files)
 #
-    _T="gg_dispatch_request.gliim"
+    _T="gg_dispatch_request.golf"
 #Generate request files, this is used for a dispatcher
 #and for a dispatcher, only request files matter 
     _NUMF=$(echo $GG_REQLIST | wc -w)
 
     if [ "$_NUMF" == "0" ]; then
-        error "Application must have at least one .gliim file, or no begin-handler (or %%) statements found"
+        error "Application must have at least one .golf file, or no begin-handler (or %%) statements found"
     fi
 
     echo "// SPDX-License-Identifier: Apache-2.0" >>$GG_BLD/$_T.new
@@ -1257,7 +1257,7 @@ $OF"
 #in the beginning of this function, we will actually jump to end_point_exit:
     echo "    gg_done_setjmp = 0;" >>$GG_BLD/$_T.new
 #regardless of whether a request normally ended, or had exit-handler, it would come here, and before anything else, memory handling must be set back
-#to Gliimly, or otherwise, and gg_* memory function will fail if set to true. after_handler() should not be affected by type of memory used.
+#to Golf, or otherwise, and gg_* memory function will fail if set to true. after_handler() should not be affected by type of memory used.
 
 #cannot do exit-handler in after_handler - must simply do return(s)
     echo "    if (req_done == 1) { after_handler(); }" >>$GG_BLD/$_T.new
@@ -1277,22 +1277,22 @@ $OF"
 #
 #
 #
-#Create linkage for before,after and startup events. _weak_ linkage didn't work because Gliimly should produce
-#a program that links *only* with Gliimly libs. It means we only distribute a single file, which is a program,
-#that has only the minimal set of code - and this program uses Gliimly's shared library. Hence, all is shared 
+#Create linkage for before,after and startup events. _weak_ linkage didn't work because Golf should produce
+#a program that links *only* with Golf libs. It means we only distribute a single file, which is a program,
+#that has only the minimal set of code - and this program uses Golf's shared library. Hence, all is shared 
 #(the program between different instance and all the shared libs).
 #GG_EVENT_STUBS is all the stubs used.
-#So, GG_EVENT_STUBS could be "/usr/lib/gliim/stub_after.o" but then available after vmakefile will be "$GG_BLD/before_handler.o $GG_BLD/startup.o"
+#So, GG_EVENT_STUBS could be "/usr/lib/golf/stub_after.o" but then available after vmakefile will be "$GG_BLD/before_handler.o $GG_BLD/startup.o"
 #and all three will be present (one empty and two implemented)
 #
 #
 #
 function stub_events() {
     GG_EVENT_STUBS=
-    if [ ! -f "before_handler.gliim" ]; then
+    if [ ! -f "before_handler.golf" ]; then
         GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/stub_before.o"
     fi
-    if [ ! -f "after_handler.gliim" ]; then
+    if [ ! -f "after_handler.golf" ]; then
         GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/stub_after.o"
     fi
     export GG_EVENT_STUBS
@@ -1306,7 +1306,7 @@ function stub_events() {
 #Cannot remove and then copy b/c this would cause make to re-make all files
 #each time since their timestamp would change. So we must use -p flag of cp
 #to preserve source file's timestamps.
-#This converts x/y/z into x__y__z files and a-b.gliim into a_b.gliim
+#This converts x/y/z into x__y__z files and a-b.golf into a_b.golf
 #So we can do full path URL based structure and "flatten" it as it
 #always was prior to this
 #
@@ -1358,7 +1358,7 @@ function flatten_source() {
 #
 #
 #
-#Build Gliimly app
+#Build Golf app
 #
 #
 #
@@ -1374,8 +1374,8 @@ function build_app() {
 #were' in subshell
     ( 
     cd $GG_BLD/.flatsrc
-    _VFILES=$(ls *.gliim 2>/dev/null|wc -l) 
-    if [ "$_VFILES" == "0" ]; then error "Your application must have at least one .gliim file"; fi
+    _VFILES=$(ls *.golf 2>/dev/null|wc -l) 
+    if [ "$_VFILES" == "0" ]; then error "Your application must have at least one .golf file"; fi
 #set .dbvendors for v1 to pickup
     db_lib
 #get any modules in use, and generate a list of all modules
@@ -1410,7 +1410,7 @@ function gg_version() {
 #of course, for those who compile from source, and don't use the provided deb/dnf packages, it will always be the current year - that is not the intention -
 #in that case, change this manually to the year from the official distribution!!!! That is required under most copyright laws, in which the second year should
 #be the year of the last change by the author.
-    echo "Gliimly $GG_VERSION$_BETA on $GG_PLATFORM_ID ($GG_PLATFORM_VERSION)"
+    echo "Golf $GG_VERSION$_BETA on $GG_PLATFORM_ID ($GG_PLATFORM_VERSION)"
     echo "Copyright (c) 2019-$(date '+%Y') Gliim LLC"
 
 }
@@ -1513,12 +1513,12 @@ $_DBCONF"
 #
 #
 #
-#Clean building artifacts of Gliimly code to rebuilt it entirely
+#Clean building artifacts of Golf code to rebuilt it entirely
 #
 #
 #
 function gg_clean() {
-#clean the source and other code, so the next gliim app compilation will be a full rebuild
+#clean the source and other code, so the next golf app compilation will be a full rebuild
     make $GG_SHOW_MAKE -f "$GG_LIBRARY_PATH"/vmakefile clean
 }
 

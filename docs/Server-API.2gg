@@ -1,16 +1,16 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-Server-API \- Gliimly documentation (API)
+Server-API \- Golf documentation (API)
 .SH DESCRIPTION
-Gliimly can be used in \fBextended-mode\fP, where non-Gliimly code or libraries can be linked with your application.
+Golf can be used in \fBextended-mode\fP, where non-Golf code or libraries can be linked with your application.
 
-Such code can be from a library (see --llflag and --cflag options in \fBgg\fP), or can be written directly as C code, i.e. files with .c and .h extension together with your Gliimly application. To do this, use \fBcall-extended\fP statement.
+Such code can be from a library (see --llflag and --cflag options in \fBgg\fP), or can be written directly as C code, i.e. files with .c and .h extension together with your Golf application. To do this, use \fBcall-extended\fP statement.
 
 Any function with C linkage can be used provided:
 
 .RS 4
 \[bu]    
-its parameters are (by value or reference) only of type: "int64_t" (number type in Gliimly), "bool" (bool type in Gliimly) or "char *" (string type in Gliimly).
+its parameters are (by value or reference) only of type: "int64_t" (number type in Golf), "bool" (bool type in Golf) or "char *" (string type in Golf).
 
 .RE
 
@@ -19,7 +19,7 @@ its parameters are (by value or reference) only of type: "int64_t" (number type 
 it must not return any value (i.e. it must have a "void" return type).
 .RE
 
-When allocating strings in extended code, you must use Gliimly memory management functions. These functions are based on standard C library (such as malloc or free), but are not compatible with them because Gliimly manages such memory on top of the standard C library.
+When allocating strings in extended code, you must use Golf memory management functions. These functions are based on standard C library (such as malloc or free), but are not compatible with them because Golf manages such memory on top of the standard C library.
 
 The functions you can use are:
 
@@ -53,43 +53,43 @@ void *gg_calloc(size_t nmemb, size_t size) allocates "nmemb" blocks of memory (e
 
 .RS 4
 \[bu]    
-num gg_mem_get_id (void *ptr) returns Gliimly memory handle for memory "ptr".
+num gg_mem_get_id (void *ptr) returns Golf memory handle for memory "ptr".
 
 
 .RE
 
 .RS 4
 \[bu]    
-void *gg_realloc(gg_num r, size_t size) reallocates memory identified with Gliimly memory handle "r" (see gg_mem_get_id()) to a new size of "size" and returns a pointer to it. Note that you can only reallocate the memory you created with gg_malloc() and gg_calloc() - do not attempt to reallocate Gliimly memory passed to your function. Gliimly in general never reallocates any existing memory in any statement.
+void *gg_realloc(gg_num r, size_t size) reallocates memory identified with Golf memory handle "r" (see gg_mem_get_id()) to a new size of "size" and returns a pointer to it. Note that you can only reallocate the memory you created with gg_malloc() and gg_calloc() - do not attempt to reallocate Golf memory passed to your function. Golf in general never reallocates any existing memory in any statement.
 
 
 .RE
 
 .RS 4
 \[bu]    
-void gg_mem_set_len (gg_num r, gg_num len) sets the length of memory identified with Gliimly memory handle "r" to "len" bytes. Note that all Gliimly memory must have a null-byte at the end for consistency, regardless of whether such memory holds pure binary data or an actual null-delimited string. So for example, a string "abc" would have "len" set to 4 to include a null byte, and binary data "\exFF\ex00\ex01" (which consists of 3 bytes, the middle of which is a null byte) would have "len" also set to 4 and you would place an extra zero byte at the end of it even if it's not part of the actual useful data. Note that whatever memory length you set, it must be lesser or equal to the length of memory you have actually allocated.
+void gg_mem_set_len (gg_num r, gg_num len) sets the length of memory identified with Golf memory handle "r" to "len" bytes. Note that all Golf memory must have a null-byte at the end for consistency, regardless of whether such memory holds pure binary data or an actual null-delimited string. So for example, a string "abc" would have "len" set to 4 to include a null byte, and binary data "\exFF\ex00\ex01" (which consists of 3 bytes, the middle of which is a null byte) would have "len" also set to 4 and you would place an extra zero byte at the end of it even if it's not part of the actual useful data. Note that whatever memory length you set, it must be lesser or equal to the length of memory you have actually allocated.
 
 
 .RE
 
 .RS 4
 \[bu]    
-num gg_mem_get_len (gg_num r) returns the length of memory identified with Gliimly memory handle "r". The length returned is 1 bytes less than the memory set by gg_mem_set_len(), so for example for string "abc" the return value would be 3, as it would be for "\exFF\ex00\ex01".
+num gg_mem_get_len (gg_num r) returns the length of memory identified with Golf memory handle "r". The length returned is 1 bytes less than the memory set by gg_mem_set_len(), so for example for string "abc" the return value would be 3, as it would be for "\exFF\ex00\ex01".
 .RE
 
 
-You can use gg_malloc(), gg_calloc() and gg_realloc() to create new Gliimly-compatible memory - and assuming you have set the last byte of any such memory to a null byte, the resulting memory will be properly sized for Gliimly usage. 
+You can use gg_malloc(), gg_calloc() and gg_realloc() to create new Golf-compatible memory - and assuming you have set the last byte of any such memory to a null byte, the resulting memory will be properly sized for Golf usage. 
 
-If you have memory that's already provided from elsewhere, you can use gg_strdup() or gg_strdupl() to create a copy of it that's compatible with Gliimly. 
+If you have memory that's already provided from elsewhere, you can use gg_strdup() or gg_strdupl() to create a copy of it that's compatible with Golf. 
 
-If Gliimly memory you created with these functions has extra unused bytes, you can use either gg_realloc() to reduce its footprint, or you can use gg_mem_set_len() to set its length.
+If Golf memory you created with these functions has extra unused bytes, you can use either gg_realloc() to reduce its footprint, or you can use gg_mem_set_len() to set its length.
 
-Note that if you use C code included with a Gliimly project, you must include "gliim.h" file in each of them. You do not need to manually include any other ".h" files (header files), as they will be automatically picked up.
+Note that if you use C code included with a Golf project, you must include "gliim.h" file in each of them. You do not need to manually include any other ".h" files (header files), as they will be automatically picked up.
 
 .SH EXAMPLES
 Place the following files in a separate directory for demonstration purposes.
 
-In this example, "example.gliim" will use C functions from "example.c", and "example.h" will have declarations of those functions. File "example.c" implements a factorial function, as well as a function that will store the factorial result in an output message that's allocated and passed back to your Gliimly code:
+In this example, "example.golf" will use C functions from "example.c", and "example.h" will have declarations of those functions. File "example.c" implements a factorial function, as well as a function that will store the factorial result in an output message that's allocated and passed back to your Golf code:
 
 .RS 4
 .EX
@@ -134,7 +134,7 @@ void fact_msg (gg_num i, char **res);
 .EE
 .RE
 
-File "example.gliim" will call the above functions and display the results:
+File "example.golf" will call the above functions and display the results:
 
 .RS 4
 .EX

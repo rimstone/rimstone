@@ -1,6 +1,6 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-connect-apache-tcp-socket \- Gliimly documentation (web-servers)
+connect-apache-tcp-socket \- Golf documentation (web-servers)
 .SH DESCRIPTION
 This shows how to connect your application listening on TCP port <port number> (started with "-p" option in \fBmgrg\fP) to Apache web server.
 

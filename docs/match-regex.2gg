@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 match-regex \-  (regex)
 .SH PURPOSE
@@ -41,7 +41,7 @@ If "utf8" is used, then the pattern itself and all data strings used for matchin
 
 <result> and <status> variables can be created within the statement.
 
-If the pattern is bad (i.e. <pattern> is not a correct regular expression), Gliimly will \fBerror out\fP with a message.
+If the pattern is bad (i.e. <pattern> is not a correct regular expression), Golf will \fBerror out\fP with a message.
 
 .LP
 .B PCRE2 AND POSIX REGEX
@@ -92,7 +92,7 @@ will produce string "Hello, day good!" as a result in "res" variable. Each subex
 
 There can be a maximum of 23 subexpressions. 
 
-Note that backreferences to non-existing subexpressions are ignored - for example \\e4 when there are only 3 subexpressions. Gliimly is "smart" about using two digits and differentiating between \\e1 and \\e10 for instance - it takes into account the actual number of subexpressions and their validity, and selects a proper subexpression even when two digits are used in a backreference.
+Note that backreferences to non-existing subexpressions are ignored - for example \\e4 when there are only 3 subexpressions. Golf is "smart" about using two digits and differentiating between \\e1 and \\e10 for instance - it takes into account the actual number of subexpressions and their validity, and selects a proper subexpression even when two digits are used in a backreference.
 
 .LP
 .B LOOKAHEADS AND LOOKBEHINDS

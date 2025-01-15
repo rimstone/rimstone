@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
-// Gliimly client library. It's part of Gliimly for the corresponding call* statements
+// Golf client library. It's part of Golf for the corresponding call* statements
 
 //
 // All memory here is OS, except for a few interface pointers. 
-// Gliimly mem is not used here because for MT, it would have to be made
+// Golf mem is not used here because for MT, it would have to be made
 // MT-safe, which would slow it down too much. Thus, all memory here must be absolutely
 // proofed for leaks with tools like asan, valgrind etc.
 //
@@ -33,20 +33,20 @@
 // Public API prototypes
 #include "gcli.h"
 
-// If memory allocation fails in Gliimly, this is handled by gg_* functions
+// If memory allocation fails in Golf, this is handled by gg_* functions
 // For a SERVICE client, the handling is explicit here in code
 #if GG_GLIIMLYSRV==1
-#   include "gliim.h"
-    // OS malloc is used here, and not Gliimly, due to multithreading. Gliimly mem alloc is not
+#   include "golf.h"
+    // OS malloc is used here, and not Golf, due to multithreading. Golf mem alloc is not
     // MT safe, and would be too slow if made to do so.
     void *gg_cli_one (void *inp);
-    // Memory adjustment for Gliimly memory 
+    // Memory adjustment for Golf memory 
 #   define GG_ADD_FOR_GLIIMLY (GG_ALIGN)
 #else
 #   define GG_ADD_FOR_GLIIMLY 0
 #   define GG_EMPTY_STRING NULL
 #endif
-// If manage-memory is false in Gliimly, then adjustment is 0
+// If manage-memory is false in Golf, then adjustment is 0
 // because in this case memory allocated is just like for Client_API
 #define GG_MADJ(x) ((x)+GG_ADD_FOR_GLIIMLY)
 
@@ -678,10 +678,10 @@ int fc_edge(fc_local *fc_l, int timeout, bool start)
         //
         // initialize reading stats, in case we return prior to reading so they have default values
         fc_l->fc->internal.read_status = GG_OKAY; // by default, read succeeds, we set error if it doesn't
-        fc_l->fc->internal.data = calloc(1,GG_ADD_FOR_GLIIMLY+1); // add GG_ADD_FOR_GLIIMLY so it works with Gliimly
+        fc_l->fc->internal.data = calloc(1,GG_ADD_FOR_GLIIMLY+1); // add GG_ADD_FOR_GLIIMLY so it works with Golf
         if (fc_l->fc->internal.data == NULL) { return GG_CLI_ERR_OUT_MEM; }
         fc_l->fc->data_len = 0;
-        fc_l->fc->internal.error = calloc(1,GG_ADD_FOR_GLIIMLY+1); //add GG_ADD_FOR_GLIIMLY so it works with Gliimly
+        fc_l->fc->internal.error = calloc(1,GG_ADD_FOR_GLIIMLY+1); //add GG_ADD_FOR_GLIIMLY so it works with Golf
         if (fc_l->fc->internal.error == NULL) { return GG_CLI_ERR_OUT_MEM; }
         fc_l->fc->error_len = 0;
         fc_l->fc->other = calloc(1,1); // other is not used for now like data or error
@@ -725,7 +725,7 @@ int fc_edge(fc_local *fc_l, int timeout, bool start)
 
 //
 // The purpose of this function is to split the URL payload (url_params) into path segment
-// and query string. While the two are combined in Gliimly's url payload, in http they are split
+// and query string. While the two are combined in Golf's url payload, in http they are split
 // with path segment being part of PATH_INFO (with request name prepended), and query string being just QUERY_STRING
 // On input, *query_string_l is 0 and *path_info_l is the length of ->path_info as input (i.e. ->req). This way
 // if query_string is empty, those values are ready to send to the server.
@@ -928,7 +928,7 @@ int gg_cli_request (gg_cli *fc_in)
     // Parameters for the request
     fc_header header = build_hdr(fc_l, fc_l->param_len, GG_CLI_PARAM);
     if (gg_write_socket(fc_l, (char *)&header, sizeof(header)) < 0) { shut_sock(fc_l); GG_CLI_RET(GG_CLI_ERR_SOCK_WRITE);}
-    // send environment, total limit just under 64K (query string limited to 32K in Gliimly)
+    // send environment, total limit just under 64K (query string limited to 32K in Golf)
     // Build environment string to send
     fc_l->env = malloc (fc_l->param_len);
     if (fc_l->env == NULL) { shut_sock(fc_l); GG_CLI_RET (GG_CLI_ERR_OUT_MEM); }
@@ -1011,7 +1011,7 @@ void gg_cli_delete (gg_cli *callin)
     // for Client API, check if NULL
     if (callin->internal.data != GG_EMPTY_STRING) free (GG_MADJ(callin->internal.data));
     if (callin->internal.data != GG_EMPTY_STRING) free (GG_MADJ(callin->internal.error));
-    // do not free like for Gliimly (where it's always allocated pointer), here it may not be, as it's any C above this call
+    // do not free like for Golf (where it's always allocated pointer), here it may not be, as it's any C above this call
 #endif
 }
 
@@ -1022,7 +1022,7 @@ char *gg_cli_data (gg_cli *callin)
 {
 #if GG_GLIIMLYSRV==1
     GG_TRACE("");
-    // convert memory to Gliimly if okay, so it goes under garbage collection
+    // convert memory to Golf if okay, so it goes under garbage collection
     gg_num mm = gg_add_mem (callin->internal.data);
     gg_vmset(callin->internal.data,mm);
     gg_num id = gg_mem_get_id (GG_MADJ(callin->internal.data));
@@ -1038,7 +1038,7 @@ char *gg_cli_error (gg_cli *callin)
 {
 #if GG_GLIIMLYSRV==1
     GG_TRACE("");
-    // convert memory to Gliimly if okay, so it goes under garbage collection
+    // convert memory to Golf if okay, so it goes under garbage collection
     gg_num mm = gg_add_mem (callin->internal.error);
     gg_vmset(callin->internal.error,mm);
     gg_num id = gg_mem_get_id (GG_MADJ(callin->internal.error));
@@ -1169,8 +1169,8 @@ gg_num gg_call_fcgi (gg_cli **req, gg_num threads, gg_num *finokay, gg_num *star
     gg_num totrun = 0;
     for (i = 0; i < threads; i++){ // execute in parallel
         // If user tries to set hooks manually, disable them; this would be disastrous
-        // if user code runs from many threads - Gliimly is made for single-threaded execution
-        // aside from new-fcgi. That would not work; and even if Gliimly was MT, user could 
+        // if user code runs from many threads - Golf is made for single-threaded execution
+        // aside from new-fcgi. That would not work; and even if Golf was MT, user could 
         // do exit-service or report-error, which would make execution go passed new-fcgi
         // and there would be multiple threads accepting on the same socket; bad all around.
         req[i]->out_hook = NULL;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // Include file for GLIIMLY FastCGI client
@@ -19,16 +19,16 @@
 
 
 // Version+Release. We use major plus minor plus release, as in 1.3.34,2.1.11,3.7.41... 
-#define GG_VERSION "142"
+#define GG_VERSION "155"
 
 // Client error codes
 #define GG_OKAY 0 // success
 //
 //
-// User-interfacing constants, to be added to variable hash for gliim compiler
+// User-interfacing constants, to be added to variable hash for golf compiler
 //
 //
-#define GG_CLI_MAX_ERRS -255 // maximum number of error messages, see gliim.h's GG_ERR_UNKNOWN - must match here!
+#define GG_CLI_MAX_ERRS -255 // maximum number of error messages, see golf.h's GG_ERR_UNKNOWN - must match here!
 //
 #define GG_CLI_ERR_SOCK_READ GG_CLI_MAX_ERRS+1 // socket read
 #define GG_CLI_ERR_PROT_ERR GG_CLI_MAX_ERRS+2  // protocol error
@@ -54,7 +54,7 @@
 //
 
 // Each protocol must have its own set of types and functions
-// here it's gg_cli*. They would be abstracted in Gliimly as server-*
+// here it's gg_cli*. They would be abstracted in Golf as server-*
 // but types/functions must be separated. server-* would have 
 // "type" clause to differentiate and C declaration would be gg_cli,
 // gg_xy etc.
@@ -101,8 +101,8 @@ typedef struct gg_cli {
         char *data; // actual response from server
         char *error; // error message from server
         int read_status; // status of reading from server
-        bool server_alloc; // true if server name alloc'd (gliim server only)
-        bool path_alloc; // true if app_path and url_params alloc'd (gliim server only)
+        bool server_alloc; // true if server name alloc'd (golf server only)
+        bool path_alloc; // true if app_path and url_params alloc'd (golf server only)
     } internal;
 } gg_cli;
 

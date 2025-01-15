@@ -1,6 +1,6 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-SEMI \- Gliimly documentation (messages)
+SEMI \- Golf documentation (messages)
 .SH DESCRIPTION
 SEMI (SimplE Message Interface) is a binary format used to write (pack) and read (unpack) messages consisting of key/value pairs in the form of:
 

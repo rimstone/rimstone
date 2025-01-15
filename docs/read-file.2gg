@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 read-file \-  (files)
 .SH PURPOSE
@@ -42,7 +42,7 @@ If "status" clause is used, then the number of bytes read is stored to <status>,
 .B WITH FILE-ID
 .LP
 
-This method uses a <file id> that was created with \fBopen-file\fP. You can then read (and write) file using this <file id> and the file stays open until \fBclose-file\fP is called, or the \fBrequest\fP ends (i.e. Gliimly will automatically close any such open files). 
+This method uses a <file id> that was created with \fBopen-file\fP. You can then read (and write) file using this <file id> and the file stays open until \fBclose-file\fP is called, or the \fBrequest\fP ends (i.e. Golf will automatically close any such open files). 
 
 Data read is stored into string <content>. Note that file can be binary or text and <content> may have null-bytes. 
 

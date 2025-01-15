@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 mgrg \-  (service-manager)
 .SH PURPOSE
@@ -15,9 +15,9 @@ mgrg <options> <app name>
 .RE
 
 .SH DESCRIPTION
-mgrg (pronounced "em-greg") is a service manager. A service is started as a number of concurrent processes serving application requests, typically from reverse-proxy servers such as Apache, Nginx, HAProxy or others. Use mgrg to create Gliimly applications, including both service and command-line.
+mgrg (pronounced "em-greg") is a service manager. A service is started as a number of concurrent processes serving application requests, typically from reverse-proxy servers such as Apache, Nginx, HAProxy or others. Use mgrg to create Golf applications, including both service and command-line.
 
-A number of options are available to setup and manage the execution of a Gliimly program as an application server, which can be accessed either via TCP/IP or a Unix domain socket. 
+A number of options are available to setup and manage the execution of a Golf program as an application server, which can be accessed either via TCP/IP or a Unix domain socket. 
 
 <app name> specifies the name of your application. Each application must have a unique name. <app name> may contain alphanumeric characters and an underscore, must start with a character and its maximum length is 30. 
 
@@ -30,7 +30,7 @@ mgrg will re-start service processes that exited or died, keeping the number of 
 .RS 4
 \[bu]    
 -i
-Initialize the directory and file structure for application <app name>. If you are building application from source code, this must be executed in the source code directory; mgrg will create file ".gliimapp" which identifies the application so \fBgg\fP can run in the directory. You must run as root when using this option (and must not run as root otherwise) - this is the only mgrg option requiring sudo. The directory structure is setup in /var/lib/gg/<app name> (see \fBdirectories\fP).
+Initialize the directory and file structure for application <app name>. If you are building application from source code, this must be executed in the source code directory; mgrg will create file ".golfapp" which identifies the application so \fBgg\fP can run in the directory. You must run as root when using this option (and must not run as root otherwise) - this is the only mgrg option requiring sudo. The directory structure is setup in /var/lib/gg/<app name> (see \fBdirectories\fP).
 
 .RE
 
@@ -163,14 +163,14 @@ Display verbose messages.
 .RS 4
 \[bu]    
 -c <program>
-Full absolute path to your service program. If omitted, the executable /var/lib/gg/bld/<app name>/<app name>.srvc is assumed, which is the standard Gliimly service executable. If present, but without any slashes in it to indicate path (including current directory as ./), then this executable is assumed to be /var/lib/gg/bld/<app name>/<program>.
+Full absolute path to your service program. If omitted, the executable /var/lib/gg/bld/<app name>/<app name>.srvc is assumed, which is the standard Golf service executable. If present, but without any slashes in it to indicate path (including current directory as ./), then this executable is assumed to be /var/lib/gg/bld/<app name>/<program>.
 
 .RE
 
 .RS 4
 \[bu]    
 -v
-Display mgrg version (which matches Gliimly version) as well as copyright and license.
+Display mgrg version (which matches Golf version) as well as copyright and license.
 
 .RE
 
@@ -193,7 +193,7 @@ When starting, mgrg exits with 0 if successful and 1 if it is already running. I
 .B PROCESS CONTROL
 .LP
 
-When mgrg is told to stop the application (with "-m stop" arguments), it will send SIGTERM signal to all its children. All Gliimly processes will complete the current request before exiting, assuming they are currently processing a request; otherwise they will exit immediately. 
+When mgrg is told to stop the application (with "-m stop" arguments), it will send SIGTERM signal to all its children. All Golf processes will complete the current request before exiting, assuming they are currently processing a request; otherwise they will exit immediately. 
 
 If mgrg is terminated without "-m stop", (for example with SIGKILL signal), then all its chidlren will immediately terminate with SIGKILL as well, regardless of whether they are currently processing any requests or not.
 
@@ -303,7 +303,7 @@ If you want your application to run on system startup (so you don't have to run 
 .EX
 
 [Unit]
-Description=Gliimly Service Program Manager for [<app name>] application.
+Description=Golf Service Program Manager for [<app name>] application.
 After=network.target
 
 [Service]

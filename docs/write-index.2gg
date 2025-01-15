@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 write-index \-  (index)
 .SH PURPOSE
@@ -36,7 +36,7 @@ write-index myindex key k value d status st
 
 The following is an example of a process-scoped index. Such a index keeps its data across the requests, for as long as the process is alive.
 
-In a new directory, create file indexsrv.gliim and copy to it:
+In a new directory, create file indexsrv.golf and copy to it:
 
 .RS 4
 .EX

@@ -1,9 +1,9 @@
 #SPDX-License-Identifier: Apache-2.0
 #Copyright 2019 Gliim LLC. 
 #Licensed under Apache License v2. See LICENSE file.
-#On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+#On the web http://golf-lang.com/ - this file is part of Golf framework.
 
-module gliim 1.0;
+module golf 1.0;
 
 require {
     type httpd_t;
@@ -19,10 +19,10 @@ require {
 
 
 
-#allow web server to connect to gg_t gliim process
+#allow web server to connect to gg_t golf process
 allow httpd_t gg_t:unix_stream_socket connectto;
-#allow web server to write to gliim socket (must also be allow by DAC, which sockets are, but nothing else)
+#allow web server to write to golf socket (must also be allow by DAC, which sockets are, but nothing else)
 allow httpd_t ggfile_t:sock_file write;
-#allow web server to connect to gliim processes only
+#allow web server to connect to golf processes only
 allow httpd_t ggport_t:tcp_socket name_connect;
 

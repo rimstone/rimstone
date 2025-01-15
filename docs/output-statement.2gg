@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 output-statement \-  (output)
 .SH PURPOSE
@@ -38,7 +38,7 @@ Outputting "Hello there":
 .EE
 .RE
 
-You can use other Gliimly statements inlined and mixed with the text you are outputting:
+You can use other Golf statements inlined and mixed with the text you are outputting:
 
 .RS 4
 .EX

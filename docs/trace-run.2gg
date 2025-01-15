@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 trace-run \-  (debugging)
 .SH PURPOSE
@@ -111,7 +111,7 @@ The line in the trace file output by your trace-run would be similar to:
 .RS 4
 .EX
 
-2024-08-01-17-13-55 (my_request.gliim:4)| my_request yes it's 90 degrees outside, or with minimum width:                  yes it's                   90 outside
+2024-08-01-17-13-55 (my_request.golf:4)| my_request yes it's 90 degrees outside, or with minimum width:                  yes it's                   90 outside
 
 .EE
 .RE

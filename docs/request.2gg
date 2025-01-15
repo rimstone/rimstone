@@ -1,14 +1,14 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-request \- Gliimly documentation (requests)
+request \- Golf documentation (requests)
 .SH DESCRIPTION
-Gliimly applications run by processing requests. A request always takes form of an HTTP request, meaning a URL, an optional HTTP request body, and any environment variables. This is regardless of whether it's a \fBservice\fP or a \fBcommand-line\fP program. 
+Golf applications run by processing requests. A request always takes form of an HTTP request, meaning a URL, an optional HTTP request body, and any environment variables. This is regardless of whether it's a \fBservice\fP or a \fBcommand-line\fP program. 
 
 .LP
 .B REQUEST URL
 .LP
 
-A "request URL" is a URL that an outside caller (such as a web browser) uses to execute your Gliimly code. Aside from the scheme, domain and port, it's made up of:
+A "request URL" is a URL that an outside caller (such as a web browser) uses to execute your Golf code. Aside from the scheme, domain and port, it's made up of:
 
 .RS 4
 \[bu]    
@@ -103,9 +103,9 @@ https://some.web.site/shopping/buy-item
 .EE
 .RE
 
-In this case the application path is "/shopping" and the request path is "/buy-item". It means that file "buy-item.gliim" handles request "/buy-item" by implementing a \fBbegin-handler\fP "/buy-item" in it. As another example, file "services/manage-home.gliim" (meaning "manage-home.gliim" file in subdirectory "services") handles request "/services/manage-home" etc.
+In this case the application path is "/shopping" and the request path is "/buy-item". It means that file "buy-item.golf" handles request "/buy-item" by implementing a \fBbegin-handler\fP "/buy-item" in it. As another example, file "services/manage-home.golf" (meaning "manage-home.golf" file in subdirectory "services") handles request "/services/manage-home" etc.
 
-The request path must match (fully or partially) the path of the file name that implements it, with source directory being the root ("/"). Here is an example of implementing a request "/buy-item" in file "buy-item.gliim":
+The request path must match (fully or partially) the path of the file name that implements it, with source directory being the root ("/"). Here is an example of implementing a request "/buy-item" in file "buy-item.golf":
 
 .RS 4
 .EX
@@ -140,22 +140,22 @@ https://some.web.site/shopping/items/wine-collection/red-wine/buy-item
 .EE
 .RE
 
-and might be implemented in file "items/wine-collection/red-wine/buy-item.gliim", meaning under subdirectory "items", then subdirectory "wine-collection", then subdirectory "red-wine", then file "buy-item.gliim".
+and might be implemented in file "items/wine-collection/red-wine/buy-item.golf", meaning under subdirectory "items", then subdirectory "wine-collection", then subdirectory "red-wine", then file "buy-item.golf".
 
 
 .B - File/path naming conventions
 
 By default, a request handler would be implemented in a source file whose path matches the request path, either fully or partially. 
 
-The simplest example is that "/buy-item" request must be implemented in file "buy-item.gliim". 
+The simplest example is that "/buy-item" request must be implemented in file "buy-item.golf". 
 
-As a more involved example, request handler for "/items/wine-collection/red-wine/buy-item" can be implemented in file "items.gliim" or file "items/wine-collection.gliim" or file "items/wine-collection/red-wine.gliim" or file "items/wine-collection/red-wine/buy-item.gliim". 
+As a more involved example, request handler for "/items/wine-collection/red-wine/buy-item" can be implemented in file "items.golf" or file "items/wine-collection.golf" or file "items/wine-collection/red-wine.golf" or file "items/wine-collection/red-wine/buy-item.golf". 
 
-Each of these source files can contain any number of matching requests. For instance, file "items.gliim" can contain request handlers for both "/items/wine-collection/red-wine/buy-item" and "/items/beer-collection/ipa-beer/buy-item"; while file "items/wine-collection.gliim" can contain request handlers for both "items/wine-collection/red-wine" and "items/wine-collection/white-wine". 
+Each of these source files can contain any number of matching requests. For instance, file "items.golf" can contain request handlers for both "/items/wine-collection/red-wine/buy-item" and "/items/beer-collection/ipa-beer/buy-item"; while file "items/wine-collection.golf" can contain request handlers for both "items/wine-collection/red-wine" and "items/wine-collection/white-wine". 
 
-By the same token, file "items/wine-collection/red-wine/buy-item.gliim" can implement both "/items/wine-collection/red-wine/buy-item" and "/items/wine-collection/red-wine/buy-item/sale" requests, as both requests match the file path.
+By the same token, file "items/wine-collection/red-wine/buy-item.golf" can implement both "/items/wine-collection/red-wine/buy-item" and "/items/wine-collection/red-wine/buy-item/sale" requests, as both requests match the file path.
 
-Note that if you use "--single-file" option in \fBgg\fP, then each source ".gliim" file must contain only a single request, and its request path must match the file path fully. So in this case, request handler for "/items/wine-collection/red-wine/buy-item" must be in file "items/wine-collection/red-wine/buy-item.gliim", and no other request can be implemented in it.
+Note that if you use "--single-file" option in \fBgg\fP, then each source ".golf" file must contain only a single request, and its request path must match the file path fully. So in this case, request handler for "/items/wine-collection/red-wine/buy-item" must be in file "items/wine-collection/red-wine/buy-item.golf", and no other request can be implemented in it.
 
 .LP
 .B URL PARAMETERS
@@ -211,7 +211,7 @@ https://some.web.site/shopping/buy-item/sku=4811?price=600
 
 A parameter name can be comprised of alphanumeric characters, hyphens and underscores, and it must start with an alphabet character. Any hyphens are converted to underscores for the purpose of obtaining parameter value, see \fBget-param\fP. Do not use double underscore ("__") in parameter names. 
 
-Structuring your parameters, i.e. the order in a query path or path segments, and which ones (if any) are in a query string, is determined by you. Regardless of your choices, the code that handles a request is the same. In the example used here, you can obtain the parameters in request handler source file "buy-item.gliim":
+Structuring your parameters, i.e. the order in a query path or path segments, and which ones (if any) are in a query string, is determined by you. Regardless of your choices, the code that handles a request is the same. In the example used here, you can obtain the parameters in request handler source file "buy-item.golf":
 
 .RS 4
 .EX
@@ -250,7 +250,7 @@ end-handler
 Maximum length of a request URL is 2500 bytes.
 
 .LP
-.B HOW GLIIMLY HANDLES REQUESTS
+.B HOW GOLF HANDLES REQUESTS
 .LP
 
 There are generally two kinds of requests, depending on their origin. If a request comes from outside the process that's serving it, then it's an "external" request (such as from a web browser, a web API client, from command line execution etc). Conversely, if a request comes from inside the process that's serving it, it's an "internal" request - meaning one request handler is calling another within one the process(es) serving an application. Internal requests are made using \fBcall-handler\fP statement.
@@ -271,21 +271,21 @@ For a \fBservice\fP application, there can be any number of processes running. A
 
 .B - Processing a request
 
-To handle a request, a process first calls a Gliimly dispatcher, which is automatically generated. It uses a request name to call the appropriate request handler, as explained above. 
+To handle a request, a process first calls a Golf dispatcher, which is automatically generated. It uses a request name to call the appropriate request handler, as explained above. 
 
 You can implement two hooks into request handling: one that executes before each request (\fBbefore-handler\fP) and one that executes afterwards (\fBafter-handler\fP). 
 
-At the end of the request, all request memory and all file handles allocated by Gliimly will be freed, except for process-scoped memory (see \fBmemory-handling\fP).
+At the end of the request, all request memory and all file handles allocated by Golf will be freed, except for process-scoped memory (see \fBmemory-handling\fP).
 
 
 .B - Performance
 
-Gliimly uses a hash table to match a request with a handler function, as well to match parameters. Typically, it takes only a single lookup to find the handler function/parameters, regardless of the number of possible request names/parameters a process may serve (be it 10 or 10,000 different names). Gliimly pre-generates a hash table at compile time, so no run-time cycles are spent on creating it. Also, the hash table is created as a continuous block of memory in the program's data segment, which loads as a part of the program (as a single memory copy) and is very fast because accessing the data needs no pointer translations. As a result, Gliimly dispatcher is extremely fast.
+Golf uses a hash table to match a request with a handler function, as well to match parameters. Typically, it takes only a single lookup to find the handler function/parameters, regardless of the number of possible request names/parameters a process may serve (be it 10 or 10,000 different names). Golf pre-generates a hash table at compile time, so no run-time cycles are spent on creating it. Also, the hash table is created as a continuous block of memory in the program's data segment, which loads as a part of the program (as a single memory copy) and is very fast because accessing the data needs no pointer translations. As a result, Golf dispatcher is extremely fast.
 
 
 .B - Unrecognized requests
 
-If no request has been recognized (i.e. request name does not match any request-handling ".gliim" source file), then 
+If no request has been recognized (i.e. request name does not match any request-handling ".golf" source file), then 
 
 .RS 4
 \[bu]    

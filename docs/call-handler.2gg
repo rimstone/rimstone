@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 call-handler \-  (service-processing)
 .SH PURPOSE
@@ -26,7 +26,7 @@ call-handler uses the same high-performance hash table used by a \fBrequest\fP t
 .SH EXAMPLES
 The following example demonstrate calling a call-handler twice, and also using its output inline in the caller. An input parameter is passed to it, and an output obtained:
 
-Copy to file "callsub.gliim":
+Copy to file "callsub.golf":
 
 .RS 4
 .EX
@@ -60,7 +60,7 @@ Copy to file "callsub.gliim":
 .EE
 .RE
 
-And in "sub/service.gliim" file (meaning file "service.gliim" in subdirectory "sub"):
+And in "sub/service.golf" file (meaning file "service.golf" in subdirectory "sub"):
 
 .RS 4
 .EX

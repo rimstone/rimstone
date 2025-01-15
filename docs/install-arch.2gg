@@ -1,10 +1,10 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-install-arch \- Gliimly documentation (download-and-build)
+install-arch \- Golf documentation (download-and-build)
 .SH DESCRIPTION
 
 .LP
-.B INSTALL GLIIMLY ON ARCH
+.B INSTALL GOLF ON ARCH
 .LP
 
 For Arch-like distributions (like Arch or Manjaro):
@@ -21,15 +21,15 @@ sudo pacman --noconfirm -Sy --overwrite "*" git
 .RE
 
 
-.B - Download Gliimly
+.B - Download Golf
 
 
 .RS 4
 .EX
 
-git clone https://github.com/gliimly/gliimly.git
-cd gliimly
-git checkout 140
+git clone https://github.com/golf-lang/golf.git
+cd golf
+git checkout 142
 
 .EE
 .RE
@@ -41,13 +41,13 @@ git checkout 140
 .RS 4
 .EX
 
-sudo pacman --noconfirm -Sy --overwrite "*" make gcc openssl curl tar 'mariadb-connector-c' fcgi 'postgresql-libs' sqlite3 pcre2
+sudo pacman --noconfirm -Sy --overwrite "*" make gcc openssl curl tar pkg-config libxml2 'mariadb-connector-c' fcgi 'postgresql-libs' sqlite3 pcre2
 
 .EE
 .RE
 
 
-.B - Build Gliimly
+.B - Build Golf
 
 Use DI=1 to build debug version, leave it as is for production:
 

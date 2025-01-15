@@ -1,8 +1,8 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-command-line \- Gliimly documentation (running-application)
+command-line \- Golf documentation (running-application)
 .SH DESCRIPTION
-A Gliimly application can run as a web application or a command-line program, or both - such as when some requests can be either fulfilled through web interface or executed otherwise (such as on the command line). Note that Gliimly produces two separate executables: a \fBservice\fP one and a command-line one - they are different because command-line program does not need the service library and thus is smaller. 
+A Golf application can run as a web application or a command-line program, or both - such as when some requests can be either fulfilled through web interface or executed otherwise (such as on the command line). Note that Golf produces two separate executables: a \fBservice\fP one and a command-line one - they are different because command-line program does not need the service library and thus is smaller. 
 
 The name of the command-line executable is the same as the application name, and its path is (assuming <app name> is the application name):
 
@@ -82,7 +82,7 @@ gg -r --app=/json --req='/process?act=get_total&period=YTD' --method=POST --cont
 
 You can generate the shell code for the above by omitting "--exec" option of \fBgg\fP utility.
 
-Note that you can also include any other headers as environment variables by using the "HTTP_" convention, where custom headers are capitalized with use of underscore for dashes and prefixed with "HTTP_", for example header "Gliimly-Header" would be set as:
+Note that you can also include any other headers as environment variables by using the "HTTP_" convention, where custom headers are capitalized with use of underscore for dashes and prefixed with "HTTP_", for example header "Golf-Header" would be set as:
 
 .RS 4
 .EX
@@ -126,7 +126,7 @@ gg -r --app="/stock" --req="/add-stock/name=ABC%3F/price=300"
 
 In this case, parameter "name" has value of "ABC?", where special character "?" is encoded as "%3F". 
 
-To make sure all your input parameters are properly URL-encoded, you can use Gliimly's v1 code processor:
+To make sure all your input parameters are properly URL-encoded, you can use Golf's v1 code processor:
 
 .RS 4
 .EX

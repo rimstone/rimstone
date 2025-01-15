@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // Include file for GLIIMLY run time development and apps
@@ -18,13 +18,13 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "142"
+#define GG_VERSION "155"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
 #define GG_OS_VERSION  GG_OSVERSION
 
-// database (MariaDB) related. Include if not application (i.e. if Gliimly itself), and if application, only if mariadb actually used
+// database (MariaDB) related. Include if not application (i.e. if Golf itself), and if application, only if mariadb actually used
 #if GG_APPMAKE==1 
 #   if defined(GG_MARIADB_INCLUDE)
 #       define GG_INC_MARIADB
@@ -144,6 +144,20 @@
 #   include <curl/curl.h>
 #endif
 
+
+// XML parser (libxml2)
+#if GG_APPMAKE==1 
+#   if defined(GG_XML_INCLUDE)
+#       define GG_INC_XML
+#   endif
+#else
+#   define GG_INC_XML
+#endif
+#ifdef GG_INC_XML
+#   include <libxml/parser.h>
+#   include <libxml/tree.h>
+#endif
+
 // fast version of getting a config pointer
 #define gg_get_config() (gg_pc)
 
@@ -159,7 +173,7 @@ typedef int64_t gg_num;
 typedef int32_t gg_num32;
 typedef char* gg_str;
 // Request handler type
-typedef void (*gg_request_handler)(); // request handler in gliim dispatcher
+typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 
 // 
 // Defines
@@ -181,7 +195,7 @@ typedef void (*gg_request_handler)(); // request handler in gliim dispatcher
 #define GG_MAX_ERR_LEN 12000 /* maximum error length in report error */
 #define GG_MAX_UPLOAD_DIR  40000 /* max directories in file directory */
 #define GG_MAX_FILENAME_LEN 512 /* max file name for make document */
-#define GG_MAX_SOCK_LEN 256 /* max file name for a local gliim socket path */
+#define GG_MAX_SOCK_LEN 256 /* max file name for a local golf socket path */
 #define GG_ERROR_EXIT_CODE 99 // exit code of command line program when it hits any error
 // constants for encoding
 #define GG_URL 1
@@ -253,10 +267,12 @@ typedef void (*gg_request_handler)(); // request handler in gliim dispatcher
 #define GG_ERR_LENGTH -20
 #define GG_ERR_REFERENCE -21
 #define GG_ERR_JSON -22
+#define GG_ERR_XML_PARSE -23
+#define GG_ERR_XML_EMPTY -24
 // new errors below
 // the last error, it's NOT user interfacing
 // Note that there's GG_CLI_ERR_TOTAL error in cli.h under -255 (so -254, -253 etc.) and those can NOT
-// be used here in gliim.h (must not overlap), so currently its 16, so the last error number here is 
+// be used here in golf.h (must not overlap), so currently its 16, so the last error number here is 
 // actually -255+16 (and not -255), which is -239 currently
 #define GG_ERR_UNKNOWN -255
 //types of database
@@ -310,6 +326,8 @@ typedef void (*gg_request_handler)(); // request handler in gliim dispatcher
 // End of user-interfacing constants
 //
 //
+
+
 //types of random data generation
 #define GG_RANDOM_NUM 0
 #define GG_RANDOM_STR 1
@@ -448,7 +466,7 @@ typedef struct gg_msg_s
 typedef struct gg_file_s
 {
     FILE **f; // pointer to file pointer
-    gg_num memind; // pointer to file pointer's location in Gliimly's memory mgmt system
+    gg_num memind; // pointer to file pointer's location in Golf's memory mgmt system
 } gg_file;
 // 
 // Configuration context data for application, read from config file. Does not change during a request.
@@ -494,7 +512,7 @@ typedef struct s_gg_ipar
         gg_num numval; // number value, if type is number, used for set-param from number so we can get-param from it (using *value won't work as C is iffy on this).
     } tval; // it's either value or numval, both are 8 bytes
     gg_num type; // type of variable
-    bool alloc; // is allocated? true if so. it means it's gliimmem; say input from web isn't alloc'd
+    bool alloc; // is allocated? true if so. it means it's golfmem; say input from web isn't alloc'd
     gg_num version; // current version of parameter, any parameter that doesn't match global _gg_run_version wasn't set
 } gg_ipar;
 // 
@@ -567,8 +585,8 @@ typedef struct gg_input_req_s
 // Context of execution. Contains input request, flags
 typedef union s_gg_dbc
 {
-    // In all Gliimly libraries, GG_INC_POSTGRES/MARIADB are defined. So, db-specific pointers are used instead of void*
-    // In generated Gliimly program, we could have any of the db-specific pointers, or void, depending on which dbs are used.
+    // In all Golf libraries, GG_INC_POSTGRES/MARIADB are defined. So, db-specific pointers are used instead of void*
+    // In generated Golf program, we could have any of the db-specific pointers, or void, depending on which dbs are used.
     // So if MariaDB is used, we will have MYSQL* data in the union. If Postgres is used, we will have PGresult. If any of
     // those is not used, we will have void pointers instead in the appropriate part of the union. The important thing is 
     // that the size of any pointer is the same; thus size and access to fields does not change, as long as we have the same
@@ -733,13 +751,14 @@ typedef struct gg_s_json_node
     gg_num index_len; // length of array number, so for 23 it's 2
 } json_node;
 //
-// Json structure sent back to Gliimly
+// Json structure sent back to Golf
 //
 typedef struct gg_json_s
 {
     gg_jsonn *nodes; // list of nodes
     gg_num node_c; // number of nodes
     gg_num node_r; // node to be read
+    bool noenum; // true if do not enumerate names (i.e. with [] for arrays
 } gg_json;
 
 
@@ -789,7 +808,7 @@ typedef struct gg_tree_cursor_s {
 //
 #define GG_UNUSED(x) (void)(x)
 #define  GG_FATAL(...) {syslog(LOG_ERR, __VA_ARGS__); _Exit(-1);}
-//trace is available only if Gliimly compiled with DI=1
+//trace is available only if Golf compiled with DI=1
 #ifdef DEBUG
 #define  GG_TRACE(...) (gg_get_config()->debug.trace_level !=0 ? _gg_trace(1, __FILE__, __LINE__, __FUNCTION__,  __VA_ARGS__) : 0)
 #else
@@ -1138,10 +1157,10 @@ gg_num gg_write_file_id (FILE *f, char *content, gg_num content_len, char append
 gg_num gg_get_file_pos(FILE *f, gg_num *pos);
 gg_num gg_set_file_pos(FILE *f, gg_num pos);
 gg_num gg_reg_file(FILE **f);
-void gg_set_json (gg_json **j);
+void gg_set_json (gg_json **j, bool noenum);
 void gg_del_json (gg_json **j);
 char *gg_json_err();
-gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec); 
+gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec);
 char *gg_web_name(char *url);
 void gg_check_transaction(gg_num check_mode);
 void gg_break_down (char *value, char *delim, gg_split_str **broken);
@@ -1337,10 +1356,10 @@ extern bool gg_true;
 extern bool gg_false;
 extern bool gg_optmem;
 
-// DO not include gliimapp.h for Gliimly itself, only for applications at source build time
+// DO not include golfapp.h for Golf itself, only for applications at source build time
 #if GG_APPMAKE==1
-// include generated Gliimly include file
-#include "gliimapp.h"
+// include generated Golf include file
+#include "golfapp.h"
        
 #endif
 

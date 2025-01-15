@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 read-index \-  (index)
 .SH PURPOSE
@@ -72,7 +72,7 @@ If a key is found, the value associated with the key can be obtained with "value
 
 You can update the value associated with a found key with "update-value" clause by specifying <update value> string. This update is performed after <value> has been retrieved, allowing you to obtain the previous value in the same statement. 
 
-If you'd like to iterate the ordered list of keys in an index, create a <cursor> by using "new-cursor" clause, in which case <cursor> will be positioned on a found index node. See \fBuse-cursor\fP for more on using cursors. Cursors are useful in range searches; typically you'd find a key that is an upper or lower bound of a range and then keep iterating to a lesser or greater value until some criteria is met, such as when the opposite bound is found. Gliimly indexes are by default constructed so that such iterations are O(1) in complexity, meaning each is a single index node access (see \fBnew-index\fP). 
+If you'd like to iterate the ordered list of keys in an index, create a <cursor> by using "new-cursor" clause, in which case <cursor> will be positioned on a found index node. See \fBuse-cursor\fP for more on using cursors. Cursors are useful in range searches; typically you'd find a key that is an upper or lower bound of a range and then keep iterating to a lesser or greater value until some criteria is met, such as when the opposite bound is found. Golf indexes are by default constructed so that such iterations are O(1) in complexity, meaning each is a single index node access (see \fBnew-index\fP). 
 
 .SH EXAMPLES
 In this example, a million key/value pairs are inserted into an index, and then each of them is searched for and then displayed back (see \fBwrite-index\fP for more on inserting into a index). Both the key and the data are a numerical value of a key:

@@ -1,26 +1,26 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-123-hello-world \- Gliimly documentation (quick-start)
+123-hello-world \- Golf documentation (quick-start)
 .SH DESCRIPTION
 
 .LP
-.B STEP 1: INSTALL GLIIMLY
+.B STEP 1: INSTALL GOLF
 .LP
 
-First \fBinstall\fP Gliimly.
+First \fBinstall\fP Golf.
 
 .LP
 .B STEP 2: BUILD IT
 .LP
 
-Create Hello World source file (hello.gliim) in a new directory; note it's all one bash command:
+Create Hello World source file (hello.golf) in a new directory; note it's all one bash command:
 
 .RS 4
 .EX
 
 echo 'begin-handler /hello public
     @Hello World!
-end-handler' > hello.gliim
+end-handler' > hello.golf
 
 .EE
 .RE

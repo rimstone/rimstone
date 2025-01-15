@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // UTF8-related module
@@ -11,7 +11,7 @@
 // Based on UTF8 standard: https://www.rfc-editor.org/rfc/rfc3629
 //
 
-#include "gliim.h"
+#include "golf.h"
 
 //
 // get original unicode from two surrogates. Return that value.

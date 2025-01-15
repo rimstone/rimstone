@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 new-remote \-  (distributed-computing)
 .SH PURPOSE
@@ -34,13 +34,13 @@ new-remote will create resources needed for a service call (see \fBcall-remote\f
 .B LOCAL OR LOCATION
 .LP
 
-If "local" clause is used, then service is a Gliimly application running on the same computer, and the name of this application is string <app name>. 
+If "local" clause is used, then service is a Golf application running on the same computer, and the name of this application is string <app name>. 
 
 If "local" is not used, then you must use "location" clause. <location> (in "location" clause) is a string representing either a Unix socket or a TCP socket of a remote service, and is:
 
 .RS 4
 \[bu]    
-for a Unix socket, a fully qualified name to a Unix socket file used to communicate with the service (for a Gliimly server, it's "/var/lib/gg/<app name>/sock/sock", where <app name> is the application name), or
+for a Unix socket, a fully qualified name to a Unix socket file used to communicate with the service (for a Golf server, it's "/var/lib/gg/<app name>/sock/sock", where <app name> is the application name), or
 
 .RE
 
@@ -68,9 +68,9 @@ Request body (i.e. body content) is specified via "request-body" clause. Within 
 
 <url params> string (in "url-params" clause) is the URL parameters, see \fBrequest\fP.
 
-<environment> (in "environment" clause) is the environment passed to a service call, in the form of "name"="value" string list where such environment elements are separated by a comma. This way you can send any environment variables to the request executed remotely. For a Gliimly server, you can access those variables in a remote request by using "environment" clause of \fBget-sys\fP statement. There is no limit on the number of environment variables you can use this way, other than the underlying communication library.
+<environment> (in "environment" clause) is the environment passed to a service call, in the form of "name"="value" string list where such environment elements are separated by a comma. This way you can send any environment variables to the request executed remotely. For a Golf server, you can access those variables in a remote request by using "environment" clause of \fBget-sys\fP statement. There is no limit on the number of environment variables you can use this way, other than the underlying communication library.
 
-<timeout> (in "timeout" clause) is the number of seconds after which a service call will timeout; meaning the duration of a service call should not exceed this period of time. For no timeout, specify 0. Note that time needed for a DNS resolution of <location> is not counted in <timeout>. Maximum value is 86400 seconds. Even though it's optional, it is recommended to specify <timeout> in order to avoid a Gliimly process waiting for a very long time. Note that even if your service call times out, the actual request executing on the server may continue until it's done.
+<timeout> (in "timeout" clause) is the number of seconds after which a service call will timeout; meaning the duration of a service call should not exceed this period of time. For no timeout, specify 0. Note that time needed for a DNS resolution of <location> is not counted in <timeout>. Maximum value is 86400 seconds. Even though it's optional, it is recommended to specify <timeout> in order to avoid a Golf process waiting for a very long time. Note that even if your service call times out, the actual request executing on the server may continue until it's done.
 
 .SH EXAMPLES
 In this example, 3 service calls are created ("srv1", "srv2" and "srv3"), and they will each make a service request. 
@@ -81,7 +81,7 @@ All three service calls connect via Unix socket.
 
 A full URL path of a service request (for "srv1" for example), would be "/app/manage-keys/op=add/key=key_1/data=data_1" (note that "app" is the application name and "manage-keys" is the request handler that provides the service).
 
-Copy this to "manage_keys.gliim" source file:
+Copy this to "manage_keys.golf" source file:
 
 .RS 4
 .EX
@@ -125,7 +125,7 @@ Copy this to "manage_keys.gliim" source file:
 
 Then \fBcall-remote\fP will make three service calls to the above request handler in parallel (i.e. as threads executing at the same time). You can examine if everything went okay, how many threads have started, and how many finished with a reply from the service (this means any kind of reply, even if an error). Finally, the output from each call is displayed (that's "data" clause in \fBread-remote\fP statement at the end).
 
-Create file "srv.gliim" and copy to it this code:
+Create file "srv.golf" and copy to it this code:
 
 .RS 4
 .EX

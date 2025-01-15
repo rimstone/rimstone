@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 new-index \-  (index)
 .SH PURPOSE
@@ -24,7 +24,7 @@ An index is a hierarchical balanced binary tree structure that allows data acces
 
 Information in an index can be inserted, updated or deleted in any order, and accessed in any order as well.
 
-Information in an index is organized in nodes. Each node has a key and a value. A key is used to search for a node in a index. By default (if "unsorted" is omitted), all nodes in a Gliimly index are also connected in an ordered linked list, allowing for very fast range searches.
+Information in an index is organized in nodes. Each node has a key and a value. A key is used to search for a node in a index. By default (if "unsorted" is omitted), all nodes in a Golf index are also connected in an ordered linked list, allowing for very fast range searches.
 
 .LP
 .B KEYS AND DATA

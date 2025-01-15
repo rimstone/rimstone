@@ -1,6 +1,6 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-error-handling \- Gliimly documentation (error-handling)
+error-handling \- Golf documentation (error-handling)
 .SH DESCRIPTION
 
 .LP
@@ -25,16 +25,16 @@ Note that if your program is \fBcommand-line\fP, it will exit in any case since 
 
 
 .LP
-.B WHEN THERE IS A PROBLEM IN GLIIMLY
+.B WHEN THERE IS A PROBLEM IN GOLF
 .LP
 
-If there is a fatal internal error (i.e. error in Gliimly code itself that cannot be handled), it will be caught by Gliimly, and the process will end. If your process is started with \fBmgrg\fP, it may be automatically restarted.
+If there is a fatal internal error (i.e. error in Golf code itself that cannot be handled), it will be caught by Golf, and the process will end. If your process is started with \fBmgrg\fP, it may be automatically restarted.
 
 .LP
 .B LOGGING THE ERROR
 .LP
 
-Regardless of the type of error and regardless of whether the process exits or not, the error is logged and the program stack with full source code lines (see \fBgg\fP for including debug information) will be written to backtrace file (use -e option of \fBgg\fP to obtain its location). Note that the program stack is logged only if Gliimly is built in debugging mode (see "DI=1" option when building Gliimly); otherwise, production code may be slowed down by stack dumping.
+Regardless of the type of error and regardless of whether the process exits or not, the error is logged and the program stack with full source code lines (see \fBgg\fP for including debug information) will be written to backtrace file (use -e option of \fBgg\fP to obtain its location). Note that the program stack is logged only if Golf is built in debugging mode (see "DI=1" option when building Golf); otherwise, production code may be slowed down by stack dumping.
 
 You can see the list of last N errors (and the location of file containing backtrace for them) by using \fBgg\fP, for instance to see the last 3 errors:
 

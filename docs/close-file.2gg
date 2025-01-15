@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 close-file \-  (files)
 .SH PURPOSE
@@ -20,7 +20,7 @@ close-file closes file <file id> previously opened with \fBopen-file\fP, where <
 
 You can obtain the status of file closing via <status> number (in "status" clause). The <status> is GG_OKAY if file is closed, or GG_ERR_CLOSE if could not close file.
 
-If you do not close a file opened with open-file, Gliimly will automatically close it when the request ends.
+If you do not close a file opened with open-file, Golf will automatically close it when the request ends.
 
 .SH EXAMPLES
 See \fBopen-file\fP.

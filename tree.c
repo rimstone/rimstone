@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2023 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // Tree implementation, in-memory modified AVL with optional double-linked sorted list. 
 // Around 50% faster than in-memory B-tree variations.
 //
 
-#include "gliim.h"
+#include "golf.h"
 
 
 // connect parent (p) to child (r) given the direction from the tree node (dir)

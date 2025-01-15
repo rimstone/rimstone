@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // postgres native interface, used by db.c for making of db-specific libs
 //
 
-#include "gliim.h"
+#include "golf.h"
 static char *gg_pg_stmt(void **prep);
 static int gg_pg_prep_stmt(void **prep, char *stmt, gg_num num_of_args);
 static char *cerror = NULL;
@@ -207,7 +207,7 @@ int gg_pg_prep_stmt(void **prep, char *stmt, gg_num num_of_args)
     {
         // if prep is NULL, create prepared statement
         // must duplicate as gg_pg_stmt returns static char*
-        // must be strdup to survive request change (gliim memory is gone, so no gg_strdup)
+        // must be strdup to survive request change (golf memory is gone, so no gg_strdup)
         if ((GG_CURR_DB.dbc->pg.name = strdup(gg_pg_stmt(prep))) == NULL)
         {
             cerror = "Out of memory for prepared statement";

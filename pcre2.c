@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://gliimly.github.io/ - this file is part of Gliimly framework.
+// On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
 // Regex (pcre2)-related module
 //
 
 
-#include "gliim.h"
+#include "golf.h"
 #include <dlfcn.h>
 #include <gnu/lib-names.h>
 
@@ -21,7 +21,7 @@ static void (*gg_pcre2_regfree)(regex_t *preg);
 
 
 // Free preg for regex, this is because for pcre2 vs glibc, it's called from v1 parser and it must be 
-// compiled into 2 different so libs (gliimpcre2 and gliimpcre2glibc), and the implementations are different.
+// compiled into 2 different so libs (golfpcre2 and golfpcre2glibc), and the implementations are different.
 void gg_regfree(regex_t *preg)
 {
     gg_pcre2_regfree (preg); 
@@ -208,7 +208,7 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
             // We stop at each subexpression, and we copy matches for them
             // and if some not used, that's fine
             //
-            // HERE is how Gliimly statement is stacked up here:
+            // HERE is how Golf statement is stacked up here:
             //
             // pattern-match 'find_this' in 'look_here' replace-with 'replace'
             //

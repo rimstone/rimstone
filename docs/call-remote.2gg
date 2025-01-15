@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 call-remote \-  (distributed-computing)
 .SH PURPOSE
@@ -57,7 +57,7 @@ call-remote will wait for all <service> requests to finish. For that reason, it 
 call-remote is faster than \fBcall-web\fP because it does not use HTTP protocol; rather it only uses small and binary protocol, which is extremenly fast, especially when using Unix sockets on the same machine (see \fBnew-remote\fP). Note that the binary protocol does not have any inherent security built-in; that is part of the reason why it is fast. As such, it is very well suited for remote service calls on the same machine or between networked machines on a secure network. 
 
 .SH EXAMPLES
-This example will connect to local Unix socket file "/var/lib/gg/app_name/sock/sock" (a Gliimly application named "app_name"), and make a request named "server" (i.e. it will be processed by source code file "server.gliim") with URL path of "/op=add/key=2" (meaning with input parameters "op=add" and "key=2"). Then, service reply is read and displayed.
+This example will connect to local Unix socket file "/var/lib/gg/app_name/sock/sock" (a Golf application named "app_name"), and make a request named "server" (i.e. it will be processed by source code file "server.golf") with URL path of "/op=add/key=2" (meaning with input parameters "op=add" and "key=2"). Then, service reply is read and displayed.
 
 .RS 4
 .EX

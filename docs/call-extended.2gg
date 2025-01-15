@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 call-extended \-  (safety)
 .SH PURPOSE
@@ -36,7 +36,7 @@ if a macro, in a ".h" file residing in the directory that contains application s
 
 The <function> must be declared via C-style declaration in a ".h" file residing in the application source code directory. You can use "--lflag" and "--cflag" options of \fBgg\fP to supply libraries used. In addition, if you need to, you can also have any number of ".c" and ".h" files which will be automatically included in your project. A macro must be defined in ".h" file.
 
-call-extended statement can only be used in extended mode (see \fBextended-mode\fP). By default, Gliimly code runs in safe mode which does not allow use of call-extended statement. Note that using call-extended statement does not automatically make your application unsafe; rather, extended code can be written in a memory-safe language (such as Rust), or even if written in C it can be made in such a way not to cause out-of-band memory reads and writes. 
+call-extended statement can only be used in extended mode (see \fBextended-mode\fP). By default, Golf code runs in safe mode which does not allow use of call-extended statement. Note that using call-extended statement does not automatically make your application unsafe; rather, extended code can be written in a memory-safe language (such as Rust), or even if written in C it can be made in such a way not to cause out-of-band memory reads and writes. 
 
 .LP
 .B C SIGNATURE, INPUT/OUTPUT VARIABLES, TYPES
@@ -46,22 +46,22 @@ Each <variable> can be of C type (or a pointer to C type):
 
 .RS 4
 \[bu]    
-"gg_num" which is a signed integer 8 bytes in length (int64_t type). This represents Gliimly number.
+"gg_num" which is a signed integer 8 bytes in length (int64_t type). This represents Golf number.
 
 .RE
 
 .RS 4
 \[bu]    
-"char *" which is a pointer to an array of characters. This represents Gliimly string value.
+"char *" which is a pointer to an array of characters. This represents Golf string value.
 
 .RE
 
 .RS 4
 \[bu]    
-"bool" which is a boolean variable. This represents Gliimly boolean.
+"bool" which is a boolean variable. This represents Golf boolean.
 .RE
 
-A <function> should not return a value. Rather, use a variable passed as a pointer if you wish to pass the function's output back to your Gliimly code.
+A <function> should not return a value. Rather, use a variable passed as a pointer if you wish to pass the function's output back to your Golf code.
 
 .SH EXAMPLES
 For instance, consider C file "calc.c":
@@ -108,7 +108,7 @@ void factorial(gg_num f, gg_num *res);
 
 In this case you have defined a macro that calculates the moduo of 10 and stores a result into another variable.
 
-Use these in your Gliimly code with call-extended statement, for instance to use a function "factorial()":
+Use these in your Golf code with call-extended statement, for instance to use a function "factorial()":
 
 .RS 4
 .EX

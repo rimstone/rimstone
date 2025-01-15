@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 read-json \-  (JSON-parsing)
 .SH PURPOSE
@@ -25,7 +25,7 @@ The actual <value> is obtained with "value" clause, and the <type> of value can 
 
 <type> is a number that can be GG_JSON_TYPE_STRING, GG_JSON_TYPE_NUMBER, GG_JSON_TYPE_REAL, GG_JSON_TYPE_BOOL and GG_JSON_TYPE_NULL for string, number, real (floating point), boolean and null values respectively. Note that <value> is always a string representation of these types.
 
-Use "next" clause to move to the next sequential key/value pair in the document, from top down. Typically, you would get a key first, examine if it's of interest to you, and then obtain value. This is because Gliimly uses "lazy" approach where value is not copied until needed; with this approach JSON parsing is faster.
+Use "next" clause to move to the next sequential key/value pair in the document, from top down. Typically, you would get a key first, examine if it's of interest to you, and then obtain value. This is because Golf uses "lazy" approach where value is not copied until needed; with this approach JSON parsing is faster.
 
 If there are no more data elements to read, <type> is GG_JSON_TYPE_NONE.
 

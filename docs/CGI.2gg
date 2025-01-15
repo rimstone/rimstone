@@ -1,10 +1,10 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-CGI \- Gliimly documentation (running-application)
+CGI \- Golf documentation (running-application)
 .SH DESCRIPTION
-You can run Gliimly application as a CGI (Common Gateway Interface) program, if your web server supports CGI. This is not recommended in general, as CGI programs do not exhibit great performance. However in some cases you may need to use CGI, such as when performance is not of critical importance, or when other methods of execution are not feasible.
+You can run Golf application as a CGI (Common Gateway Interface) program, if your web server supports CGI. This is not recommended in general, as CGI programs do not exhibit great performance. However in some cases you may need to use CGI, such as when performance is not of critical importance, or when other methods of execution are not feasible.
 
-To run your application with CGI, use \fBcommand-line\fP program. Since Gliimly applications require running in the security context of the user who owns the application, you must use "suexec" (or similar feature) of your web server.
+To run your application with CGI, use \fBcommand-line\fP program. Since Golf applications require running in the security context of the user who owns the application, you must use "suexec" (or similar feature) of your web server.
 
 The following script sets up an application named "func_test" (any kind of application will do) to run as CGI (after it's been compiled with \fBgg\fP) on Apache web server running on Ubuntu 18 and up. For other web servers/distros, consult their documentation on how to setup CGI for a program.
 

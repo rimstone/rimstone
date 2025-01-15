@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 write-string \-  (strings)
 .SH PURPOSE
@@ -19,20 +19,20 @@ end-write-string [ notrim ]
 .RE
 
 .SH DESCRIPTION
-Output of any Gliimly code can be written into <string> with write-string. In between write-string and end-write-string you can write <any Gliimly code>. For instance you can use database queries, conditional statements etc., just as you would for any other Gliimly code. 
+Output of any Golf code can be written into <string> with write-string. In between write-string and end-write-string you can write <any Golf code>. For instance you can use database queries, conditional statements etc., just as you would for any other Golf code. 
 
 .LP
 .B SHORTCUT CODE
 .LP
 
-Note that instead of write-string you can also use a shortcut "(("  (and instead of end-write-string you can use "))"  ), for example here a string "fname" holds a full path of a file named "config-install.gliim" under the application home directory (see \fBdirectories\fP):
+Note that instead of write-string you can also use a shortcut "(("  (and instead of end-write-string you can use "))"  ), for example here a string "fname" holds a full path of a file named "config-install.golf" under the application home directory (see \fBdirectories\fP):
 
 .RS 4
 .EX
 
 get-app directory to home_dir
 (( fname
-@<<p-out home_dir>>/config-install.gliim
+@<<p-out home_dir>>/config-install.golf
 ))
 
 .EE
@@ -43,7 +43,7 @@ get-app directory to home_dir
 .B TRIMMING
 .LP
 
-Just like with all other Gliimly code, every line is trimmed both on left and write, so this:
+Just like with all other Golf code, every line is trimmed both on left and write, so this:
 
 .RS 4
 .EX
@@ -120,7 +120,7 @@ Hello world (and have a nice day too!)
 
 .B - Using code inside
 
-Here is using Gliimly code inside write-string, including database query and conditional statements to produce different strings at run-time:
+Here is using Golf code inside write-string, including database query and conditional statements to produce different strings at run-time:
 
 .RS 4
 .EX

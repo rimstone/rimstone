@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 begin-handler \-  (service-processing)
 .SH PURPOSE
@@ -23,7 +23,7 @@ A <request path> is a path consisting of any number of path segments. A request 
 
 For example, a <request path> can be "/wine-items" or "/items/wine" etc. In general, it represents the nature of a request, such as an action on an object, a resource path handled by it etc. There is no specific way to interpret a request path, and you can construct it in a way that works for you.
 
-The source ".gliim" file name that implements a given begin-handler matches its path and name, fully or partially (see \fBrequest\fP). For example, <request path> of "/items/wine" might be implemented in  "items/wine.gliim" file (meaning in file "wine.gliim" in subdirectory "items").
+The source ".golf" file name that implements a given begin-handler matches its path and name, fully or partially (see \fBrequest\fP). For example, <request path> of "/items/wine" might be implemented in  "items/wine.golf" file (meaning in file "wine.golf" in subdirectory "items").
 
 Note that you can also use "%%" instead of either begin-handler or end-handler or both. 
 
@@ -40,7 +40,7 @@ If neither "public" nor "private" is used, then the default is "private". This d
 You can change this default behavior with "--public" option in \fBgg\fP, in which case the default is "public". This is useful if either all request handlers should be public, or if only a handful fixed ones are private.
 
 .SH EXAMPLES
-The following begin-handler is implemented in file "items/wines/red-wine.gliim":
+The following begin-handler is implemented in file "items/wines/red-wine.golf":
 
 .RS 4
 .EX

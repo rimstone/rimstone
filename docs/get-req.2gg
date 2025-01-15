@@ -1,4 +1,4 @@
-.TH GLIIMLY 2gg $VERSION $DATE Development Tools
+.TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
 get-req \-  (request-information)
 .SH PURPOSE
@@ -25,7 +25,7 @@ Information related to an input request can be obtained with get-req statement a
 
 .RS 4
 \[bu]    
-"errno" obtains the integer value of operating system "errno" tied to a last Gliimly statement that can return a status code. The "errno" value is saved internally; and restored here. It means that if "errno" changed for whatever reason since such Gliimly statement (such as with \fBcall-extended\fP), you will still obtain the correct value. See \fBerror-code\fP for an example. Note that errno value is undefined if there is no error, and can be 0 if the error is reported by Gliimly and not by operating system.
+"errno" obtains the integer value of operating system "errno" tied to a last Golf statement that can return a status code. The "errno" value is saved internally; and restored here. It means that if "errno" changed for whatever reason since such Golf statement (such as with \fBcall-extended\fP), you will still obtain the correct value. See \fBerror-code\fP for an example. Note that errno value is undefined if there is no error, and can be 0 if the error is reported by Golf and not by operating system.
 
 
 .RE
