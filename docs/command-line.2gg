@@ -87,7 +87,7 @@ Note that you can also include any other headers as environment variables by usi
 .RS 4
 .EX
 
-export HTTP_GLIIMLY_HEADER="some value"
+export HTTP_GOLF_HEADER="some value"
 
 .EE
 .RE

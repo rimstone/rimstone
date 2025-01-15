@@ -214,7 +214,7 @@ void gg_get_stack(char *fname)
 // Signal handler for signal sig. sig is signal number
 // This way at run time we know which signal was caught. We also core dump for 
 // more information.
-// NO GLIIMLY MEMORY HANDLING HERE
+// NO GOLF MEMORY HANDLING HERE
 // This will either end program (due to request to end it, or some fatal condition), or set the flag
 // to end it once the current request completes, and that's all it can do.
 //
@@ -379,7 +379,7 @@ int modinfo(struct dl_phdr_info *info, size_t size, void *data)
 }
  
 //
-// This is what's called by generated GLIIMLY program at the beginning
+// This is what's called by generated GOLF program at the beginning
 // to enable catchng signals and dumping human-readable stack in backtrace file
 // 'dir' is the tracing directory where to write trace file
 //

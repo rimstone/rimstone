@@ -4,7 +4,7 @@
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
-// Security-related functions for GLIIMLY and run-time
+// Security-related functions for GOLF and run-time
 // (getting db credentials, encryption etc)
 //
 
@@ -325,7 +325,7 @@ gg_num gg_get_enc_key(char *password, char *salt, gg_num salt_len, gg_num iter_c
 // the length of data to encrypt, and also the output length after being done (excluding zero byte at the end).
 // is_binary is 1 if the encrypted value is binary and not hex-string, otherwise 0.
 // We allocate new memory for encrypted value - caller must de-allocate (this is gg_
-// allocation, so you may just leave it to be collected by GLIIMLY memory garbage collector.
+// allocation, so you may just leave it to be collected by GOLF memory garbage collector.
 // 'e' is the encryption context, produced as e_ctx in gg_get_enc_key().
 // iv is the nonce (IV), the length of which should be sufficient for the algorithm
 // The maximum length of encrypted data is 2*(input_len+AES_BLOCK_SIZE)+1. Note that 
@@ -415,7 +415,7 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
 // the decrypted value doesn't have to be a string, but it will have a zero byte at the end).
 // 'len' is also input parameter - it's the length of input data to decrypt (-1 if not given).
 // We allocate new memory for decrypted value - caller must de-allocate (this is gg_
-// allocation, so you may just leave it to be collected by GLIIMLY memory garbage collector.
+// allocation, so you may just leave it to be collected by GOLF memory garbage collector.
 // 'e' is the encryption context, produced as d_ctx in gg_get_enc_key().
 // iv is the nonce (IV), the length of which should be sufficient for the algorithm
 // 'is_binary' is 1 if encrypted value was encrypted in binary mode, and 0 if as a hex string.

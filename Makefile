@@ -118,7 +118,7 @@ endif
 CFLAGS=-std=gnu99 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME_ID=$(OSNAMEID) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
-#this is for installation at customer's site where we link GLIIMLY with mariadb (LGPL), crypto (OpenSSL)
+#this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
 LDFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN)
 
 #Libraries and executables must be 0755 or the packager (RPM) will say they are not satisfied
@@ -212,7 +212,7 @@ clean:
 
 
 #
-# Other than GLIIMLY preprocessor, we do NOT use any libraries at customer's site - 
+# Other than GOLF preprocessor, we do NOT use any libraries at customer's site - 
 # the Makefile for application (such as in hello world example) will link with
 # those libraries AT customer site.
 #
@@ -388,7 +388,7 @@ libgolfcli.so: gcli.c gcli.h
 
 libgolfscli.so: gcli.c gcli.h
 	rm -f libgolfscli.so
-	$(CC) -shared -o libgolfscli.so $^ $(CFLAGS) -DGG_GLIIMLYSRV
+	$(CC) -shared -o libgolfscli.so $^ $(CFLAGS) -DGG_GOLFSRV
 	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfscli.so ; fi
 
 

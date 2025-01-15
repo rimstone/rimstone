@@ -4,7 +4,7 @@
 // On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
 // 
-// Main GLIIMLY processor. Takes input and output parameters from the command line
+// Main GOLF processor. Takes input and output parameters from the command line
 // and generates C file ready for compilation.
 //
 
@@ -345,7 +345,7 @@ typedef struct gg_qry_info_t
     gg_num ind_current_db;
 } qry_info;
 // 
-// Context data for GLIIMLY preprocessor. Used to hold information
+// Context data for GOLF preprocessor. Used to hold information
 // during the preprocessing.
 //
 typedef struct gg_gen_ctx_s
@@ -456,7 +456,7 @@ gg_num print_mode = 0; // 1 if @  to print out
 gg_num die_now = 0; // used in golf run-time only for now to gracefully exit program, not used here (not yet,
                 // and maybe not ever).
 FILE *outf = NULL; // golf output file (.c generated file)
-gg_num usedGLIIMLY = 0; // 1 if golf statement is used on the line
+gg_num usedGOLF = 0; // 1 if golf statement is used on the line
 gg_num gg_is_inline = 0; // if 1, the last statement just processed was inline
 gg_num within_inline = 0; // if statement is within <<...>>
 gg_num last_line_readline_closed = 0; // line number of the last read-line that has closed
@@ -584,7 +584,7 @@ char *undecorate (char *src);
 
 //
 //
-// Implementation of functions used in GLIIMLY alone
+// Implementation of functions used in GOLF alone
 //
 //
 
@@ -3578,7 +3578,7 @@ gg_num terminal_width()
 // Parse a list of parameters. Parameters are a list of strings or non-string parameters separated
 // by commas. Parameter can have a comma if it is a string, or within ()
 //
-// String representing list of parameters is parse_list. GLIIMLY list structure is 'params', which will
+// String representing list of parameters is parse_list. GOLF list structure is 'params', which will
 // hold the parsed parameters. 
 // parse_list is advanced to its end during processing.
 // tot is the number of elements (single or x=y pairs encountered); it can be NULL.
@@ -3878,7 +3878,7 @@ void oprintf (char *format, ...)
 #define GG_COLOR_BOLD "\033[0;1m"
 #define GG_COLOR_PINK "\033[35m"
 // 
-// Output warning to stdout. During the preprocessing with GLIIMLY.
+// Output warning to stdout. During the preprocessing with GOLF.
 // There's a maximum length for it, and if it's more than that, ignore the rest.
 // If there is no dot at the end, put it there.
 // After that, continue program.
@@ -3904,7 +3904,7 @@ void gg_report_warning (char *format, ...)
 }
 
 // 
-// Output error to stderr. The error means error during the preprocessing with GLIIMLY.
+// Output error to stderr. The error means error during the preprocessing with GOLF.
 // There's a maximum length for it, and if it's more than that, ignore the rest.
 // If there is no dot at the end, put it there.
 // After that, exit program.
@@ -4098,7 +4098,7 @@ gg_num recog_statement (char *cinp, gg_num pos, char *opt, char **mtext, gg_num 
             }
             if (cinp[pos] == 0 || is_end_of_inline == 1)
             {
-                usedGLIIMLY = 0;
+                usedGOLF = 0;
                 *msize = (cinp+pos)-*mtext;
                 (*mtext)[*msize] = 0; // zero the >>
                 GG_VERBOSE(lnum,"Markup [%s] found", opt);
@@ -4171,7 +4171,7 @@ gg_num recog_statement (char *cinp, gg_num pos, char *opt, char **mtext, gg_num 
                 }
                 return 0; // must have space afterward
             }
-            usedGLIIMLY = 0;
+            usedGOLF = 0;
             GG_VERBOSE(lnum,"Markup [%s] found", opt);
             char *nl = strchr (cinp+orig_position, '\n');
             if (nl) *nl = 0;
@@ -4346,7 +4346,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
         gg_num first_on_line = 1;
         gg_num is_verbatim = 0; // 1 if #  to print out
         within_inline = 0; // if statement is within <<...>>
-        usedGLIIMLY = 0;
+        usedGOLF = 0;
         print_mode = 0; // if in @ or !
         emptyc_c = 0;
 
@@ -4498,7 +4498,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
         //
         // In this loop, a line is examined char by char. However, once certain patterns are recognized, parsing
-        // progresses more rapidly. Basically, recog_statement() is called to recognized the beginning of the GLIIMLY statement,
+        // progresses more rapidly. Basically, recog_statement() is called to recognized the beginning of the GOLF statement,
         // and from there the rest is parsed in a more rapid fashion. Each statement is checked, and once recognized and
         // processed, the next line is read in the outer loop.
         // Skip whitespaces
@@ -4525,7 +4525,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                 {
                     i = i + 2; // past "<<"
                     within_inline = 1;
-                    usedGLIIMLY = 1;
+                    usedGOLF = 1;
                     if (print_mode == 1)
                     {
                         // Finish current portion of @ line, so that <<>> can do its thing
@@ -4540,9 +4540,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                 }
 
 
-                // checking for GLIIMLY statement without <<..>> can only work in those statements where they are the first on the 
+                // checking for GOLF statement without <<..>> can only work in those statements where they are the first on the 
                 // line, OR if this is actual statement << ...>>
-                if (first_on_line == 1 || usedGLIIMLY == 1)
+                if (first_on_line == 1 || usedGOLF == 1)
                 {
                     while (isspace (line[i])) i++;
                     first_on_line = 0;
@@ -4987,7 +4987,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         oprintf("//%s\n", line+i); // there can never be \n in line, so this should work
                         // @, !  is a synonym for an output line.  ! is verbatim, @ respects << ... >>
-                        usedGLIIMLY = 0; // reset usedGLIIMLY because "@/!" isn't actual directive, it only
+                        usedGOLF = 0; // reset usedGOLF because "@/!" isn't actual directive, it only
                                     // says what follows is just printed out
                         if (line[i+1] == 0)
                         {
@@ -9531,9 +9531,9 @@ int main (int argc, char* argv[])
 
     //
     //
-    // We must set various variables used in GLIIMLY shared library, for example, global connection data (description, transaction marker, 
+    // We must set various variables used in GOLF shared library, for example, global connection data (description, transaction marker, 
     // connection marker). Encryption function is set too, as well as other variable.
-    // This is the SAME code as below generated for application. This is because for GLIIMLY, we need it in order for db connection etc. to work.
+    // This is the SAME code as below generated for application. This is because for GOLF, we need it in order for db connection etc. to work.
     // And we need it for application too. Here in golf, we don't need it to be static since it's only one run of this process.
     // We can't really put this code in a common place because it spans two projects. Perhaps something could be done with generated code
     // but the effort doesn't seem worth it.

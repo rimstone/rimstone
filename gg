@@ -1095,12 +1095,12 @@ function gen_src() {
     _T="source.golf"
 #this is all source files, including C files
     GG_CLIST=$(ls *.c 2>/dev/null) || true
-    GG_GLIIMLIST=$(ls *.golf 2>/dev/null) || true
+    GG_GOLFLIST=$(ls *.golf 2>/dev/null) || true
     GG_HLIST=$(ls *.h 2>/dev/null) || true
 #GG_REQLIST is really a list of requests, which we get from the list of source files
-#GG_GLIIMLIST is the list of golf files - note these are "flattened" so that any directory structure works in a flat directory with / substituted for __
+#GG_GOLFLIST is the list of golf files - note these are "flattened" so that any directory structure works in a flat directory with / substituted for __
     GG_REQLIST=""
-    for i in $GG_GLIIMLIST; do
+    for i in $GG_GOLFLIST; do
 #we can do this since we prohibit line splitting for begin-handler or %%
         RS=$(sed -n 's/^\s*\(%%\|begin\-handler\) \s*\([^ \t]\+\).*/\2/gp' $i)
         for OF in $RS; do #take request paths and turn them into flat files
@@ -1124,7 +1124,7 @@ $OF"
     echo "GG_HEADER_FILES=$(echo $_HFILES)" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     echo "#Source files here:" >> $GG_BLD/$_T.new
-    echo "GG_SOURCE_FILES=$(echo $GG_GLIIMLIST)" >> $GG_BLD/$_T.new
+    echo "GG_SOURCE_FILES=$(echo $GG_GOLFLIST)" >> $GG_BLD/$_T.new
     echo "GG_SOURCE_C_FILES=$(echo $GG_CLIST)" >> $GG_BLD/$_T.new
 
     _ISDIFF=$(diff $GG_BLD/$_T.new $GG_BLD/$_T 2>/dev/null) || true
@@ -1144,10 +1144,10 @@ $OF"
     echo "// SPDX-License-Identifier: Apache-2.0"  >> $GG_BLD/$_T.new
     echo "// Copyright 2019 Gliim LLC. ">> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
-    echo "// This is an auto-generated file for a GLIIMLY application" >> $GG_BLD/$_T.new
+    echo "// This is an auto-generated file for a GOLF application" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
-    echo "#ifndef _GLIIMLYAPP" >> $GG_BLD/$_T.new
-    echo "#define _GLIIMLYAPP" >> $GG_BLD/$_T.new
+    echo "#ifndef _GOLFAPP" >> $GG_BLD/$_T.new
+    echo "#define _GOLFAPP" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     if [ "$_HFILES" != "" ]; then
         for i in $_HFILES; do
@@ -1190,7 +1190,7 @@ $OF"
     echo "// SPDX-License-Identifier: Apache-2.0" >>$GG_BLD/$_T.new
     echo "// Copyright 2019 Gliim LLC. " >>$GG_BLD/$_T.new
     echo >>$GG_BLD/$_T.new
-    echo "// GLIIMLY auto-generated request dispatcher" >>$GG_BLD/$_T.new
+    echo "// GOLF auto-generated request dispatcher" >>$GG_BLD/$_T.new
     echo >>$GG_BLD/$_T.new
     echo "begin-handler /gg_dispatch_request public" >>$GG_BLD/$_T.new
 

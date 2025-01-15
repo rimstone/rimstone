@@ -5,8 +5,8 @@
 
 // 
 // Memory handling, including garbage collector
-// GLIIMLY memory is made for request-based processing. Simplest form of memory management is for 
-// memory to be allocated anywhere and released at the end of the request, GLIIMLY will de-allocate 
+// GOLF memory is made for request-based processing. Simplest form of memory management is for 
+// memory to be allocated anywhere and released at the end of the request, GOLF will de-allocate 
 // it automatically. 'string' is memory and is any binary or text memory. Objects such as indexes, arrays,
 // lists, split strings etc are never freed; but the items they hold (aka elements, mostly key/values) can be freed when
 // an element is deleted; however superstructure of an index, array etc remains but is miniscule in memory footprint.
@@ -92,7 +92,7 @@ static gg_num vm_first_free = -1; // first free memory block
 
 // determines the size of the block allocated (and the size of consequent expansions) for the memory
 // block that keeps all pointers to allocated blocks.
-#define GLIIMLYMSIZE 512
+#define GOLFMSIZE 512
 
 
 // 
@@ -163,7 +163,7 @@ inline gg_num gg_add_mem (void *p)
         if (vm_curr >= vm_tot)
         {
             gg_num old_vm_tot = vm_tot;
-            vm_tot += GLIIMLYMSIZE;
+            vm_tot += GOLFMSIZE;
             vm = realloc (vm, vm_tot * sizeof (vml));
             if (vm == NULL)
             {
@@ -187,7 +187,7 @@ inline gg_num gg_add_mem (void *p)
 // 
 // Adds string constant to memory pool
 // 'r' is the index in vm[].
-// The memory returned is the actually a pointer to useful memory (that a GLIIMLY program can use). We place
+// The memory returned is the actually a pointer to useful memory (that a GOLF program can use). We place
 // some information at the beginning of the memory pointed to by alloc'd mem: the reference to the 
 // index in the block of memory where memory (p) is;
 //
@@ -205,7 +205,7 @@ inline void *gg_mem_add_const (void *p, gg_num len)
 // 
 // Adds pointer to our block of memory. 
 // 'r' is the index in vm[].
-// The memory returned is the actually a pointer to useful memory (that a GLIIMLY program can use). We place
+// The memory returned is the actually a pointer to useful memory (that a GOLF program can use). We place
 // some information at the beginning of the memory pointed to by alloc'd mem: the reference to the 
 // index in the block of memory where memory (p) is;
 //
@@ -596,7 +596,7 @@ void gg_done ()
     if (vm == NULL) 
     {
         // init memory if it's not there. Keep it if it has process-memory, but release all others
-        vm = calloc (vm_tot = GLIIMLYMSIZE, sizeof (vml));
+        vm = calloc (vm_tot = GOLFMSIZE, sizeof (vml));
         if (vm == NULL) gg_report_error ("Out of memory");
         vm_curr = 0;
         vm_first_free = -1;

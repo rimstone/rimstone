@@ -336,7 +336,7 @@ gg_dbc *gg_execute_SQL (char *s,  gg_num *arows, char **er, char **err_message, 
     assert (s);
     assert (er);
 
-    // get location in source code (if set, GLIIMLY automatically does this)
+    // get location in source code (if set, GOLF automatically does this)
     char *sname = "";
     gg_num lnum = 0; 
     gg_location (&sname, &lnum, 0);
@@ -573,7 +573,7 @@ gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, ch
         gg_report_error ("Unknown database type [%ld]", GG_CURR_DB.db_type); 
     }
 
-    // get location in source code (if set, GLIIMLY automatically does this)
+    // get location in source code (if set, GOLF automatically does this)
     char *sname = "";
     gg_num lnum = 0;
     gg_location (&sname, &lnum, 0);

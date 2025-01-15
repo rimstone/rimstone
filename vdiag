@@ -64,14 +64,14 @@ function displ() {
     VL=$(sed $VLN'q;d' ./$F.golf|sed 's/^[ \t]*//;s/[ \t]*$//')
 #determine if the issue is a golf line or just a C line in .golf code. It's C code if the source code line is the same (i.e.
 #it matches), because for Golf code it wouldn't.
-    IS_GLIIMLY=0
+    IS_GOLF=0
 #if in Golf code, display it first, then down below display C code too
     if [ "$CL" != "$VL" ]; then
         echo -e -n "$RED>>> "; echo -n "Golf stmt: [$VL]"; echo -e "$NORMAL"
-        IS_GLIIMLY=1
+        IS_GOLF=1
     fi
 #for C code, display it and put the caret up, first 
-    if [ "$IS_GLIIMLY" == "0" ]; then
+    if [ "$IS_GOLF" == "0" ]; then
         echo -e -n "$RED>>> "; echo -n "C code: $CL"; echo -e "$NORMAL"
 #Add 12 for '>>> C code: '
         ((COL=COL-1+12))

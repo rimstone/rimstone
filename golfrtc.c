@@ -4,7 +4,7 @@
 // On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
 //
-// Library used both by GLIIMLY utility and GLIIMLY run-time 
+// Library used both by GOLF utility and GOLF run-time 
 // trailing 'c' in the name of this file refers to 'common' 
 // code.
 //

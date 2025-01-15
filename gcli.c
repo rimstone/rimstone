@@ -35,20 +35,20 @@
 
 // If memory allocation fails in Golf, this is handled by gg_* functions
 // For a SERVICE client, the handling is explicit here in code
-#if GG_GLIIMLYSRV==1
+#if GG_GOLFSRV==1
 #   include "golf.h"
     // OS malloc is used here, and not Golf, due to multithreading. Golf mem alloc is not
     // MT safe, and would be too slow if made to do so.
     void *gg_cli_one (void *inp);
     // Memory adjustment for Golf memory 
-#   define GG_ADD_FOR_GLIIMLY (GG_ALIGN)
+#   define GG_ADD_FOR_GOLF (GG_ALIGN)
 #else
-#   define GG_ADD_FOR_GLIIMLY 0
+#   define GG_ADD_FOR_GOLF 0
 #   define GG_EMPTY_STRING NULL
 #endif
 // If manage-memory is false in Golf, then adjustment is 0
 // because in this case memory allocated is just like for Client_API
-#define GG_MADJ(x) ((x)+GG_ADD_FOR_GLIIMLY)
+#define GG_MADJ(x) ((x)+GG_ADD_FOR_GOLF)
 
 // Fcgi end request (the body)
 typedef struct {
@@ -403,9 +403,9 @@ void fc_server_read(fc_local *fc_l)
             // allocate memory for the reply and/or error, depending on what this header is
             if (header.type == GG_CLI_STDOUT) 
             {
-                // Originally we set fc_l->fc->internal.data to calloc(1,GG_ADD_FOR_GLIIMLY+1) so it can be re-alloced
+                // Originally we set fc_l->fc->internal.data to calloc(1,GG_ADD_FOR_GOLF+1) so it can be re-alloced
                 // Initially fc_l->fc->data_len is 0
-                fc_l->fc->internal.data = realloc(fc_l->fc->internal.data, GG_ADD_FOR_GLIIMLY+fc_l->fc->data_len+fc_l->msg_remain+1);
+                fc_l->fc->internal.data = realloc(fc_l->fc->internal.data, GG_ADD_FOR_GOLF+fc_l->fc->data_len+fc_l->msg_remain+1);
                 if (fc_l->fc->internal.data == NULL)
                 {
                     fc_l->fc->internal.read_status = GG_CLI_ERR_OUT_MEM;
@@ -414,9 +414,9 @@ void fc_server_read(fc_local *fc_l)
             }
             else if (header.type == GG_CLI_STDERR) 
             {
-                // Originally we set fc_l->fc->internal.error to calloc(1,GG_ADD_FOR_GLIIMLY+1) so it can be re-alloced
+                // Originally we set fc_l->fc->internal.error to calloc(1,GG_ADD_FOR_GOLF+1) so it can be re-alloced
                 // Initially fc_l->fc->error_len is 0
-                fc_l->fc->internal.error = realloc(fc_l->fc->internal.error, GG_ADD_FOR_GLIIMLY+fc_l->fc->error_len+fc_l->msg_remain+1);
+                fc_l->fc->internal.error = realloc(fc_l->fc->internal.error, GG_ADD_FOR_GOLF+fc_l->fc->error_len+fc_l->msg_remain+1);
                 if (fc_l->fc->internal.error == NULL) 
                 {
                     fc_l->fc->internal.read_status = GG_CLI_ERR_OUT_MEM;
@@ -678,10 +678,10 @@ int fc_edge(fc_local *fc_l, int timeout, bool start)
         //
         // initialize reading stats, in case we return prior to reading so they have default values
         fc_l->fc->internal.read_status = GG_OKAY; // by default, read succeeds, we set error if it doesn't
-        fc_l->fc->internal.data = calloc(1,GG_ADD_FOR_GLIIMLY+1); // add GG_ADD_FOR_GLIIMLY so it works with Golf
+        fc_l->fc->internal.data = calloc(1,GG_ADD_FOR_GOLF+1); // add GG_ADD_FOR_GOLF so it works with Golf
         if (fc_l->fc->internal.data == NULL) { return GG_CLI_ERR_OUT_MEM; }
         fc_l->fc->data_len = 0;
-        fc_l->fc->internal.error = calloc(1,GG_ADD_FOR_GLIIMLY+1); //add GG_ADD_FOR_GLIIMLY so it works with Golf
+        fc_l->fc->internal.error = calloc(1,GG_ADD_FOR_GOLF+1); //add GG_ADD_FOR_GOLF so it works with Golf
         if (fc_l->fc->internal.error == NULL) { return GG_CLI_ERR_OUT_MEM; }
         fc_l->fc->error_len = 0;
         fc_l->fc->other = calloc(1,1); // other is not used for now like data or error
@@ -1000,7 +1000,7 @@ int gg_cli_request (gg_cli *fc_in)
 //
 void gg_cli_delete (gg_cli *callin)
 {
-#if GG_GLIIMLYSRV==1
+#if GG_GOLFSRV==1
     GG_TRACE("");
     if (callin->internal.server_alloc) gg_free (callin->server);
     if (callin->internal.path_alloc) { gg_free (callin->app_path); gg_free (callin->url_params); }
@@ -1020,7 +1020,7 @@ void gg_cli_delete (gg_cli *callin)
 //
 char *gg_cli_data (gg_cli *callin)
 {
-#if GG_GLIIMLYSRV==1
+#if GG_GOLFSRV==1
     GG_TRACE("");
     // convert memory to Golf if okay, so it goes under garbage collection
     gg_num mm = gg_add_mem (callin->internal.data);
@@ -1036,7 +1036,7 @@ char *gg_cli_data (gg_cli *callin)
 //
 char *gg_cli_error (gg_cli *callin)
 {
-#if GG_GLIIMLYSRV==1
+#if GG_GOLFSRV==1
     GG_TRACE("");
     // convert memory to Golf if okay, so it goes under garbage collection
     gg_num mm = gg_add_mem (callin->internal.error);
@@ -1048,7 +1048,7 @@ char *gg_cli_error (gg_cli *callin)
 }
 
 
-#if GG_GLIIMLYSRV==1
+#if GG_GOLFSRV==1
 //
 // Create SERVICE object for call-fcgi. call is the object, server is the server (or Unix socket location)
 // req_method is GET, POST (default GET) etc. app_path is application path, req is request path, url_params is URL payload (i.e. the resot of URL)

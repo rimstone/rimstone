@@ -4,9 +4,9 @@
 // On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
 // 
-// Main library used at GLIIMLY runtime. Most of the functions used
+// Main library used at GOLF runtime. Most of the functions used
 // within markups are implemented here. See also golfrtc.c which includes
-// common functions shared between GLIIMLY runtime and GLIIMLY preprocessor.
+// common functions shared between GOLF runtime and GOLF preprocessor.
 //
 
 #include "golf.h"
@@ -136,7 +136,7 @@ gg_num gg_write_to_string_length ()
 }
 
 // 
-// Write to string. str is either a GLIIMLY-allocated string into which to write
+// Write to string. str is either a GOLF-allocated string into which to write
 // or NULL, which signifies end of string writing.
 // Once non-NULL string str is passed here, all future writing (such as print-noenc
 // or print-web etc) goes to this string, until this function is called with NULL.
@@ -499,7 +499,7 @@ void gg_send_header(gg_input_req *req)
     }
     else
     {
-        // this is for output from GLIIMLY files only! for files, we cache-forever by default
+        // this is for output from GOLF files only! for files, we cache-forever by default
         gg_gen_add_header ("Cache-Control", "max-age=0, no-cache");
         gg_gen_add_header ("Pragma", "no-cache");
         GG_TRACE("Setting no cache for HTTP header (1)");

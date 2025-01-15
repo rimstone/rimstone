@@ -4,7 +4,7 @@
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
-// Include file for GLIIMLY FastCGI client
+// Include file for GOLF FastCGI client
 //
 
 #ifndef _GG_SERVICE_INC
@@ -19,7 +19,7 @@
 
 
 // Version+Release. We use major plus minor plus release, as in 1.3.34,2.1.11,3.7.41... 
-#define GG_VERSION "157"
+#define GG_VERSION "159"
 
 // Client error codes
 #define GG_OKAY 0 // success
