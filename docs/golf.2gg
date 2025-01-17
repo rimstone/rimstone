@@ -2,11 +2,11 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
-Golf is a compiled programming language for web services. It includes a framework, application server and tools for a complete web development platform. Golf is simple, memory-safe, high-performance, built with industry-standard Free Open Source libraries, extensible, and licensed under \fBApache 2\fP Free Open Source.
+Golf is a compiled programming language for web services. It includes a framework, application server and tools for a complete web development platform. Golf is about (much) less coding, simplicity, memory-safety and high-performance, built with industry-standard Free Open Source libraries, extensible, and licensed under \fBApache 2\fP Free Open Source.
 
 \fBInstall Golf\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note version comments are the same as their numbers; each change log is described on \fBGolf blog\fP). 
 
-Current version is 159. Check \fBBlog\fP for change log.
+Current version is 161. Check \fBBlog\fP for change log.
 
 Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to Golf!
 

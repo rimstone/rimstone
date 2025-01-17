@@ -2,6 +2,8 @@
 // Copyright 2019 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
+//
+// gcc -o xml3 xml3.c $(pkg-config --cflags libxml-2.0) -lxml2 -g -std=gnu99
 
 
 //
@@ -56,7 +58,7 @@
     </country>\n\
 </countries>\n";
 
-#include "golf.h"
+//#include "golf.h"
 #include <libxml/parser.h>
 #include <libxml/SAX.h>
 #include <string.h>
@@ -69,7 +71,7 @@ char eval[20][400];
 int elen[20];
 int dep;
 int main_xml() ;
-void OnStartElementNs(
+void process_start(
     void *ctx,
     const xmlChar *localname,
     const xmlChar *prefix,
@@ -81,16 +83,16 @@ void OnStartElementNs(
     const xmlChar **attributes
 );
 void xml_err(void *userData, xmlErrorPtr error);
-void OnEndElementNs(
+void process_end(
     void* ctx,
     const xmlChar* localname,
     const xmlChar* prefix,
     const xmlChar* URI
 );
-void OnCharacters(void* ctx, const xmlChar * ch, int len);
+void process_chars(void* ctx, const xmlChar * ch, int len);
 
 // Your custom SAX handler functions
-void OnStartElementNs(
+void process_start(
     void *ctx,
     const xmlChar *localname,
     const xmlChar *prefix,
@@ -102,12 +104,12 @@ void OnStartElementNs(
     const xmlChar **attributes
 )
 {
-    GG_UNUSED(ctx);
-    GG_UNUSED(prefix);
-    GG_UNUSED(URI);
-    GG_UNUSED(nb_namespaces);
-    GG_UNUSED(namespaces);
-    GG_UNUSED(nb_defaulted);
+    //GG_UNUSED(ctx);
+    //GG_UNUSED(prefix);
+    //GG_UNUSED(URI);
+    //GG_UNUSED(nb_namespaces);
+    //GG_UNUSED(namespaces);
+    //GG_UNUSED(nb_defaulted);
     //printf("\n------\n");
 
     strcpy (ename[dep+1], ename[dep]);
@@ -118,35 +120,34 @@ void OnStartElementNs(
     //printf ("'%s'=", ename[dep]);
     unsigned int index = 0;
     // now the attributes
-    int indexAttribute;
-    for (indexAttribute = 0; indexAttribute < nb_attributes; ++indexAttribute, index += 5)
+    int i_att;
+    for (i_att = 0; i_att < nb_attributes; ++i_att, index += 5)
       {
         const xmlChar *localname = attributes[index];
-        const xmlChar *valueBegin = attributes[index + 3];
-        const xmlChar *valueEnd = attributes[index + 4];
-        int alen = valueEnd-valueBegin;
+        const xmlChar *begv = attributes[index + 3];
+        const xmlChar *endv = attributes[index + 4];
+        int alen = endv-begv;
         strcpy (ename[dep+1], ename[dep]);
         elen[dep+1]=elen[dep];
         dep++;
         elen[dep]+=snprintf (ename[dep]+elen[dep], sizeof(ename[dep])-elen[dep], "%s/@", localname);
 
-        //printf ("  %sattribute: localname='%s',  value='%s' ", indexAttribute >= (nb_attributes - nb_defaulted) ? "defaulted " : "", ename[dep], valueBegin);
-        printf ("'%s'='%.*s'\n", ename[dep], alen, valueBegin);
+        printf ("'%s'='%.*s'\n", ename[dep], alen, begv);
         dep--;
       }
 }
 
-void OnEndElementNs(
+void process_end(
     void* ctx,
     const xmlChar* localname,
     const xmlChar* prefix,
     const xmlChar* URI
 )
 {
-    GG_UNUSED(ctx);
-    GG_UNUSED(prefix);
-    GG_UNUSED(URI);
-    GG_UNUSED(localname);
+    //GG_UNUSED(ctx);
+    //GG_UNUSED(prefix);
+    //GG_UNUSED(URI);
+    //GG_UNUSED(localname);
     //
     //TODO:check localname to be in eval[]
     //
@@ -164,18 +165,17 @@ void OnEndElementNs(
     dep--;
 }
 
-void OnCharacters(void* ctx, const xmlChar * ch, int len)
+void process_chars(void* ctx, const xmlChar * ch, int len)
 {
-    GG_UNUSED(ctx);
+    //GG_UNUSED(ctx);
     int l;
     memcpy (eval[dep]+(l=strlen(eval[dep])), ch, len);
     (eval[dep]+l)[len]= 0;
 }
 
 void xml_err(void *userData, xmlErrorPtr error) {
-    GG_UNUSED(userData);
+    //GG_UNUSED(userData);
     fprintf(stderr, "Error: %s %d %s %s %s %d\n", error->message, error->line, error->str1, error->str2, error->str3, error->int2);
-    // Handle the error, e.g., log it or exit
     xmlSetStructuredErrorFunc(NULL, NULL);
 }
 
@@ -193,10 +193,10 @@ int main_xml() {
     memset(&handler, 0, sizeof(handler));
 
     // Set up handler functions
+    handler.startElementNs = process_start;
+    handler.endElementNs = process_end;
+    handler.characters = process_chars;
     handler.initialized = XML_SAX2_MAGIC;
-    handler.startElementNs = OnStartElementNs;
-    handler.endElementNs = OnEndElementNs;
-    handler.characters = OnCharacters;
     // ... set other handler functions as needed
 
     xmlSetStructuredErrorFunc(NULL, xml_err);
@@ -206,8 +206,7 @@ int main_xml() {
     ctxt = xmlCreatePushParserCtxt( &handler, NULL, xmld, strlen(xmld), NULL);
     xmlCtxtUseOptions		(ctxt, XML_PARSE_NONET|XML_PARSE_HUGE|XML_PARSE_IGNORE_ENC);
 
-    // Parse the memory buffer
-    //xmlParseChunk(ctxt, xmld, strlen(xmld), 0);
+    // finish parsing
     xmlParseChunk(ctxt, "", 0, 1);
 
 
@@ -222,4 +221,4 @@ int main_xml() {
 
 }
 
-//int main() { main_xml(); }*/
+int main() { main_xml(); }*/
