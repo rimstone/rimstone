@@ -12,7 +12,7 @@ Read more \fBabout Golf\fP.
 
 \fBInstall Golf\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
 
-Current version is 168. Check \fBBlog\fP for change log.
+Current version is 171. Check \fBBlog\fP for change log.
 
 Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to Golf!
 
@@ -23,7 +23,7 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2025-01-18 \fBGolf 168 released\fP
+2025-01-18 \fBGolf 171 released\fP
 .RE
 
 
