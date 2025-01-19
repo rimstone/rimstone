@@ -30,7 +30,7 @@ Create Hello World application:
 .RS 4
 .EX
 
-sudo mgrg -i -u $(whoami) helloworld
+gg -k helloworld
 
 .EE
 .RE

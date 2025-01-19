@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "165"
+#define GG_VERSION "168"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -193,7 +193,7 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_MAX_HTTP_HEADER 32
 #define GG_MAX_SIZE_OF_URL 32000 /* maximum length of browser url (get) */
 #define GG_MAX_ERR_LEN 12000 /* maximum error length in report error */
-#define GG_MAX_UPLOAD_DIR  40000 /* max directories in file directory */
+#define GG_MAX_UPLOAD_DIR  64000 /* max directories in file directory */
 #define GG_MAX_FILENAME_LEN 512 /* max file name for make document */
 #define GG_MAX_SOCK_LEN 256 /* max file name for a local golf socket path */
 #define GG_ERROR_EXIT_CODE 99 // exit code of command line program when it hits any error

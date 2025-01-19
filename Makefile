@@ -257,7 +257,7 @@ libgolfsec.so: sec.o
 	$(CC) -shared -o libgolfsec.so  $^ 
 	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfsec.so ; fi
 
-libgolfxml.so: xml3.o 
+libgolfxml.so: xml.o 
 	rm -f libgolfxml.so
 	$(CC) -shared -o libgolfxml.so $^ 
 	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfxml.so ; fi
@@ -354,7 +354,7 @@ stub_gendb.o: stub.c golf.h
 curl.o: curl.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
-xml3.o: xml3.c golf.h
+xml.o: xml.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
 pcre2.o: pcre2.c golf.h

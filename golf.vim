@@ -1,7 +1,7 @@
 " Language: Golf
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2025-January-14
+" Latest Revision: 2025-January-18
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link golfConstruct Statement
@@ -307,78 +307,78 @@ syn region gg_r_construct_read_json start="^[[:space:]]*read-json" skip="\\[[:sp
     hi def link gg_h_clause_output_read_json    golfClauseOutput
     hi def link gg_h_construct_read_json    golfConstruct
     hi def link gg_h_print_inline_read_json    golfConstruct
-syn region gg_r_construct_read_array start="^[[:space:]]*read-array" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_read_array,gg_r_inline_read_array,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_read_array,gg_r_inline_read_array,gg_r_at
-    syn match gg_h_construct_read_array "^[[:space:]]*read-array" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_read_array " begin \@=" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_read_array " begin,\@=" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_read_array " begin$" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_read_array " delete \@=" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_read_array " delete,\@=" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_read_array " delete$" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_output_read_array " key \@=" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_output_read_array " status \@=" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_read_array " traverse \@=" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_read_array " traverse,\@=" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_read_array " traverse$" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_output_read_array " value \@=" contained containedin=gg_r_construct_read_array
-    hi def link gg_h_clause_read_array    golfClause
-    hi def link gg_h_clause_output_read_array    golfClauseOutput
-    hi def link gg_h_construct_read_array    golfConstruct
-    hi def link gg_h_print_inline_read_array    golfConstruct
-syn region gg_r_construct_write_array start="^[[:space:]]*write-array" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_write_array,gg_r_inline_write_array,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_write_array,gg_r_inline_write_array,gg_r_at
-    syn match gg_h_construct_write_array "^[[:space:]]*write-array" contained containedin=gg_r_construct_write_array
-    syn match gg_h_clause_write_array " key \@=" contained containedin=gg_r_construct_write_array
-    syn match gg_h_clause_output_write_array " old-value \@=" contained containedin=gg_r_construct_write_array
-    syn match gg_h_clause_output_write_array " status \@=" contained containedin=gg_r_construct_write_array
-    syn match gg_h_clause_write_array " value \@=" contained containedin=gg_r_construct_write_array
-    hi def link gg_h_clause_write_array    golfClause
-    hi def link gg_h_clause_output_write_array    golfClauseOutput
-    hi def link gg_h_construct_write_array    golfConstruct
-    hi def link gg_h_print_inline_write_array    golfConstruct
-syn region gg_r_construct_new_array start="^[[:space:]]*new-array" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_new_array,gg_r_inline_new_array,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_new_array,gg_r_inline_new_array,gg_r_at
-    syn match gg_h_construct_new_array "^[[:space:]]*new-array" contained containedin=gg_r_construct_new_array
-    syn match gg_h_clause_new_array " hash-size \@=" contained containedin=gg_r_construct_new_array
-    syn match gg_h_clause_new_array " process-scope \@=" contained containedin=gg_r_construct_new_array
-    syn match gg_h_clause_new_array " process-scope,\@=" contained containedin=gg_r_construct_new_array
-    syn match gg_h_clause_new_array " process-scope$" contained containedin=gg_r_construct_new_array
-    hi def link gg_h_clause_new_array    golfClause
-    hi def link gg_h_clause_output_new_array    golfClauseOutput
-    hi def link gg_h_construct_new_array    golfConstruct
-    hi def link gg_h_print_inline_new_array    golfConstruct
-syn region gg_r_construct_resize_array start="^[[:space:]]*resize-array" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_resize_array,gg_r_inline_resize_array,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_resize_array,gg_r_inline_resize_array,gg_r_at
-    syn match gg_h_construct_resize_array "^[[:space:]]*resize-array" contained containedin=gg_r_construct_resize_array
-    syn match gg_h_clause_resize_array " hash-size \@=" contained containedin=gg_r_construct_resize_array
-    hi def link gg_h_clause_resize_array    golfClause
-    hi def link gg_h_clause_output_resize_array    golfClauseOutput
-    hi def link gg_h_construct_resize_array    golfConstruct
-    hi def link gg_h_print_inline_resize_array    golfConstruct
-syn region gg_r_construct_purge_array start="^[[:space:]]*purge-array" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_purge_array,gg_r_inline_purge_array,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_purge_array,gg_r_inline_purge_array,gg_r_at
-    syn match gg_h_construct_purge_array "^[[:space:]]*purge-array" contained containedin=gg_r_construct_purge_array
-    hi def link gg_h_clause_purge_array    golfClause
-    hi def link gg_h_clause_output_purge_array    golfClauseOutput
-    hi def link gg_h_construct_purge_array    golfConstruct
-    hi def link gg_h_print_inline_purge_array    golfConstruct
-syn region gg_r_construct_get_array start="^[[:space:]]*get-array" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_array,gg_r_inline_get_array,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_array,gg_r_inline_get_array,gg_r_at
-    syn match gg_h_construct_get_array "^[[:space:]]*get-array" contained containedin=gg_r_construct_get_array
-    syn match gg_h_clause_output_get_array " average-reads \@=" contained containedin=gg_r_construct_get_array
-    syn match gg_h_clause_output_get_array " hash-size \@=" contained containedin=gg_r_construct_get_array
-    syn match gg_h_clause_output_get_array " length \@=" contained containedin=gg_r_construct_get_array
-    hi def link gg_h_clause_get_array    golfClause
-    hi def link gg_h_clause_output_get_array    golfClauseOutput
-    hi def link gg_h_construct_get_array    golfConstruct
-    hi def link gg_h_print_inline_get_array    golfConstruct
+syn region gg_r_construct_read_set start="^[[:space:]]*read-set" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_read_set,gg_r_inline_read_set,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_read_set,gg_r_inline_read_set,gg_r_at
+    syn match gg_h_construct_read_set "^[[:space:]]*read-set" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_read_set " begin \@=" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_read_set " begin,\@=" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_read_set " begin$" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_read_set " delete \@=" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_read_set " delete,\@=" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_read_set " delete$" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_output_read_set " key \@=" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_output_read_set " status \@=" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_read_set " traverse \@=" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_read_set " traverse,\@=" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_read_set " traverse$" contained containedin=gg_r_construct_read_set
+    syn match gg_h_clause_output_read_set " value \@=" contained containedin=gg_r_construct_read_set
+    hi def link gg_h_clause_read_set    golfClause
+    hi def link gg_h_clause_output_read_set    golfClauseOutput
+    hi def link gg_h_construct_read_set    golfConstruct
+    hi def link gg_h_print_inline_read_set    golfConstruct
+syn region gg_r_construct_write_set start="^[[:space:]]*write-set" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_write_set,gg_r_inline_write_set,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_write_set,gg_r_inline_write_set,gg_r_at
+    syn match gg_h_construct_write_set "^[[:space:]]*write-set" contained containedin=gg_r_construct_write_set
+    syn match gg_h_clause_write_set " key \@=" contained containedin=gg_r_construct_write_set
+    syn match gg_h_clause_output_write_set " old-value \@=" contained containedin=gg_r_construct_write_set
+    syn match gg_h_clause_output_write_set " status \@=" contained containedin=gg_r_construct_write_set
+    syn match gg_h_clause_write_set " value \@=" contained containedin=gg_r_construct_write_set
+    hi def link gg_h_clause_write_set    golfClause
+    hi def link gg_h_clause_output_write_set    golfClauseOutput
+    hi def link gg_h_construct_write_set    golfConstruct
+    hi def link gg_h_print_inline_write_set    golfConstruct
+syn region gg_r_construct_new_set start="^[[:space:]]*new-set" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_new_set,gg_r_inline_new_set,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_new_set,gg_r_inline_new_set,gg_r_at
+    syn match gg_h_construct_new_set "^[[:space:]]*new-set" contained containedin=gg_r_construct_new_set
+    syn match gg_h_clause_new_set " hash-size \@=" contained containedin=gg_r_construct_new_set
+    syn match gg_h_clause_new_set " process-scope \@=" contained containedin=gg_r_construct_new_set
+    syn match gg_h_clause_new_set " process-scope,\@=" contained containedin=gg_r_construct_new_set
+    syn match gg_h_clause_new_set " process-scope$" contained containedin=gg_r_construct_new_set
+    hi def link gg_h_clause_new_set    golfClause
+    hi def link gg_h_clause_output_new_set    golfClauseOutput
+    hi def link gg_h_construct_new_set    golfConstruct
+    hi def link gg_h_print_inline_new_set    golfConstruct
+syn region gg_r_construct_resize_set start="^[[:space:]]*resize-set" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_resize_set,gg_r_inline_resize_set,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_resize_set,gg_r_inline_resize_set,gg_r_at
+    syn match gg_h_construct_resize_set "^[[:space:]]*resize-set" contained containedin=gg_r_construct_resize_set
+    syn match gg_h_clause_resize_set " hash-size \@=" contained containedin=gg_r_construct_resize_set
+    hi def link gg_h_clause_resize_set    golfClause
+    hi def link gg_h_clause_output_resize_set    golfClauseOutput
+    hi def link gg_h_construct_resize_set    golfConstruct
+    hi def link gg_h_print_inline_resize_set    golfConstruct
+syn region gg_r_construct_purge_set start="^[[:space:]]*purge-set" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_purge_set,gg_r_inline_purge_set,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_purge_set,gg_r_inline_purge_set,gg_r_at
+    syn match gg_h_construct_purge_set "^[[:space:]]*purge-set" contained containedin=gg_r_construct_purge_set
+    hi def link gg_h_clause_purge_set    golfClause
+    hi def link gg_h_clause_output_purge_set    golfClauseOutput
+    hi def link gg_h_construct_purge_set    golfConstruct
+    hi def link gg_h_print_inline_purge_set    golfConstruct
+syn region gg_r_construct_get_set start="^[[:space:]]*get-set" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_set,gg_r_inline_get_set,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_set,gg_r_inline_get_set,gg_r_at
+    syn match gg_h_construct_get_set "^[[:space:]]*get-set" contained containedin=gg_r_construct_get_set
+    syn match gg_h_clause_output_get_set " average-reads \@=" contained containedin=gg_r_construct_get_set
+    syn match gg_h_clause_output_get_set " hash-size \@=" contained containedin=gg_r_construct_get_set
+    syn match gg_h_clause_output_get_set " length \@=" contained containedin=gg_r_construct_get_set
+    hi def link gg_h_clause_get_set    golfClause
+    hi def link gg_h_clause_output_get_set    golfClauseOutput
+    hi def link gg_h_construct_get_set    golfConstruct
+    hi def link gg_h_print_inline_get_set    golfConstruct
 syn region gg_r_construct_read_file start="^[[:space:]]*read-file" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_read_file,gg_r_inline_read_file,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_read_file,gg_r_inline_read_file,gg_r_at
