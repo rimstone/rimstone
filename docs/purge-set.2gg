@@ -1,0 +1,47 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+purge-set \-  (set)
+.SH PURPOSE
+Purge a set.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+purge-set <set> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+purge-set deletes all elements from <set> that was created with \fBnew-set\fP. 
+
+After purge-set, you can use it without calling \fBnew-set\fP again. Note however, that "average-reads" statistics (see \fBget-set\fP) is not reset - it keeps being computed and remains for the life of the set.
+
+.SH EXAMPLES
+Create a set, put some data in it and then delete the data:
+
+.RS 4
+.EX
+
+new-set h 
+write-set h key "mykey" value "myvalue"
+purge-set h
+
+.EE
+.RE
+
+See \fBread-set\fP for more examples.
+.SH SEE ALSO
+ 
+.B - Set
+
+\fBget-set\fP  
+\fBnew-set\fP  
+\fBpurge-set\fP  
+\fBread-set\fP  
+\fBresize-set\fP  
+\fBwrite-set\fP   
+See all 
+\fBdocumentation\fP

@@ -34,7 +34,7 @@ String <text> is modified during parsing for performance reasons, to minimize me
 The maximum depth of nested structures in JSON document (i.e. objects and arrays) is 32, and the maximum length of normalized leaf node name is 1024 (see \fBread-json\fP for more on normalized names). There is no limit on document size.
 
 .SH EXAMPLES
-Parse the following JSON document and display all keys and values from it. You can use them as they come along, or store them into \fBnew-array\fP or \fBnew-index\fP for instance for searching of large documents. This also demonstrates usage of UTF8 characters:
+Parse the following JSON document and display all keys and values from it. You can use them as they come along, or store them into \fBnew-set\fP or \fBnew-index\fP for instance for searching of large documents. This also demonstrates usage of UTF8 characters:
 
 .RS 4
 .EX

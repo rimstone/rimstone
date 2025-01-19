@@ -4,7 +4,7 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 165
+.B REFERENCE FOR GOLF VERSION 168
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -28,21 +28,6 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 .B - Application information
 
 \fBget-app\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-
-.B - Array
-
-\fBget-array\fP  
-\fBnew-array\fP  
-\fBpurge-array\fP  
-\fBread-array\fP  
-\fBresize-array\fP  
-\fBwrite-array\fP   
 .RE
 
 
@@ -506,6 +491,21 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 \fBbefore-handler\fP  
 \fBbegin-handler\fP  
 \fBcall-handler\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Set
+
+\fBget-set\fP  
+\fBnew-set\fP  
+\fBpurge-set\fP  
+\fBread-set\fP  
+\fBresize-set\fP  
+\fBwrite-set\fP   
 .RE
 
 

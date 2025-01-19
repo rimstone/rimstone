@@ -1,0 +1,45 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+resize-set \-  (set)
+.SH PURPOSE
+Resize set's hash table.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+resize-set <set> hash-size <new size>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+resize-set will resize <set>'s hash table (created by \fBnew-set\fP) to size <new size>, which refers to the number of "buckets", or possible hash codes derived from keys stored.
+
+When a number of elements stored grows, the search performance may decline if set size remains the same. Consequently, if the number of elements shrinks, the memory allocated by the set may be wasted. Use \fBget-set\fP to obtain its current hash-size, its length (the number of elements currently stored in it) and the statistics (such as average reads) to determine if you need to resize it.
+
+Resizing is generally expensive, so it should not be done too often, and only when needed. The goal is to amortize this expense through future gain of lookup performance. For that reason it may be better to resize proportionally (i.e. by a percentage), unless you have a specific application reason to do otherwise, or to avoid exponential growth.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+resize-set h hash-size 100000
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Set
+
+\fBget-set\fP  
+\fBnew-set\fP  
+\fBpurge-set\fP  
+\fBread-set\fP  
+\fBresize-set\fP  
+\fBwrite-set\fP   
+See all 
+\fBdocumentation\fP

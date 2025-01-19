@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "168"
+#define GG_VERSION "171"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -310,7 +310,7 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_KEY_T_NUMBER "number"
 #define GG_KEY_T_MESSAGE "message"
 #define GG_KEY_T_SPLITSTRING "split-string"
-#define GG_KEY_T_HASH "array"
+#define GG_KEY_T_HASH "set"
 #define GG_KEY_T_TREE "index"
 #define GG_KEY_T_JSON "json"
 #define GG_KEY_T_TREECURSOR "index-cursor"

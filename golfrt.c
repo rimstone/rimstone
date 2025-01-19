@@ -4338,5 +4338,3 @@ inline void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bo
     memcpy (tgt+swith, copy, len);
 }
 
-
-

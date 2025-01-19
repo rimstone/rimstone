@@ -1,10 +1,14 @@
-Golf is a compiled programming language for web services\. It includes a framework, application server and tools for a complete web development platform\. Golf is about \(much\) less coding, simplicity, memory\-safety and high\-performance, built with industry\-standard Free Open Source libraries, extensible, and licensed under [Apache 2](http://golf-lang.github.io//license.html) Free Open Source\.
+Golf is a language, tools and application server for building and deploying web services and back\-end solutions for any business\. Its purpose is rapid and easy development of low\-maintenance, memory\-safe and high\-performance business applications\. It's about much less coding and much higher readability of code\.
+
+Golf is built with industry\-standard Free Open Source libraries, extensible, and licensed under [Apache 2](http://golf-lang.github.io//license.html) Free Open Source\.
+
+Read more [about Golf](http://golf-lang.github.io//about-golf.html)\.
 
 [Hello World](http://golf-lang.github.io//123-hello-world.html) with Golf\.
 
 [Install Golf](http://golf-lang.github.io//install.html)\. See [Documentation](http://golf-lang.github.io//documentation.html)\. Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
 
-Current version is 165\. Check [Blog](https://golf-lang.blogspot.com/) for change log\.
+Current version is 168\. Check [Blog](https://golf-lang.blogspot.com/) for change log\.
 
 Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to Golf\!
 
@@ -12,6 +16,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 ![Golf image](http://golf-lang.github.io/home-example.png)
 
 [Blog](https://golf-lang.blogspot.com/) release updates, articles and examples:
+* 2025\-01\-18 [Golf 168 released](https://golf-lang.blogspot.com/2025/01/golf-168-released.html)
 * 2025\-01\-14 [Golf 155 released](https://golf-lang.blogspot.com/2025/01/golf-155-released.html)
 * 2025\-01\-03 [What is application server?](https://golf-lang.blogspot.com/2025/01/what-is-application-server_72.html)
 * 2024\-12\-26 [Encryption: ciphers, digests, salt, IV](https://golf-lang.blogspot.com/2024/12/encryption-ciphers-digests-salt-iv_84.html)

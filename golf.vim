@@ -860,9 +860,9 @@ syn region gg_r_construct_get_param start="^[[:space:]]*get-param" skip="\\[[:sp
     syn match gg_h_clause_get_param " file \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " file,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " file$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " array \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " array,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " array$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " set \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " set,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " set$" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " lifo \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " lifo,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " lifo$" contained containedin=gg_r_construct_get_param

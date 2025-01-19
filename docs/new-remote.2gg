@@ -88,7 +88,7 @@ Copy this to "manage_keys.golf" source file:
 
 %% /manage-keys public
    do-once
-   new-array h hash-size 1024 process-scope
+   new-set h hash-size 1024 process-scope
    end-do-once
 
    // Get input parameters
@@ -97,10 +97,10 @@ Copy this to "manage_keys.golf" source file:
    get-param data
 
    if-true op equal "add" // Add data to hash,
-       write-array h key (key) value data status st
+       write-set h key (key) value data status st
        @Added [<<p-out key>>]
    else-if op equal "delete" // Delete data and obtain the value deleted
-       read-array h key (key) value val \\
+       read-set h key (key) value val \\
            delete \\
            status st
        if-true st equal GG_ERR_EXIST
@@ -111,7 +111,7 @@ Copy this to "manage_keys.golf" source file:
            delete-string val
        end-if
    else-if op equal "query" // Query hash based on key value
-       read-array h key (key) value val status st
+       read-set h key (key) value val status st
        if-true st equal GG_ERR_EXIST
            @Not found, queried [<<p-out key>>]
        else-if
