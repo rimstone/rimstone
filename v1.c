@@ -43,6 +43,7 @@
 // various keywords used. What's recognized is a keyword. Only keywords that have something following them
 // have a space afterwards. No whitespace other than space can be used in commands!
 #define GG_KEYSIZE0 "size"
+#define GG_KEYMAXSIZE "max-size "
 #define GG_KEYHASHSIZE "hash-size "
 #define GG_KEYWITHVALUE "with-value "
 #define GG_KEYREPLACE "replace"
@@ -981,6 +982,7 @@ gg_num typeid (char *type)
     else if (!strcmp (type, GG_KEY_T_MESSAGE)) return GG_DEFMSG;
     else if (!strcmp (type, GG_KEY_T_SPLITSTRING)) return GG_DEFBROKEN;
     else if (!strcmp (type, GG_KEY_T_HASH)) return GG_DEFHASH;
+    else if (!strcmp (type, GG_KEY_T_ARRAY)) return GG_DEFARRAY;
     else if (!strcmp (type, GG_KEY_T_JSON)) return GG_DEFJSON;
     else if (!strcmp (type, GG_KEY_T_TREE)) return GG_DEFTREE;
     else if (!strcmp (type, GG_KEY_T_TREECURSOR)) return GG_DEFTREECURSOR;
@@ -3480,7 +3482,7 @@ gg_num define_statement (char **statement, gg_num type, bool always)
     // For static types within do-once, lower their gg_level, but only if current level is do_once_level+1 - see "do-once" handler elsewhere here in this file
     // Note that do-once CANNOT be nested, so it makes this simpler here.
     //
-    if (do_once_open && gg_level == do_once_level+1 && (type == GG_DEFSTRINGSTATIC || type == GG_DEFNUMBERSTATIC || type == GG_DEFHASHSTATIC || type == GG_DEFTREESTATIC || type == GG_DEFLISTSTATIC || type == GG_DEFBOOLSTATIC))
+    if (do_once_open && gg_level == do_once_level+1 && (type == GG_DEFSTRINGSTATIC || type == GG_DEFNUMBERSTATIC || type == GG_DEFHASHSTATIC || type == GG_DEFARRAYSTATIC || type == GG_DEFTREESTATIC || type == GG_DEFLISTSTATIC || type == GG_DEFBOOLSTATIC))
     {
         // make this variable in the same scope as do-once. All other vars are in +1 level. 
         // Note that generated C code is all the same level as do-once. We simulate higher level. The other variables
@@ -3511,6 +3513,8 @@ gg_num define_statement (char **statement, gg_num type, bool always)
         else if (type == GG_DEFBROKEN) oprintf ("gg_split_str *%s = NULL;\n",*statement);
         else if (type == GG_DEFHASH) oprintf ("gg_hash *%s = NULL;\n", *statement);
         else if (type == GG_DEFHASHSTATIC) oprintf ("static gg_hash *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAY) oprintf ("gg_array *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAYSTATIC) oprintf ("static gg_array *%s = NULL;\n", *statement);
         else if (type == GG_DEFJSON) oprintf ("gg_json *%s = NULL;\n", *statement);
         else if (type == GG_DEFTREE) oprintf ("gg_tree *%s = NULL;\n", *statement);
         else if (type == GG_DEFTREESTATIC) oprintf ("static gg_tree *%s = NULL;\n", *statement);
@@ -7076,7 +7080,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             //
                             // Make vim recognize type names
                             //
-                            // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
+                            // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_ARRAY GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
 
                             // we used to forbid non-string/bool/number in non-call-handler. But we should be able to create say index in call-handler and pass it back
                             // to caller. In golfrt.c, we error out if such param with such type is not found.
@@ -8158,7 +8162,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         continue;
 
                     }
-                    else if ((newI=recog_statement(line, i, "get-set", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "get-hash", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8168,9 +8172,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *reads = find_keyword (mtext, GG_KEYAVERAGEREADS, 1);
 
 
-                        carve_statement (&size, "get-set", GG_KEYHASHSIZE, 0, 1);
-                        carve_statement (&len, "get-set", GG_KEYLENGTH, 0, 1);
-                        carve_statement (&reads, "get-set", GG_KEYAVERAGEREADS, 0, 1);
+                        carve_statement (&size, "get-hash", GG_KEYHASHSIZE, 0, 1);
+                        carve_statement (&len, "get-hash", GG_KEYLENGTH, 0, 1);
+                        carve_statement (&reads, "get-hash", GG_KEYAVERAGEREADS, 0, 1);
                         carve_stmt_obj (&mtext, true);
                         define_statement (&len, GG_DEFNUMBER, false);
                         define_statement (&size, GG_DEFNUMBER, false);
@@ -8178,7 +8182,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         check_var (&mtext, GG_DEFHASH, NULL);
 
-                        if (size == NULL && len == NULL && reads == NULL) gg_report_error( "one of 'length', 'size' or 'average-reads' must be in get-set statement");
+                        if (size == NULL && len == NULL && reads == NULL) gg_report_error( "one of 'length', 'size' or 'average-reads' must be in get-hash statement");
 
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
                         if (len !=NULL) oprintf("%s=gg_total_hash (%s);\n", len, mtext);
@@ -8187,7 +8191,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("gg_mem_process=false;\n");
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "purge-set", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "purge-hash", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8200,13 +8204,13 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("gg_mem_process=false;\n");
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "resize-set", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "resize-hash", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
                         char *size = find_keyword (mtext, GG_KEYHASHSIZE, 1);
 
-                        carve_statement (&size, "resize-set", GG_KEYHASHSIZE, 1, 1);
+                        carve_statement (&size, "resize-hash", GG_KEYHASHSIZE, 1, 1);
                         carve_stmt_obj (&mtext, true);
                         //
                         check_var (&mtext, GG_DEFHASH, NULL);
@@ -8217,15 +8221,34 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("gg_mem_process=false;\n");
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "new-set", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "new-array", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+                        char *maxsize = find_keyword (mtext, GG_KEYMAXSIZE, 1);
+                        char *process = find_keyword (mtext, GG_KEYPROCESSSCOPE, 1);
+
+                        carve_statement (&maxsize, "new-array", GG_KEYMAXSIZE, 0, 1);
+                        carve_statement (&process, "new-array", GG_KEYPROCESSSCOPE, 0, 0);
+                        carve_stmt_obj (&mtext, true);
+                        if (process) define_statement (&mtext, GG_DEFARRAYSTATIC, true); else define_statement (&mtext, GG_DEFARRAY, true);
+                        //
+                        check_var (&maxsize, GG_DEFNUMBER, NULL);
+
+                        oprintf("gg_mem_process=%s;\n", process?"true":"false");
+                        oprintf("%s = gg_new_array (%s, %s);\n", mtext, maxsize?maxsize:"0", process?"true":"false");
+                        oprintf("gg_mem_process=false;\n");
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "new-hash", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
                         char *size = find_keyword (mtext, GG_KEYHASHSIZE, 1);
                         char *process = find_keyword (mtext, GG_KEYPROCESSSCOPE, 1);
 
-                        carve_statement (&size, "new-set", GG_KEYHASHSIZE, 0, 1);
-                        carve_statement (&process, "new-set", GG_KEYPROCESSSCOPE, 0, 0);
+                        carve_statement (&size, "new-hash", GG_KEYHASHSIZE, 0, 1);
+                        carve_statement (&process, "new-hash", GG_KEYPROCESSSCOPE, 0, 0);
                         carve_stmt_obj (&mtext, true);
                         if (process) define_statement (&mtext, GG_DEFHASHSTATIC, true); else define_statement (&mtext, GG_DEFHASH, true);
                         //
@@ -8236,7 +8259,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("gg_mem_process=false;\n");
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "write-set", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "write-array", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8245,10 +8268,93 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *oldd = find_keyword (mtext, GG_KEYOLDVALUE, 1);
                         char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
 
-                        carve_statement (&key, "write-set", GG_KEYKEY, 1, 1);
-                        carve_statement (&val, "write-set", GG_KEYVALUE, 1, 1);
-                        carve_statement (&oldd, "write-set", GG_KEYOLDVALUE, 0, 1);
-                        carve_statement (&st, "write-set", GG_KEYSTATUS, 0, 1);
+                        carve_statement (&key, "write-array", GG_KEYKEY, 1, 1);
+                        carve_statement (&val, "write-array", GG_KEYVALUE, 1, 1);
+                        carve_statement (&oldd, "write-array", GG_KEYOLDVALUE, 0, 1);
+                        carve_statement (&st, "write-array", GG_KEYSTATUS, 0, 1);
+                        carve_stmt_obj (&mtext, true);
+                        define_statement (&oldd, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_add_hash with GG_EMPTY_STRING
+                        define_statement (&st, GG_DEFNUMBER, false);
+                        make_mem (&val);
+                        //
+                        check_var (&mtext, GG_DEFARRAY, NULL);
+                        check_var (&key, GG_DEFNUMBER, NULL);
+                        check_var (&val, GG_DEFSTRING, NULL);
+
+                        oprintf("gg_mem_process=(%s)->process;\n", mtext);
+
+                        oprintf("gg_write_array (%s, %s, %s, %s%s%s, %s%s%s);\n", mtext, key, val, oldd==NULL?"":"&(", oldd==NULL?"NULL":oldd, oldd==NULL?"":")", st==NULL?"":"&(", st==NULL?"NULL":st, st==NULL?"":")");
+                        oprintf("gg_mem_process=false;\n");
+                        // both key and value are now referenced by the index as well as the original variables that put them here
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "purge-array", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        carve_stmt_obj (&mtext, true);
+                        //
+                        check_var (&mtext, GG_DEFARRAY, NULL);
+                        oprintf("gg_mem_process=(%s)->process;\n", mtext);
+                        oprintf("gg_purge_array (%s);\n", mtext);
+                        oprintf("gg_mem_process=false;\n");
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "read-array", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+                        char *key = find_keyword (mtext, GG_KEYKEY, 1);
+                        char *val = find_keyword (mtext, GG_KEYVALUE, 1);
+                        char *del = find_keyword (mtext, GG_KEYDELETE0, 1);
+                        char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
+
+
+                        carve_statement (&key, "read-array", GG_KEYKEY, 1, 1);
+                        carve_statement (&val, "read-array", GG_KEYVALUE, 1, 1);
+                        carve_statement (&st, "read-array", GG_KEYSTATUS, 0, 1);
+                        carve_statement (&del, "read-array", GG_KEYDELETE0, 0, 2);
+                        carve_stmt_obj (&mtext, true);
+
+                        char *delc = opt_clause(del, "true", "false", GG_DEFBOOL);
+
+                        gg_num is_def_v = define_statement (&val, GG_DEFSTRING, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
+                        define_statement (&st, GG_DEFNUMBER, false);
+
+                        //
+                        check_var (&delc, GG_DEFBOOL, NULL);
+                        check_var (&mtext, GG_DEFARRAY, NULL);
+                        check_var (&key, GG_DEFNUMBER, NULL);
+
+
+                        //
+                        // For read-array here, the output value is empty string when not found; for that reason we always get value (_gg_hfind), even when status
+                        // is not GG_OKAY
+                        //
+                        oprintf("{ ");
+                        if (st == NULL) oprintf ("gg_num _gg_astat; ");
+                        oprintf("char *_gg_afind = gg_read_array (%s, %s, %s, &(%s));\n", mtext, key, delc, st==NULL?"_gg_astat":st);
+                        if (optmem) oprintf ("if ((%s) == GG_OKAY && (%s) != _gg_afind) {gg_mem_add_ref(%ld, %s, _gg_afind);\n%s = _gg_afind;}\n", st==NULL?"_gg_astat":st, val, is_def_v, val, val);
+                        else oprintf ("if ((%s) == GG_OKAY) %s = _gg_afind;\n", st==NULL?"_gg_astat":st, val);
+                        oprintf("}\n");
+
+                        gg_free(delc);
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "write-hash", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+                        char *key = find_keyword (mtext, GG_KEYKEY, 1);
+                        char *val = find_keyword (mtext, GG_KEYVALUE, 1);
+                        char *oldd = find_keyword (mtext, GG_KEYOLDVALUE, 1);
+                        char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
+
+                        carve_statement (&key, "write-hash", GG_KEYKEY, 1, 1);
+                        carve_statement (&val, "write-hash", GG_KEYVALUE, 1, 1);
+                        carve_statement (&oldd, "write-hash", GG_KEYOLDVALUE, 0, 1);
+                        carve_statement (&st, "write-hash", GG_KEYSTATUS, 0, 1);
                         carve_stmt_obj (&mtext, true);
                         define_statement (&oldd, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_add_hash with GG_EMPTY_STRING
                         define_statement (&st, GG_DEFNUMBER, false);
@@ -8266,7 +8372,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // both key and value are now referenced by the index as well as the original variables that put them here
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "read-set", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "read-hash", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8288,18 +8394,18 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         if (trav != NULL)
                         {
-                            carve_statement (&beg, "read-set", GG_KEYBEGIN, 0, 0);
-                            carve_statement (&key, "read-set", GG_KEYKEY, 0, 1);
-                            carve_statement (&val, "read-set", GG_KEYVALUE, 0, 1);
-                            carve_statement (&trav, "read-set", GG_KEYTRAVERSE, 0, 0);
+                            carve_statement (&beg, "read-hash", GG_KEYBEGIN, 0, 0);
+                            carve_statement (&key, "read-hash", GG_KEYKEY, 0, 1);
+                            carve_statement (&val, "read-hash", GG_KEYVALUE, 0, 1);
+                            carve_statement (&trav, "read-hash", GG_KEYTRAVERSE, 0, 0);
                         }
                         else
                         {
-                            carve_statement (&key, "read-set", GG_KEYKEY, 1, 1);
-                            carve_statement (&val, "read-set", GG_KEYVALUE, 1, 1);
+                            carve_statement (&key, "read-hash", GG_KEYKEY, 1, 1);
+                            carve_statement (&val, "read-hash", GG_KEYVALUE, 1, 1);
                         }
-                        carve_statement (&st, "read-set", GG_KEYSTATUS, 0, 1);
-                        carve_statement (&del, "read-set", GG_KEYDELETE0, 0, 2);
+                        carve_statement (&st, "read-hash", GG_KEYSTATUS, 0, 1);
+                        carve_statement (&del, "read-hash", GG_KEYDELETE0, 0, 2);
                         carve_stmt_obj (&mtext, true);
                         if (trav == NULL)
                         {
@@ -8327,7 +8433,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
 
                         //
-                        // For read-set here, the output value is empty string when not found; for that reason we always get value (_gg_hfind), even when status
+                        // For read-hash here, the output value is empty string when not found; for that reason we always get value (_gg_hfind), even when status
                         // is not GG_OKAY
                         //
                         if (trav == NULL)
@@ -8342,7 +8448,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         else
                         {
-                            if ((key == NULL && val != NULL) || (key != NULL && val == NULL)) gg_report_error( "'key' and 'value' must both be in read-set statement");
+                            if ((key == NULL && val != NULL) || (key != NULL && val == NULL)) gg_report_error( "'key' and 'value' must both be in read-hash statement");
                             if (beg != NULL) oprintf ("gg_rewind_hash(%s);\n", mtext);
                             if (key != NULL) 
                             {
@@ -8487,7 +8593,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "new-index", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "new-tree", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8501,9 +8607,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *unsorted = find_keyword (mtext, GG_KEYUNSORTED, 1);
                         char *process = find_keyword (mtext, GG_KEYPROCESSSCOPE, 1);
 
-                        carve_statement (&keyas, "new-index", GG_KEYKEYAS, 0, 1);
-                        carve_statement (&unsorted, "new-index", GG_KEYUNSORTED, 0, 0);
-                        carve_statement (&process, "new-index", GG_KEYPROCESSSCOPE, 0, 0);
+                        carve_statement (&keyas, "new-tree", GG_KEYKEYAS, 0, 1);
+                        carve_statement (&unsorted, "new-tree", GG_KEYUNSORTED, 0, 0);
+                        carve_statement (&process, "new-tree", GG_KEYPROCESSSCOPE, 0, 0);
                         carve_stmt_obj (&mtext, true);
 
                         if (process) define_statement (&mtext, GG_DEFTREESTATIC, true); else define_statement (&mtext, GG_DEFTREE, true);
@@ -8532,7 +8638,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         char *count = find_keyword (mtext, GG_KEYCOUNT, 1);
 
-                        carve_statement (&count, "get-index", GG_KEYCOUNT, 0, 1);
+                        carve_statement (&count, "get-tree", GG_KEYCOUNT, 0, 1);
                         carve_stmt_obj (&mtext, true);
 
                         if (count != NULL) define_statement (&count, GG_DEFNUMBER, false);
@@ -8544,7 +8650,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (count != NULL) oprintf("%s = (%s)->num_of;\n", count, mtext);
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "get-index", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "get-tree", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8552,8 +8658,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *count = find_keyword (mtext, GG_KEYCOUNT, 1);
                         char *hops = find_keyword (mtext, GG_KEYHOPS, 1);
 
-                        carve_statement (&count, "get-index", GG_KEYCOUNT, 0, 1);
-                        carve_statement (&hops, "get-index", GG_KEYHOPS, 0, 1);
+                        carve_statement (&count, "get-tree", GG_KEYCOUNT, 0, 1);
+                        carve_statement (&hops, "get-tree", GG_KEYHOPS, 0, 1);
                         carve_stmt_obj (&mtext, true);
 
                         if (count != NULL) define_statement (&count, GG_DEFNUMBER, false);
@@ -8567,7 +8673,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (hops != NULL) oprintf("%s = (%s)->hops;\n", hops, mtext);
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "purge-index", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "purge-tree", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8577,7 +8683,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("gg_mem_process=false;\n");
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "write-index", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "write-tree", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8588,10 +8694,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
                         char *ccursor = find_keyword (mtext, GG_KEYNEWCURSOR, 1);
 
-                        carve_statement (&key, "write-index", GG_KEYKEY, 1, 1);
-                        carve_statement (&value, "write-index", GG_KEYVALUE, 1, 1);
-                        carve_statement (&status, "write-index", GG_KEYSTATUS, 0, 1);
-                        carve_statement (&ccursor, "write-index", GG_KEYNEWCURSOR, 0, 1);
+                        carve_statement (&key, "write-tree", GG_KEYKEY, 1, 1);
+                        carve_statement (&value, "write-tree", GG_KEYVALUE, 1, 1);
+                        carve_statement (&status, "write-tree", GG_KEYSTATUS, 0, 1);
+                        carve_statement (&ccursor, "write-tree", GG_KEYNEWCURSOR, 0, 1);
                         carve_stmt_obj (&mtext, true);
 
                         define_statement (&status, GG_DEFNUMBER, false);
@@ -8622,7 +8728,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         continue;
 
                     }
-                    else if ((newI=recog_statement(line, i, "read-index", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "read-tree", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8636,31 +8742,31 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *gekey = find_keyword (mtext, GG_KEYGREATEREQUAL, 1);
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
                         char *ccursor = find_keyword (mtext, GG_KEYNEWCURSOR, 1);
-                        // Begin read-index 
+                        // Begin read-tree 
                         char *getkey = find_keyword (mtext, GG_KEYKEY, 1);
                         char *value = find_keyword (mtext, GG_KEYVALUE, 1);
                         char *upd = find_keyword (mtext, GG_KEYUPDATEVALUE, 1);
-                        // End read-index 
+                        // End read-tree 
 
-                        carve_statement (&key, "read-index", GG_KEYEQUAL, 0, 1);
-                        carve_statement (&lekey, "read-index", GG_KEYLESSEREQUAL, 0, 1);
-                        carve_statement (&gekey, "read-index", GG_KEYGREATEREQUAL, 0, 1);
-                        carve_statement (&lkey, "read-index", GG_KEYLESSER, 0, 1);
-                        carve_statement (&gkey, "read-index", GG_KEYGREATER, 0, 1);
-                        carve_statement (&mink, "read-index", GG_KEYMINKEY, 0, 0);
-                        carve_statement (&maxk, "read-index", GG_KEYMAXKEY, 0, 0);
-                        carve_statement (&status, "read-index", GG_KEYSTATUS, 0, 1);
-                        carve_statement (&ccursor, "read-index", GG_KEYNEWCURSOR, 0, 1);
-                        // Begin read-index
-                        carve_statement (&value, "read-index", GG_KEYVALUE, 0, 1);
-                        carve_statement (&upd, "read-index", GG_KEYUPDATEVALUE, 0, 1);
-                        carve_statement (&getkey, "read-index", GG_KEYKEY, 0, 1);
-                        // End read-index
+                        carve_statement (&key, "read-tree", GG_KEYEQUAL, 0, 1);
+                        carve_statement (&lekey, "read-tree", GG_KEYLESSEREQUAL, 0, 1);
+                        carve_statement (&gekey, "read-tree", GG_KEYGREATEREQUAL, 0, 1);
+                        carve_statement (&lkey, "read-tree", GG_KEYLESSER, 0, 1);
+                        carve_statement (&gkey, "read-tree", GG_KEYGREATER, 0, 1);
+                        carve_statement (&mink, "read-tree", GG_KEYMINKEY, 0, 0);
+                        carve_statement (&maxk, "read-tree", GG_KEYMAXKEY, 0, 0);
+                        carve_statement (&status, "read-tree", GG_KEYSTATUS, 0, 1);
+                        carve_statement (&ccursor, "read-tree", GG_KEYNEWCURSOR, 0, 1);
+                        // Begin read-tree
+                        carve_statement (&value, "read-tree", GG_KEYVALUE, 0, 1);
+                        carve_statement (&upd, "read-tree", GG_KEYUPDATEVALUE, 0, 1);
+                        carve_statement (&getkey, "read-tree", GG_KEYKEY, 0, 1);
+                        // End read-tree
                         carve_stmt_obj (&mtext, true);
 
                         define_statement (&ccursor, GG_DEFTREECURSOR, true);
                         define_statement (&status, GG_DEFNUMBER, false);
-                        // Begin read-index
+                        // Begin read-tree
                         gg_num is_def_v = define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
                         gg_num is_def_k = define_statement (&getkey, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
                         make_mem (&key);
@@ -8669,7 +8775,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem (&gekey);
                         make_mem (&gkey);
                         make_mem (&upd);
-                        // End read-index
+                        // End read-tree
                         //
                         check_var (&mtext, GG_DEFTREE, NULL);
                         check_var (&key, GG_DEFSTRING, NULL);
@@ -8723,12 +8829,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                             oprintf ("gg_tree_search_f (%s, %s, %s, -1);\n", ccursor , mtext, key);
                         }
-                        else gg_report_error ("Unknown read-index key");
+                        else gg_report_error ("Unknown read-tree key");
 
                         // after searching or deleting, get the result and the key affected, as well as status
                         if (status != NULL) oprintf ("%s = (%s)->status;\n", status, ccursor);
 
-                        // Begin read-index 
+                        // Begin read-tree 
                         oprintf ("if ((%s)->status == GG_OKAY) {\n", ccursor);
                         // We increase reference to read key and value, because now another variable points to them, and we can delete those
                         // and if we do, then that shouldn't delete the tree node. Or if we delete tree node, that shouldn't delete these variables!
@@ -8745,18 +8851,18 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (upd != NULL) 
                         {
                             oprintf("gg_mem_process=(%s)->process;\n", mtext);
-                            // 0 is fine in gg_mem_add_ref because in read-index an element can never be NULL
+                            // 0 is fine in gg_mem_add_ref because in read-tree an element can never be NULL
                             if (optmem) oprintf ("if ((%s)->current->data != %s) {gg_mem_add_ref(0, (%s)->current->data,%s); gg_mem_set_process (%s, false);(%s)->current->data = %s;}\n", ccursor, upd, ccursor, upd, upd, ccursor, upd);
                             else oprintf ("gg_mem_set_process (%s, false); (%s)->current->data = %s;\n", upd, ccursor, upd);
                             oprintf("gg_mem_process=false;\n");
                         }
                         oprintf ("}\n");
-                        // End read-index 
+                        // End read-tree 
                         wcurs++;
                         continue;
 
                     }
-                    else if ((newI=recog_statement(line, i, "delete-index", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "delete-tree", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -8765,9 +8871,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *value = find_keyword (mtext, GG_KEYVALUE, 1);
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
 
-                        carve_statement (&key, "delete-index", GG_KEYKEY, 1, 1);
-                        carve_statement (&status, "delete-index", GG_KEYSTATUS, 0, 1);
-                        carve_statement (&value, "delete-index", GG_KEYVALUE, 0, 1);
+                        carve_statement (&key, "delete-tree", GG_KEYKEY, 1, 1);
+                        carve_statement (&status, "delete-tree", GG_KEYSTATUS, 0, 1);
+                        carve_statement (&value, "delete-tree", GG_KEYVALUE, 0, 1);
                         carve_stmt_obj (&mtext, true);
                         make_mem(&key);
 
@@ -8805,29 +8911,29 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *lkey = find_keyword (mtext, GG_KEYGETLESSER, 1);
                         char *gkey = find_keyword (mtext, GG_KEYGETGREATER, 1);
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
-                        // Begin read-index 
+                        // Begin read-tree 
                         char *getkey = find_keyword (mtext, GG_KEYKEY, 1);
                         char *value = find_keyword (mtext, GG_KEYVALUE, 1);
                         char *upd = find_keyword (mtext, GG_KEYUPDATEVALUE, 1);
-                        // End read-index 
+                        // End read-tree 
 
                         carve_statement (&cur, "use-cursor", GG_KEYCURRENT, 0, 0);
                         carve_statement (&lkey, "use-cursor", GG_KEYGETLESSER, 0, 0);
                         carve_statement (&gkey, "use-cursor", GG_KEYGETGREATER, 0, 0);
                         carve_statement (&status, "use-cursor", GG_KEYSTATUS, 0, 1);
-                        // Begin read-index
+                        // Begin read-tree
                         carve_statement (&value, "use-cursor", GG_KEYVALUE, 0, 1);
                         carve_statement (&upd, "use-cursor", GG_KEYUPDATEVALUE, 0, 1);
                         carve_statement (&getkey, "use-cursor", GG_KEYKEY, 0, 1);
-                        // End read-index
+                        // End read-tree
                         carve_stmt_obj (&mtext, true);
 
                         define_statement (&status, GG_DEFNUMBER, false);
-                        // Begin read-index
+                        // Begin read-tree
                         gg_num is_def_v = define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
                         gg_num is_def_k = define_statement (&getkey, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
                         make_mem (&upd);
-                        // End read-index
+                        // End read-tree
                         //
                         check_var (&mtext, GG_DEFTREECURSOR, NULL);
                         check_var (&upd, GG_DEFSTRING, NULL);
@@ -8848,7 +8954,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         else gg_report_error ("Must use one of current, get-lesser or get-greater clauses");
                         if (status != NULL) oprintf ("%s = (%s)->status;\n", status, ucursor);
-                        // Begin read-index 
+                        // Begin read-tree 
                         oprintf ("if ((%s)->status == GG_OKAY) {\n", ucursor);
                         //
                         if (value != NULL) 
@@ -8872,7 +8978,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf("gg_mem_process=false;\n");
                         }
                         oprintf ("}\n");
-                        // End read-index 
+                        // End read-tree 
                         continue;
 
                     }

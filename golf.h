@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "173"
+#define GG_VERSION "184"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -286,6 +286,7 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_DEFBROKEN 8
 #define GG_DEFJSON 9
 #define GG_DEFHASH 10
+#define GG_DEFARRAY 11
 #define GG_DEFFIFO 12
 #define GG_DEFLIFO 13
 #define GG_DEFENCRYPT 15
@@ -296,6 +297,7 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_DEFHASHSTATIC 21
 #define GG_DEFTREESTATIC 22
 #define GG_DEFLIST 23
+#define GG_DEFARRAYSTATIC 24
 #define GG_DEFLISTSTATIC 25
 #define GG_DEFBOOL 26
 #define GG_DEFSTRINGSTATIC 27
@@ -310,10 +312,11 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_KEY_T_NUMBER "number"
 #define GG_KEY_T_MESSAGE "message"
 #define GG_KEY_T_SPLITSTRING "split-string"
-#define GG_KEY_T_HASH "set"
-#define GG_KEY_T_TREE "index"
+#define GG_KEY_T_HASH "hash"
+#define GG_KEY_T_ARRAY "array"
+#define GG_KEY_T_TREE "tree"
 #define GG_KEY_T_JSON "json"
-#define GG_KEY_T_TREECURSOR "index-cursor"
+#define GG_KEY_T_TREECURSOR "tree-cursor"
 #define GG_KEY_T_FIFO "fifo"
 #define GG_KEY_T_LIFO "lifo"
 #define GG_KEY_T_LIST "list"
@@ -392,6 +395,9 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_LIST_SET_CURRENT 5
 #define GG_LIST_GET_CURRENT 6
 
+//Array memory increment to begin with
+#define GG_ARRAY_INC 256
+
 
 //Request parsing errors
 #define GG_ERR_DUPREQ "Input parameter 'req' specified more than once."
@@ -403,6 +409,19 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 // 
 // Data type definitions
 //
+
+
+// 
+// Array type internal representation
+//
+typedef struct gg_array_s {
+    char **arr; // array of actual data
+    gg_num max_elem; // how many total elements there can be - we don't allocate this before hand!
+    gg_num alloc_elem; // how many elements are actually allocated
+    bool process; // true if this is process-scoped
+} gg_array;
+
+
 
 // 
 // Debug information obtained from trace/debug file
@@ -1239,6 +1258,10 @@ void gg_del_msg(gg_msg *msg);
 char *gg_get_msg(gg_msg *msg);
 gg_msg * gg_new_msg (char *from);
 void gg_sleepabit(gg_num milli);
+gg_array *gg_new_array (gg_num max_elem, bool process);
+void gg_purge_array (gg_array *arr);
+void gg_write_array (gg_array *arr, gg_num key, char *val, char **old_val, gg_num *st);
+char *gg_read_array (gg_array *arr, gg_num key, bool del, gg_num *st);
 
 gg_num gg_tree_bal (gg_tree_node *tree);
 gg_tree *gg_tree_create(char key_type, bool sorted, bool process);

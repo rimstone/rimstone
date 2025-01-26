@@ -33,7 +33,7 @@ void gg_create_hash (gg_hash **hres_ptr, gg_num size, gg_hash_table **in_h, bool
 
     gg_hash *hres = *hres_ptr;
 
-    if (size < 10) size = 10; // minimum size 10
+    if (size < 256) size = 256; // minimum size 256
     // create hash array of lists
     gg_hash_table **h;
     if (in_h == NULL) h = (gg_hash_table **)gg_calloc (size, sizeof(gg_hash_table*)); else h = in_h;

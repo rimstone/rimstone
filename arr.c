@@ -7,57 +7,108 @@
 // Array implementation
 //
 
-typedef gg_array_data_s {
-    char *key;
-    char *value;
-} gg_array_data;
+
+#include "golf.h"
+
+// function prototypes
+void gg_init_array (gg_array *arr, gg_num max_elem, bool process);
+
 // 
-// Array type. Two dimensional array where first one points to a block of pointers to data. This way each new element in top array points to a block
-// of arrays. Only when all are exhausted, a new top level is relloced. So if we have 1024 per block, each of 1024 top level pointers points to a block
-// of 1024 bottom level pointers. It takes 1M pointers to realloc top level from 1024 to 2048, etc.
-// This is bottom array.
+// Init new array with 0 elements.
+// max_elem is the absolute maximum size of an array (0 means default of 1,000,000)
+// process is true if this is process-scoped array
 //
-typedef gg_array_bottom_s {
-    gg_array_data *arr; // array as 2 dimensional array underneath so we do realloc sparingly
-    gg_num tot; // total number of elements in arr that's used, so originally 0
-} gg_array_bottom;
-//
-// Top array for an array type (see above).
-//
-typedef gg_array_top_s {
-    gg_array_bottom *bottom_arr; // list of bottom blocks of pointers
-    gg_num tot_bottom; // how many of those we have allocated, so 1 means one block of GG_ARRAY_INC_BOTTOM elements
-    gg_num tot_elem; // how many total elements (key/value pairs) there are
-    gg_num max_elem; // maximum elements we can hold now - can be calculated at run time for each add, this caches it so it's faster
-} gg_array_top;
-// increments for size of top and bottom. Top gets realloced, bottom just malloc's new blocks.
-#define GG_ARRAY_INC_TOP 1
-#define GG_ARRAY_INC_BOTTOM 2
+void gg_init_array (gg_array *arr, gg_num max_elem, bool process)
+{
+    GG_TRACE("");
+    // make top array
+    if (max_elem < 0) gg_report_error ("Maximum number of elements in array cannot be negative");
+    if (max_elem == 0) max_elem = 1000000;
+    if (max_elem < GG_ARRAY_INC) max_elem = GG_ARRAY_INC;
+    arr->max_elem = max_elem;
+    arr->process = process;
+    // make initial array
+    arr->arr = gg_calloc (arr->alloc_elem = GG_ARRAY_INC, sizeof(char*)); // all values NULL
+}
 
 // 
 // Make new array. Returns fresh array with 0 elements.
+// max_elem is the absolute maximum size of an array (0 means default of 1,000,000)
+// process is true if this is process-scoped array
 //
-gg_array *gg_new_array ()
+gg_array *gg_new_array (gg_num max_elem, bool process)
 {
-    // make top array
-    gg_array_top *garr = gg_malloc ((garr->tot_bottom = GG_ARRAY_INC_TOP) * sizeof(gg_array_top));
-    garr->tot_elem = 0;
-    // make one bottom array
-    gg_array_data **arr = gg_malloc (GG_ARRAY_INC_BOTTOM *sizeof(gg_array_data*));
-    garr->bottom_arr[0]->arr = arr;
-    garr->bottom_arr[0]->tot = 0;
-    garr->max_elem = GG_ARRAY_INC_TOP * GG_ARRAY_INC_BOTTOM;
-    return garr;
+    GG_TRACE("");
+    gg_array *arr = gg_malloc (sizeof(gg_array));
+    gg_init_array (arr, max_elem, process);
+    return arr;
 }
 
-void gg_add_array (gg_array *arr, char *key, char *val)
+
+//
+// Purges array arr. All elements are deleted including the values, and array initialized back to 256 elements.
+// max_elem remains to whatever it was.
+//
+void gg_purge_array (gg_array *arr)
 {
-    if (arr->gg_tot_elem == arr->max_elem)
+    GG_TRACE("");
+    gg_num i;
+    for (i = 0; i < arr->alloc_elem; i++) 
     {
-        arr->gg_
-        *arr = gg_realloc ((garr->tot_bottom += GG_ARRAY_INC_TOP) * sizeof (gg_array_top));
+        if (arr->arr[i] != NULL) gg_free (arr->arr[i]);
+    }
+    gg_free (arr->arr);
+    gg_init_array (arr, arr->max_elem, arr->process);
+    
+}
+
+//
+// Write element to array arr. key is the number index, val is value, old_val is the old value that was there (if any).
+// st is status: GG_OKAY if written, GG_INFO_EXISTS if written but there was old value which is now in old_val.
+// Will expand array as needed, starting from only 256, up to ->max_elem.
+//
+void gg_write_array (gg_array *arr, gg_num key, char *val, char **old_val, gg_num *st)
+{
+    GG_TRACE("");
+    if (key < 0) gg_report_error ("Index to array is negative [%ld]", key);
+    if (key >= arr->max_elem) gg_report_error ("Index to array is too large for array sizing [%ld], maximum allowed is set to [%ld]", key, arr->max_elem);
+    if (key >= arr->alloc_elem)
+    {
+        gg_num old_alloc = arr->alloc_elem;
+        if (arr->alloc_elem < 65536) arr->alloc_elem *= 2; else arr->alloc_elem += 65536;
+        if (arr->alloc_elem > arr->max_elem) arr->alloc_elem = arr->max_elem;
+        arr->arr = gg_realloc (gg_mem_get_id(arr->arr), arr->alloc_elem * sizeof (char*));
+        memset (&(arr->arr[old_alloc]),0, sizeof(char*)*(arr->alloc_elem - old_alloc));
     }
 
+    if (arr->arr[key] != NULL) { if (st) *st = GG_INFO_EXIST; } else { if (st) *st = GG_OKAY; }
+    gg_mem_set_process (val, false);
+    if (old_val != NULL) *old_val = arr->arr[key]; 
+    else gg_free (arr->arr[key]);
+
+    arr->arr[key] = val;
+    if (gg_optmem) gg_mem_add_ref (1, NULL, val);
+    gg_mem_set_process (val, false);
+
+}
+
+//
+// Read array from arr, using key number. Delete if del true, and status st is GG_OKAY if read, GG_ERR_EXIST if key is not existing
+// Returns the value in the array. 
+//
+char *gg_read_array (gg_array *arr, gg_num key, bool del, gg_num *st)
+{
+    GG_TRACE("");
+    if (key >= arr->max_elem || key < 0) gg_report_error ("Index [%ld] to array is negative or is beyond maximum allowable size", key);
+    if (key >= arr->alloc_elem || arr->arr[key] == NULL)
+    {
+        if (st != NULL) *st = GG_ERR_EXIST;
+        return GG_EMPTY_STRING;
+    }
+    if (st != NULL) *st = GG_OKAY;
+    char *rval = arr->arr[key];
+    if (del)  arr->arr[key] = NULL; 
+    return rval;
 }
 
 

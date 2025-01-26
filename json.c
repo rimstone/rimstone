@@ -26,7 +26,11 @@ static char tb;
 
 
 // default number of json nodes allocated, incremented by
+#ifdef DEBUG
 #define GG_JSON_NODES 32
+#else
+#define GG_JSON_NODES 1024
+#endif
 // max depth of normalized name
 #define GG_JSON_MAX_NESTED 32
 

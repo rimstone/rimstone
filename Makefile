@@ -137,6 +137,7 @@ install:
 	install -D -m 0755 libgolftree.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolfcurl.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolfxml.so -t $(DESTDIR)$(V_LIB)/
+	install -D -m 0755 libgolfarr.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolfpcre2.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolfpcre2glibc.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libsrvcgolf.so -t $(DESTDIR)$(V_LIB)/
@@ -150,7 +151,7 @@ install:
 	install -D -m 0644 stub_srvc.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 stub_pcre2.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 stub_curl.o -t $(DESTDIR)$(V_LIB)/
-	install -D -m 0644 stub_xml.o -t $(DESTDIR)$(V_LIB)/
+	install -D -m 0644 stub_arr.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 stub_tree.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 stub_crypto.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 stub_before.o -t $(DESTDIR)$(V_LIB)/
@@ -197,7 +198,7 @@ binary:build
 	@;
 
 .PHONY: build
-build: libsrvcgolf.so libgolfcli.so libgolfscli.so libgolf.so libgolfdb.so libgolfsec.so libgolfmys.so libgolflite.so libgolfpg.so libgolfcurl.so libgolfxml.so libgolftree.so libgolfpcre2.so libgolfpcre2glibc.so v1.o stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_xml.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg 
+build: libsrvcgolf.so libgolfcli.so libgolfscli.so libgolf.so libgolfdb.so libgolfsec.so libgolfmys.so libgolflite.so libgolfpg.so libgolfcurl.so libgolfxml.so libgolfarr.so libgolftree.so libgolfpcre2.so libgolfpcre2glibc.so v1.o stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_xml.o stub_arr.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg 
 	@echo "Building version $(PACKAGE_VERSION)"
 	$(CC) -o v1 v1.o chandle.o golfrtc.o golfmemc.o hash.o $(LDFLAGS) 
 
@@ -261,6 +262,11 @@ libgolfxml.so: xml.o
 	rm -f libgolfxml.so
 	$(CC) -shared -o libgolfxml.so $^ 
 	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfxml.so ; fi
+
+libgolfarr.so: arr.o 
+	rm -f libgolfarr.so
+	$(CC) -shared -o libgolfarr.so $^ 
+	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfarr.so ; fi
 
 libgolfcurl.so: curl.o 
 	rm -f libgolfcurl.so
@@ -330,6 +336,9 @@ stub_curl.o: stub.c golf.h
 stub_xml.o: stub.c golf.h
 	$(CC) -c -o $@ -DGG_XML $< $(CFLAGS)
 
+stub_arr.o: stub.c golf.h
+	$(CC) -c -o $@ -DGG_ARR $< $(CFLAGS)
+
 stub_tree.o: stub.c golf.h
 	$(CC) -c -o $@ -DGG_TREE $< $(CFLAGS) 
 
@@ -355,6 +364,9 @@ curl.o: curl.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
 xml.o: xml.c golf.h
+	$(CC) -c -o $@ $< $(CFLAGS) 
+
+arr.o: arr.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
 pcre2.o: pcre2.c golf.h

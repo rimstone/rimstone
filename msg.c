@@ -11,7 +11,11 @@
 // add 38 for ' equals length', and null at the end
 #define GG_MSG_ADD_LEN 30 
 // buffer size to add when adding items, it increases up to 4K
+#ifdef DEBUG
 #define GG_MSG_BUFF_LEN 128
+#else
+#define GG_MSG_BUFF_LEN 1024
+#endif
 #define GG_MSG_SEP "="
 #define GG_MSG_SEP_LEN sizeof(GG_MSG_SEP)-1
 void gg_init_msg(gg_msg *t);

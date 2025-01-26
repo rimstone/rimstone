@@ -233,7 +233,7 @@ function gg_copy(gt, eid, gc) {
 
 
 <div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://golf-lang.github.io' style='border-bottom:0px'><img src='http://golf-lang.github.io/golf.png'/></a></div>
-<div class='vhub'>Golf Single-Page Documentation for version 171</div><hr/>
+<div class='vhub'>Golf Single-Page Documentation for version 173</div><hr/>
 This page contains all of Golf documentation topics combined into one. It may be easier to search. <!--GOLFBEGDOC39--><br/><br/>
 <a href='#123-hello-world.html'>123-hello-world</a><br/>
 <a href='#about-golf.html'>about-golf</a><br/>
@@ -1063,7 +1063,7 @@ The data to encrypt in these examples is a string, i.e. null-delimited. You can 
 <span class="Statement">     @</span>
      <span class="Comment">// Decrypt</span>
 <span class="Statement">     decrypt-data</span> enc_str<span class="Identifier"> password</span> <span class="Constant">&quot;my_password&quot;</span><span class="Type"> to</span> dec_str
-     <span class="Comment">// Output binary data; present null byte as octal \000</span>
+     <span class="Comment">// Output binary data; present null byte as octal \</span><span class="PreProc">0</span><span class="Constant">00</span>
 
 <span class="Statement">     string-length</span> dec_str<span class="Type"> to</span> res_len
 <span class="Statement">     start-loop</span><span class="Identifier"> repeat</span> res_len<span class="Type"> use</span> i<span class="Identifier"> start-with</span> <span class="Constant">0</span>
@@ -2647,7 +2647,7 @@ Let's start with a simple service that provides current time based on a timezone
 <div class='code'  style='position:relative;padding-right:16px;'>
 <pre id='code_151'>
 <span class="Statement"> begin-handler</span> /local/time
-<span class="Statement">     get-param</span> tzone <span class="Comment">// get time zone as input parameter (i.e. &quot;EST&quot;, &quot;MST&quot;, &quot;PST&quot; etc.)</span>
+<span class="Statement">     get-param</span> tzone <span class="Comment">// get time zone as input parameter (i.e. </span><span class="Constant">&quot;EST&quot;</span><span class="Comment">, </span><span class="Constant">&quot;MST&quot;</span><span class="Comment">, </span><span class="Constant">&quot;PST&quot;</span><span class="Comment"> etc.)</span>
 <span class="Statement">     get-time</span><span class="Type"> to</span> curr_time<span class="Identifier"> timezone</span> tzone
 <span class="Statement">     @</span>&lt;div&gt;Current time is <span class="Statement">&lt;&lt;p-out</span> curr_time<span class="Statement">&gt;&gt;</span>&lt;/div&gt;
 <span class="Statement"> end-handler</span></pre>
@@ -2711,9 +2711,9 @@ The result parameter will be obtained in the caller, and then output as HTML fro
 <div class='code'  style='position:relative;padding-right:16px;'>
 <pre id='code_159'>
 <span class="Statement"> begin-handler</span> /some/service
-<span class="Statement">     set-param</span> tzone=<span class="Constant">&quot;EST&quot;</span> <span class="Comment">// set input parameter used by &quot;/local/time&quot;</span>
+<span class="Statement">     set-param</span> tzone=<span class="Constant">&quot;EST&quot;</span> <span class="Comment">// set input parameter used by </span><span class="Constant">&quot;/local/time&quot;</span>
 <span class="Statement">     call-handler</span> <span class="Constant">&quot;/local/time&quot;</span>
-<span class="Statement">     get-param</span> curr_time <span class="Comment">// get parameter that was set by &quot;/local/time&quot;</span>
+<span class="Statement">     get-param</span> curr_time <span class="Comment">// get parameter that was set by </span><span class="Constant">&quot;/local/time&quot;</span>
 <span class="Statement">     @</span>&lt;div&gt;Current time is <span class="Statement">&lt;&lt;p-out</span> curr_time<span class="Statement">&gt;&gt;</span>&lt;/div&gt;
 <span class="Statement"> end-handler</span></pre>
 <span id=golf_copied_159 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
@@ -3694,7 +3694,7 @@ All input and output is contained in a single variable of type "gg_cli", the poi
  <span class="Comment">// Define and initialize request variable</span>
  gg_cli req = {<span class="Constant">0</span>};
  <span class="Comment">// You could also do:</span>
- <span class="Comment">// memset ((char*)&amp;req, 0, sizeof(gg_cli));</span>
+ <span class="Comment">// memset ((char*)&amp;req, </span><span class="Constant">0</span><span class="Comment">, sizeof(gg_cli));</span>
 <span class="Statement"> .</span>..
  <span class="Comment">// Set members of 'req' variable (see below)</span>
 <span class="Statement"> .</span>..
@@ -4046,7 +4046,7 @@ Copy this to file "cli1.c" in a directory of its own - note that in this example
      <span class="Comment">// Initialize request</span>
      memset (&amp;req, <span class="Constant">0</span>, <span class="Statement">sizeof</span>(req));
 
-     <span class="Comment">// Add 3 environment variables (in the form of name, value, name, value, ... , NULL)</span>
+     <span class="Comment">// Add </span><span class="Constant">3</span><span class="Comment"> environment variables (in the form of name, value, name, value, ... , NULL)</span>
      <span class="Type">char</span> *env[] = { <span class="Constant">&quot;REMOTE_USER&quot;</span>, <span class="Constant">&quot;John&quot;</span>, <span class="Constant">&quot;SOME_VAR&quot;</span>, <span class="Constant">&quot;SOME</span><span class="Special">\n</span><span class="Constant">VALUE&quot;</span>, <span class="Constant">&quot;NEW_VAR&quot;</span>, <span class="Constant">&quot;1000&quot;</span>, <span class="Constant">NULL</span> };
 
      <span class="Comment">// Create a request</span>
@@ -4068,7 +4068,7 @@ Copy this to file "cli1.c" in a directory of its own - note that in this example
      req.req_body = <span class="Constant">&quot;This is request body&quot;</span>;
      <span class="Comment">// Content length</span>
      req.content_len = strlen (req.req_body);
-     <span class="Comment">// No timeout (set to 0)</span>
+     <span class="Comment">// No timeout (set to </span><span class="Constant">0</span><span class="Comment">)</span>
      req.timeout = <span class="Constant">0</span>;
 
      <span class="Comment">// Make a request</span>
@@ -4144,9 +4144,9 @@ To test it, you can create a Golf application. Copy this to "hello.golf" file in
 <span class="Statement">     get-req</span><span class="Identifier"> process-id</span><span class="Type"> to</span> pid
 <span class="Statement">     @</span>Hello World! [<span class="Statement">&lt;&lt;p-out</span> ruser<span class="Statement">&gt;&gt;</span>] [<span class="Statement">&lt;&lt;p-out</span> somev<span class="Statement">&gt;&gt;</span>] [<span class="Statement">&lt;&lt;p-out</span> newv<span class="Statement">&gt;&gt;</span>] [<span class="Statement">&lt;&lt;p-out</span> par1<span class="Statement">&gt;&gt;</span>] [<span class="Statement">&lt;&lt;p-out</span> par2<span class="Statement">&gt;&gt;</span>] <span class="Statement">&lt;&lt;p-num</span> pid<span class="Statement">&gt;&gt;</span> <span class="Statement">&lt;&lt;p-out</span> rb<span class="Statement">&gt;&gt;</span>
 
-     <span class="Comment">// Output back a number of lines, generally as &quot;Output line #&lt;num of line&gt;&quot;</span>
-     <span class="Comment">// After line #1418, print out &quot;Line 1419 has an error&quot; to stderr</span>
-     <span class="Comment">// After line #4418, report an error and exit</span>
+     <span class="Comment">// Output back a number of lines, generally as </span><span class="Constant">&quot;Output line #&lt;num of line&gt;&quot;</span>
+     <span class="Comment">// After line #</span><span class="Constant">1418</span><span class="Comment">, print out </span><span class="Constant">&quot;Line 1419 has an error&quot;</span><span class="Comment"> to stderr</span>
+     <span class="Comment">// After line #</span><span class="Constant">4418</span><span class="Comment">, report an error and exit</span>
      <span class="Comment">// This demostrates outputting data to both stdout and stderr</span>
 <span class="Statement">     start-loop</span><span class="Identifier"> repeat</span> <span class="Constant">8000</span><span class="Type"> use</span> i<span class="Identifier"> start-with</span> <span class="Constant">0</span>
 <span class="Statement">         @</span>Output line #<span class="Statement">&lt;&lt;p-num</span> i<span class="Statement">&gt;&gt;</span>
@@ -4955,8 +4955,8 @@ You can copy a string to itself. In this case, the original string remains and t
 
 <span class="Statement"> upper-string</span> str <span class="Comment">// change the copy</span>
 
- <span class="Comment">// Now &quot;str&quot; references &quot;ORIGINAL STRING&quot; </span>
- <span class="Comment">// and &quot;orig&quot; references &quot;original string&quot;</span></pre>
+ <span class="Comment">// Now </span><span class="Constant">&quot;str&quot;</span><span class="Comment"> references </span><span class="Constant">&quot;ORIGINAL STRING&quot;</span><span class="Comment"> </span>
+ <span class="Comment">// and </span><span class="Constant">&quot;orig&quot;</span><span class="Comment"> references </span><span class="Constant">&quot;original string&quot;</span></pre>
 <span id=golf_copied_290 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='golft_290' style='position: absolute;left: -500%;'></textarea>
 <img src='http://golf-lang.github.io/golf-copy-small-1.png' id='golfb' onclick='gg_copy(golft_290, code_290, golf_copied_290)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -5604,7 +5604,7 @@ Right after <a href='/rewind-fifo.html'>rewind-fifo</a>, no element was read yet
  <span class="Comment">// Get first data from the list</span>
 <span class="Statement"> read-fifo</span> mylist<span class="Type"> key</span> k<span class="Type"> value</span> v
 
- <span class="Comment">// Delete first element from the list, so list will have only &quot;some2&quot; key</span>
+ <span class="Comment">// Delete first element from the list, so list will have only </span><span class="Constant">&quot;some2&quot;</span><span class="Comment"> key</span>
 <span class="Statement"> delete-fifo</span> mylist</pre>
 <span id=golf_copied_330 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='golft_330' style='position: absolute;left: -500%;'></textarea>
@@ -5727,10 +5727,10 @@ After any <a href='/read-lifo.html'>read-lifo</a>, delete-lifo wil delete all el
 <span class="Statement"> write-lifo</span> mylist<span class="Identifier"> key</span> <span class="Constant">&quot;key1&quot;</span><span class="Identifier"> value</span> <span class="Constant">&quot;value1&quot;</span>
 <span class="Statement"> write-lifo</span> mylist<span class="Identifier"> key</span> <span class="Constant">&quot;some2&quot;</span><span class="Identifier"> value</span> <span class="Constant">&quot;other2&quot;</span>
 
- <span class="Comment">// Get first data from the list, it will be &quot;some2&quot; key</span>
+ <span class="Comment">// Get first data from the list, it will be </span><span class="Constant">&quot;some2&quot;</span><span class="Comment"> key</span>
 <span class="Statement"> read-lifo</span> mylist<span class="Type"> key</span> k<span class="Type"> value</span> v
 
- <span class="Comment">// Delete first element from the list, so list will have only &quot;key1&quot; key</span>
+ <span class="Comment">// Delete first element from the list, so list will have only </span><span class="Constant">&quot;key1&quot;</span><span class="Comment"> key</span>
 <span class="Statement"> delete-lifo</span> mylist</pre>
 <span id=golf_copied_336 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='golft_336' style='position: absolute;left: -500%;'></textarea>
@@ -5928,7 +5928,7 @@ ln <span class="Special">-s</span> /home/disk0/file /var/lib/gg/<span class="Sta
 <span style="font-weight:bold;">See all</span> <br/>
 <a href='/documentation.html'>documentation</a><br/>
 <a id='documentation.html'></a>
-<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://golf-lang.github.io' style='border-bottom:0px'><img src='http://golf-lang.github.io/golf.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Golf version 171"></a>Reference for Golf version 171</div>
+<div class='vhub' style='margin-top:10px;margin-right:20px;text-align:right;background-color:white;'><a href='http://golf-lang.github.io' style='border-bottom:0px'><img src='http://golf-lang.github.io/golf.png'/></a></div><div class='vhub' style='margin-top:10px;'>&nbsp;Documentation</div><hr/><div class="vsub"><a id="Reference for Golf version 173"></a>Reference for Golf version 173</div>
 <span style="font-weight:bold;">Note</span>: All the topics below are available as a <a href='/golfdoc.html'>single-page documentation</a>. <br/>
 <br/>
 <ul><br/>
@@ -6323,7 +6323,7 @@ In the next example, "input-length" clause is used, and only a partial of the in
  <span class="Comment">// Original string, generally this would be binary data in most cases</span>
 <span class="Statement"> set-string</span> dt =<span class="Constant">&quot;  oh well  &quot;</span>
 
- <span class="Comment">// Encode in base64, encode only 6 bytes</span>
+ <span class="Comment">// Encode in base64, encode only </span><span class="Constant">6</span><span class="Comment"> bytes</span>
 <span class="Statement"> encode-base64</span> dt<span class="Identifier"> input-length</span> <span class="Constant">6</span><span class="Type"> to</span> out_dt
 
 <span class="Statement"> decode-base64</span> out_dt<span class="Type"> to</span> new_dt
@@ -6530,10 +6530,10 @@ In the following example, the data is encrypted, and then decrypted, producing t
  <span class="Comment">// Original string to encrypt</span>
 <span class="Statement"> set-string</span> orig_data=<span class="Constant">&quot;something to encrypt!&quot;</span>
 
- <span class="Comment">// Encrypted data is in &quot;res&quot; variable</span>
+ <span class="Comment">// Encrypted data is in </span><span class="Constant">&quot;res&quot;</span><span class="Comment"> variable</span>
 <span class="Statement"> encrypt-data</span> orig_data<span class="Identifier"> password</span> <span class="Constant">&quot;mypass&quot;</span><span class="Type"> to</span> res
 
- <span class="Comment">// Decrypt what was just encrypted, decrypted data is in &quot;dec_data&quot;</span>
+ <span class="Comment">// Decrypt what was just encrypted, decrypted data is in </span><span class="Constant">&quot;dec_data&quot;</span>
 <span class="Statement"> decrypt-data</span> res<span class="Identifier"> password</span> <span class="Constant">&quot;mypass&quot;</span><span class="Type"> to</span> dec_data
 
  <span class="Comment">// Check that decrypted data matches the original </span>
@@ -6549,21 +6549,21 @@ In the following example, the data is encrypted, and then decrypted, producing t
 A more involved example below encrypts specific number of bytes (6 in this case). <a href='/random-string.html'>random-string</a> is used to produce salt. The length of data to encrypt is given with "input-length" clause. The encrypted data is specified to be "binary" (meaning not as a human-readable string), so the "output-length" of such binary output is specified. The decryption thus uses "input-length" clause to specify the length of data to decrypt, and also "output-length" to get the length of decrypted data. Finally, the original data is compared with the decrypted data, and the length of such data must be the same as the original (meaning 6):<br/>
 <div class='code'  style='position:relative;padding-right:16px;'>
 <pre id='code_364'>
- <span class="Comment">// Original data (only the first 6 bytes are encrypted)</span>
+ <span class="Comment">// Original data (only the first </span><span class="Constant">6</span><span class="Comment"> bytes are encrypted)</span>
 <span class="Statement"> set-string</span> orig_data=<span class="Constant">&quot;something to encrypt!&quot;</span>
 
- <span class="Comment">// Get 8 random binary bytes to be the salt</span>
+ <span class="Comment">// Get </span><span class="Constant">8</span><span class="Comment"> random binary bytes to be the salt</span>
 <span class="Statement"> random-string</span><span class="Type"> to</span> newsalt<span class="Identifier"> length</span> <span class="Constant">8</span><span class="Identifier"> binary</span>
 
  <span class="Comment">// Encrypt data using salt and produce binary output (meaning it's not a null-terminated character string), with the</span>
- <span class="Comment">// length of such output in &quot;encrypted_len&quot; variable.</span>
+ <span class="Comment">// length of such output in </span><span class="Constant">&quot;encrypted_len&quot;</span><span class="Comment"> variable.</span>
 <span class="Statement"> encrypt-data</span> orig_data<span class="Identifier"> input-length</span> <span class="Constant">6</span> output-length encrypted_len<span class="Identifier"> password</span> <span class="Constant">&quot;mypass&quot;</span><span class="Identifier"> salt</span> newsalt<span class="Type"> to</span> res<span class="Identifier"> binary</span>
 
- <span class="Comment">// Decrypt the data encrypted above. The length of encrypted data is passed in &quot;encrypted_len&quot; variable, and then length of decrypted data</span>
- <span class="Comment">// is obtained in &quot;decrypted_len&quot; variable.</span>
+ <span class="Comment">// Decrypt the data encrypted above. The length of encrypted data is passed in </span><span class="Constant">&quot;encrypted_len&quot;</span><span class="Comment"> variable, and then length of decrypted data</span>
+ <span class="Comment">// is obtained in </span><span class="Constant">&quot;decrypted_len&quot;</span><span class="Comment"> variable.</span>
 <span class="Statement"> decrypt-data</span> res output-length decrypted_len<span class="Identifier"> password</span> <span class="Constant">&quot;mypass&quot;</span><span class="Identifier"> salt</span> newsalt<span class="Type"> to</span> dec_data<span class="Identifier"> input-length</span> encrypted_len<span class="Identifier"> binary</span>
 
- <span class="Comment">// Check if the 6 bytes of the original data matches decrypted data, and if exactly 6 bytes was decrypted</span>
+ <span class="Comment">// Check if the </span><span class="Constant">6</span><span class="Comment"> bytes of the original data matches decrypted data, and if exactly </span><span class="Constant">6</span><span class="Comment"> bytes was decrypted</span>
  <span class="Statement">if</span> (!strncmp(orig_data,dec_data, <span class="Constant">6</span>) &amp;&amp; decrypted_len == <span class="Constant">6</span>) {
 <span class="Statement">     @</span>Success!
 <span class="Statement"> }</span> else {
@@ -8288,7 +8288,7 @@ sudo pacman <span class="Special">--noconfirm</span> <span class="Special">-Sy</
 <pre id='code_468'>
 git clone <a href="https://github.com/golf-lang/golf.git">https://github.com/golf-lang/golf.git</a>
 <span class="Statement">cd</span> golf
-git checkout <span class="Constant">171</span></pre>
+git checkout <span class="Constant">173</span></pre>
 <span id=golf_copied_468 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='golft_468' style='position: absolute;left: -500%;'></textarea>
 <img src='http://golf-lang.github.io/golf-copy-small-1.png' id='golfb' onclick='gg_copy(golft_468, code_468, golf_copied_468)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -8339,7 +8339,7 @@ sudo apt <span class="Special">-y</span> install git</pre>
 <pre id='code_472'>
 git clone <a href="https://github.com/golf-lang/golf.git">https://github.com/golf-lang/golf.git</a>
 <span class="Statement">cd</span> golf
-git checkout <span class="Constant">171</span></pre>
+git checkout <span class="Constant">173</span></pre>
 <span id=golf_copied_472 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='golft_472' style='position: absolute;left: -500%;'></textarea>
 <img src='http://golf-lang.github.io/golf-copy-small-1.png' id='golfb' onclick='gg_copy(golft_472, code_472, golf_copied_472)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -8389,7 +8389,7 @@ sudo dnf <span class="Special">-y</span> install git</pre>
 <pre id='code_476'>
 git clone <a href="https://github.com/golf-lang/golf.git">https://github.com/golf-lang/golf.git</a>
 <span class="Statement">cd</span> golf
-git checkout <span class="Constant">171</span></pre>
+git checkout <span class="Constant">173</span></pre>
 <span id=golf_copied_476 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='golft_476' style='position: absolute;left: -500%;'></textarea>
 <img src='http://golf-lang.github.io/golf-copy-small-1.png' id='golfb' onclick='gg_copy(golft_476, code_476, golf_copied_476)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -8458,7 +8458,7 @@ sudo zypper <span class="Special">-n</span> install git</pre>
 <pre id='code_480'>
 git clone <a href="https://github.com/golf-lang/golf.git">https://github.com/golf-lang/golf.git</a>
 <span class="Statement">cd</span> golf
-git checkout <span class="Constant">171</span></pre>
+git checkout <span class="Constant">173</span></pre>
 <span id=golf_copied_480 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='golft_480' style='position: absolute;left: -500%;'></textarea>
 <img src='http://golf-lang.github.io/golf-copy-small-1.png' id='golfb' onclick='gg_copy(golft_480, code_480, golf_copied_480)' style='position:absolute;right:0;top:0; cursor: pointer;opacity:0.5;'/>
@@ -8683,14 +8683,14 @@ You can use any file name (likely choose a name that signifies the purpose of a 
 <span class="Statement">         lock-file</span> fname<span class="Type"> id</span> lockid<span class="Type"> status</span> lockst
          <span class="Comment">// Check the status of locking</span>
 <span class="Statement">         if-true</span> lockst<span class="Identifier"> equal</span> GG_OKAY
-             <span class="Comment">// File successfully locked, simulate working for 20 seconds</span>
+             <span class="Comment">// File successfully locked, simulate working for </span><span class="Constant">20</span><span class="Comment"> seconds</span>
 <span class="Statement">             @</span>WORKING
 <span class="Statement">             pause-program</span> <span class="Constant">20000</span>
 <span class="Statement">             @</span>DONE
              <span class="Comment">// Exit while loop</span>
 <span class="Statement">             break-loop</span>
 <span class="Statement">         else-if</span> lockst<span class="Identifier"> equal</span> GG_ERR_FAILED
-             <span class="Comment">// Another process holds the lock, wait, try again for 1 second</span>
+             <span class="Comment">// Another process holds the lock, wait, try again for </span><span class="Constant">1</span><span class="Comment"> second</span>
 <span class="Statement">             pause-program</span> <span class="Constant">1000</span>
 <span class="Statement">             @</span>WAITING
 <span class="Statement">             continue-loop</span>
@@ -9440,7 +9440,7 @@ Create file "srv.golf" and copy to it this code:<br/>
 <div class='code'  style='position:relative;padding-right:16px;'>
 <pre id='code_526'>
 <span class="Statement"> begin-handler</span> /srv<span class="Identifier"> public</span>
-  <span class="Comment">// Create resources (prepare) for 3 service calls</span>
+  <span class="Comment">// Create resources (prepare) for </span><span class="Constant">3</span><span class="Comment"> service calls</span>
   <span class="Comment">// We pass environment variable GG_SILENT_HEADER to these calls</span>
   <span class="Comment">// so they don't emit HTTP header</span>
 <span class="Statement">  new-remote</span> srv1<span class="Identifier"> local</span> <span class="Constant">&quot;app&quot;</span> \
@@ -9452,7 +9452,7 @@ Create file "srv.golf" and copy to it this code:<br/>
 <span class="Statement">  new-remote</span> srv3<span class="Identifier"> local</span> <span class="Constant">&quot;app&quot;</span> \
      <span class="Identifier"> url-path</span> <span class="Constant">&quot;/app/manage-keys/op=add/key=key3/data=data3&quot;</span> \
      <span class="Identifier"> environment</span> <span class="Constant">&quot;GG_SILENT_HEADER&quot;</span>=<span class="Constant">&quot;yes&quot;</span>
-  <span class="Comment">// Make 3 service calls in parallel, each in it own thread</span>
+  <span class="Comment">// Make </span><span class="Constant">3</span><span class="Comment"> service calls in parallel, each in it own thread</span>
 <span class="Statement">  call-remote</span> srv1, srv2, srv3<span class="Type"> status</span> st \
      <span class="Type"> started</span> start \
      <span class="Type"> finished-okay</span> fok
@@ -9697,7 +9697,7 @@ Create a file (or truncate an existing one), write 25,000 rows and the read back
      <span class="Comment">// Create new file, or truncate an old file if it exists</span>
 <span class="Statement">     open-file</span> <span class="Constant">&quot;testwrite&quot;</span><span class="Type"> file-id</span> nf<span class="Identifier"> new-truncate</span>
 
-     <span class="Comment">// Write 25000 rows</span>
+     <span class="Comment">// Write </span><span class="Constant">25000</span><span class="Comment"> rows</span>
 <span class="Statement">     start-loop</span><span class="Identifier"> repeat</span> <span class="Constant">25000</span><span class="Type"> use</span> i
 <span class="Statement">        ((</span> line
 <span class="Statement">        @</span>some text in line <span class="Statement">&lt;&lt;p-num</span> i<span class="Statement">&gt;&gt;</span>
@@ -9709,7 +9709,7 @@ Create a file (or truncate an existing one), write 25,000 rows and the read back
      <span class="Comment">// Rewind back to the beginning</span>
 <span class="Statement">     file-position</span><span class="Identifier"> set</span> <span class="Constant">0</span><span class="Identifier"> file-id</span> nf
 
-     <span class="Comment">// Read all 25000 rows back, and print them out</span>
+     <span class="Comment">// Read all </span><span class="Constant">25000</span><span class="Comment"> rows back, and print them out</span>
 <span class="Statement">     start-loop</span><span class="Identifier"> repeat</span> <span class="Constant">25000</span><span class="Type"> use</span> i
 <span class="Statement">        read-file</span><span class="Identifier"> file-id</span> nf <span class="Type"> to</span> one_item
 <span class="Statement">        p-out</span> one_item
@@ -12096,10 +12096,10 @@ Note that if database connection was lost, and could not be reestablished, the r
 "=" and "@" clauses may or may not have a space before the data that follows. So for example, these are both valid:<br/>
 <div class='code'  style='position:relative;padding-right:16px;'>
 <pre id='code_660'>
- <span class="Comment">// No space after &quot;@&quot; and &quot;=&quot;</span>
+ <span class="Comment">// No space after </span><span class="Constant">&quot;@&quot;</span><span class="Comment"> and </span><span class="Constant">&quot;=&quot;</span>
 <span class="Statement"> run-query</span> @db =<span class="Constant">&quot;select firstName, lastName from employee where employeeId='</span><span class="Special">%s</span><span class="Constant">'&quot;</span><span class="Type"> output</span> firstName, lastName<span class="Identifier"> input</span> empid
 
- <span class="Comment">// Space after &quot;@&quot; and &quot;=&quot;</span>
+ <span class="Comment">// Space after </span><span class="Constant">&quot;@&quot;</span><span class="Comment"> and </span><span class="Constant">&quot;=&quot;</span>
 <span class="Statement"> run-query</span><span class="Identifier"> @</span> db = <span class="Constant">&quot;select firstName, lastName from employee where employeeId='</span><span class="Special">%s</span><span class="Constant">'&quot;</span><span class="Type"> output</span> firstName, lastName<span class="Identifier"> input</span> empid</pre>
 <span id=golf_copied_660 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>
 <textarea id='golft_660' style='position: absolute;left: -500%;'></textarea>
@@ -12987,17 +12987,17 @@ The following will parse a string containing name/value pairs (such as "name=val
 <div class='code'  style='position:relative;padding-right:16px;'>
 <pre id='code_717'>
 <span class="Statement"> %%</span> /parse-url<span class="Identifier"> public</span>
-     <span class="Comment">// Data to parse - data/value pairs delimited by &quot;&amp;amp;&quot; string, and data and value delimited by equal sign:</span>
+     <span class="Comment">// Data to parse - data/value pairs delimited by </span><span class="Constant">&quot;&amp;amp;&quot;</span><span class="Comment"> string, and data and value delimited by equal sign:</span>
 <span class="Statement">     set-string</span> url =<span class="Constant">&quot;x=23&amp;amp;y=good&amp;amp;z=hello_world&quot;</span>
 
-     <span class="Comment">// Split string first into pieces based on &quot;amp;&quot;</span>
+     <span class="Comment">// Split string first into pieces based on </span><span class="Constant">&quot;amp;&quot;</span>
 <span class="Statement">     split-string</span> url<span class="Identifier"> with</span> <span class="Constant">&quot;&amp;amp;&quot;</span><span class="Type"> to</span> url_var<span class="Type"> count</span> tot
 
      <span class="Comment">// For each of name=value pairs, split it with equal sign</span>
 <span class="Statement">     start-loop</span><span class="Identifier"> repeat</span> tot<span class="Type"> use</span> i
-         <span class="Comment">// Get a url pair (each separated with &quot;&amp;amp;&quot;)</span>
+         <span class="Comment">// Get a url pair (each separated with </span><span class="Constant">&quot;&amp;amp;&quot;</span><span class="Comment">)</span>
 <span class="Statement">         read-split</span> i<span class="Identifier"> from</span> url_var<span class="Type"> to</span> item
-         <span class="Comment">// Then split that with &quot;=&quot; </span>
+         <span class="Comment">// Then split that with </span><span class="Constant">&quot;=&quot;</span><span class="Comment"> </span>
 <span class="Statement">         split-string</span> item<span class="Identifier"> with</span> <span class="Constant">&quot;=&quot;</span><span class="Type"> to</span> item_var
          <span class="Comment">// Get name and value</span>
 <span class="Statement">         read-split</span> <span class="Constant">1</span><span class="Identifier"> from</span> item_var<span class="Type"> to</span> name
@@ -13694,7 +13694,7 @@ To create a temporary file:<br/>
 <pre id='code_755'>
 <span class="Statement"> uniq-file</span> temp_file<span class="Identifier"> temporary</span>
 <span class="Statement"> .</span>..
- <span class="Comment">// use file named &quot;temp_file&quot;</span>
+ <span class="Comment">// use file named </span><span class="Constant">&quot;temp_file&quot;</span>
 <span class="Statement"> .</span>.
 <span class="Statement"> delete-file</span> temp_file</pre>
 <span id=golf_copied_755 style='position:absolute;right:-14px;top:-30px; cursor: pointer;visibility:hidden;background:white;'>Copied!</span>

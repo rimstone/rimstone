@@ -895,12 +895,15 @@ function read_modules() {
 
 #first look for all possible statements
 #there can't be a comment prior to statement, v1.c will prohibit that
-    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-index \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.golf>$GG_BLD/.findmod || true
+    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-tree \|[a-z]\+-array \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.golf>$GG_BLD/.findmod || true
 #then from occurrances, look for curl
     E=0;grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod >/dev/null||E=$?
     if [ "$E" == "0" ]; then _ISMOD_CURL="1"; fi
-#then from occurrances, look for index
-    E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-index " $GG_BLD/.findmod > /dev/null||E=$?
+#then from occurrances, look for array
+    E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-array " $GG_BLD/.findmod > /dev/null||E=$?
+    if [ "$E" == "0" ]; then _ISMOD_ARRAY="1"; fi
+#then from occurrances, look for tree
+    E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-tree " $GG_BLD/.findmod > /dev/null||E=$?
     if [ "$E" == "0" ]; then _ISMOD_TREE="1"; fi
 #then from occurrances, look for pcre2
     E=0;grep -m 1 -o "^[[:space:]]*match-regex " $GG_BLD/.findmod > /dev/null||E=$?
@@ -990,7 +993,16 @@ function read_modules() {
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_pcre2.o"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
     fi
-#index module
+#array module
+    if [ "$_ISMOD_ARRAY" == "1" ]; then
+        GG_ARRAY_USED="-DGG_ARRAY_INCLUDE"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfarr"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES array"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_arr.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES array"
+    fi
+#tree module
     if [ "$_ISMOD_TREE" == "1" ]; then
         GG_TREE_USED="-DGG_TREE_INCLUDE"
         GG_MOD_LIBS="$GG_MOD_LIBS -lgolftree"

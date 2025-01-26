@@ -1751,7 +1751,7 @@ gg_num gg_set_input (gg_num name_id, void *val, gg_num type)
         GG_TRACE ("Found input [%s] at [%ld]", _gg_sprm_par[name_id].name, name_id);
         // set-input can be assigned any type (tree, boolean, string etc)
         // If it is string, it is always assigned allocated memory, so we must increase its refcount (unless it's already there)
-        // in that way, params are like an index, array or a list
+        // in that way, params are like a tree , array or a list
         // check if they are equal first of course, then assign (or they'd be equal always)
         //
         // If string, if current param is alloc'd, delete reference to it because the existing value (that comes from outside caller) may not be allocated
@@ -2030,7 +2030,11 @@ void gg_read_child (int ofd, char **out_buf)
 {
     lseek (ofd, SEEK_SET, 0);
     // minimum allocation for dmalloc
+#ifdef DEBUG
 #define EXEC_BLEN 32
+#else
+#define EXEC_BLEN 2048
+#endif
     gg_num tread = EXEC_BLEN;
     *out_buf = (char*) gg_malloc (tread); 
     gg_num curr = 0;
@@ -2821,7 +2825,11 @@ void gg_break_down (char *value, char *delim, gg_split_str **broken_ptr)
     gg_split_str *broken = *broken_ptr;
 
     // setup memory for 128 pieces and expand later if necessary
+#ifdef DEBUG
+#define MAX_BREAK_DOWN 32
+#else
 #define MAX_BREAK_DOWN 128
+#endif
 
     gg_num tot_break = MAX_BREAK_DOWN;
 
@@ -3802,9 +3810,6 @@ void gg_get_runtime_options()
 
     pc->app.max_upload_size  = gg_max_upload;
     pc->debug.trace_level = gg_is_trace;
-
-#define GG_OTHER_DIR_OVERHEAD 50
-
 
     // Make sure that program cannot setuid to root
     if (setuid(0) == 0 || seteuid(0) == 0)
