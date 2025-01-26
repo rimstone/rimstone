@@ -1,21 +1,23 @@
+With Golf, you can develop web applications and services quicker and with a near\-flat learning curve\. Plus, experience faster run\-time performance and smaller memory footprint\.
+
 Golf is a language, tools and application server for building and deploying web services and back\-end solutions for any business\. Its purpose is rapid and easy development of low\-maintenance, memory\-safe and high\-performance business applications\. It's about much less coding and much higher readability of code\.
 
-Golf is built with industry\-standard Free Open Source libraries, extensible, and licensed under [Apache 2](http://golf-lang.github.io//license.html) Free Open Source\.
+Golf is built with industry\-standard Free Open Source libraries, extensible, and licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source\.
 
-Read more [about Golf](http://golf-lang.github.io//about-golf.html)\.
+Read more [about Golf](https://golf-lang.com//about-golf.html)\.
 
-[Hello World](http://golf-lang.github.io//123-hello-world.html) with Golf\.
+[Hello World](https://golf-lang.com//123-hello-world.html) with Golf\.
 
-[Install Golf](http://golf-lang.github.io//install.html)\. See [Documentation](http://golf-lang.github.io//documentation.html)\. Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
+[Install Golf](https://golf-lang.com//install.html)\. See [Documentation](https://golf-lang.com//documentation.html)\. Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
 
-Current version is 173\. Check [Blog](https://golf-lang.blogspot.com/) for change log\.
+Current version is 184\. Check [Blog](https://golf-lang.blogspot.com/) for change log\.
 
 Contact email [golf\-lang@proton\.me](mailto:golf-lang@proton.me)
 
 Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to Golf\!
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
-![Golf image](http://golf-lang.github.io/home-example.png)
+![Golf image](https://golf-lang.com/home-example.png)
 
 [Blog](https://golf-lang.blogspot.com/) release updates, articles and examples:
 * 2025\-01\-18 [Golf 171 released](https://golf-lang.blogspot.com/2025/01/golf-168-released.html)
@@ -64,7 +66,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 
-Visit [official Golf home page](http://golf-lang.github.io).
+Visit [official Golf home page](https://golf-lang.com).
 
 See CONTRIBUTING.md file on how to contribute.
 

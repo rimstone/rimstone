@@ -1,0 +1,158 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+write-tree \-  (tree)
+.SH PURPOSE
+Insert a key/value pair into a tree.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+write-tree <tree> key <key> value <value> \\
+    [ status <status> ] \\
+    [ new-cursor <cursor> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+write-tree inserts string <key> and associated string <value> into <tree> created by \fBnew-tree\fP.
+
+If <key> already exists in <tree>, <status> (in "status" clause) will be GG_ERR_EXIST and nothing is inserted into <tree>, otherwise it is GG_OKAY.
+
+If "new-cursor" clause is used, then a <cursor> will be positioned on a newly inserted tree node. You can use \fBuse-cursor\fP to iterate to nodes with lesser and greater key values.
+
+.SH EXAMPLES
+Insert key "k" with value "d" into "mytree", and obtain status in "st":
+
+.RS 4
+.EX
+
+write-tree mytree key k value d status st
+
+.EE
+.RE
+
+The following is an example of a process-scoped tree. Such a tree keeps its data across the requests, for as long as the process is alive.
+
+In a new directory, create file treesrv.golf and copy to it:
+
+.RS 4
+.EX
+
+%% /treesrv public
+    do-once
+    new-tree t process-scope
+    end-do-once
+
+    // Get input parameters
+    get-param op
+    get-param key
+    get-param data
+
+    if-true op equal "add" // Add data to tree
+        write-tree t key (key) value data status st
+        if-true st equal GG_OKAY
+            @Added [<<p-out key>>]
+        else-if
+            @Key exists
+        end-if
+    else-if op equal "delete" // Delete data and obtain the value deleted
+        delete-tree t key (key) value val status st
+        if-true st equal GG_ERR_EXIST
+            @Not found [<<p-out key>>]
+        else-if
+            // If found, then delete key and value
+            @Deleted [<<p-out val>>]
+            delete-string val
+        end-if
+    else-if op equal "query" // Query tree based on key value
+        read-tree t equal (key) value val status st
+        if-true st equal GG_ERR_EXIST
+            @Not found, queried [<<p-out key>>]
+        else-if
+            @Value [<<p-out val>>]
+        end-if
+    end-if
+%%
+
+.EE
+.RE
+
+Create new application ("pt" for "process tree"):
+
+.RS 4
+.EX
+
+sudo mgrg -i -u $(whoami) pt
+
+.EE
+.RE
+
+Build application:
+
+.RS 4
+.EX
+
+gg -q
+
+.EE
+.RE
+
+Run the tree service:
+
+.RS 4
+.EX
+
+mgrg -w 1 pt
+
+.EE
+.RE
+
+Try it out, add key/value pairs, query, delete, query again:
+
+.RS 4
+.EX
+
+\[char35] Add key=1 and data=d1
+$ gg -r --req="/treesrv/op=add/key=1/data=d1" --service --exec --silent-header
+Added [1]
+
+\[char35] Add key=2 and data=d2
+$ gg -r --req="/treesrv/op=add/key=2/data=d2" --service --exec --silent-header
+Added [2]
+
+\[char35] Query key=1
+$ gg -r --req="/treesrv/op=query/key=1" --service --exec --silent-header
+Value [d1]
+
+\[char35] Query key=2
+i$ gg -r --req="/treesrv/op=query/key=2" --service --exec --silent-header
+Value [d2]
+
+\[char35] Delete key=2
+$ gg -r --req="/treesrv/op=delete/key=2" --service --exec --silent-header
+Deleted [d2]
+
+\[char35] Query key=2
+$ gg -r --req="/treesrv/op=query/key=2" --service --exec --silent-header
+Not found, queried [2]
+
+.EE
+.RE
+
+See \fBread-tree\fP for more examples.
+.SH SEE ALSO
+ 
+.B - Tree
+
+\fBdelete-tree\fP  
+\fBget-tree\fP  
+\fBnew-tree\fP  
+\fBpurge-tree\fP  
+\fBread-tree\fP  
+\fBuse-cursor\fP  
+\fBwrite-tree\fP   
+See all 
+\fBdocumentation\fP

@@ -10,7 +10,7 @@ Memory allocated by Golf statements is tracked and freed at the end of the reque
 
 With Golf there is no need to free memory manually. Memory is automatically freed even if it is no longer accessible to the program, thus preventing memory leaks; this is important for stability of long-running processes. 
 
-Some statements (\fBnew-index\fP, \fBnew-set\fP, \fBnew-list\fP and \fBset-string\fP) have the option of allocating memory that won't get freed at the end of the request and is available to any request served by the same process. This kind of memory is called "process-scoped". A process-scoped string can be manually freed.
+Some statements (\fBnew-tree\fP, \fBnew-hash\fP, \fBnew-list\fP and \fBset-string\fP) have the option of allocating memory that won't get freed at the end of the request and is available to any request served by the same process. This kind of memory is called "process-scoped". A process-scoped string can be manually freed.
 
 Golf handles memory references and assignments automatically, preventing dangling memory.
 

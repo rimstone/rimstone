@@ -27,16 +27,16 @@ Typical use of do-once may be making any calls that need to be performed only on
 <any statements> execute in the nested scope relative to the code surrounding do-once/end-do-once, except that any process-scoped variables are created in the same scope as the code surrounding do-once/end-do-once; this simplifies creation of process-scoped variables, if needed.
 
 .SH EXAMPLES
-In this example, a process-scoped set (that is available to multiple requests of a single process) is created in the very first request a process serves and data is written to it; the subsequent requests do not create a new set but rather just write to it.
+In this example, a process-scoped hash (that is available to multiple requests of a single process) is created in the very first request a process serves and data is written to it; the subsequent requests do not create a new hash but rather just write to it.
 
 .RS 4
 .EX
 
 \[char46]..
  do-once 
-    new-set my_set hash-size 1024 process-scope
+    new-hash my_hash hash-size 1024 process-scope
  end-do-once
- write-set my_set key my_key value my_data 
+ write-hash my_hash key my_key value my_data 
  ...
 
 .EE

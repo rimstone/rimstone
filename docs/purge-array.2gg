@@ -1,0 +1,45 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+purge-array \-  (array)
+.SH PURPOSE
+Purge an array.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+purge-array <array> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+purge-array deletes all elements from <array> that was created with \fBnew-array\fP. 
+
+After purge-array, you can use it without calling \fBnew-array\fP again; the array is initialized as if it was just created that way.
+
+.SH EXAMPLES
+Create an array, put some data in it and then delete the data:
+
+.RS 4
+.EX
+
+new-array arr
+write-array arr key 50 value "myvalue"
+purge-array arr
+
+.EE
+.RE
+
+See \fBread-array\fP for more examples.
+.SH SEE ALSO
+ 
+.B - Array
+
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBwrite-array\fP   
+See all 
+\fBdocumentation\fP

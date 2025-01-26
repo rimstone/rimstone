@@ -1,8 +1,8 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-use-cursor \-  (index)
+use-cursor \-  (tree)
 .SH PURPOSE
-Iterate to a lesser or greater key in an index.
+Iterate to a lesser or greater key in a tree.
 
 .SH SYNTAX
 
@@ -19,7 +19,7 @@ use-cursor <cursor> ( current | get-lesser | get-greater ) \\
 .RE
 
 .SH DESCRIPTION
-use-cursor uses <cursor> previously created (see \fBread-index\fP, \fBwrite-index\fP) for iteration over index nodes with lesser or greater key values. It can also obtain keys and values for such nodes, as well as update their values.
+use-cursor uses <cursor> previously created (see \fBread-tree\fP, \fBwrite-tree\fP) for iteration over tree nodes with lesser or greater key values. It can also obtain keys and values for such nodes, as well as update their values.
 
 .LP
 .B CURRENT NODE
@@ -29,7 +29,7 @@ A <cursor> has a current node, which is first computed by using "current", "get-
 
 The computation of a current node is performed by using a <cursor>'s "previous current node", i.e. the current node just before use-cursor executes. If "current" clause is used, the current node remains the same as previous current node. If "get-lesser" clause is used, a node with a key that is the next lesser from the previous current will become the new current. If "get-greater" clause is used, a node with a key that is the next greater from the previous current will become the new current. 
 
-If the new current node can be found, then other use-cursor clauses are applied to it, such as to obtain a <key> or <value>, or to <update value>. If, as a result of either of these clauses, the new current node cannot be found (for instance there is no lesser or greater key in the index), the current node will be unchanged and <status> (in "status" clause) will be GG_ERR_EXIST.
+If the new current node can be found, then other use-cursor clauses are applied to it, such as to obtain a <key> or <value>, or to <update value>. If, as a result of either of these clauses, the new current node cannot be found (for instance there is no lesser or greater key in the tree), the current node will be unchanged and <status> (in "status" clause) will be GG_ERR_EXIST.
 
 .LP
 .B KEY, VALUE, UPDATING VALUE, STATUS
@@ -40,13 +40,13 @@ If the new current node can be found, then other use-cursor clauses are applied 
 "status" clause can be used to obtain <status> number, which is GG_ERR_EXIST if the new current node cannot be found, in which case the current node, <key> and <value> are unchanged. Otherwise, <status> is GG_OKAY.
 
 .SH EXAMPLES
-The following will find a value with key "999", and then iterate in the index to find all lesser values (in descending order):
+The following will find a value with key "999", and then iterate in the tree to find all lesser values (in descending order):
 
 .RS 4
 .EX
 
 set-string k = "999"
-read-index myindex equal k status st \\
+read-tree mytree equal k status st \\
     value val new-cursor cur
 start-loop
     if-true st equal GG_OKAY
@@ -60,17 +60,17 @@ end-loop
 .EE
 .RE
 
-For more examples, see \fBnew-index\fP.
+For more examples, see \fBnew-tree\fP.
 .SH SEE ALSO
  
-.B - Index
+.B - Tree
 
-\fBdelete-index\fP  
-\fBget-index\fP  
-\fBnew-index\fP  
-\fBpurge-index\fP  
-\fBread-index\fP  
+\fBdelete-tree\fP  
+\fBget-tree\fP  
+\fBnew-tree\fP  
+\fBpurge-tree\fP  
+\fBread-tree\fP  
 \fBuse-cursor\fP  
-\fBwrite-index\fP   
+\fBwrite-tree\fP   
 See all 
 \fBdocumentation\fP

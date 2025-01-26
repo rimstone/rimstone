@@ -1,0 +1,56 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+get-tree \-  (tree)
+.SH PURPOSE
+Get information about a tree.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+get-tree <tree> \\
+    ( count <count> ) | ( hops <hops> ) 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+get-tree provides information about <tree> (created by \fBnew-tree\fP):
+
+.RS 4
+\[bu]    
+<count> (in "count" clause) provides the number of keys (i.e. nodes) in the tree. 
+
+.RE
+
+.RS 4
+\[bu]    
+<hops> (in "hops" clause) provides the number of nodes accessed to find a key in the last tree statement executed prior to get-tree. Note that <hops> is available only in debug Golf \fBbuild\fP; otherwise it is always zero.
+
+.SH EXAMPLES
+Get the number of nodes (keys) in a tree:
+
+.RS 4
+.EX
+
+new-tree mytree
+\[char46]..
+get-tree mytree count c
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Tree
+
+\fBdelete-tree\fP  
+\fBget-tree\fP  
+\fBnew-tree\fP  
+\fBpurge-tree\fP  
+\fBread-tree\fP  
+\fBuse-cursor\fP  
+\fBwrite-tree\fP   
+See all 
+\fBdocumentation\fP

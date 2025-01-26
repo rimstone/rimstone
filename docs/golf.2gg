@@ -2,6 +2,8 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
+With Golf, you can develop web applications and services quicker and with a near-flat learning curve. Plus, experience faster run-time performance and smaller memory footprint.
+
 Golf is a language, tools and application server for building and deploying web services and back-end solutions for any business. Its purpose is rapid and easy development of low-maintenance, memory-safe and high-performance business applications. It's about much less coding and much higher readability of code.
 
 Golf is built with industry-standard Free Open Source libraries, extensible, and licensed under \fBApache 2\fP Free Open Source.
@@ -12,7 +14,7 @@ Read more \fBabout Golf\fP.
 
 \fBInstall Golf\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
 
-Current version is 173. Check \fBBlog\fP for change log.
+Current version is 184. Check \fBBlog\fP for change log.
 
 Contact email \fBgolf-lang@proton.me\fP
 

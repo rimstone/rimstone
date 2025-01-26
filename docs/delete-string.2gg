@@ -19,7 +19,7 @@ delete-string frees <string> variable previously allocated by a Golf statement.
 
 Note that freeing memory is in most cases unnecessary as Golf will automatically do so at the end of each request. You should have a good reason for using delete-string otherwise.
 
-Golf keeps count of <string> references. So if <string> is referenced by other Golf statements (for instance it was assigned to another string variable in \fBset-string\fP, or was used in statements like \fBwrite-index\fP or \fBwrite-set\fP), then <string> may not be deleted; in such a case, unless string was declared to be of process-scope and still used in such statements, it will be deleted when the \fBrequest\fP ends. Otherwise, <string> becomes an empty string ("") after it was deleted.
+Golf keeps count of <string> references. So if <string> is referenced by other Golf statements (for instance it was assigned to another string variable in \fBset-string\fP, or was used in statements like \fBwrite-tree\fP or \fBwrite-hash\fP), then <string> may not be deleted; in such a case, unless string was declared to be of process-scope and still used in such statements, it will be deleted when the \fBrequest\fP ends. Otherwise, <string> becomes an empty string ("") after it was deleted.
 
 .SH EXAMPLES
 Allocate and free random string:

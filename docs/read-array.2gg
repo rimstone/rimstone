@@ -1,0 +1,60 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+read-array \-  (array)
+.SH PURPOSE
+Get data from an array.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+read-array <array> \\
+    key <key> \\
+    value <value> \\
+    [ delete [ <delete> ] ] \\
+    [ status <status> ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+read-array will obtain an element from <array>, which is a string <value> (in "value" clause) based on a number <key> (in "key" clause). <key> is a number from 0 up to (excluding) the currently allocated array size. Note that array may be allocated beyond the highest index of an element written to it. <array> was created by \fBnew-array\fP. 
+
+You can also delete an element from the array by using "delete" clause - the <value> is still obtained though it is no longer in the array. The array element is deleted if "delete" clause is used without boolean variable <delete>, or if <delete> evaluates to true.
+
+If no <key> was found in the array (meaning an array element with index <key> was either never written or was deleted), then <status> number (in "status" clause) is GG_ERR_EXIST and <value> is unchanged, otherwise <status> is GG_OKAY. 
+
+.SH EXAMPLES
+In this example, a new array is created, a value is written to it, and then the value is obtained and the element deleted; return status is checked:
+
+.RS 4
+.EX
+
+// Create new array
+new-array arr
+
+// Write to array
+write-array arr key 500 value "some data"
+
+// Read from array
+read-array arr key 500 value res status st delete
+if-true st equal GG_ERR_EXIST
+    @No data in the array at index 500!
+else-if
+    @Deleted value is <<p-out res>>
+end-if
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Array
+
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBwrite-array\fP   
+See all 
+\fBdocumentation\fP

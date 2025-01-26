@@ -4,7 +4,7 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 173
+.B REFERENCE FOR GOLF VERSION 184
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -28,6 +28,19 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 .B - Application information
 
 \fBget-app\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Array
+
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBwrite-array\fP   
 .RE
 
 
@@ -217,10 +230,14 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 .RS 4
 \[bu]    
 
-.B - Hex encoding
+.B - Hash
 
-\fBdecode-hex\fP  
-\fBencode-hex\fP   
+\fBget-hash\fP  
+\fBnew-hash\fP  
+\fBpurge-hash\fP  
+\fBread-hash\fP  
+\fBresize-hash\fP  
+\fBwrite-hash\fP   
 .RE
 
 
@@ -228,15 +245,10 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 .RS 4
 \[bu]    
 
-.B - Index
+.B - Hex encoding
 
-\fBdelete-index\fP  
-\fBget-index\fP  
-\fBnew-index\fP  
-\fBpurge-index\fP  
-\fBread-index\fP  
-\fBuse-cursor\fP  
-\fBwrite-index\fP   
+\fBdecode-hex\fP  
+\fBencode-hex\fP   
 .RE
 
 
@@ -498,21 +510,6 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 .RS 4
 \[bu]    
 
-.B - Set
-
-\fBget-set\fP  
-\fBnew-set\fP  
-\fBpurge-set\fP  
-\fBread-set\fP  
-\fBresize-set\fP  
-\fBwrite-set\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-
 .B - Strings
 
 \fBcopy-string\fP  
@@ -548,6 +545,22 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 \fBget-time\fP  
 \fBpause-program\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
+.B - Tree
+
+\fBdelete-tree\fP  
+\fBget-tree\fP  
+\fBnew-tree\fP  
+\fBpurge-tree\fP  
+\fBread-tree\fP  
+\fBuse-cursor\fP  
+\fBwrite-tree\fP   
 .RE
 
 
