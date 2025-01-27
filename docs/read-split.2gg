@@ -20,7 +20,7 @@ read-split will read split string pieces from <split string> which is produced b
 .SH EXAMPLES
 See \fBsplit-string\fP.
 .SH SEE ALSO
- 
+ lrnStringselrn
 .B - Strings
 
 \fBcopy-string\fP  

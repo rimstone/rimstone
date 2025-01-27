@@ -95,7 +95,7 @@ end-loop
 .RE
 
 .SH SEE ALSO
- 
+ lrnHashelrn
 .B - Hash
 
 \fBget-hash\fP  

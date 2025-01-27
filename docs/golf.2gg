@@ -14,7 +14,7 @@ Read more \fBabout Golf\fP.
 
 \fBInstall Golf\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
 
-Current version is 184. Check \fBBlog\fP for change log.
+Current version is 186. Check \fBBlog\fP for change log.
 
 Contact email \fBgolf-lang@proton.me\fP
 
@@ -22,21 +22,7 @@ Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to 
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
-
-\fBBlog\fP release updates, articles and examples:
-
-.RS 4
-\[bu]    
-2025-01-18 \fBGolf 171 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2025-01-14 \fBGolf 155 released\fP
-.RE
-
-
+\fBBlog\fP articles and examples:
 .RS 4
 \[bu]    
 2025-01-03 \fBWhat is application server?\fP
@@ -46,18 +32,6 @@ Example of Golf code (from \fBSaaS example\fP):
 .RS 4
 \[bu]    
 2024-12-26 \fBEncryption: ciphers, digests, salt, IV\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-12-25 \fBGolf 136 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-12-24 \fBGolf 132 released\fP
 .RE
 
 
@@ -81,37 +55,7 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-12-08 \fBGolf 124 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-12-04 \fBGolf 121 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
 2024-12-02 \fBPassing parameters between local request handlers\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-11-29 \fBGolf 117 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-11-26 \fBGolf 114 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-11-22 \fBGolf 109 released\fP
 .RE
 
 
@@ -135,31 +79,7 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-11-10 \fBGolf 91 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-11-05 \fBGolf 87 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-10-28 \fBGolf 76 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
 2024-10-28 \fBWeb Services Security\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-10-23 \fBGolf 70 released\fP
 .RE
 
 
@@ -171,19 +91,7 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-10-19 \fBGolf 65 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
 2024-10-17 \fBWeb service calling web service\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-10-14 \fBGolf 56 released\fP
 .RE
 
 
@@ -207,19 +115,7 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-10-08 \fBGolf 54 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
 2024-10-06 \fBMemory safety: the cost in performance\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-10-01 \fBGolf 50 released\fP
 .RE
 
 
@@ -237,19 +133,7 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2024-09-27 \fBGolf 44 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
 2024-09-26 \fBOverview of Golf\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-09-24 \fBGolf 37 released\fP
 .RE
 
 
@@ -262,12 +146,6 @@ Example of Golf code (from \fBSaaS example\fP):
 .RS 4
 \[bu]    
 2024-09-21 \fBHello World as a Service\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2024-09-20 \fBGolf 32 released\fP
 .RE
 
 
@@ -292,5 +170,131 @@ Example of Golf code (from \fBSaaS example\fP):
 .RS 4
 \[bu]    
 2024-09-12 \fBInitial Golf release\fP
+.RE
+
+Releases:
+.RS 4
+\[bu]    
+2025-01-26 \fBGolf 184 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-01-18 \fBGolf 171 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-01-14 \fBGolf 155 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-12-25 \fBGolf 136 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-12-24 \fBGolf 132 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-12-08 \fBGolf 124 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-12-04 \fBGolf 121 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-11-29 \fBGolf 117 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-11-26 \fBGolf 114 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-11-22 \fBGolf 109 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-11-10 \fBGolf 91 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-11-05 \fBGolf 87 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-10-28 \fBGolf 76 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-10-23 \fBGolf 70 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-10-19 \fBGolf 65 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-10-14 \fBGolf 56 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-10-08 \fBGolf 54 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-10-01 \fBGolf 50 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-09-27 \fBGolf 44 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-09-24 \fBGolf 37 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2024-09-20 \fBGolf 32 released\fP
 .RE
 

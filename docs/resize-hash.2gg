@@ -32,7 +32,7 @@ resize-hash h hash-size 100000
 .RE
 
 .SH SEE ALSO
- 
+ lrnHashelrn
 .B - Hash
 
 \fBget-hash\fP  

@@ -43,7 +43,7 @@ end-handler
 .RE
 
 .SH SEE ALSO
- 
+ lrnMessageselrn
 .B - Messages
 
 \fBget-message\fP  

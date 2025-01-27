@@ -50,7 +50,7 @@ delete-file temp_file
 .RE
 
 .SH SEE ALSO
- 
+ lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  

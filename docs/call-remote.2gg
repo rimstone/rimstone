@@ -92,7 +92,7 @@ In this case, you are connecting to another service (running on IP "192.168.0.28
 
 See also \fBnew-remote\fP.
 .SH SEE ALSO
- 
+ lrnDistributed computingelrn
 .B - Distributed computing
 
 \fBcall-remote\fP  

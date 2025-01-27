@@ -47,7 +47,7 @@ gg -e 3
 .RE
 
 .SH SEE ALSO
- 
+ lrnError handlingelrn
 .B - Error handling
 
 \fBdb-error\fP  

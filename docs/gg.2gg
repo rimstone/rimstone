@@ -442,7 +442,7 @@ gg -q
 .RE
 
 .SH SEE ALSO
- 
+ lrnGolf compiler and utilityelrn
 .B - Golf compiler and utility
 
 \fBgg\fP   

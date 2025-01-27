@@ -62,7 +62,7 @@ end-loop
 
 For more examples, see \fBnew-tree\fP.
 .SH SEE ALSO
- 
+ lrnTreeelrn
 .B - Tree
 
 \fBdelete-tree\fP  

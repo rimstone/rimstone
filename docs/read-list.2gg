@@ -70,7 +70,7 @@ purge-list mylist
 .RE
 
 .SH SEE ALSO
- 
+ lrnLinked listelrn
 .B - Linked list
 
 \fBdelete-list\fP  

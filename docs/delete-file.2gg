@@ -30,7 +30,7 @@ delete-file "/home/user/some_file" status st
 .RE
 
 .SH SEE ALSO
- 
+ lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  

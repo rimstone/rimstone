@@ -74,7 +74,7 @@ You can use any file name (likely choose a name that signifies the purpose of a 
 
 %%
 .SH SEE ALSO
- 
+ lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  

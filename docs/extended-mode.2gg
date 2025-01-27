@@ -34,7 +34,7 @@ end-handler
 .RE
 
 .SH SEE ALSO
- 
+ lrnSafetyelrn
 .B - Safety
 
 \fBcall-extended\fP  

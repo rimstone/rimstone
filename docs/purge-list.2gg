@@ -20,7 +20,7 @@ purge-list will delete all elements (including their keys and values) from the l
 .SH EXAMPLES
 See \fBread-list\fP.
 .SH SEE ALSO
- 
+ lrnLinked listelrn
 .B - Linked list
 
 \fBdelete-list\fP  

@@ -64,7 +64,7 @@ stat-file "../file" path to fp
 .RE
 
 .SH SEE ALSO
- 
+ lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  

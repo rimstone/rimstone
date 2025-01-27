@@ -172,7 +172,7 @@ get-req trace-file to trace_file
 .RE
 
 .SH SEE ALSO
- 
+ lrnRequest informationelrn
 .B - Request information
 
 \fBget-req\fP   

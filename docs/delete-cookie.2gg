@@ -40,7 +40,7 @@ delete-cookie "my_cookie" path "/path" secure is_secure
 .RE
 
 .SH SEE ALSO
- 
+ lrnCookieselrn
 .B - Cookies
 
 \fBdelete-cookie\fP  

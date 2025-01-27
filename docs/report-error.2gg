@@ -63,7 +63,7 @@ report-error "Too many input parameters for %s, encountered total of [%ld]", "cu
 .RE
 
 .SH SEE ALSO
- 
+ lrnError handlingelrn
 .B - Error handling
 
 \fBdb-error\fP  

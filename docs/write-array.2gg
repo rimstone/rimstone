@@ -132,7 +132,7 @@ gg -r --req="/arrsrv/op=delete/key=15" --service --app="/arr" --exec
 
 See \fBread-array\fP for more examples.
 .SH SEE ALSO
- 
+ lrnArrayelrn
 .B - Array
 
 \fBnew-array\fP  

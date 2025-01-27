@@ -47,7 +47,7 @@ end-if
 .RE
 
 .SH SEE ALSO
- 
+ lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  

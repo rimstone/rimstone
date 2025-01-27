@@ -29,7 +29,7 @@ sudo pacman --noconfirm -Sy --overwrite "*" git
 
 git clone https://github.com/golf-lang/golf.git
 cd golf
-git checkout 184
+git checkout 186
 
 .EE
 .RE
@@ -62,7 +62,7 @@ sudo make install
 .RE
 
 .SH SEE ALSO
- 
+ lrnDownload and buildelrn
 .B - Download and build
 
 \fBinstall\fP  

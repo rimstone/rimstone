@@ -41,7 +41,7 @@ exit-handler
 .RE
 
 .SH SEE ALSO
- 
+ lrnProgram executionelrn
 .B - Program execution
 
 \fBexec-program\fP  

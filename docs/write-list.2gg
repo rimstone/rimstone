@@ -154,7 +154,7 @@ gg -r --req="/llsrv/op=query" --exec --service
 .RE
 
 .SH SEE ALSO
- 
+ lrnLinked listelrn
 .B - Linked list
 
 \fBdelete-list\fP  

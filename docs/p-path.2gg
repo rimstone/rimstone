@@ -57,7 +57,7 @@ See \fBrequest\fP for more on URL structure.
 
 If "new-line" clause is used, then a new line ("\en") is output after the URL path.
 .SH SEE ALSO
- 
+ lrnOutputelrn
 .B - Output
 
 \fBfinish-output\fP  

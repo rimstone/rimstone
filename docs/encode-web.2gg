@@ -34,7 +34,7 @@ encode-web str to result
 
 The "result" is "   x&lt;y&gt;z&amp;&quot;&apos;  ".
 .SH SEE ALSO
- 
+ lrnWeb encodingelrn
 .B - Web encoding
 
 \fBdecode-web\fP  

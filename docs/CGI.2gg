@@ -45,7 +45,7 @@ The following script sets up an application named "func_test" (any kind of appli
 .RE
 
 .SH SEE ALSO
- 
+ lrnRunning applicationelrn
 .B - Running application
 
 \fBapplication-setup\fP  

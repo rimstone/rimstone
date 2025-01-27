@@ -65,7 +65,7 @@ Another way to write this is:
 .RE
 
 .SH SEE ALSO
- 
+ lrnService processingelrn
 .B - Service processing
 
 \fBafter-handler\fP  

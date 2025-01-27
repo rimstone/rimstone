@@ -132,7 +132,7 @@ However, if you wish to step through the underlying C libraries, use "--c-lines"
 
 Debugging version of Golf, as well as using "--debug" option to compile, will considerably slow down run-time performance (in some tests about 50-55%); do not use Golf build with debugging symbols (see \fBinstall\fP) nor "--debug" (see \fBgg\fP) in production.
 .SH SEE ALSO
- 
+ lrnDebuggingelrn
 .B - Debugging
 
 \fBdebugging\fP  

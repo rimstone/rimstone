@@ -36,7 +36,7 @@ set-number num = str[0] + 2
 .RE
 
 .SH SEE ALSO
- 
+ lrnNumberselrn
 .B - Numbers
 
 \fBnumber-expressions\fP  

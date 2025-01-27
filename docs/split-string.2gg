@@ -106,7 +106,7 @@ Variable z has value hello_world
 .RE
 
 .SH SEE ALSO
- 
+ lrnStringselrn
 .B - Strings
 
 \fBcopy-string\fP  

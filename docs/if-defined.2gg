@@ -82,7 +82,7 @@ Defined
 .RE
 
 .SH SEE ALSO
- 
+ lrnProgram flowelrn
 .B - Program flow
 
 \fBbreak-loop\fP  

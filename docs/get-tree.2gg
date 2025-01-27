@@ -42,7 +42,7 @@ get-tree mytree count c
 .RE
 
 .SH SEE ALSO
- 
+ lrnTreeelrn
 .B - Tree
 
 \fBdelete-tree\fP  

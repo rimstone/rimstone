@@ -35,7 +35,7 @@ sudo mysql -u root -e "show variables like 'socket'"
 .RE
 
 .SH SEE ALSO
- 
+ lrnDatabaseelrn
 .B - Database
 
 \fBbegin-transaction\fP  

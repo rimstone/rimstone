@@ -305,7 +305,7 @@ and a "Request not found" error will be reported via \fBreport-error\fP.
 .RE
 
 .SH SEE ALSO
- 
+ lrnRequestselrn
 .B - Requests
 
 \fBrequest\fP   

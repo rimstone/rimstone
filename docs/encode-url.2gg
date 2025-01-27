@@ -36,7 +36,7 @@ encode-url str to result
 
 The "result" is "%20%20x%3Dy%3Fz%26%20%20".
 .SH SEE ALSO
- 
+ lrnURL encodingelrn
 .B - URL encoding
 
 \fBdecode-url\fP  

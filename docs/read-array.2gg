@@ -49,7 +49,7 @@ end-if
 .RE
 
 .SH SEE ALSO
- 
+ lrnArrayelrn
 .B - Array
 
 \fBnew-array\fP  

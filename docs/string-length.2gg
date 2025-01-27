@@ -43,7 +43,7 @@ string-length str2 to len2
 .RE
 
 .SH SEE ALSO
- 
+ lrnStringselrn
 .B - Strings
 
 \fBcopy-string\fP  

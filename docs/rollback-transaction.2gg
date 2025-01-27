@@ -56,7 +56,7 @@ rollback-transaction @mydb
 .RE
 
 .SH SEE ALSO
- 
+ lrnDatabaseelrn
 .B - Database
 
 \fBbegin-transaction\fP  

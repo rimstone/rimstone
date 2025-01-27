@@ -68,7 +68,7 @@ ln -s /home/disk0/file /var/lib/gg/<app name>/app/file
 .RE
 
 .SH SEE ALSO
- 
+ lrnGeneralelrn
 .B - General
 
 \fBabout-golf\fP  

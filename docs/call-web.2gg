@@ -232,7 +232,7 @@ write-file "pic.jpg" from resp length wlen
 .RE
 
 .SH SEE ALSO
- 
+ lrnWebelrn
 .B - Web
 
 \fBcall-web\fP  

@@ -40,7 +40,7 @@ delete-string val
 .RE
 
 .SH SEE ALSO
- 
+ lrnTreeelrn
 .B - Tree
 
 \fBdelete-tree\fP  

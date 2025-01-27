@@ -28,7 +28,7 @@ You can then change the color scheme to anything you like by using ":colorscheme
 
 The Golf highlighting syntax is tested with Vim 8.1.
 .SH SEE ALSO
- 
+ lrnLanguageelrn
 .B - Language
 
 \fBinline-code\fP  

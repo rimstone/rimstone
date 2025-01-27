@@ -30,7 +30,7 @@ copy-file "/home/user/source_file" to "/home/user/target_file" status st
 .RE
 
 .SH SEE ALSO
- 
+ lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  

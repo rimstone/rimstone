@@ -33,7 +33,7 @@ write-fifo nf key "mykey" value "myvalue"
 .RE
 
 .SH SEE ALSO
- 
+ lrnFIFOelrn
 .B - FIFO
 
 \fBdelete-fifo\fP  

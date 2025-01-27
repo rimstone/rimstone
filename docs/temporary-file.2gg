@@ -18,7 +18,7 @@ The reason for storing temporary files in a separate directory is to gain a sepa
 
 See \fBuniq-file\fP for an example of creating a temporary file.
 .SH SEE ALSO
- 
+ lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  

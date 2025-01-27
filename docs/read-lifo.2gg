@@ -74,7 +74,7 @@ In this example, a LIFO list is created, and two key/value pairs added. They are
 .RE
 
 .SH SEE ALSO
- 
+ lrnLIFOelrn
 .B - LIFO
 
 \fBdelete-lifo\fP  

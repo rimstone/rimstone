@@ -208,7 +208,7 @@ Golf uses well-known and widely used Free Open Source libraries like cURL, OpenS
 
 Do not use object names (such as variables and request names) that start with "_gg_" or "gg_" (including upper-case variations) as those are reserved by Golf.
 .SH SEE ALSO
- 
+ lrnGeneralelrn
 .B - General
 
 \fBabout-golf\fP  

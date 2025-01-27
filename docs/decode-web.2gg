@@ -31,7 +31,7 @@ decode-web str
 .RE
 
 .SH SEE ALSO
- 
+ lrnWeb encodingelrn
 .B - Web encoding
 
 \fBdecode-web\fP  

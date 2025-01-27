@@ -129,7 +129,7 @@ gg -r --req="/keysrv/op=delete/key=15" --service --app="/hash" --exec
 
 See \fBread-hash\fP for more examples.
 .SH SEE ALSO
- 
+ lrnHashelrn
 .B - Hash
 
 \fBget-hash\fP  

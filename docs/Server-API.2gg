@@ -198,7 +198,7 @@ Factorial value (message from C function) is 362880
 .RE
 
 .SH SEE ALSO
- 
+ lrnAPIelrn
 .B - API
 
 \fBClient-API\fP  

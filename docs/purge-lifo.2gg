@@ -20,7 +20,7 @@ purge-lifo will delete all elements from the LIFO <list> created by \fBnew-lifo\
 .SH EXAMPLES
 See \fBread-lifo\fP.
 .SH SEE ALSO
- 
+ lrnLIFOelrn
 .B - LIFO
 
 \fBdelete-lifo\fP  

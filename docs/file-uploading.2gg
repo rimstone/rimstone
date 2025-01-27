@@ -69,7 +69,7 @@ You have uploaded file <<p-web myfile_filename>> to a server file at <<p-web myf
 .RE
 
 .SH SEE ALSO
- 
+ lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  

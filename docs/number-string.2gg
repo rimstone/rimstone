@@ -60,7 +60,7 @@ number-string x
 .RE
 
 .SH SEE ALSO
- 
+ lrnNumberselrn
 .B - Numbers
 
 \fBnumber-expressions\fP  

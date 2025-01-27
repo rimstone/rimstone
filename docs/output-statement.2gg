@@ -91,7 +91,7 @@ Today's weather is <<p-out weatherType>>
 .RE
 
 .SH SEE ALSO
- 
+ lrnOutputelrn
 .B - Output
 
 \fBfinish-output\fP  

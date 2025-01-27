@@ -35,7 +35,7 @@ end-after-handler
 .RE
 
 .SH SEE ALSO
- 
+ lrnService processingelrn
 .B - Service processing
 
 \fBafter-handler\fP  

@@ -85,7 +85,7 @@ read-file "/home/user/some_file" to file_content position 20 length 10
 
 See \fBopen-file\fP for an example with "file-id" clause.
 .SH SEE ALSO
- 
+ lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  

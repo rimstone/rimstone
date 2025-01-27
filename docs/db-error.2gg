@@ -42,7 +42,7 @@ db-error @mydb continue
 .RE
 
 .SH SEE ALSO
- 
+ lrnDatabaseelrn
 .B - Database
 
 \fBbegin-transaction\fP  
@@ -55,7 +55,7 @@ db-error @mydb continue
 \fBrollback-transaction\fP  
 \fBrun-query\fP  
 \fBsqlite-database\fP   
- 
+ lrnError handlingelrn
 .B - Error handling
 
 \fBdb-error\fP  

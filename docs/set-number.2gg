@@ -74,7 +74,7 @@ set-number my_num = (some_num*3+1)%5
 .RE
 
 .SH SEE ALSO
- 
+ lrnNumberselrn
 .B - Numbers
 
 \fBnumber-expressions\fP  

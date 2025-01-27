@@ -332,7 +332,7 @@ pkg-config systemd --variable=systemdsystemunitdir
 
 The file should be saved as <app name>.service (or similar). Once saved, you can use standard systemctl commands to start, stop and restart your service.
 .SH SEE ALSO
- 
+ lrnService managerelrn
 .B - Service manager
 
 \fBmgrg\fP   

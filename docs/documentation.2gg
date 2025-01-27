@@ -4,16 +4,17 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 184
+.B REFERENCE FOR GOLF VERSION 186
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
+Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl,   lrlBase64elrl,   lrlCookieselrl,   lrlDatabaseelrl,   lrlDebuggingelrl,   lrlDistributed computingelrl,   lrlDocumentationelrl,   lrlDownload and buildelrl,   lrlEncryptionelrl,   lrlError handlingelrl,   lrlFIFOelrl,   lrlFileselrl,   lrlGeneralelrl,   lrlGolf compiler and utilityelrl,   lrlHashelrl,   lrlHex encodingelrl,   lrlJSON parsingelrl,   lrlLanguageelrl,   lrlLicenseelrl,   lrlLIFOelrl,   lrlLinked listelrl,   lrlMemoryelrl,   lrlMessageselrl,   lrlNumberselrl,   lrlOutputelrl,   lrlProgram executionelrl,   lrlProgram flowelrl,   lrlQuick startelrl,   lrlRegexelrl,   lrlRequest dataelrl,   lrlRequest informationelrl,   lrlRequestselrl,   lrlRunning applicationelrl,   lrlSafetyelrl,   lrlService managerelrl,   lrlService processingelrl,   lrlStringselrl,   lrlSystem informationelrl,   lrlTimeelrl,   lrlTreeelrl,   lrlURL encodingelrl,   lrlUTF8elrl,   lrlWebelrl,   lrlWeb encodingelrl,   lrlWeb serverselrl
 
 
 
 .RS 4
 \[bu]    
-
+lrnAPIelrn
 .B - API
 
 \fBClient-API\fP  
@@ -24,7 +25,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnApplication informationelrn
 .B - Application information
 
 \fBget-app\fP   
@@ -34,7 +35,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnArrayelrn
 .B - Array
 
 \fBnew-array\fP  
@@ -47,7 +48,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnBase64elrn
 .B - Base64
 
 \fBdecode-base64\fP  
@@ -58,7 +59,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnCookieselrn
 .B - Cookies
 
 \fBdelete-cookie\fP  
@@ -70,7 +71,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnDatabaseelrn
 .B - Database
 
 \fBbegin-transaction\fP  
@@ -89,7 +90,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnDebuggingelrn
 .B - Debugging
 
 \fBdebugging\fP  
@@ -100,7 +101,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnDistributed computingelrn
 .B - Distributed computing
 
 \fBcall-remote\fP  
@@ -113,7 +114,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnDocumentationelrn
 .B - Documentation
 
 \fBdocumentation\fP   
@@ -123,7 +124,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnDownload and buildelrn
 .B - Download and build
 
 \fBinstall\fP  
@@ -138,7 +139,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnEncryptionelrn
 .B - Encryption
 
 \fBdecrypt-data\fP  
@@ -154,7 +155,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnError handlingelrn
 .B - Error handling
 
 \fBdb-error\fP  
@@ -167,7 +168,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnFIFOelrn
 .B - FIFO
 
 \fBdelete-fifo\fP  
@@ -182,7 +183,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnFileselrn
 .B - Files
 
 \fBclose-file\fP  
@@ -207,7 +208,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnGeneralelrn
 .B - General
 
 \fBabout-golf\fP  
@@ -219,7 +220,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnGolf compiler and utilityelrn
 .B - Golf compiler and utility
 
 \fBgg\fP   
@@ -229,7 +230,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnHashelrn
 .B - Hash
 
 \fBget-hash\fP  
@@ -244,7 +245,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnHex encodingelrn
 .B - Hex encoding
 
 \fBdecode-hex\fP  
@@ -255,7 +256,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnJSON parsingelrn
 .B - JSON parsing
 
 \fBjson-doc\fP  
@@ -266,7 +267,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnLanguageelrn
 .B - Language
 
 \fBinline-code\fP  
@@ -280,7 +281,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnLicenseelrn
 .B - License
 
 \fBlicense\fP   
@@ -290,7 +291,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnLIFOelrn
 .B - LIFO
 
 \fBdelete-lifo\fP  
@@ -305,7 +306,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnLinked listelrn
 .B - Linked list
 
 \fBdelete-list\fP  
@@ -321,7 +322,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnMemoryelrn
 .B - Memory
 
 \fBmemory-handling\fP   
@@ -331,7 +332,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnMessageselrn
 .B - Messages
 
 \fBget-message\fP  
@@ -345,7 +346,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnNumberselrn
 .B - Numbers
 
 \fBnumber-expressions\fP  
@@ -358,7 +359,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnOutputelrn
 .B - Output
 
 \fBfinish-output\fP  
@@ -380,7 +381,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnProgram executionelrn
 .B - Program execution
 
 \fBexec-program\fP  
@@ -391,7 +392,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnProgram flowelrn
 .B - Program flow
 
 \fBbreak-loop\fP  
@@ -410,7 +411,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnQuick startelrn
 .B - Quick start
 
 \fB123-hello-world\fP   
@@ -420,7 +421,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnRegexelrn
 .B - Regex
 
 \fBmatch-regex\fP   
@@ -430,7 +431,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnRequest dataelrn
 .B - Request data
 
 \fBget-param\fP  
@@ -442,7 +443,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnRequest informationelrn
 .B - Request information
 
 \fBget-req\fP   
@@ -452,7 +453,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnRequestselrn
 .B - Requests
 
 \fBrequest\fP   
@@ -462,7 +463,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnRunning applicationelrn
 .B - Running application
 
 \fBapplication-setup\fP  
@@ -475,7 +476,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnSafetyelrn
 .B - Safety
 
 \fBcall-extended\fP  
@@ -486,7 +487,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnService managerelrn
 .B - Service manager
 
 \fBmgrg\fP   
@@ -496,7 +497,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnService processingelrn
 .B - Service processing
 
 \fBafter-handler\fP  
@@ -509,7 +510,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnStringselrn
 .B - Strings
 
 \fBcopy-string\fP  
@@ -530,7 +531,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnSystem informationelrn
 .B - System information
 
 \fBget-sys\fP   
@@ -540,7 +541,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnTimeelrn
 .B - Time
 
 \fBget-time\fP  
@@ -551,7 +552,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnTreeelrn
 .B - Tree
 
 \fBdelete-tree\fP  
@@ -567,7 +568,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnURL encodingelrn
 .B - URL encoding
 
 \fBdecode-url\fP  
@@ -578,7 +579,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnUTF8elrn
 .B - UTF8
 
 \fBtext-utf8\fP  
@@ -589,7 +590,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnWebelrn
 .B - Web
 
 \fBcall-web\fP  
@@ -602,7 +603,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnWeb encodingelrn
 .B - Web encoding
 
 \fBdecode-web\fP  
@@ -613,7 +614,7 @@ Note: All the topics below are available as a \fBsingle-page documentation\fP.
 
 .RS 4
 \[bu]    
-
+lrnWeb serverselrn
 .B - Web servers
 
 \fBconnect-apache-tcp-socket\fP  
