@@ -10,7 +10,7 @@ Read more [about Golf](https://golf-lang.com//about-golf.html)\.
 
 [Install Golf](https://golf-lang.com//install.html)\. See [Documentation](https://golf-lang.com//documentation.html)\. Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
 
-Current version is 191\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2283 automated functional tests\.
+Current version is 193\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2283 automated functional tests\.
 
 Contact email [golf\-lang@proton\.me](mailto:golf-lang@proton.me)
 
@@ -18,7 +18,9 @@ Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to 
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
-[Blog](https://golf-lang.blogspot.com/) articles and examples:* 2025\-01\-03 [What is application server?](https://golf-lang.blogspot.com/2025/01/what-is-application-server_72.html)
+[Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-01\-28 [Fast JSON parser with little coding](https://golf-lang.blogspot.com/2025/01/fast-json-parser-with-little-coding.html)
+* 2025\-01\-03 [What is application server?](https://golf-lang.blogspot.com/2025/01/what-is-application-server_72.html)
 * 2024\-12\-26 [Encryption: ciphers, digests, salt, IV](https://golf-lang.blogspot.com/2024/12/encryption-ciphers-digests-salt-iv_84.html)
 * 2024\-12\-15 [Distributed computing made easy](https://golf-lang.blogspot.com/2024/12/distributed-computing-made-easy_31.html)
 * 2024\-12\-12 [How is memory organized in Golf](https://golf-lang.blogspot.com/2024/12/how-is-memory-organized-in-golf_12.html)
@@ -43,7 +45,9 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-17 [Hello World in Golf](https://golf-lang.blogspot.com/2024/09/hello-world-in-golf_17.html)
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
-Releases:* 2025\-01\-27 [Golf 191 released](https://golf-lang.blogspot.com/2025/01/golf-191-released.html)
+
+Releases:
+* 2025\-01\-27 [Golf 191 released](https://golf-lang.blogspot.com/2025/01/golf-191-released.html)
 * 2025\-01\-26 [Golf 184 released](https://golf-lang.blogspot.com/2025/01/golf-184-released.html)
 * 2025\-01\-18 [Golf 171 released](https://golf-lang.blogspot.com/2025/01/golf-168-released.html)
 * 2025\-01\-14 [Golf 155 released](https://golf-lang.blogspot.com/2025/01/golf-155-released.html)

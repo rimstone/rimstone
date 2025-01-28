@@ -14,7 +14,7 @@ Read more \fBabout Golf\fP.
 
 \fBInstall Golf\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
 
-Current version is 191. Check \fBBlog\fP for change log. This release passed 2283 automated functional tests.
+Current version is 193. Check \fBBlog\fP for change log. This release passed 2283 automated functional tests.
 
 Contact email \fBgolf-lang@proton.me\fP
 
@@ -23,6 +23,13 @@ Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-01-28 \fBFast JSON parser with little coding\fP
+.RE
+
+
 .RS 4
 \[bu]    
 2025-01-03 \fBWhat is application server?\fP
@@ -172,7 +179,9 @@ Example of Golf code (from \fBSaaS example\fP):
 2024-09-12 \fBInitial Golf release\fP
 .RE
 
+
 Releases:
+
 .RS 4
 \[bu]    
 2025-01-27 \fBGolf 191 released\fP
