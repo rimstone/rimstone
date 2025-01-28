@@ -1165,7 +1165,7 @@ void check_format(char *mtext, char *comma, char **list)
         else if (*(next+1) == 's' || (fmt_len = is_len_format(next+1, "s", 1)))
         {
             // should be GG_DEFSTRING
-            if (gg_mode != GG_MODE_INTERNAL && is_constant_string(par) != GG_CONST_OK &&  check_var (&par, GG_DEFUNKN, NULL) != GG_DEFSTRING) gg_report_error ("Parameter #%ld in format should be of string type", pos);
+            if (gg_mode != GG_MODE_INTERNAL && is_constant_string(par) != GG_CONST_OK &&  !cmp_type (check_var (&par, GG_DEFUNKN, NULL), GG_DEFSTRING)) gg_report_error ("Parameter #%ld in format should be of string type", pos);
             if (fmt_len == 0) next+=2; else next+=1+fmt_len;
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
@@ -1173,7 +1173,7 @@ void check_format(char *mtext, char *comma, char **list)
         {
             // should be GG_DEFNUMBER
             gg_num t = check_var (&par, GG_DEFUNKN, NULL);
-            if (gg_mode != GG_MODE_INTERNAL && (t != GG_DEFNUMBER && t != GG_DEFBOOL)) gg_report_error ("Parameter #%ld in format should be of number type", pos);
+            if (gg_mode != GG_MODE_INTERNAL && (!cmp_type (t, GG_DEFNUMBER) && !cmp_type (t, GG_DEFBOOL))) gg_report_error ("Parameter #%ld in format should be of number type", pos);
             if (fmt_len == 0) next+=3; else next+=1+fmt_len;
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
@@ -1181,7 +1181,7 @@ void check_format(char *mtext, char *comma, char **list)
         {
             // should be GG_DEFNUMBER (this is character from string)
             gg_num t = check_var (&par, GG_DEFUNKN, NULL);
-            if (gg_mode != GG_MODE_INTERNAL && (t != GG_DEFNUMBER)) gg_report_error ("Parameter #%ld in format should be of number type", pos);
+            if (gg_mode != GG_MODE_INTERNAL && (!cmp_type (t, GG_DEFNUMBER))) gg_report_error ("Parameter #%ld in format should be of number type", pos);
             next+=2;
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
@@ -8574,8 +8574,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         if (to != NULL)
                         {
-                            oprintf ("gg_set_json (&(%s), %s);\n", to, noenum == NULL?"false":"true");
-                            oprintf ("gg_num gg_json_status_%ld = %s%sgg_json_new (%s, NULL, (%s), %s);\n", json_id, errp == NULL ? "":errp, errp == NULL ? "":"=", mtext, len == NULL ? "-1" : len, nodec == NULL?"1":"0");
+                            oprintf ("gg_set_json (&(%s), %s, %s);\n", to, noenum == NULL?"false":"true", mtext);
+                            oprintf ("gg_num gg_json_status_%ld = %s%sgg_json_new ((%s)->data, NULL, (%s), %s);\n", json_id, errp == NULL ? "":errp, errp == NULL ? "":"=", to, len == NULL ? "-1" : len, nodec == NULL?"1":"0");
                             if (status != NULL)
                             {
                                 oprintf ("GG_ERR0; %s = (gg_json_status_%ld == -1 ? GG_OKAY : GG_ERR_JSON);\n", status, json_id);

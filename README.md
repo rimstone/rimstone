@@ -10,7 +10,7 @@ Read more [about Golf](https://golf-lang.com//about-golf.html)\.
 
 [Install Golf](https://golf-lang.com//install.html)\. See [Documentation](https://golf-lang.com//documentation.html)\. Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
 
-Current version is 186\. Check [Blog](https://golf-lang.blogspot.com/) for change log\.
+Current version is 188\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2283 automated functional tests\.
 
 Contact email [golf\-lang@proton\.me](mailto:golf-lang@proton.me)
 

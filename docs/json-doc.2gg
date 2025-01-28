@@ -25,8 +25,6 @@ The length of <text> may be specified with "length" clause in <length> variable,
 
 The "status" clause specifies the return <status> number, which is GG_OKAY if successful or GG_ERR_JSON if there is an error. The number <error position> in "error-position" clause is the byte position in <text> where error was found (starting with "0"), in which case <error text> in "error-text" clause is the error message.
 
-String <text> is modified during parsing for performance reasons, to minimize memory copying. If you don't wish <text> to be modified, make a copy of it before parsing it (see \fBcopy-string\fP). In many cases though, this is not necessary, allowing for better performance.
-
 "noencode" clause will not encode strings, i.e. convert from JSON Unicode strings to UTF8, nor will it perform any validity checks on strings. This may be useful as a performance boost, however it is not recommended in general.
 
 "no-enum" clause will not include indexing of arrays in normalized names (with "[..]"), see \fBread-json\fP. This is useful if you want to check the path of each data element, and not worry about counting them; this happens often when using JSON in a structured way to transfer arrays when data elements repeat in a predictable fashion. Parsing of JSON is also faster with "no-enum".

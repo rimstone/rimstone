@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "188"
+#define GG_VERSION "191"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -778,6 +778,7 @@ typedef struct gg_json_s
     gg_num node_c; // number of nodes
     gg_num node_r; // node to be read
     bool noenum; // true if do not enumerate names (i.e. with [] for arrays
+    char *data; // data to parse (copied from original, but then parsed items are not copied, which is overall faster!
 } gg_json;
 
 
@@ -1176,7 +1177,7 @@ gg_num gg_write_file_id (FILE *f, char *content, gg_num content_len, char append
 gg_num gg_get_file_pos(FILE *f, gg_num *pos);
 gg_num gg_set_file_pos(FILE *f, gg_num pos);
 gg_num gg_reg_file(FILE **f);
-void gg_set_json (gg_json **j, bool noenum);
+void gg_set_json (gg_json **j, bool noenum, char *data);
 void gg_del_json (gg_json **j);
 char *gg_json_err();
 gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec);

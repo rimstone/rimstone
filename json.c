@@ -34,11 +34,10 @@ static char tb;
 // max depth of normalized name
 #define GG_JSON_MAX_NESTED 32
 
-// Add json node to list of nodes, if hash is used
+// Add json node to list of nodes.
 // *i is the location of where this element was found, so ec is the location, and if cannot allocate memory, go to endj, which must
 // be visible from where GG_ADD_JSON is used. j_tp is the type of node, j_str value, lc is the count in the list of nodes prior to
-// this node, l is the list of nodes (normalized name). 'n' here is calculated if needed, which isn't needed if no-hash is used.
-// So no-hash performs ultra-fast JSON parsing, with virtually no memory allocated.
+// this node, l is the list of nodes (normalized name). 
 // A node after the last has empty name.
 #define GG_ADD_JSON(j_tp, j_str, lc, l) { gg_add_json(); char *n = gg_json_fullname (l, lc); nodes[node_c].name = n; nodes[node_c].type = j_tp; nodes[node_c].str =  j_str; nodes[node_c].alloced = false; node_c++; }; 
 
@@ -67,6 +66,7 @@ static gg_num depth = 0; // depth of recursion
 // returns normalized name for a leaf name in name:value,  this is
 // returned as an allocated value
 // this accounts for any arrays
+// returns NULL if issue in converting UTF8
 //
 char *gg_json_fullname (json_node *list, gg_num list_c)
 {
@@ -142,8 +142,9 @@ char *gg_json_fullname (json_node *list, gg_num list_c)
 //
 // Set the end result of json parsing. 'j' is the json object, 
 // noenum is true if no [] in normalized path
+// data is string to parse
 //
-void gg_set_json (gg_json **j, bool noenum)
+void gg_set_json (gg_json **j, bool noenum, char *data)
 {
     GG_TRACE("");
     // get json object
@@ -151,6 +152,7 @@ void gg_set_json (gg_json **j, bool noenum)
 
     jloc = *j; // set local processing object
     jloc->noenum = noenum;
+    jloc->data = gg_strdupl(data, 0, gg_mem_get_len(gg_mem_get_id(data)));
 
 }
 
@@ -170,6 +172,7 @@ void gg_del_json (gg_json **j)
     }
     if ((*j)->node_c != 0) gg_free ((*j)->nodes);
     (*j)->node_c = 0;
+    gg_free ((*j)->data); // delete data
     gg_free (*j); // delete the entire json structure
     *j = NULL;
 }
@@ -401,7 +404,7 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
                 {
                     // this is name in an array of names leading up to name:value
                     list[list_c].name = str;
-                    list[list_c].name_len = lstr - 1;
+                    list[list_c].name_len = lstr - 1; // because there's leading quote we're avoiding
                     (*i)++;
                     expected_name = 0;
                     expected_colon = 1;
@@ -415,7 +418,6 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
                     list_c --; 
                     { goto endj; }
                 }
-                // no UNBINDV, we modify original string at the point of closing " (we place 0 there)
                 break;
             }
             // number

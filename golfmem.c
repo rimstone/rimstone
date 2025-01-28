@@ -505,7 +505,7 @@ inline void _gg_free (void *ptr, char check)
 
     // for debugging, make the freed memory empty to aid in testing of freeing, since often it remains the same
     // and freed memory always has at least one byte
-    ((unsigned char*)ptr)[0] = 0;
+    memset (ptr, 0, vm[r].len); // .len is at least 1
 #endif
     free ((unsigned char*)ptr-GG_ALIGN);
     // release vm[]
@@ -516,7 +516,7 @@ inline void _gg_free (void *ptr, char check)
 
 // 
 // 
-// Like strdup below, but copies exactly l bytes and sets length
+// Like strdup below, but copies exactly l+1 bytes and sets length
 // Starting from byte 'from' (0 is first)
 //
 inline char *gg_strdupl (char *s, gg_num from, gg_num l)
