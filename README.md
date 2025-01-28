@@ -10,7 +10,7 @@ Read more [about Golf](https://golf-lang.com//about-golf.html)\.
 
 [Install Golf](https://golf-lang.com//install.html)\. See [Documentation](https://golf-lang.com//documentation.html)\. Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
 
-Current version is 188\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2283 automated functional tests\.
+Current version is 191\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2283 automated functional tests\.
 
 Contact email [golf\-lang@proton\.me](mailto:golf-lang@proton.me)
 
@@ -43,7 +43,8 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-17 [Hello World in Golf](https://golf-lang.blogspot.com/2024/09/hello-world-in-golf_17.html)
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
-Releases:* 2025\-01\-26 [Golf 184 released](https://golf-lang.blogspot.com/2025/01/golf-184-released.html)
+Releases:* 2025\-01\-27 [Golf 191 released](https://golf-lang.blogspot.com/2025/01/golf-191-released.html)
+* 2025\-01\-26 [Golf 184 released](https://golf-lang.blogspot.com/2025/01/golf-184-released.html)
 * 2025\-01\-18 [Golf 171 released](https://golf-lang.blogspot.com/2025/01/golf-168-released.html)
 * 2025\-01\-14 [Golf 155 released](https://golf-lang.blogspot.com/2025/01/golf-155-released.html)
 * 2024\-12\-25 [Golf 136 released](https://golf-lang.blogspot.com/2024/12/golf-136-released_25.html)

@@ -14,7 +14,7 @@ Read more \fBabout Golf\fP.
 
 \fBInstall Golf\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
 
-Current version is 188. Check \fBBlog\fP for change log. This release passed 2283 automated functional tests.
+Current version is 191. Check \fBBlog\fP for change log. This release passed 2283 automated functional tests.
 
 Contact email \fBgolf-lang@proton.me\fP
 
@@ -173,6 +173,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .RE
 
 Releases:
+.RS 4
+\[bu]    
+2025-01-27 \fBGolf 191 released\fP
+.RE
+
+
 .RS 4
 \[bu]    
 2025-01-26 \fBGolf 184 released\fP
