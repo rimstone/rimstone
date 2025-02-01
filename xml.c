@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2019 Gliim LLC. 
+// Copyright 2018 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
 //
@@ -67,8 +67,10 @@
 xmlParserCtxtPtr ctxt;
 
 char ename[20][400];
-char eval[20][400];
-int elen[20];
+char *eval[20];
+int eval_len[20];
+int eval_alloc[20];
+int ename_len[20];
 int dep;
 int main_xml() ;
 void process_start(
@@ -113,9 +115,9 @@ void process_start(
     //printf("\n------\n");
 
     strcpy (ename[dep+1], ename[dep]);
-    elen[dep+1]=elen[dep];
+    ename_len[dep+1]=ename_len[dep];
     dep++;
-    elen[dep]+=snprintf (ename[dep]+elen[dep], sizeof(ename[dep])-elen[dep], "%s/", localname);
+    ename_len[dep]+=snprintf (ename[dep]+ename_len[dep], sizeof(ename[dep])-ename_len[dep], "%s/", localname);
 
     //printf ("'%s'=", ename[dep]);
     unsigned int index = 0;
@@ -128,9 +130,9 @@ void process_start(
         const xmlChar *endv = attributes[index + 4];
         int alen = endv-begv;
         strcpy (ename[dep+1], ename[dep]);
-        elen[dep+1]=elen[dep];
+        ename_len[dep+1]=ename_len[dep];
         dep++;
-        elen[dep]+=snprintf (ename[dep]+elen[dep], sizeof(ename[dep])-elen[dep], "%s/@", localname);
+        ename_len[dep]+=snprintf (ename[dep]+ename_len[dep], sizeof(ename[dep])-ename_len[dep], "%s/@", localname);
 
         printf ("'%s'='%.*s'\n", ename[dep], alen, begv);
         dep--;
@@ -162,6 +164,7 @@ void process_end(
         printf("'%s$'='%s'\n", ename[dep], eval[dep]+i);
     }
     eval[dep][0] = 0;
+    eval_len[dep] = 0;
     dep--;
 }
 
@@ -169,13 +172,20 @@ void process_chars(void* ctx, const xmlChar * ch, int len)
 {
     //GG_UNUSED(ctx);
     int l;
-    memcpy (eval[dep]+(l=strlen(eval[dep])), ch, len);
-    (eval[dep]+l)[len]= 0;
+    int alen = (len < 256 ? 256:len);
+    if (eval[dep] == NULL) {eval_alloc[dep] = alen; eval[dep] = malloc (eval_alloc[dep]);}
+    //else {if (eval_len[dep]+len >= eval_alloc[dep]) eval_alloc[dep] += alen; eval[dep] = realloc(gg_mem_get_id(eval[dep]), eval_alloc[dep]); }
+    else {if (eval_len[dep]+len >= eval_alloc[dep]) eval_alloc[dep] += alen; eval[dep] = realloc(eval[dep], eval_alloc[dep]); }
+    memcpy (eval[dep]+eval_len[dep], ch, len);
+    eval_len[dep] += len;
+    eval[dep][eval_len[dep]]= 0;
 }
 
 void xml_err(void *userData, xmlErrorPtr error) {
     //GG_UNUSED(userData);
-    fprintf(stderr, "Error: %s %d %s %s %s %d\n", error->message, error->line, error->str1, error->str2, error->str3, error->int2);
+    fprintf(stderr, "Message: %s", error->message);
+    fprintf(stderr, "Line: %d\n", error->line);
+    fprintf(stderr, "Position:%d\n", error->int2);
     xmlSetStructuredErrorFunc(NULL, NULL);
 }
 
@@ -185,8 +195,10 @@ int main_xml() {
     for (i = 0; i < 20; i ++)
     {
         ename[i][0] = 0;
-        eval[i][0] = 0;
-        elen[i] = 0;
+        eval[i] = NULL;
+        eval_len[i] = 0;
+        eval_alloc[i] = 0;
+        ename_len[i] = 0;
     }
     dep = 0;
     xmlSAXHandler handler;

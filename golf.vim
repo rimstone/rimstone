@@ -1,7 +1,7 @@
 " Language: Golf
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2025-January-25
+" Latest Revision: 2025-January-31
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link golfConstruct Statement
@@ -278,6 +278,8 @@ syn region gg_r_construct_json_doc start="^[[:space:]]*json-doc" skip="\\[[:spac
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_json_doc,gg_r_inline_json_doc,gg_r_at
     syn match gg_h_construct_json_doc "^[[:space:]]*json-doc" contained containedin=gg_r_construct_json_doc
     syn match gg_h_clause_json_doc " delete \@=" contained containedin=gg_r_construct_json_doc
+    syn match gg_h_clause_output_json_doc " error-char \@=" contained containedin=gg_r_construct_json_doc
+    syn match gg_h_clause_output_json_doc " error-line \@=" contained containedin=gg_r_construct_json_doc
     syn match gg_h_clause_output_json_doc " error-position \@=" contained containedin=gg_r_construct_json_doc
     syn match gg_h_clause_output_json_doc " error-text \@=" contained containedin=gg_r_construct_json_doc
     syn match gg_h_clause_json_doc " length \@=" contained containedin=gg_r_construct_json_doc

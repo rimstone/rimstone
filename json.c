@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2019 Gliim LLC. 
+// Copyright 2018 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
 
@@ -35,8 +35,7 @@ static char tb;
 #define GG_JSON_MAX_NESTED 32
 
 // Add json node to list of nodes.
-// *i is the location of where this element was found, so ec is the location, and if cannot allocate memory, go to endj, which must
-// be visible from where GG_ADD_JSON is used. j_tp is the type of node, j_str value, lc is the count in the list of nodes prior to
+// j_tp is the type of node, j_str value, lc is the count in the list of nodes prior to
 // this node, l is the list of nodes (normalized name). 
 // A node after the last has empty name.
 #define GG_ADD_JSON(j_tp, j_str, lc, l) { gg_add_json(); char *n = gg_json_fullname (l, lc); nodes[node_c].name = n; nodes[node_c].type = j_tp; nodes[node_c].str =  j_str; nodes[node_c].alloced = false; node_c++; }; 
@@ -56,6 +55,8 @@ static gg_json *jloc = NULL; // final result, super structure for the whole json
 static char nulled = 0; // character that is nulled to bind a string, used in the following parser iteration
 static char *errm; // error message
 static gg_num ec = -1; // location where error happened (0..size) or -1 if okay
+static gg_num line_ec = -1; // line where error happened (1..) 
+static gg_num last_line_ec = 0; // position (byte) of last line beginning (so ec - pos_line is character position since we always detect error one byte afterward)
 static gg_num depth = 0; // depth of recursion
 
 
@@ -215,14 +216,16 @@ char *gg_json_err()
 }
 
 //
-// parse val as JSON text. val is modified - make a copy of val if you still need it.
+// parse val as JSON text. 
 // len is the length of val, if -1 then we use strlen to figure it out
 // curr is the current position from where to start parsing, it's NULL for top call in recursion
-// returns -1 if okay, or position of error if not. 
+// returns -1 if okay, or position of error (as in byte in the whole text) if not. 
 // To get error, use gg_json_err()
 // if "dec" is 0, do not decode strings, otherwise decode
+// if errl is not NULL, store line where error ocurred there
+// if errs is not NULL, store char on line where error ocurred there
 //
-gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
+gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec, gg_num *errc, gg_num *errl)
 {
     GG_TRACE("");
 
@@ -236,6 +239,9 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
         root_call = 1;
         errm = GG_EMPTY_STRING; // no error by default
         ec = -1; // exit code by default
+        line_ec = 1; //line number were error is
+        last_line_ec = 0; // byte # of last line processed
+
         depth = 0; // max dept allowed, currently we're in first (root) invocation
         list_c = -1; // start with root for arrays
 
@@ -286,6 +292,7 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
     while (*i < len) // initial value of i is determined at the beginning of this function, which is recursive
     {
         if (nulled != 0) { nchar = nulled; nulled = 0; } else nchar = val[*i];
+        if (nchar == '\n') { line_ec++; last_line_ec = *i; }
         switch (nchar) 
         {
             // begin object, zero or more name:value inside separated by commas. Names should be unique.
@@ -323,7 +330,7 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
                 // use previous element because array applies to it
                 list_c--;
                 list[list_c].index++; // if index was -1, now it's 0 (first element in array), otherwise increments it
-                if (gg_json_new (val, i, len,dec) != -1) { goto endj; }  
+                if (gg_json_new (val, i, len,dec, errc, errl) != -1) { goto endj; }  
                 // no incrementing *i because it's done in gg_json_new()
                 expected_comma_or_end_array = 1;
                 break;
@@ -350,7 +357,7 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
                 if (expected_comma_or_end_object == 1) { ec = *i; GG_ERR0; errm = gg_strdup(GG_ERR_JSON_COMMA_END_OBJECT_EXPECTED); goto endj; }
                 if (expected_name == 1) { ec = *i; GG_ERR0; errm = gg_strdup(GG_ERR_JSON_NAME_EXPECTED); goto endj; }
                 (*i)++; // get passed : to find the value that follows
-                if (gg_json_new (val, i, len ,dec) != -1) { goto endj; }  // return value if failed
+                if (gg_json_new (val, i, len ,dec, errc, errl) != -1) { goto endj; }  // return value if failed
                 // no incrementing *i because it's done in gg_json()
                 expected_comma_or_end_object = 1;
                 break;
@@ -369,7 +376,7 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec)
                 // if we're in array of values, find the next value
                 else if (isarr == 1) list[list_c].index++; // this is next array element, advance the index
                 else { ec = *i; GG_ERR0; errm = gg_strdup(GG_ERR_JSON_UNRECOGNIZED); goto endj; }
-                if (gg_json_new (val, i, len ,dec) != -1) { goto endj; }  // return value if failed
+                if (gg_json_new (val, i, len ,dec, errc, errl) != -1) { goto endj; }  // return value if failed
                 // no incrementing *i because it's done in gg_json_new()
                 if (isobj == 1) expected_comma_or_end_object = 1;
                 if (isarr == 1) expected_comma_or_end_array = 1;
@@ -538,6 +545,8 @@ endj:
             ec = *i; GG_ERR0; errm = gg_strdup(GG_ERR_JSON_SYNTAX);
         }
     }
+    if (errl != NULL) *errl = line_ec;
+    if (errc != NULL) *errc = ec-last_line_ec;
     return ec;
 }
 

@@ -1,0 +1,28 @@
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2018 Gliim LLC. 
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://golf-lang.com/ - this file is part of Golf framework.
+
+
+Source: golf
+Section: devel
+Priority: optional
+Maintainer: Gliim LLC <golf-lang@proton.me>
+#To install build dependencies:
+#sudo apt update
+#sudo apt -y install devscripts equivs build-essential lintian
+#mk-build-deps -i -s sudo debian/control
+#Build apt with debuild -us -uc -b (.deb in parent dir afterwards)
+Build-Depends: make,gcc,libssl-dev,curl,pkgconf,libxml2-dev,libcurl4,libcurl4-openssl-dev,libmariadb-dev,zlib1g-dev,libfcgi-bin,libfcgi-dev,libpq-dev,libsqlite3-dev,libpcre2-dev
+Standards-Version: 4.1.2
+Homepage: https://golf-lang.com
+Vcs-Browser: https://github.com/golf-lang/golf
+
+Package: golf
+Architecture: any
+#libfcgi-bin is for cgi-fcgi utility
+Depends: make,gcc,libssl-dev,curl,pkgconf,libxml2-dev,libcurl4,libcurl4-openssl-dev,libmariadb-dev,zlib1g-dev,libfcgi-bin,libfcgi-dev,libpq-dev,libsqlite3-dev,libpcre2-dev,${shlibs:Depends}, ${misc:Depends}
+Description: Programming language for web services
+ Programming language, tools and server for web services and applications.
+
+

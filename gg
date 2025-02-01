@@ -1,6 +1,6 @@
 #!/bin/bash
 #SPDX-License-Identifier: Apache-2.0
-#Copyright 2019 Gliim LLC.  
+#Copyright 2018 Gliim LLC.  
 #Licensed under Apache License v2. See LICENSE file.
 #On the web http://golf-lang.com/ - this file is part of Golf framework.
 
@@ -895,13 +895,16 @@ function read_modules() {
 
 #first look for all possible statements
 #there can't be a comment prior to statement, v1.c will prohibit that
-    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-tree \|[a-z]\+-array \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.golf>$GG_BLD/.findmod || true
+    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-tree \|xml-doc \|[a-z]\+-array \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.golf>$GG_BLD/.findmod || true
 #then from occurrances, look for curl
     E=0;grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod >/dev/null||E=$?
     if [ "$E" == "0" ]; then _ISMOD_CURL="1"; fi
 #then from occurrances, look for array
     E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-array " $GG_BLD/.findmod > /dev/null||E=$?
     if [ "$E" == "0" ]; then _ISMOD_ARRAY="1"; fi
+#then from occurrances, look for xml
+    E=0;grep -m 1 -o "^[[:space:]]*xml-doc " $GG_BLD/.findmod > /dev/null||E=$?
+    if [ "$E" == "0" ]; then _ISMOD_XML="1"; fi
 #then from occurrances, look for tree
     E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-tree " $GG_BLD/.findmod > /dev/null||E=$?
     if [ "$E" == "0" ]; then _ISMOD_TREE="1"; fi
@@ -1001,6 +1004,15 @@ function read_modules() {
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_arr.o"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES array"
+    fi
+#xml module
+    if [ "$_ISMOD_XML" == "1" ]; then
+        GG_XML_USED="-DGG_XML_INCLUDE"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfxml"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES xml"
+    else
+        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_xml.o"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES xml"
     fi
 #tree module
     if [ "$_ISMOD_TREE" == "1" ]; then
@@ -1125,7 +1137,7 @@ $OF"
     done
 
     echo "#SPDX-License-Identifier: Apache-2.0" >> $GG_BLD/$_T.new
-    echo "#Copyright 2019 Gliim LLC. " >> $GG_BLD/$_T.new
+    echo "#Copyright 2018 Gliim LLC. " >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     echo "#" >> $GG_BLD/$_T.new
     echo "#Lists source files in your application. This is an auto-generated file." >> $GG_BLD/$_T.new
@@ -1154,7 +1166,7 @@ $OF"
     _T="golfapp.h"
 
     echo "// SPDX-License-Identifier: Apache-2.0"  >> $GG_BLD/$_T.new
-    echo "// Copyright 2019 Gliim LLC. ">> $GG_BLD/$_T.new
+    echo "// Copyright 2018 Gliim LLC. ">> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     echo "// This is an auto-generated file for a GOLF application" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
@@ -1200,7 +1212,7 @@ $OF"
     fi
 
     echo "// SPDX-License-Identifier: Apache-2.0" >>$GG_BLD/$_T.new
-    echo "// Copyright 2019 Gliim LLC. " >>$GG_BLD/$_T.new
+    echo "// Copyright 2018 Gliim LLC. " >>$GG_BLD/$_T.new
     echo >>$GG_BLD/$_T.new
     echo "// GOLF auto-generated request dispatcher" >>$GG_BLD/$_T.new
     echo >>$GG_BLD/$_T.new

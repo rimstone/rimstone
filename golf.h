@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2019 Gliim LLC. 
+// Copyright 2018 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
 
@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "195"
+#define GG_VERSION "204"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -100,6 +100,22 @@
 #   else
 #       include "pcre2posix.h"
 #   endif
+#endif
+
+// XML parsing 
+#if GG_APPMAKE==1 
+#   if defined(GG_XML_INCLUDE)
+#       define GG_INC_XML
+#   endif
+#else
+#   define GG_INC_XML
+#endif
+#ifdef GG_INC_XML
+#   include <libxml/parser.h>
+#   include <libxml/SAX.h>
+#   include <string.h>
+#   include <ctype.h>
+#   include <libxml/parserInternals.h>
 #endif
 
 // Crypto calls (encrypt, hash)
@@ -267,8 +283,7 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_ERR_LENGTH -20
 #define GG_ERR_REFERENCE -21
 #define GG_ERR_JSON -22
-#define GG_ERR_XML_PARSE -23
-#define GG_ERR_XML_EMPTY -24
+#define GG_ERR_XML -23
 // new errors below
 // the last error, it's NOT user interfacing
 // Note that there's GG_CLI_ERR_TOTAL error in cli.h under -255 (so -254, -253 etc.) and those can NOT
@@ -291,6 +306,7 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_DEFLIFO 13
 #define GG_DEFENCRYPT 15
 #define GG_DEFFILE 16
+#define GG_DEFXML 17
 #define GG_DEFSERVICE 18
 #define GG_DEFTREE 19
 #define GG_DEFTREECURSOR 20
@@ -316,6 +332,7 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_KEY_T_ARRAY "array"
 #define GG_KEY_T_TREE "tree"
 #define GG_KEY_T_JSON "json"
+#define GG_KEY_T_XML "xml"
 #define GG_KEY_T_TREECURSOR "tree-cursor"
 #define GG_KEY_T_FIFO "fifo"
 #define GG_KEY_T_LIFO "lifo"
@@ -1180,7 +1197,7 @@ gg_num gg_reg_file(FILE **f);
 void gg_set_json (gg_json **j, bool noenum, char *data);
 void gg_del_json (gg_json **j);
 char *gg_json_err();
-gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec);
+gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec, gg_num *errc, gg_num *errl);
 char *gg_web_name(char *url);
 void gg_check_transaction(gg_num check_mode);
 void gg_break_down (char *value, char *delim, gg_split_str **broken);

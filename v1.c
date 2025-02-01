@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2019 Gliim LLC. 
+// Copyright 2018 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
 // On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
@@ -151,6 +151,8 @@
 #define GG_KEYERRORFILE "error-file "
 #define GG_KEYERRORTEXT "error-text "
 #define GG_KEYERRORPOSITION "error-position "
+#define GG_KEYERRORLINE "error-line "
+#define GG_KEYERRORCHAR  "error-char "
 #define GG_KEYROWCOUNT "row-count "
 #define GG_KEYAFFECTEDROWS "affected-rows "
 #define GG_KEYNEWTRUNCATE "new-truncate"
@@ -984,6 +986,7 @@ gg_num typeid (char *type)
     else if (!strcmp (type, GG_KEY_T_HASH)) return GG_DEFHASH;
     else if (!strcmp (type, GG_KEY_T_ARRAY)) return GG_DEFARRAY;
     else if (!strcmp (type, GG_KEY_T_JSON)) return GG_DEFJSON;
+    else if (!strcmp (type, GG_KEY_T_XML)) return GG_DEFXML;
     else if (!strcmp (type, GG_KEY_T_TREE)) return GG_DEFTREE;
     else if (!strcmp (type, GG_KEY_T_TREECURSOR)) return GG_DEFTREECURSOR;
     else if (!strcmp (type, GG_KEY_T_FIFO))  return GG_DEFFIFO;
@@ -3516,6 +3519,7 @@ gg_num define_statement (char **statement, gg_num type, bool always)
         else if (type == GG_DEFARRAY) oprintf ("gg_array *%s = NULL;\n", *statement);
         else if (type == GG_DEFARRAYSTATIC) oprintf ("static gg_array *%s = NULL;\n", *statement);
         else if (type == GG_DEFJSON) oprintf ("gg_json *%s = NULL;\n", *statement);
+        else if (type == GG_DEFXML) oprintf ("gg_xml *%s = NULL;\n", *statement);
         else if (type == GG_DEFTREE) oprintf ("gg_tree *%s = NULL;\n", *statement);
         else if (type == GG_DEFTREESTATIC) oprintf ("static gg_tree *%s = NULL;\n", *statement);
         else if (type == GG_DEFTREECURSOR) oprintf ("gg_tree_cursor *%s = NULL;\n", *statement);
@@ -8530,6 +8534,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *nodec = find_keyword (mtext, GG_KEYNOENCODE, 1);
                         char *to = find_keyword (mtext, GG_KEYTO, 1);
                         char *errp = find_keyword (mtext, GG_KEYERRORPOSITION, 1);
+                        char *errl = find_keyword (mtext, GG_KEYERRORLINE, 1);
+                        char *errc = find_keyword (mtext, GG_KEYERRORCHAR, 1);
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
                         char *errt = find_keyword (mtext, GG_KEYERRORTEXT, 1);
                         char *len = find_keyword (mtext, GG_KEYLENGTH, 1);
@@ -8539,13 +8545,15 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         if (del != NULL && to != NULL) gg_report_error ("Only one of 'to' or 'delete' can be used");
                         if (del == NULL && to == NULL) gg_report_error ("At least one of 'to' or 'delete' must be used");
-                        if ((nodec != NULL || noenum != NULL || errp != NULL || status != NULL || errt != NULL || len != NULL) && to == NULL) gg_report_error ("no other options can be used with 'delete'");
+                        if ((nodec != NULL || noenum != NULL || errp != NULL || errl != NULL || errc != NULL || status != NULL || errt != NULL || len != NULL) && to == NULL) gg_report_error ("no other options can be used with 'delete'");
 
                         if (to != NULL) 
                         {
                             carve_statement (&errt, "json-doc", GG_KEYERRORTEXT, 0, 1);
                             carve_statement (&status, "json-doc", GG_KEYSTATUS, 0, 1);
                             carve_statement (&errp, "json-doc", GG_KEYERRORPOSITION, 0, 1);
+                            carve_statement (&errc, "json-doc", GG_KEYERRORCHAR, 0, 1);
+                            carve_statement (&errl, "json-doc", GG_KEYERRORLINE, 0, 1);
                             carve_statement (&nodec, "json-doc", GG_KEYNOENCODE, 0, 0);
                             carve_statement (&noenum, "json-doc", GG_KEYNOENUM, 0, 0);
                             carve_statement (&len, "json-doc", GG_KEYLENGTH, 0, 1);
@@ -8554,6 +8562,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             define_statement (&errt, GG_DEFSTRING, false);
                             define_statement (&status, GG_DEFNUMBER, false);
                             define_statement (&errp, GG_DEFNUMBER, false);
+                            define_statement (&errl, GG_DEFNUMBER, false);
+                            define_statement (&errc, GG_DEFNUMBER, false);
                             define_statement (&to, GG_DEFJSON, true);
                             check_var (&len, GG_DEFNUMBER, NULL);
                             check_var (&mtext, GG_DEFSTRING, NULL);
@@ -8575,7 +8585,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (to != NULL)
                         {
                             oprintf ("gg_set_json (&(%s), %s, %s);\n", to, noenum == NULL?"false":"true", mtext);
-                            oprintf ("gg_num gg_json_status_%ld = %s%sgg_json_new ((%s)->data, NULL, (%s), %s);\n", json_id, errp == NULL ? "":errp, errp == NULL ? "":"=", to, len == NULL ? "-1" : len, nodec == NULL?"1":"0");
+                            oprintf ("gg_num gg_json_status_%ld = %s%sgg_json_new ((%s)->data, NULL, (%s), %s, %s%s%s, %s%s%s);\n", json_id, errp == NULL ? "":errp, errp == NULL ? "":"=", to, len == NULL ? "-1" : len, nodec == NULL?"1":"0", errc==NULL?"":"&(",errc==NULL?"NULL":errc,errc==NULL?"":")",  errl==NULL?"":"&(",errl==NULL?"NULL":errl,errl==NULL?"":")");
                             if (status != NULL)
                             {
                                 oprintf ("GG_ERR0; %s = (gg_json_status_%ld == -1 ? GG_OKAY : GG_ERR_JSON);\n", status, json_id);
@@ -9766,6 +9776,7 @@ int main (int argc, char* argv[])
     add_var ("GG_ERR_OVERFLOW", GG_DEFNUMBER, NULL);
     add_var ("GG_ERR_LENGTH", GG_DEFNUMBER, NULL);
     add_var ("GG_ERR_JSON", GG_DEFNUMBER, NULL);
+    add_var ("GG_ERR_XML", GG_DEFNUMBER, NULL);
     add_var ("GG_ERR_UNKNOWN", GG_DEFNUMBER, NULL);
     add_var ("GG_DB_MARIADB", GG_DEFNUMBER, NULL);
     add_var ("GG_DB_POSTGRES", GG_DEFNUMBER, NULL);

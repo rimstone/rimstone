@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: Apache-2.0
-#Copyright 2019 Gliim LLC.  
+#Copyright 2018 Gliim LLC.  
 #Licensed under Apache License v2. See LICENSE file.
 #On the web http://golf-lang.com/ - this file is part of Golf framework.
 
@@ -330,11 +330,11 @@ stub_before.o: stub_before.c golf.h
 stub_crypto.o: stub.c golf.h
 	$(CC) -c -o $@ -DGG_CRYPTO $< $(CFLAGS) 
 
+stub_xml.o: stub.c golf.h
+	$(CC) -c -o $@ -DGG_XML $< $(CFLAGS) 
+
 stub_curl.o: stub.c golf.h
 	$(CC) -c -o $@ -DGG_CURL $< $(CFLAGS)
-
-stub_xml.o: stub.c golf.h
-	$(CC) -c -o $@ -DGG_XML $< $(CFLAGS)
 
 stub_arr.o: stub.c golf.h
 	$(CC) -c -o $@ -DGG_ARR $< $(CFLAGS)

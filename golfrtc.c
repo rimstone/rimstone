@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2019 Gliim LLC. 
+// Copyright 2018 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
 // On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
@@ -1072,6 +1072,7 @@ bool cmp_type (gg_num t1, gg_num t2)
     else if ((t1 == GG_DEFTREE || t1 == GG_DEFTREESTATIC) && (t2 == GG_DEFTREE || t2 == GG_DEFTREESTATIC)) return true;
     else if ((t1 == GG_DEFLIST || t1 == GG_DEFLISTSTATIC) && (t2 == GG_DEFLIST || t2 == GG_DEFLISTSTATIC)) return true;
     else if ((t1 == GG_DEFJSON ) && (t2 == GG_DEFJSON )) return true;
+    else if ((t1 == GG_DEFXML ) && (t2 == GG_DEFXML )) return true;
     else if (t1 == t2) return true;
     else return false;
 }
@@ -1559,6 +1560,7 @@ char *typename (gg_num type)
     else if (type == GG_DEFHASHSTATIC) return "process-scope " GG_KEY_T_HASH;
     else if (type == GG_DEFARRAYSTATIC) return "process-scope " GG_KEY_T_ARRAY;
     else if (type == GG_DEFJSON) return GG_KEY_T_JSON;
+    else if (type == GG_DEFXML) return GG_KEY_T_XML;
     else if (type == GG_DEFTREE) return GG_KEY_T_TREE;
     else if (type == GG_DEFTREESTATIC) return "process-scope " GG_KEY_T_TREE;
     else if (type == GG_DEFTREECURSOR) return GG_KEY_T_TREECURSOR;

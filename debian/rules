@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2018 Gliim LLC.
+
+%:
+	dh $@
+
+#on ubuntu22, default compression is zstd, however dkpg-sig doesn't yet
+#know about. Go with xz.
+override_dh_builddeb:
+	dh_builddeb -- -Zxz
+
