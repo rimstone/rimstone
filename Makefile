@@ -156,6 +156,7 @@ install:
 	install -D -m 0644 stub_crypto.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 stub_before.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 stub_after.o -t $(DESTDIR)$(V_LIB)/
+	install -D -m 0644 stub_xml.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 golf.vim -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 vmakefile -t $(DESTDIR)$(V_LIB)/
 	install -m 0755 -d $(DESTDIR)$(V_BIN)

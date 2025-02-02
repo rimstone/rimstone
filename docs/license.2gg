@@ -51,6 +51,12 @@ Golf makes use of the following dynamically-linked libraries (with copyright by 
 
 .RS 4
 \[bu]    
+\fBMIT-licensed\fP libxml2 library (\fBhttps://gitlab.gnome.org/GNOME/libxml2\fP),
+
+.RE
+
+.RS 4
+\[bu]    
 \fBOpenSSL-licensed\fP SSL/crypto library (\fBhttps://www.openssl.org/\fP).
 
 .RE

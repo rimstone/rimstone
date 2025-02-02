@@ -2,27 +2,85 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
-With Golf, you can develop web applications and services quicker and with a near-flat learning curve. Plus, experience faster run-time performance and smaller memory footprint.
 
-Golf is a language, tools and application server for building and deploying web services and back-end solutions for any business. Its purpose is rapid and easy development of low-maintenance, memory-safe and high-performance business applications. It's about much less coding and much higher readability of code.
+.LP
+.B WELCOME TO GOLF
+.LP
 
-Golf is built with industry-standard Free Open Source libraries, extensible, and licensed under \fBApache 2\fP Free Open Source.
+With Golf, you can develop web applications and services quicker and with a near-flat learning curve. Plus, experience faster run-time performance and smaller memory footprint. Golf is a language, tools and application server for building and deploying web services and back-end solutions for any business. Its purpose is rapid and easy development of low-maintenance, memory-safe and high-performance business applications. It's about less coding and higher readability of code. Golf is extensible and built with industry-standard Free Open Source libraries.
+
+.LP
+.B LICENSE
+.LP
+
+Golf is licensed under \fBApache 2\fP Free Open Source License.
+
+.LP
+.B MORE ABOUT GOLF
+.LP
 
 Read more \fBabout Golf\fP.
 
+.LP
+.B HELLO WORLD
+.LP
+
 \fBHello World\fP with Golf.
 
-\fBInstall Golf\fP. See \fBDocumentation\fP. Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
+.LP
+.B INSTALL
+.LP
 
-Current version is 193. Check \fBBlog\fP for change log. This release passed 2283 automated functional tests.
+\fBInstall Golf\fP. 
+
+.LP
+.B DOCUMENTATION
+.LP
+
+See \fBDocumentation\fP. 
+
+.LP
+.B SOURCE CODE
+.LP
+
+Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
+
+.LP
+.B VERSION AND CHANGE LOG
+.LP
+
+Current version is 206. Check \fBBlog\fP for change log. This release passed 2287 automated functional tests.
+
+.LP
+.B CONTACT
+.LP
 
 Contact email \fBgolf-lang@proton.me\fP
 
-Golf is formerly Gliimly; it's the same project and Gliimly has been renamed to Golf!
+.LP
+.B HISTORY
+.LP
+
+Golf is formerly Gliimly (which was its pre-release code name). In turn, the project evolved from the original effort that went under the name Vely a few years ago.
+
+.LP
+.B BRIEF EXAMPLE OF CODE
+.LP
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
+
+.LP
+.B LEARN FROM EXAMPLES AND ARTICLES
+.LP
+
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-01-30 \fBHow to send email with Golf\fP
+.RE
+
 
 .RS 4
 \[bu]    
@@ -180,7 +238,10 @@ Example of Golf code (from \fBSaaS example\fP):
 .RE
 
 
-Releases:
+.LP
+.B RELEASES
+.LP
+
 
 .RS 4
 \[bu]    

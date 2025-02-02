@@ -11,7 +11,10 @@ Parse JSON text.
 
 json-doc <text> to <json> \\
     [ status <status> ] [ length <length> ] [ noencode ] [ no-enum ] \\
-    [ error-text <status> ] [ error-position <status> ] \\
+    [ error-text <status> ] \\
+        [ error-position <status> ] \\
+        [ error-line <line> ] \\
+        [ error-char <char> ] 
 
 json-doc  delete <json>
 
@@ -23,7 +26,7 @@ json-doc will parse JSON <text> into <json> variable, which can be used with \fB
 
 The length of <text> may be specified with "length" clause in <length> variable, or if not, it will be the string length of <text>.
 
-The "status" clause specifies the return <status> number, which is GG_OKAY if successful or GG_ERR_JSON if there is an error. The number <error position> in "error-position" clause is the byte position in <text> where error was found (starting with "0"), in which case <error text> in "error-text" clause is the error message.
+The "status" clause specifies the return <status> number, which is GG_OKAY if successful or GG_ERR_JSON if there is an error. The number <error position> in "error-position" clause is the byte position in <text> where error was found (starting with "0"), in which case <error text> in "error-text" clause is the error message. You can also obtain the error's line number (with number <line> in clause "error-line") and the character position within that line (with number <char> in clause "error-char").
 
 "noencode" clause will not encode strings, i.e. convert from JSON Unicode strings to UTF8, nor will it perform any validity checks on strings. This may be useful as a performance boost, however it is not recommended in general.
 
