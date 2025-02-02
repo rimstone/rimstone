@@ -13,7 +13,7 @@ Maintainer: Gliim LLC <golf-lang@proton.me>
 #sudo apt -y install devscripts equivs build-essential lintian
 #mk-build-deps -i -s sudo debian/control
 #Build apt with debuild -us -uc -b (.deb in parent dir afterwards)
-Build-Depends: make,gcc,libssl-dev,curl,pkgconf,libxml2-dev,libcurl4,libcurl4-openssl-dev,libmariadb-dev,zlib1g-dev,libfcgi-bin,libfcgi-dev,libpq-dev,libsqlite3-dev,libpcre2-dev
+Build-Depends: make,gcc,libssl-dev,curl,pkgconf,libxml2-dev,libcurl4,libcurl4-openssl-dev,libmariadb-dev,zlib1g-dev,libfcgi-bin,libfcgi-dev,libpq-dev,libsqlite3-dev,libpcre2-dev,devscripts,equivs,build-essential,lintian,debhelper(>= 11)
 Standards-Version: 4.1.2
 Homepage: https://golf-lang.com
 Vcs-Browser: https://github.com/golf-lang/golf
