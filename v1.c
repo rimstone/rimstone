@@ -29,7 +29,7 @@
 // SQL query input, per input.
 #define GG_MAX_QUERY_INPUT_LEN 250
 // maximum length of input line in a  source code file.
-#define GG_FILE_LINE_LEN 8096
+#define GG_FILE_LINE_LEN 8192
 // maximum length of file name
 #define GG_FILE_NAME_LEN 200
 // maximum space to write out all output columns of a query
@@ -257,7 +257,7 @@
 #define GG_IN 1
 #define GG_INOUT 2
 // maximum length of generated code line (in .c file, final line)
-#define GG_MAX_CODE_LINE 4096
+#define GG_MAX_CODE_LINE 8192
 // error messages
 #define GG_NAME_INVALID "Name [%s] is not valid, must be a valid identifier because a variable is required in this context, or this clause has already been specified"
 #define GG_VAR_NOT_EXIST "Variable [%s] does not exist"
