@@ -13,7 +13,7 @@ See [Documentation](https://golf-lang.com//documentation.html)\.
 ## Source code
 Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
 ## Version and change log
-Current version is 206\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2287 automated functional tests\.
+Current version is 210\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2289 automated functional tests\.
 ## Contact
 Contact email [golf\-lang@proton\.me](mailto:golf-lang@proton.me)
 ## History

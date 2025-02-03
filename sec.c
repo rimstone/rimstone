@@ -12,17 +12,23 @@
 #include "golf.h"
 #include <openssl/err.h>
 
+#if OPENSSL_VERSION_MAJOR  >= 3
+typedef EVP_MD gg_type_dig;
+#else
+typedef const EVP_MD gg_type_dig;
+#endif
+
 // Prototypes
 void gg_sec_err (char *err);
-EVP_MD *gg_get_digest(char *digest_name);
+gg_type_dig *gg_get_digest(char *digest_name);
 
 //
 // Get digest based on digest_name, accounts for various OpenSSL versions
 //
-EVP_MD *gg_get_digest(char *digest_name)
+gg_type_dig *gg_get_digest(char *digest_name)
 {
     GG_TRACE("");
-    EVP_MD *md = NULL;
+    gg_type_dig *md = NULL;
 #if OPENSSL_VERSION_MAJOR  >= 3
 // in OpenSSL3, only if the implementation of digest exists, it will be non-NULL, while EV_get_digestbyname may return non-NULL
 // even if not existing
@@ -49,7 +55,7 @@ char *gg_hmac (char *key, char *data, char *digest_name, bool binary)
     char *out = gg_malloc (binary ? (EVP_MAX_MD_SIZE + 1) : ((EVP_MAX_MD_SIZE + 1)*2)+ 2) ; // +2 is just in case for null
 
     // get digest
-    EVP_MD *md = gg_get_digest(digest_name);
+    gg_type_dig *md = gg_get_digest(digest_name);
 
     // do hmac
     int key_len = (int)gg_mem_get_len(gg_mem_get_id( key) );
@@ -130,7 +136,7 @@ char *gg_hash_data( char *val, char *digest_name, bool binary)
     if ((mdctx = EVP_MD_CTX_new()) == NULL) gg_sec_err ("Cannot allocate digest context");
 
     // get digest
-    EVP_MD *md = gg_get_digest(digest_name);
+    gg_type_dig *md = gg_get_digest(digest_name);
 
     EVP_MD_CTX_init(mdctx);
     EVP_DigestInit_ex(mdctx, md, NULL);
@@ -180,7 +186,7 @@ char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_c
     unsigned char *key = gg_malloc (key_len + 1);
 
     // get digest
-    EVP_MD *dgst = gg_get_digest(digest_name);
+    gg_type_dig *dgst = gg_get_digest(digest_name);
 
 
     if (iter_count == -1) iter_count=1000; 
@@ -270,7 +276,7 @@ gg_num gg_get_enc_key(char *password, char *salt, gg_num salt_len, gg_num iter_c
     }
 
     // get digest
-    EVP_MD *dgst = gg_get_digest(digest_name);
+    gg_type_dig *dgst = gg_get_digest(digest_name);
 
     if (salt != NULL && salt_len == 0) salt_len = gg_mem_get_len(gg_mem_get_id(salt));
     if (iter_count == -1) iter_count=1000; 
@@ -351,7 +357,11 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
     if (iv != NULL)
     {
         // make sure IV length is sufficient, or otherwise EVP_EncryptInit_ex2 will SIGSEG trying to copy nonexistent bytes
+#if OPENSSL_VERSION_MAJOR  >= 3
         int req_ivlen = EVP_CIPHER_CTX_get_iv_length(e);
+#else
+        int req_ivlen = EVP_CIPHER_CTX_iv_length(e);
+#endif
         gg_num iv_len = gg_mem_get_len (gg_mem_get_id(iv)); 
         if (iv_len < req_ivlen) gg_report_error ("Length of Initialization Vector (IV) must be [%d] but only [%ld] allocated", req_ivlen, iv_len);
     }
