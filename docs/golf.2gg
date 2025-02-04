@@ -2,79 +2,33 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
+Golf is a language, tools and application server for building and deploying web services and back-end solutions for any business. Its purpose is rapid and easy development of low-maintenance, memory-safe and high-performance business applications. It's about less coding and higher readability of code. Golf is extensible and built with industry-standard Free Open Source libraries.
 
-.LP
-.B WELCOME TO GOLF
-.LP
-
-With Golf, you can develop web applications and services quicker and with a near-flat learning curve. Plus, experience faster run-time performance and smaller memory footprint. Golf is a language, tools and application server for building and deploying web services and back-end solutions for any business. Its purpose is rapid and easy development of low-maintenance, memory-safe and high-performance business applications. It's about less coding and higher readability of code. Golf is extensible and built with industry-standard Free Open Source libraries.
-
-.LP
-.B LICENSE
-.LP
+With Golf, you can develop web applications and services quicker and with a near-flat learning curve. Plus, experience faster run-time performance and smaller memory footprint. 
 
 Golf is licensed under \fBApache 2\fP Free Open Source License.
 
-.LP
-.B MORE ABOUT GOLF
-.LP
-
 Read more \fBabout Golf\fP.
-
-.LP
-.B HELLO WORLD
-.LP
 
 \fBHello World\fP with Golf.
 
-.LP
-.B INSTALL
-.LP
-
-\fBInstall Golf\fP. 
-
-.LP
-.B DOCUMENTATION
-.LP
+Install Golf \fBfrom source code\fP or by using \fBLinux packagers\fP (such as apt). 
 
 See \fBDocumentation\fP. 
 
-.LP
-.B SOURCE CODE
-.LP
-
 Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
 
-.LP
-.B VERSION AND CHANGE LOG
-.LP
-
-Current version is 210. Check \fBBlog\fP for change log. This release passed 2289 automated functional tests.
-
-.LP
-.B CONTACT
-.LP
-
-Contact email \fBgolf-lang@proton.me\fP
-
-.LP
-.B HISTORY
-.LP
-
-Golf is formerly Gliimly (which was its pre-release code name). In turn, the project evolved from the original effort that went under the name Vely a few years ago.
-
-.LP
-.B BRIEF EXAMPLE OF CODE
-.LP
+Current version is 212. Check \fBBlog\fP for change log. This release passed 2289 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
-
-.LP
-.B LEARN FROM EXAMPLES AND ARTICLES
-.LP
-
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-02-02 \fBUbuntu apt package available for Golf\fP
+.RE
+
 
 .RS 4
 \[bu]    
@@ -237,10 +191,12 @@ Example of Golf code (from \fBSaaS example\fP):
 2024-09-12 \fBInitial Golf release\fP
 .RE
 
+Releases:
 
-.LP
-.B RELEASES
-.LP
+.RS 4
+\[bu]    
+2025-02-02 \fBGolf 210 released\fP
+.RE
 
 
 .RS 4
@@ -374,3 +330,4 @@ Example of Golf code (from \fBSaaS example\fP):
 2024-09-20 \fBGolf 32 released\fP
 .RE
 
+Contact email \fBgolf-lang@proton.me\fP

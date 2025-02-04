@@ -29,7 +29,7 @@ sudo zypper -n install git
 
 git clone https://github.com/golf-lang/golf.git
 cd golf
-git checkout 210
+git checkout 212
 
 .EE
 .RE
@@ -67,6 +67,7 @@ sudo make install
 
 \fBinstall\fP  
 \fBinstall-arch\fP  
+\fBinstall-binary\fP  
 \fBinstall-debian\fP  
 \fBinstall-fedora\fP  
 \fBinstall-opensuse\fP  

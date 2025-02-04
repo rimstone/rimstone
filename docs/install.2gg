@@ -39,6 +39,7 @@ To uninstall Golf, click \fBuninstall\fP.
 
 \fBinstall\fP  
 \fBinstall-arch\fP  
+\fBinstall-binary\fP  
 \fBinstall-debian\fP  
 \fBinstall-fedora\fP  
 \fBinstall-opensuse\fP  

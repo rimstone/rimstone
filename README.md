@@ -1,28 +1,25 @@
-## Welcome to Golf
-With Golf, you can develop web applications and services quicker and with a near\-flat learning curve\. Plus, experience faster run\-time performance and smaller memory footprint\. Golf is a language, tools and application server for building and deploying web services and back\-end solutions for any business\. Its purpose is rapid and easy development of low\-maintenance, memory\-safe and high\-performance business applications\. It's about less coding and higher readability of code\. Golf is extensible and built with industry\-standard Free Open Source libraries\.
-## License
+Golf is a language, tools and application server for building and deploying web services and back\-end solutions for any business\. Its purpose is rapid and easy development of low\-maintenance, memory\-safe and high\-performance business applications\. It's about less coding and higher readability of code\. Golf is extensible and built with industry\-standard Free Open Source libraries\.
+
+With Golf, you can develop web applications and services quicker and with a near\-flat learning curve\. Plus, experience faster run\-time performance and smaller memory footprint\. 
+
 Golf is licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\.
-## More about Golf
+
 Read more [about Golf](https://golf-lang.com//about-golf.html)\.
-## Hello World
+
 [Hello World](https://golf-lang.com//123-hello-world.html) with Golf\.
-## Install
-[Install Golf](https://golf-lang.com//install.html)\. 
-## Documentation
+
+Install Golf [from source code](https://golf-lang.com//install.html) or by using [Linux packagers](https://golf-lang.com//install-binary.html) \(such as apt\)\. 
+
 See [Documentation](https://golf-lang.com//documentation.html)\. 
-## Source code
+
 Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
-## Version and change log
-Current version is 210\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2289 automated functional tests\.
-## Contact
-Contact email [golf\-lang@proton\.me](mailto:golf-lang@proton.me)
-## History
-Golf is formerly Gliimly \(which was its pre\-release code name\)\. In turn, the project evolved from the original effort that went under the name Vely a few years ago\.
-## Brief example of code
+
+Current version is 212\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2289 automated functional tests\.
+
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
-## Learn from examples and articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-02\-02 [Ubuntu apt package available for Golf](https://golf-lang.blogspot.com/2025/02/ubuntu-apt-package-available-for-golf.html)
 * 2025\-01\-30 [How to send email with Golf](https://golf-lang.blogspot.com/2025/01/how-to-send-email-with-golf.html)
 * 2025\-01\-28 [Fast JSON parser with little coding](https://golf-lang.blogspot.com/2025/01/fast-json-parser-with-little-coding.html)
 * 2025\-01\-03 [What is application server?](https://golf-lang.blogspot.com/2025/01/what-is-application-server_72.html)
@@ -50,7 +47,8 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-17 [Hello World in Golf](https://golf-lang.blogspot.com/2024/09/hello-world-in-golf_17.html)
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
-## Releases
+Releases:
+* 2025\-02\-02 [Golf 210 released](https://golf-lang.blogspot.com/2025/02/golf-210-released.html)
 * 2025\-01\-27 [Golf 191 released](https://golf-lang.blogspot.com/2025/01/golf-191-released.html)
 * 2025\-01\-26 [Golf 184 released](https://golf-lang.blogspot.com/2025/01/golf-184-released.html)
 * 2025\-01\-18 [Golf 171 released](https://golf-lang.blogspot.com/2025/01/golf-168-released.html)
@@ -73,6 +71,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-27 [Golf 44 released](https://golf-lang.blogspot.com/2024/09/golf-44-released_27.html)
 * 2024\-09\-24 [Golf 37 released](https://golf-lang.blogspot.com/2024/09/golf-37-released_24.html)
 * 2024\-09\-20 [Golf 32 released](https://golf-lang.blogspot.com/2024/09/golf-32-released_20.html)
+Contact email [golf\-lang@proton\.me](mailto:golf-lang@proton.me)
 
 Visit [official Golf home page](https://golf-lang.com).
 
