@@ -8,7 +8,7 @@
 
 # Maintainer: Gliim LLC <golf-lang@proton.me>
 pkgname=golf
-pkgver=218
+pkgver=220
 pkgrel=0
 epoch=
 pkgdesc="Programming language and application server for building and running web services and web applications. High performance and memory-safe."
