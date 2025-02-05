@@ -3,17 +3,20 @@
 # Licensed under Apache License v2. See LICENSE file.
 # On the web http://golf-lang.com/ - this file is part of Golf framework.
 
+# Build locally: makepkg --noconfirm -s
+# Check this file: namcap PKGBUILD
+
 # Maintainer: Gliim LLC <golf-lang@proton.me>
 pkgname=golf
-pkgver=216
+pkgver=218
 pkgrel=0
 epoch=
-pkgdesc="Golf is language, tools and application server for web services and web application, high performance and memory-safe"
+pkgdesc="Programming language and application server for building and running web services and web applications. High performance and memory-safe."
 arch=("x86_64")
 url="https://golf-lang.com"
 license=('Apache-2.0')
 groups=()
-depends=(make gcc openssl curl 'mariadb-connector-c' fcgi 'postgresql-libs' sqlite3 pcre2 libxml2)
+depends=()
 makedepends=(make gcc openssl curl 'mariadb-connector-c' fcgi 'postgresql-libs' sqlite3 pcre2 libxml2)
 checkdepends=()
 optdepends=()
@@ -24,27 +27,27 @@ backup=()
 options=()
 install=
 changelog=
-source=("https://github.com/golf-lang/golf/archive/refs/tags/216.tar.gz")
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/golf-lang/golf/archive/refs/tags/${pkgver}.tar.gz")
         
 noextract=()
 md5sums=(SKIP)
 validpgpkeys=()
 
 prepare() {
-	tar xvfz 216.tar.gz 
+	tar xvfz ${pkgname}-${pkgver}.tar.gz 
 }
 
 build() {
-	cd "golf-216"
+	cd "${pkgname}-${pkgver}"
 	make DESTDIR="$pkgdir/" clean
 	make DESTDIR="$pkgdir/"
 }
 
 check() {
-	cd "golf-216"
+	cd "${pkgname}-${pkgver}"
 }
 
 package() {
-	cd "golf-216"
+	cd "${pkgname}-${pkgver}"
 	make DESTDIR="$pkgdir/" install
 }
