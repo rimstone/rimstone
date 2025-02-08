@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "224"
+#define GG_VERSION "231"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -615,7 +615,6 @@ typedef struct gg_input_req_s
     gg_num method; // GG_GET/POST/PATCH/PUT/DELETE
     char *name; // request name, value of "req" param
     bool sub; // true if current call (top or sub) is as sub-service at run-time
-    bool optmem; // true if we're optimizing memory (cleanup ASAP, which does slow down things, but good if you're short on memory). false by default.
 } gg_input_req;
 // 
 // Context of execution. Contains input request, flags
@@ -1099,10 +1098,9 @@ void gg_memory_init ();
 void *gg_malloc(size_t size);
 void *gg_calloc(size_t nmemb, size_t size);
 void *gg_realloc(gg_num r, size_t size);
-void gg_mem_add_ref (gg_num tgt_def, char *tgt, char *m);
-void gg_mem_del_ref (gg_num r);
 void gg_mem_set_process (char *m, bool force);
 void gg_mem_release(gg_num r);
+void gg_mem_delete_and_return (void *ptr);
 gg_num gg_get_memory_len (void *ptr);
 gg_num gg_memid (void *ptr);
 void gg_set_memory_len (void *ptr, gg_num len);
@@ -1163,7 +1161,7 @@ char *gg_upper(char *s);
 void gg_location (char **fname, gg_num *lnum, gg_num set);
 void gg_list_purge (gg_list **fdata_p);
 gg_num gg_list_delete (gg_list *fdata);
-gg_num gg_retrieve (gg_fifo *fdata, gg_num is_def_n, char **name, gg_num is_def_d, void **data);
+gg_num gg_retrieve (gg_fifo *fdata, char **name, void **data);
 void gg_list_retrieve (gg_list *fdata, char **name, void **data);
 void gg_list_store (gg_list *fdata, char *name, void *data, bool append);
 gg_num gg_list_pos(gg_list *fdata, int where, gg_list_item *item);
@@ -1395,7 +1393,6 @@ extern gg_hash gg_paramhash;
 extern gg_tree_cursor *gg_cursor;
 extern bool gg_true;
 extern bool gg_false;
-extern bool gg_optmem;
 
 // DO not include golfapp.h for Golf itself, only for applications at source build time
 #if GG_APPMAKE==1

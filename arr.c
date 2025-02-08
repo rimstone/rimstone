@@ -87,7 +87,6 @@ void gg_write_array (gg_array *arr, gg_num key, char *val, char **old_val, gg_nu
     else gg_free (arr->arr[key]);
 
     arr->arr[key] = val;
-    if (gg_optmem) gg_mem_add_ref (1, NULL, val);
     gg_mem_set_process (val, false);
 
 }
@@ -108,6 +107,7 @@ char *gg_read_array (gg_array *arr, gg_num key, bool del, gg_num *st)
     if (st != NULL) *st = GG_OKAY;
     char *rval = arr->arr[key];
     if (del)  arr->arr[key] = NULL; 
+    gg_mem_delete_and_return (rval);
     return rval;
 }
 

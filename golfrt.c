@@ -107,7 +107,6 @@ void gg_init_input_req (gg_input_req *req)
     req->body_len = 0;
     req->method = GG_OKAY;
     req->sub = false;
-    req->optmem = false;
     finished_output = 0; // reset finish-output indicator
 }
 
@@ -1755,21 +1754,6 @@ gg_num gg_set_input (gg_num name_id, void *val, gg_num type)
         // check if they are equal first of course, then assign (or they'd be equal always)
         //
         // If string, if current param is alloc'd, delete reference to it because the existing value (that comes from outside caller) may not be allocated
-        if (_gg_sprm_par[name_id].alloc == true) 
-        {
-            // regardless of old and new param type, if they are equal, do nothing
-            if (gg_optmem && val != _gg_sprm_par[name_id].tval.value)
-            {
-                // If old param alloc'd and string, delete its reference
-                if (cmp_type(_gg_sprm_par[name_id].type, GG_DEFSTRING)) gg_mem_del_ref (gg_mem_get_id(_gg_sprm_par[name_id].tval.value));
-                // if new param is string and not equal old one, add reference
-                if (cmp_type (type, GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val);
-            }
-        } 
-        else 
-        {
-            if (gg_optmem && cmp_type (type, GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val); // existing is not allocated, nothing to delete ref
-        }
         if (cmp_type (type, GG_DEFNUMBER)) _gg_sprm_par[name_id].tval.numval = *(gg_num*)val;
         else _gg_sprm_par[name_id].tval.value = val;
         // The end result here is if val and _gg_sprm_par[name_id].tval.value are equal, then no refcount change as it should be
@@ -1784,7 +1768,6 @@ gg_num gg_set_input (gg_num name_id, void *val, gg_num type)
         if (cmp_type (type, GG_DEFNUMBER)) _gg_sprm_par[name_id].tval.numval = *(gg_num*)val;
         else _gg_sprm_par[name_id].tval.value = val;
         //
-        if (gg_optmem && cmp_type(type,GG_DEFSTRING)) gg_mem_add_ref (1, NULL, val); // no target since there was nothing there, but only if string
         _gg_sprm_par[name_id].version = _gg_run_version;
         _gg_sprm_par[name_id].type = type;
         _gg_sprm_par[name_id].alloc = true;

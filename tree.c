@@ -250,7 +250,6 @@ void gg_tree_insert(gg_tree_node *parent_tree, int dir, gg_tree_node *tree, void
         // There is no checking if existing data is the same as new data because in a tree
         // it's always new, there's no updating of data like say in lists
         //
-        if (gg_optmem) gg_mem_add_ref (1, NULL, data);
         gg_mem_set_process (data, false);
         tree->data = data;
         //
@@ -554,6 +553,7 @@ void gg_tree_find_leaf_del (gg_tree_node *parent_tree, int dir, gg_tree_node *tr
         // and no need to change reference of ->data because it's deleted here and then assigned to variable (in which case it's refcount
         // remains the same), or it's deleted in v1.c (in delete-index) and that removes it
         // so just overwrite found node's data with the leaf node's data
+        gg_mem_delete_and_return (found->data); // see comment in the other instance of this function
         found->data = tree_greater_node->data;
         //
         // make sure leaf node's parent is connected property
@@ -600,6 +600,10 @@ void gg_tree_delete (gg_tree_node *parent_tree,  int dir, gg_tree_node *tree)
                 if (tree->dlist[GG_TREE_GREATER_LIST]) tree->dlist[GG_TREE_GREATER_LIST]->dlist[GG_TREE_LESSER_LIST] = tree->dlist[GG_TREE_LESSER_LIST]; else gg_cursor->root->max = tree->dlist[GG_TREE_LESSER_LIST];
             }
             // delete the node, free it up
+            gg_mem_delete_and_return (tree->data); // make sure value, if process-scoped, will be un-process-ed if ref was just 1
+                                                   // since if we're assigning this value to a variable, this variable must not be process-scoped
+                                                   // or otherwise this would be a leak and memory would grow as this memory would never
+                                                   // be released
             gg_tree_node_delete (tree);
         }
         else
@@ -749,7 +753,6 @@ void gg_tree_insert_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_
     // There is no checking if existing key is the same as new key because in a tree
     // it's always new, there's no updating of key like say in lists
     //
-    if (gg_optmem) gg_mem_add_ref (1, NULL, key);
     gg_mem_set_process (key, false);
     gg_cursor->key = key;
     if (key_len == -1) gg_cursor->key_len = gg_mem_get_len(gg_mem_get_id(key)); else gg_cursor->key_len = key_len;

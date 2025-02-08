@@ -416,7 +416,6 @@ typedef struct s_gg_if {
 
 bool gg_single_file = false; // by default request handlers can be grouped in same-prefix files, with this being true, each must be in own file
 bool gg_public = false; // by default all request handlers are private unless made public, with --public this flag will be switched to true
-bool optmem = false; // true if to optimize memory (global for all files, comes from gg)
 bool do_once_open = false; // true if do-once open
 gg_num do_once_level; // the scope level at the beginning of do-once
 char *emptyc[GG_MAX_CLAUSE]; // empty statement
@@ -576,7 +575,6 @@ gg_num is_len_format (char *s, char *f, gg_num flen);
 void check_level(char *prline);
 gg_num typeid (char *type);
 bool add_var (char *var, gg_num type, char *realname);
-void free_handle_sub ();
 bool find_var (char *name, gg_num *type, gg_num *line, char **realname, bool *is_process);
 void make_var (char **v, gg_num type);
 void check_c (char *mtext);
@@ -862,46 +860,6 @@ void check_c (char *m)
         }
         lp = nc;
         if (lp == NULL) break;
-    }
-}
-
-//
-// Frees all memory that's accesible in current scope. It helps isolate memory usage which is then automatically released at the end of call-handler
-// UNLESS the memory is saved with set-param (or added to index, array which are not released in call-handler). This basically releases
-// all variables such as set-string or results from statements like random-string etc.
-// Also, important, do not release memory that's process-scoped - because this is releasing memory automatically and not by
-// user, we certainly don't want to delete such memory automatically; right now this is only set-string with process-scope b/c all other process-scoped
-// memory is tied up in indexes, arrays and lists which cannot be directly freed (by using delete-memory or via automatic cleanup, but only via the 
-// appropriate delete-... statement or such).
-//
-void free_handle_sub ()
-{
-    if (!optmem) return;
-    gg_rewind_hash (gg_varh);
-    gg_var *var;
-    gg_num st;
-    // We don't create a new hash for this, because the cost of adding/maintaining it is higher than
-    // searching through current hash, especially given that once we're out of scope, we delete all vars (not just
-    // by generating gg_free()) but by removing them from the hash too, which reduces the lookup effort constantly.
-    while (1)
-    {
-        char *k = gg_next_hash(gg_varh, (void**)&var, &st, false);
-        if (st != GG_OKAY) break;
-        gg_num lev = gg_level;
-        char decname[GG_MAX_DECNAME+1];
-        gg_num bw = snprintf (decname, sizeof(decname), "%ld_%ld+", lev, gg_resurr[lev]);
-        if (strncmp (var->name, decname, bw)) continue;
-        // do not auto free if string is process-scoped
-        if (cmp_type (var->type, GG_DEFSTRING) && var->is_process == false)
-        {
-            char *n = strchr (var->name, '+');
-            if (n != NULL && strncmp (n+1, "gg_", 3) && strncmp (n+1, "_gg", 3)) 
-            {
-                oprintf("gg_free (%s);\n", n+1);
-                // also delete in variable hash so each time there's less and less to search through
-                gg_find_hash (gg_varh, k , NULL, true, NULL);
-            }
-        }
     }
 }
 
@@ -2682,7 +2640,7 @@ gg_num outargs(char *args, char *outname, char *type, gg_num startwith, char pai
         char *value;
         while (1)
         {
-            gg_num st = gg_retrieve (params, 1, NULL, 1, (void*)&value);
+            gg_num st = gg_retrieve (params, NULL, (void*)&value);
             if (st != GG_OKAY) break;
 
             if (pair == 1)
@@ -3672,7 +3630,7 @@ void get_all_input_param (gg_gen_ctx *gen_ctx, char *iparams)
     char *value;
     while (1)
     {
-        gg_num st = gg_retrieve (params, 1, NULL, 1, (void**)&value);
+        gg_num st = gg_retrieve (params, NULL, (void**)&value);
         if (st != GG_OKAY) break;
 
         make_mem (&value);
@@ -3734,7 +3692,6 @@ void end_query (gg_gen_ctx *gen_ctx, gg_num close_block)
 
     if (close_block == 1)
     {
-        free_handle_sub ();
         oprintf("}\n"); // end of FOR loop we started with the QRY statement beginning
     }
 
@@ -4673,7 +4630,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
 
                         carve_stmt_obj (&mtext, false);
-                        free_handle_sub ();
                         oprintf ("}\n");
 
                         continue; // skip the statement and continue analyzing 
@@ -4717,7 +4673,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
 
                         carve_stmt_obj (&mtext, false);
-                        free_handle_sub ();
                         oprintf ("}\n");
                         open_loops--;
 
@@ -6956,10 +6911,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
                         carve_stmt_obj (&mtext, true);
                         if (gg_is_valid_param_name(mtext, false, false) != 1) gg_report_error(GG_NAME_INVALID, mtext);
-                        gg_num is_def = define_statement (&mtext, GG_DEFSTRING, true);
+                        define_statement (&mtext, GG_DEFSTRING, true);
 
-                        if (optmem) oprintf ("if ((%s) != gg_get_config()->ctx.req->body) {gg_mem_add_ref(%ld, %s, gg_get_config()->ctx.req->body); \n%s = gg_get_config()->ctx.req->body;\n}\n", mtext, is_def, mtext,  mtext);
-                        else oprintf ("%s = gg_get_config()->ctx.req->body;\n\n", mtext);
+                        oprintf ("%s = gg_get_config()->ctx.req->body;\n\n", mtext);
 
                         continue;
                     }
@@ -7061,9 +7015,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             save_param (mtext);
 
                             gg_num t;
-                            gg_num is_def;
-                            if (type == NULL) is_def = define_statement (&mtext, (t=GG_DEFSTRING), false);
-                            else is_def = define_statement (&mtext, (t=typeid(type)), false);
+                            if (type == NULL) define_statement (&mtext, (t=GG_DEFSTRING), false);
+                            else define_statement (&mtext, (t=typeid(type)), false);
                             //
                             // No need to check_var when define_statement is with "true" as the second argument, since it
                             // means the variable is created of that type for sure, and it can't have been or will be created before or after.
@@ -7075,10 +7028,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                 else if (t == GG_DEFBOOL) oprintf ("*(bool*)");
                                 oprintf("gg_get_input_param (_gg_sprm_%s, %ld);\n", mtext, t);
                                 //
-                                if (optmem)
-                                {
-                                    if (cmp_type(t,GG_DEFSTRING)) oprintf ("if (_gg_param != %s)  gg_mem_add_ref (%ld, %s, _gg_param);\n", mtext, is_def, mtext);
-                                }
                                 oprintf ("%s = _gg_param;}\n", mtext);
                             }
                             //
@@ -7149,7 +7098,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             gg_report_error( "end-handler found the second time");
                         }
                         done_end_handler = true;
-                        free_handle_sub();
                         oprintf("}\n");
                         continue;
                     }
@@ -7184,7 +7132,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, false);
                         if (!after_started || after_ended) gg_report_error ("found end-after-handler without after-handler to begin with, or already found prior to here");
                         after_ended = true;
-                        free_handle_sub();
                         oprintf ("}\n");
                         continue;
                     }
@@ -7195,7 +7142,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, false);
                         if (!before_started || before_ended) gg_report_error ("found end-before-handler without before-handler to begin with, or already found prior to here");
                         before_ended = true;
-                        free_handle_sub();
                         oprintf ("}\n");
                         continue;
                     }
@@ -7446,8 +7392,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
 
                         // if string is assigned to process-scope string, it becomes process-scoped too
-                        // delete reference to where mtext was point to, assuming it existed
-                        if (optmem) oprintf ("if (%s != %s) {\n gg_mem_add_ref (%ld, %s, %s);\n", mtext, eq, is_def,mtext, eq); // do not increase ref count if it's set-string x=x
 
                         // X(process) = Y(process), X is now process
                         // X(process) = Y(not process), X is now process
@@ -7456,8 +7400,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // Basically if either one is process, the lvalue is process.
                         gg_num mtext_p = check_var (&mtext, GG_DEFUNKN, NULL);
                         if (mtext_p == GG_DEFSTRINGSTATIC) oprintf ("gg_mem_set_process(%s, true);\n", eq);
-                        if (optmem) oprintf ("%s = %s;}\n", mtext, eq);
-                        else oprintf ("%s = %s;\n", mtext, eq);
+                        oprintf ("%s = %s;\n", mtext, eq);
 
                         gg_num eq_p = check_var (&eq, GG_DEFUNKN, NULL);
                         if (eq_p == GG_DEFSTRINGSTATIC || mtext_p == GG_DEFSTRINGSTATIC)
@@ -7535,7 +7478,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             // At this point, open_ifs is 1 greater than the level, so on level 0 (original if-string), open_ifs is 1,
                             // on level 1 (one-nested if-string), open_ifs is 2 etc. That's because if-string will do +1, and for else-string
                             // it remains so. By the time code reaches here, it's +1
-                            free_handle_sub ();
                             oprintf("} else {\n");
                             // here checking is done with open_ifs-1, because open_ifs is now +1 of what the level really is
                             if (if_nest[open_ifs-1].else_done) gg_report_error( "else-if without a condition can be used only once");
@@ -7571,7 +7513,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // process strings, we count references (including indexes, list) so freeing up with delete-string will need
                         // to have all references freed up before actually freeing memory
                         // IMPORTANT:if free+set to empty changes - must change read-line freeing of 'to'
-                        oprintf("_gg_free ((void*)(%s),0);\n", mtext);
+                        gg_num mtext_p = check_var (&mtext, GG_DEFUNKN, NULL);
+                        if (mtext_p == GG_DEFSTRINGSTATIC) oprintf("_gg_free ((void*)(%s),0);\n", mtext);
+                        else oprintf("_gg_free ((void*)(%s),3);\n", mtext);
                         oprintf("%s=GG_EMPTY_STRING;\n", mtext);
                         continue;
                     }
@@ -7627,20 +7571,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *to = find_keyword (mtext, GG_KEYTO, 1);
                         carve_statement (&to, "get-message", GG_KEYTO, 1, 1);
                         carve_stmt_obj (&mtext, true);
-                        gg_num is_def = define_statement (&to, GG_DEFSTRING, false); // exact length set below with gg_get_msg
+                        define_statement (&to, GG_DEFSTRING, false); // exact length set below with gg_get_msg
                         //
                         check_var (&mtext, GG_DEFMSG, NULL);
 
                         oprintf ("{ char *_gg_gmsg =gg_get_msg(%s);\n",mtext); 
-                        // delete reference to where "to" was point to, assuming it existed
-                        // when we get message, we obtain a string reference in another pointer. Now we can delete this string,
-                        // but this shouldn't delete message as it's still referencing it, so increase reference.
-                        if (optmem)
-                        {
-                            oprintf ("if (_gg_gmsg != %s) { gg_mem_add_ref (%ld, %s, _gg_gmsg);\n", to, is_def, to);
-                            oprintf ("%s = _gg_gmsg;}\n", to);
-                        }
-                        else oprintf ("%s = _gg_gmsg;\n", to);
+                        oprintf ("%s = _gg_gmsg;\n", to);
                         oprintf("}\n");
 
 
@@ -7678,7 +7614,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&st, "read-split", GG_KEYSTATUS, 0, 1);
                         carve_stmt_obj (&mtext, true);
 
-                        gg_num is_def = define_statement (&to, GG_DEFSTRING, false); // exact length set below with strdup/GG_EMPTY_STRING
+                        define_statement (&to, GG_DEFSTRING, false); // exact length set below with strdup/GG_EMPTY_STRING
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
                         check_var (&mtext, GG_DEFNUMBER, NULL);
@@ -7687,8 +7623,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // check split-string isn't NULL
                         oprintf ("if ((%s) != NULL && %s >= 1 && %s <= (%s)->num_pieces) {\n", from, mtext, mtext, from);
                         if (st != NULL) oprintf("%s=GG_OKAY;\n", st);
-                        if (optmem) oprintf ("if ((%s) != (%s)->pieces[(%s)-1]) {gg_mem_add_ref(%ld, %s, (%s)->pieces[(%s)-1]); gg_mem_set_process ((%s)->pieces[(%s)-1],false);}\n%s = (%s)->pieces[(%s)-1];\n", to, from, mtext, is_def, to, from, mtext, from, mtext, to, from, mtext);
-                        else oprintf ("gg_mem_set_process ((%s)->pieces[(%s)-1],false);\n%s = (%s)->pieces[(%s)-1];\n", from, mtext, to, from, mtext);
+                        oprintf ("gg_mem_set_process ((%s)->pieces[(%s)-1],false);\n%s = (%s)->pieces[(%s)-1];\n", from, mtext, to, from, mtext);
                         oprintf("} else {\n");
                         if (st != NULL) oprintf("%s=GG_ERR_OVERFLOW;\n", st);
                         oprintf ("%s=GG_EMPTY_STRING;}\n",to); 
@@ -7818,8 +7753,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&upd);
                         make_mem(&updkey);
 
-                        gg_num is_def_k = define_statement (&key, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing
-                        gg_num is_def_v = define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing
+                        define_statement (&key, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing
+                        define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing
 
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
@@ -7831,45 +7766,22 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("{ char *_gg_list_k; char *_gg_list_v; gg_list_retrieve (%s, &(_gg_list_k), (void**)&(_gg_list_v));\n", mtext);
                         if (upd || updkey || st) oprintf("if ((%s)->curr != NULL) {\n", mtext);
                         //
-                        if (optmem)
-                        {
-                            oprintf ("if (_gg_list_k != (%s)) {gg_mem_add_ref(%ld, %s, _gg_list_k); gg_mem_set_process (_gg_list_k, false);\n%s = _gg_list_k;}\n", key, is_def_k, key, key);
-                            oprintf ("if (_gg_list_v != (%s)) {gg_mem_add_ref(%ld, %s, _gg_list_v); gg_mem_set_process (_gg_list_v, false);\n%s = _gg_list_v;}\n", value, is_def_v, value, value);
-                        }
-                        else
-                        {
-                            oprintf ("gg_mem_set_process (_gg_list_k, false);\n%s = _gg_list_k;\n", key);
-                            oprintf ("gg_mem_set_process (_gg_list_v, false);\n%s = _gg_list_v;\n", value);
-                        }
+                        oprintf ("gg_mem_set_process (_gg_list_k, false);\n%s = _gg_list_k;\n", key);
+                        oprintf ("gg_mem_set_process (_gg_list_v, false);\n%s = _gg_list_v;\n", value);
+                    
                         // name,data surely existed, so 0 in add_ref
                         // 0 is fine in gg_mem_add_ref because in read-list an element can never be NULL
                         if (updkey) 
                         {
-                            if (optmem) 
-                            {
-                                oprintf("if ((%s)->curr->name != (%s)) {gg_mem_add_ref(0, (%s)->curr->name, %s);gg_mem_set_process (%s, false); \n", mtext, updkey, mtext, updkey, updkey);
-                                oprintf("(%s)->curr->name = (%s);}\n", mtext, updkey); 
-                            }
-                            else 
-                            {
-                                oprintf("gg_mem_set_process (%s, false); \n", updkey);
-                                oprintf("(%s)->curr->name = (%s);\n", mtext, updkey); 
-                            }
+                            oprintf("gg_mem_set_process (%s, false); \n", updkey);
+                            oprintf("(%s)->curr->name = (%s);\n", mtext, updkey); 
                         }
                         //
                         // 0 is fine in gg_mem_add_ref because in read-list an element can never be NULL
                         if (upd) 
                         {
-                            if (optmem) 
-                            {
-                                oprintf("if ((%s)->curr->data != (%s)) {gg_mem_add_ref(0, (%s)->curr->data, %s);gg_mem_set_process (%s, false);\n", mtext, upd, mtext, upd, upd);
-                                oprintf("(%s)->curr->data = (%s) ;}\n", mtext, upd); 
-                            }
-                            else 
-                            {
-                                oprintf("gg_mem_set_process (%s, false);\n", upd);
-                                oprintf("(%s)->curr->data = (%s) ;\n", mtext, upd); 
-                            }
+                            oprintf("gg_mem_set_process (%s, false);\n", upd);
+                            oprintf("(%s)->curr->data = (%s) ;\n", mtext, upd); 
                         }
                         //
                         if (st) oprintf("     (%s) = GG_OKAY;\n", st); 
@@ -8081,13 +7993,13 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&st, "read-fifo", GG_KEYSTATUS, 0, 1);
                         carve_stmt_obj (&mtext, true);
 
-                        gg_num is_def_k = define_statement (&key, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_retrieve
-                        gg_num is_def_v = define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_retrieve
+                        define_statement (&key, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_retrieve
+                        define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_retrieve
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
                         check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
 
-                        oprintf ("%s%sgg_retrieve (%s, %ld, &(%s), %ld,(void**)&(%s));\n", st!=NULL?st:"",st!=NULL?"=":"", mtext, is_def_k, key, is_def_v, value);
+                        oprintf ("%s%sgg_retrieve (%s, &(%s), (void**)&(%s));\n", st!=NULL?st:"",st!=NULL?"=":"", mtext, key, value);
                         continue;
 
                     }
@@ -8323,7 +8235,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         char *delc = opt_clause(del, "true", "false", GG_DEFBOOL);
 
-                        gg_num is_def_v = define_statement (&val, GG_DEFSTRING, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
+                        define_statement (&val, GG_DEFSTRING, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
                         define_statement (&st, GG_DEFNUMBER, false);
 
                         //
@@ -8339,8 +8251,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("{ ");
                         if (st == NULL) oprintf ("gg_num _gg_astat; ");
                         oprintf("char *_gg_afind = gg_read_array (%s, %s, %s, &(%s));\n", mtext, key, delc, st==NULL?"_gg_astat":st);
-                        if (optmem) oprintf ("if ((%s) == GG_OKAY && (%s) != _gg_afind) {gg_mem_add_ref(%ld, %s, _gg_afind);\n%s = _gg_afind;}\n", st==NULL?"_gg_astat":st, val, is_def_v, val, val);
-                        else oprintf ("if ((%s) == GG_OKAY) %s = _gg_afind;\n", st==NULL?"_gg_astat":st, val);
+                        oprintf ("if ((%s) == GG_OKAY) %s = _gg_afind;\n", st==NULL?"_gg_astat":st, val);
                         oprintf("}\n");
 
                         gg_free(delc);
@@ -8418,13 +8329,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         char *delc = opt_clause(del, "true", "false", GG_DEFBOOL);
 
-                        gg_num is_def_v = define_statement (&val, GG_DEFSTRING, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
+                        define_statement (&val, GG_DEFSTRING, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
                         define_statement (&st, GG_DEFNUMBER, false);
 
-                        gg_num is_def_k = 1;
                         if (trav != NULL)
                         {
-                            is_def_k = define_statement (&key, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_next_hash with GG_EMPTY_STRING
+                            define_statement (&key, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_next_hash with GG_EMPTY_STRING
                         }
                         else
                         {
@@ -8445,8 +8355,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf("{ ");
                             if (st == NULL) oprintf ("gg_num _gg_hstat; ");
                             oprintf("char *_gg_hfind = gg_find_hash (%s, %s, NULL, %s, &(%s));\n", mtext, key, delc, st==NULL?"_gg_hstat":st);
-                            if (optmem) oprintf ("if ((%s) == GG_OKAY && (%s) != _gg_hfind) {gg_mem_add_ref(%ld, %s, _gg_hfind);\n%s = _gg_hfind;}\n", st==NULL?"_gg_hstat":st, val, is_def_v, val, val);
-                            else oprintf ("if ((%s) == GG_OKAY) %s = _gg_hfind;\n", st==NULL?"_gg_hstat":st, val);
+                            oprintf ("if ((%s) == GG_OKAY) %s = _gg_hfind;\n", st==NULL?"_gg_hstat":st, val);
                             oprintf("}\n");
 
                         }
@@ -8460,10 +8369,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                 if (st == NULL) oprintf ("gg_num _gg_hstat; ");
                                 oprintf("char *_gg_hfind_v; char *_gg_hfind_k=gg_next_hash (%s, (void*)&(_gg_hfind_v), &(%s), %s);\n", mtext, st==NULL?"_gg_hstat":st, delc);
                                 //
-                                if (optmem) oprintf ("if (%s == GG_OKAY) {\nif ((%s) != _gg_hfind_v) {gg_mem_add_ref(%ld, %s, _gg_hfind_v); \n%s = _gg_hfind_v;}\n", st==NULL?"_gg_hstat":st, val, is_def_v, val, val);
-                                else oprintf ("if (%s == GG_OKAY) \n{%s = _gg_hfind_v;\n", st==NULL?"_gg_hstat":st, val);
-                                if (optmem) oprintf ("if ((%s) != _gg_hfind_k) {gg_mem_add_ref(%ld, %s, _gg_hfind_k); \n%s = _gg_hfind_k;\n}}\n", key, is_def_k, key, key);
-                                else oprintf ("%s = _gg_hfind_k;\n}\n", key);
+                                oprintf ("if (%s == GG_OKAY) \n{%s = _gg_hfind_v;\n", st==NULL?"_gg_hstat":st, val);
+                                oprintf ("%s = _gg_hfind_k;\n}\n", key);
                                 //
                                 oprintf("}\n");
                             }
@@ -8487,24 +8394,16 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&next, "read-json", GG_KEYNEXT, 0, 0);
                         carve_stmt_obj (&mtext, true);
 
-                        gg_num is_def_k = define_statement (&key, GG_DEFSTRING, false); 
-                        gg_num is_def_v = define_statement (&val, GG_DEFSTRING, false); 
+                        define_statement (&key, GG_DEFSTRING, false); 
+                        define_statement (&val, GG_DEFSTRING, false); 
                         define_statement (&type, GG_DEFNUMBER, false);
 
                         check_var (&mtext, GG_DEFJSON, NULL);
                         oprintf ("if ((%s) != NULL && ((%s)->node_r < (%s)->node_c)) { \n;\n", mtext, mtext, mtext);
                         if (key != NULL) 
                         {
-                            if (optmem) 
-                            {
-                                oprintf ("if ((%s) != (%s)->nodes[(%s)->node_r].name) {gg_mem_add_ref(%ld, %s, (%s)->nodes[(%s)->node_r].name); gg_mem_set_process ((%s)->nodes[(%s)->node_r].name,false);\n", key, mtext,mtext,is_def_k, key,mtext, mtext, mtext, mtext);
-                                oprintf ("(%s) = (%s)->nodes[(%s)->node_r].name;}\n", key, mtext, mtext);
-                            }
-                            else
-                            {
-                                oprintf ("gg_mem_set_process ((%s)->nodes[(%s)->node_r].name,false);\n", mtext, mtext);
-                                oprintf ("(%s) = (%s)->nodes[(%s)->node_r].name;\n", key, mtext, mtext);
-                            }
+                            oprintf ("gg_mem_set_process ((%s)->nodes[(%s)->node_r].name,false);\n", mtext, mtext);
+                            oprintf ("(%s) = (%s)->nodes[(%s)->node_r].name;\n", key, mtext, mtext);
                         }
                         // if value is asked for, we copy value (lazy approch, faster) and we mark this value as 'alloced' 
                         // so when deleting json, we know to free it
@@ -8512,8 +8411,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (val != NULL) 
                         {
                             oprintf ("{gg_num _gg_json_node = (%s)->node_r; char *_gg_json_str = (%s)->nodes[_gg_json_node].str = ((%s)->nodes[_gg_json_node].alloced ? (%s)->nodes[_gg_json_node].str : gg_strdup((%s)->nodes[_gg_json_node].str)); (%s)->nodes[_gg_json_node].alloced=true;\n", mtext, mtext, mtext, mtext, mtext, mtext);
-                            if (optmem) oprintf ("if ((%s) != _gg_json_str) {gg_mem_add_ref(%ld, %s,_gg_json_str); gg_mem_set_process (_gg_json_str,false);\n%s = _gg_json_str;} }\n", val, is_def_v, val, val);
-                            else oprintf ("gg_mem_set_process (_gg_json_str,false);\n%s = _gg_json_str; }\n", val);
+                            oprintf ("gg_mem_set_process (_gg_json_str,false);\n%s = _gg_json_str; }\n", val);
                         }
                         if (type != NULL) oprintf ("(%s) = (%s)->nodes[(%s)->node_r].type;\n", type, mtext, mtext);
                         if (next) oprintf ("(%s)->node_r++;\n", mtext);
@@ -8648,7 +8546,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         char *count = find_keyword (mtext, GG_KEYCOUNT, 1);
 
-                        carve_statement (&count, "get-tree", GG_KEYCOUNT, 0, 1);
+                        carve_statement (&count, "get-list", GG_KEYCOUNT, 0, 1);
                         carve_stmt_obj (&mtext, true);
 
                         if (count != NULL) define_statement (&count, GG_DEFNUMBER, false);
@@ -8777,8 +8675,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&ccursor, GG_DEFTREECURSOR, true);
                         define_statement (&status, GG_DEFNUMBER, false);
                         // Begin read-tree
-                        gg_num is_def_v = define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
-                        gg_num is_def_k = define_statement (&getkey, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
+                        define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
+                        define_statement (&getkey, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
                         make_mem (&key);
                         make_mem (&lkey);
                         make_mem (&lekey);
@@ -8846,24 +8744,19 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         // Begin read-tree 
                         oprintf ("if ((%s)->status == GG_OKAY) {\n", ccursor);
-                        // We increase reference to read key and value, because now another variable points to them, and we can delete those
-                        // and if we do, then that shouldn't delete the tree node. Or if we delete tree node, that shouldn't delete these variables!
                         if (value != NULL) 
                         {
-                            if (optmem) oprintf ("if ((%s) != (%s)->current->data) {gg_mem_add_ref(%ld, %s, (%s)->current->data); gg_mem_set_process ((%s)->current->data,false);\n%s = (%s)->current->data;}\n", value, ccursor, is_def_v, value, ccursor, ccursor, value, ccursor);
-                            else oprintf ("gg_mem_set_process ((%s)->current->data,false);\n%s = (%s)->current->data;\n", ccursor, value, ccursor);
+                            oprintf ("%s = (%s)->current->data;\n", value, ccursor);
                         }
                         if (getkey != NULL) 
                         {
-                            if (optmem) oprintf ("if ((%s) != (%s)->current->key) {gg_mem_add_ref(%ld, %s,(%s)->current->key); gg_mem_set_process ((%s)->current->key,false);\n%s = (%s)->current->key;}\n", getkey, ccursor, is_def_k, getkey, ccursor, ccursor, getkey, ccursor);
-                            else oprintf ("gg_mem_set_process ((%s)->current->key,false);\n%s = (%s)->current->key;\n", ccursor, getkey, ccursor);
+                            oprintf ("%s = (%s)->current->key;\n", getkey, ccursor);
                         }
                         if (upd != NULL) 
                         {
                             oprintf("gg_mem_process=(%s)->process;\n", mtext);
                             // 0 is fine in gg_mem_add_ref because in read-tree an element can never be NULL
-                            if (optmem) oprintf ("if ((%s)->current->data != %s) {gg_mem_add_ref(0, (%s)->current->data,%s); gg_mem_set_process (%s, false);(%s)->current->data = %s;}\n", ccursor, upd, ccursor, upd, upd, ccursor, upd);
-                            else oprintf ("gg_mem_set_process (%s, false); (%s)->current->data = %s;\n", upd, ccursor, upd);
+                            oprintf ("gg_mem_set_process (%s, false); (%s)->current->data = %s;\n", upd, ccursor, upd);
                             oprintf("gg_mem_process=false;\n");
                         }
                         oprintf ("}\n");
@@ -8940,8 +8833,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         // Begin read-tree
-                        gg_num is_def_v = define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
-                        gg_num is_def_k = define_statement (&getkey, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
+                        define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
+                        define_statement (&getkey, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
                         make_mem (&upd);
                         // End read-tree
                         //
@@ -8970,21 +8863,18 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (value != NULL) 
                         {
                             // delete reference to where value/key was pointing to, assuming it existed
-                            if (optmem) oprintf ("if ((%s) != (%s)->current->data) {gg_mem_add_ref (%ld, %s,(%s)->current->data);\n%s = (%s)->current->data;}\n", value, ucursor, is_def_v, value, ucursor, value, ucursor);
-                            else oprintf ("%s = (%s)->current->data;\n", value, ucursor);
+                            oprintf ("%s = (%s)->current->data;\n", value, ucursor);
                         }
                         if (getkey != NULL) 
                         {
                             // delete reference to where value/key was pointing to, assuming it existed
-                            if (optmem) oprintf ("if ((%s) != (%s)->current->key) {gg_mem_add_ref (%ld, %s,(%s)->current->key);\n%s = (%s)->current->key;}\n", getkey, ucursor,is_def_k, getkey, ucursor, getkey, ucursor);
-                            else oprintf ("%s = (%s)->current->key;\n", getkey, ucursor);
+                            oprintf ("%s = (%s)->current->key;\n", getkey, ucursor);
                         }
                         if (upd != NULL) 
                         {
                             oprintf("gg_mem_process=(%s)->root->process;\n", ucursor);
                             // 0 is fine in gg_mem_add_ref because in use-cursor an element can never be NULL
-                            if (optmem) oprintf("if ((%s)->current->data != %s) {gg_mem_add_ref(0, (%s)->current->data,%s); gg_mem_set_process (%s, false);(%s)->current->data = %s;}\n", ucursor, upd, ucursor, upd,upd,ucursor, upd);
-                            else oprintf("gg_mem_set_process (%s, false);(%s)->current->data = %s;\n", upd,ucursor, upd);
+                            oprintf("gg_mem_set_process (%s, false);(%s)->current->data = %s;\n", upd,ucursor, upd);
                             oprintf("gg_mem_process=false;\n");
                         }
                         oprintf ("}\n");
@@ -9022,7 +8912,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, false);
                         do_once_open = false;
 
-                        free_handle_sub ();
                         check_level ("}"); // end new scope for do-once
                                            
                         oprintf ("_gg_end_do_once_%ld: ;\n",do_once); // must have empty ; statement
@@ -9066,7 +8955,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        free_handle_sub();
                         // return from handler, no return status, use set/get-param
                         oprintf("return;\n");
                         continue;
@@ -9082,7 +8970,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             carve_stmt_obj (&mtext, true);
                             oprintf("gg_get_config ()->ctx.req->ec=(%s);\n", mtext);
                         }
-                        free_handle_sub();
 
                         // return 1 to sigsetjmp so it differs from the first time around
                         oprintf("gg_exit_request(1);\n");
@@ -9288,7 +9175,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // must assign "" in the loop, checking after loop for this pointer in case there was a break from the loop, but by setting to ""
                         // here, we won't free again
                         oprintf ("if (gg_rl_local_memptr_%ld!=GG_EMPTY_STRING) {gg_free (gg_rl_local_memptr_%ld); gg_rl_local_memptr_%ld = GG_EMPTY_STRING;}\n", open_readline-1, open_readline-1, open_readline-1);
-                        free_handle_sub ();
                         oprintf("}\n");
                         oprintf ("if (!feof(gg_rl_%ld)) {GG_ERR;*gg_rl_read_%ld = (gg_num)GG_ERR_READ;} else {*gg_rl_read_%ld = (gg_num)GG_OKAY;}\n", open_readline-1, open_readline-1, open_readline-1); // this is if there was an error, not end of file
                         oprintf ("fclose (gg_rl_%ld);\n", open_readline-1); // open_readline was ++ after generating the code, so this is it
@@ -9585,10 +9471,6 @@ int main (int argc, char* argv[])
         {
             gg_public = true;
         }
-        else if (!strcmp (argv[i], "-optmem"))
-        {
-            optmem = true;
-        }
         else
         {
             _item = argv[i];
@@ -9848,8 +9730,6 @@ int main (int argc, char* argv[])
 
         oprintf("int main (int argc, char *argv[])\n");
         oprintf("{\n");
-        //first specify what kind of memory we use
-        oprintf("gg_optmem=%s;\n", optmem?"true":"false");
         // gg_done_init and allocation of config structure are done once per program run
         // this also reads config file
         oprintf("gg_s_pc = gg_alloc_config ();\n");

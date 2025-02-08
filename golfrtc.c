@@ -12,7 +12,6 @@
 
 #include "golf.h"
 int gg_errno=0;
-bool gg_optmem=false;
 
 // Function prototypes
 gg_num gg_core_write_file(FILE *f, gg_num content_len, char *content, char ispos, gg_num pos);
@@ -552,11 +551,9 @@ void gg_store_l (gg_fifo *fdata, char *name, void *data)
     gg_fifo_item *np = gg_malloc (sizeof (gg_fifo_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    if (gg_optmem) gg_mem_add_ref (1, NULL, data); 
     gg_mem_set_process (data, false);
     np->data = data;
     //
-    if (gg_optmem) gg_mem_add_ref (1, NULL, name); 
     gg_mem_set_process (name, false);
     np->name = name;
     //
@@ -587,11 +584,9 @@ void gg_store (gg_fifo *fdata, char *name, void *data)
     gg_fifo_item *np = gg_malloc (sizeof (gg_fifo_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    if (gg_optmem) gg_mem_add_ref(1, NULL, data); 
     gg_mem_set_process (data, false);
     np->data = data;
     //
-    if (gg_optmem) gg_mem_add_ref(1, NULL, name);
     gg_mem_set_process (name, false);
     np->name = name;
     //
@@ -615,7 +610,7 @@ void gg_store (gg_fifo *fdata, char *name, void *data)
 // name and 'data' being the value. The name/data are simply assigned pointer
 // values. Initially, this starts with fist name/value pair put in.
 //
-gg_num gg_retrieve (gg_fifo *fdata, gg_num is_def_n, char **name, gg_num is_def_d, void **data)
+gg_num gg_retrieve (gg_fifo *fdata, char **name, void **data)
 {
     GG_TRACE ("");
     assert (fdata != NULL);
@@ -626,33 +621,11 @@ gg_num gg_retrieve (gg_fifo *fdata, gg_num is_def_n, char **name, gg_num is_def_
     }
     if (data != NULL) 
     {
-        if (gg_optmem) 
-        {
-            if (*data != fdata->retrieve_ptr->data) 
-            {
-                gg_mem_add_ref(is_def_d, *data, fdata->retrieve_ptr->data); 
-                *data = fdata->retrieve_ptr->data;
-            }
-        }
-        else
-        {
-            *data = fdata->retrieve_ptr->data;
-        }
+        *data = fdata->retrieve_ptr->data;
     }
     if (name != NULL) 
     {
-        if (gg_optmem) 
-        {
-            if (*name != fdata->retrieve_ptr->name) 
-            {
-                gg_mem_add_ref(is_def_n, *name, fdata->retrieve_ptr->name); 
-                *name = fdata->retrieve_ptr->name;
-            }
-        }
-        else
-        {
-            *name = fdata->retrieve_ptr->name;
-        }
+        *name = fdata->retrieve_ptr->name;
     }
     fdata->retrieve_ptr = fdata->retrieve_ptr->next;
     return GG_OKAY;
@@ -733,11 +706,9 @@ void gg_list_store (gg_list *fdata, char *name, void *data, bool append)
     gg_list_item *np = gg_malloc (sizeof (gg_list_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    if (gg_optmem) gg_mem_add_ref(1, NULL, data); 
     gg_mem_set_process (data, false);
     np->data = data;
     //
-    if (gg_optmem) gg_mem_add_ref(1, NULL, name); 
     gg_mem_set_process (name, false);
     np->name = name;
     //
@@ -806,6 +777,7 @@ inline gg_num gg_list_delete (gg_list *fdata)
     if (temp == NULL) return GG_ERR_EXIST;
     gg_free (temp->data);
     gg_free (temp->name);
+    // no gg_mem_delete_and_return since value is not returned here
     if (temp->next != NULL) {
         temp->next->prev = temp->prev; 
         fdata->curr = temp->next;

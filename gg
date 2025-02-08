@@ -152,11 +152,6 @@ _DO_QUICK=0
             _DEVOPT=1
             shift 
             ;;
-        --optimize-memory  )
-            export GG_C_OPTMEM="1"
-            _DEVOPT=1
-            shift 
-            ;;
         --public  )
             export GG_C_PUBLIC="1"
             _DEVOPT=1
@@ -781,7 +776,6 @@ GG_C_ASAN='$GG_C_ASAN'
 GG_C_DEBUG='$GG_C_DEBUG'
 GG_C_PUBLIC='$GG_C_PUBLIC'
 GG_C_SINGLE_FILE='$GG_C_SINGLE_FILE'
-GG_C_OPTMEM='$GG_C_OPTMEM'
 GG_C_MAXUPLOAD='$GG_C_MAXUPLOAD'
 GG_C_RESTPATH='$GG_C_RESTPATH'
 GG_C_CFLAGS='$GG_C_CFLAGS'

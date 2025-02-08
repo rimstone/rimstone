@@ -13,7 +13,7 @@
 // prototypes
 static gg_num gg_compute_hash (char* d, char **dlist, gg_num size);
 static gg_hash_table *gg_new_hash_item (char *key, void *data);
-void gg_hash_process (gg_hash_table *el, char *key, void *data);
+void gg_hash_process (char *key, void *data);
 
 //
 // Create new hash hres_ptr. size is the size of hash table. The actual object is created here, the caller handlers pointer only.
@@ -123,7 +123,11 @@ void gg_del_hash_entry (gg_hash *h, gg_hash_table *todel, gg_hash_table *prev, g
         prev->next = next; // update previous to point to the one after the deleted entry
                            // which can be NULL
     }
-    if (keydel) gg_free (todel->key); // delete key in hash, value can be deleted by user if desired
+    if (keydel) 
+    {
+        gg_free (todel->key); // delete key in hash, value can be deleted by user if desired
+        gg_mem_delete_and_return (todel->data);
+    }
     gg_free (todel);
     // account for rewinding, if we just deleted the current element
     if (h->dcurr == todel)
@@ -326,7 +330,7 @@ char *gg_next_hash(gg_hash *h, void **data, gg_num *st, bool del)
 // 
 // Set key/data into el element of hash. process is true if hash is process-scoped.
 //
-void gg_hash_process (gg_hash_table *el, char *key, void *data)
+void gg_hash_process (char *key, void *data)
 {
     GG_TRACE("");
     //
@@ -334,16 +338,8 @@ void gg_hash_process (gg_hash_table *el, char *key, void *data)
     // cause increasing ref count to the point where this memory would have to be deleted multiple
     // times to really be deleted.
     //
-    if (gg_optmem) 
-    {
-        if (el->key != key) {gg_mem_add_ref(1, NULL, key); gg_mem_set_process (key, false);}
-        if (el->data != data) {gg_mem_add_ref(1, NULL, data); gg_mem_set_process (data, false);}
-    }
-    else
-    {
-        gg_mem_set_process (key, false);
-        gg_mem_set_process (data, false);
-    }
+    gg_mem_set_process (key, false);
+    gg_mem_set_process (data, false);
 }
 
 
@@ -356,7 +352,7 @@ gg_hash_table *gg_new_hash_item (char *key, void *data)
     // create new hash linked list item
     gg_hash_table *new = (gg_hash_table *)gg_malloc (sizeof (gg_hash_table));
     // set data and key
-    gg_hash_process (new, key, data);
+    gg_hash_process (key, data);
     // since new->data/key were just created, they didn't point anywhere so we don't decrease their reference
     new->data = data; 
     new->key = key; 
@@ -395,7 +391,7 @@ void gg_add_hash (gg_hash *h, char *key, char **keylist, void *data, void **old_
             if (!strcmp (key, bucket->key))
             {
                 // match found, set new key/data to process if needed
-                gg_hash_process (bucket, key, data);
+                gg_hash_process (key, data);
                 // delete old key/data
                 if (old_data) *old_data = bucket->data; else gg_free(bucket->data);
                 gg_free (bucket->key); // delete old key, see gg_hash_process()
