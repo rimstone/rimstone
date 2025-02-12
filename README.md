@@ -14,11 +14,12 @@ See [Documentation](https://golf-lang.com//documentation.html)\.
 
 Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
 
-Current version is 212\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2289 automated functional tests\.
+Current version is 231\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2288 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-02\-04 [Golf&\#39;s package page on AUR for Arch Linux](https://golf-lang.blogspot.com/2025/02/golfs-package-page-on-aur-for-arch-linux.html)
 * 2025\-02\-02 [Ubuntu apt package available for Golf](https://golf-lang.blogspot.com/2025/02/ubuntu-apt-package-available-for-golf.html)
 * 2025\-01\-30 [How to send email with Golf](https://golf-lang.blogspot.com/2025/01/how-to-send-email-with-golf.html)
 * 2025\-01\-28 [Fast JSON parser with little coding](https://golf-lang.blogspot.com/2025/01/fast-json-parser-with-little-coding.html)
@@ -48,6 +49,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 Releases:
+* 2025\-02\-08 [Golf 231 released](https://golf-lang.blogspot.com/2025/02/golf-231-released.html)
 * 2025\-02\-02 [Golf 210 released](https://golf-lang.blogspot.com/2025/02/golf-210-released.html)
 * 2025\-01\-27 [Golf 191 released](https://golf-lang.blogspot.com/2025/01/golf-191-released.html)
 * 2025\-01\-26 [Golf 184 released](https://golf-lang.blogspot.com/2025/01/golf-184-released.html)

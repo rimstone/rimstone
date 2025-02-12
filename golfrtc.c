@@ -551,10 +551,10 @@ void gg_store_l (gg_fifo *fdata, char *name, void *data)
     gg_fifo_item *np = gg_malloc (sizeof (gg_fifo_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    gg_mem_set_process (data, false);
+    gg_mem_set_process (np->data, data, false, true); 
     np->data = data;
     //
-    gg_mem_set_process (name, false);
+    gg_mem_set_process (np->name, name, false, true); 
     np->name = name;
     //
     np->next = NULL;
@@ -584,10 +584,10 @@ void gg_store (gg_fifo *fdata, char *name, void *data)
     gg_fifo_item *np = gg_malloc (sizeof (gg_fifo_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    gg_mem_set_process (data, false);
+    gg_mem_set_process (np->data, data, false, true); 
     np->data = data;
     //
-    gg_mem_set_process (name, false);
+    gg_mem_set_process (np->name, name, false, true); 
     np->name = name;
     //
     np->next = NULL;
@@ -622,10 +622,12 @@ gg_num gg_retrieve (gg_fifo *fdata, char **name, void **data)
     if (data != NULL) 
     {
         *data = fdata->retrieve_ptr->data;
+        gg_mem_add_ref(*data);
     }
     if (name != NULL) 
     {
         *name = fdata->retrieve_ptr->name;
+        gg_mem_add_ref(*name);
     }
     fdata->retrieve_ptr = fdata->retrieve_ptr->next;
     return GG_OKAY;
@@ -706,10 +708,10 @@ void gg_list_store (gg_list *fdata, char *name, void *data, bool append)
     gg_list_item *np = gg_malloc (sizeof (gg_list_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    gg_mem_set_process (data, false);
+    gg_mem_set_process (np->data, data, false, true); 
     np->data = data;
     //
-    gg_mem_set_process (name, false);
+    gg_mem_set_process (np->name, name, false, true); 
     np->name = name;
     //
     np->next = NULL;

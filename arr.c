@@ -82,13 +82,15 @@ void gg_write_array (gg_array *arr, gg_num key, char *val, char **old_val, gg_nu
     }
 
     if (arr->arr[key] != NULL) { if (st) *st = GG_INFO_EXIST; } else { if (st) *st = GG_OKAY; }
-    gg_mem_set_process (val, false);
-    if (old_val != NULL) *old_val = arr->arr[key]; 
+    if (old_val != NULL) 
+    {
+        *old_val = arr->arr[key]; 
+        gg_mem_replace_and_return (*old_val, val);
+    }
     else gg_free (arr->arr[key]);
 
+    gg_mem_set_process (arr->arr[key], val, arr->process, true);
     arr->arr[key] = val;
-    gg_mem_set_process (val, false);
-
 }
 
 //
@@ -106,8 +108,11 @@ char *gg_read_array (gg_array *arr, gg_num key, bool del, gg_num *st)
     }
     if (st != NULL) *st = GG_OKAY;
     char *rval = arr->arr[key];
-    if (del)  arr->arr[key] = NULL; 
-    gg_mem_delete_and_return (rval);
+    if (del)  
+    {
+        arr->arr[key] = NULL; 
+        gg_mem_delete_and_return (rval);
+    }
     return rval;
 }
 

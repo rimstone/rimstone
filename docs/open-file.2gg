@@ -48,10 +48,8 @@ Create a file (or truncate an existing one), write 25,000 rows and the read back
     file-position set 0 file-id nf
 
     // Read all 25000 rows back, and print them out
-    start-loop repeat 25000 use i
-       read-file file-id nf  to one_item
-       p-out one_item
-    end-loop
+    read-file file-id nf  to whole_file
+    p-out whole_file
 
     // Close the file
     close-file file-id nf

@@ -18,11 +18,17 @@ See \fBDocumentation\fP.
 
 Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
 
-Current version is 212. Check \fBBlog\fP for change log. This release passed 2289 automated functional tests.
+Current version is 231. Check \fBBlog\fP for change log. This release passed 2288 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-02-04 \fBGolf&#39;s package page on AUR for Arch Linux\fP
+.RE
+
 
 .RS 4
 \[bu]    
@@ -192,6 +198,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .RE
 
 Releases:
+
+.RS 4
+\[bu]    
+2025-02-08 \fBGolf 231 released\fP
+.RE
+
 
 .RS 4
 \[bu]    

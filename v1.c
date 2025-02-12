@@ -6914,6 +6914,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&mtext, GG_DEFSTRING, true);
 
                         oprintf ("%s = gg_get_config()->ctx.req->body;\n\n", mtext);
+                        oprintf ("gg_mem_add_ref(%s);\n", mtext);
 
                         continue;
                     }
@@ -7029,6 +7030,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                 oprintf("gg_get_input_param (_gg_sprm_%s, %ld);\n", mtext, t);
                                 //
                                 oprintf ("%s = _gg_param;}\n", mtext);
+                                if (cmp_type(t,GG_DEFSTRING)) oprintf ("gg_mem_add_ref (%s);\n", mtext);
                             }
                             //
                             // Make vim recognize type names
@@ -7399,8 +7401,14 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // X(not process) = Y(not process), X is NOT process
                         // Basically if either one is process, the lvalue is process.
                         gg_num mtext_p = check_var (&mtext, GG_DEFUNKN, NULL);
-                        if (mtext_p == GG_DEFSTRINGSTATIC) oprintf ("gg_mem_set_process(%s, true);\n", eq);
+                        if (mtext_p == GG_DEFSTRINGSTATIC) 
+                        {
+                            oprintf ("gg_mem_set_process(%s, %s, true, false);\n", mtext, eq);
+                            oprintf ("gg_mem_replace_and_return (%s, %s);\n", mtext, eq);
+                        }
                         oprintf ("%s = %s;\n", mtext, eq);
+                        oprintf ("gg_mem_add_ref (%s);\n", eq); // must be after gg_mem_set_process, because it becomes process-scoped
+                                                                // there's nothing to do
 
                         gg_num eq_p = check_var (&eq, GG_DEFUNKN, NULL);
                         if (eq_p == GG_DEFSTRINGSTATIC || mtext_p == GG_DEFSTRINGSTATIC)
@@ -7508,11 +7516,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true);
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
-                        // free memory regardless. If optimized-memory, that works as it counts references propely.
-                        // for default (non-optimized), non-process strings are never freed here, only at the end of request; for
-                        // process strings, we count references (including indexes, list) so freeing up with delete-string will need
-                        // to have all references freed up before actually freeing memory
-                        // IMPORTANT:if free+set to empty changes - must change read-line freeing of 'to'
+                        //
+                        // Only string actually defined as process-scope can be freed as such (or rather it's 
+                        // ref-count decreased, and then if 0, freed). Even references to it cannot be freed like this.
+                        // Ordinary memory can be freed ONLY if never referenced.
+                        //
                         gg_num mtext_p = check_var (&mtext, GG_DEFUNKN, NULL);
                         if (mtext_p == GG_DEFSTRINGSTATIC) oprintf("_gg_free ((void*)(%s),0);\n", mtext);
                         else oprintf("_gg_free ((void*)(%s),3);\n", mtext);
@@ -7577,6 +7585,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         oprintf ("{ char *_gg_gmsg =gg_get_msg(%s);\n",mtext); 
                         oprintf ("%s = _gg_gmsg;\n", to);
+                        oprintf ("gg_mem_add_ref (%s);\n", to);
                         oprintf("}\n");
 
 
@@ -7623,7 +7632,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // check split-string isn't NULL
                         oprintf ("if ((%s) != NULL && %s >= 1 && %s <= (%s)->num_pieces) {\n", from, mtext, mtext, from);
                         if (st != NULL) oprintf("%s=GG_OKAY;\n", st);
-                        oprintf ("gg_mem_set_process ((%s)->pieces[(%s)-1],false);\n%s = (%s)->pieces[(%s)-1];\n", from, mtext, to, from, mtext);
+                        oprintf ("%s = (%s)->pieces[(%s)-1];gg_mem_add_ref(%s);\n", to, from, mtext, to);
                         oprintf("} else {\n");
                         if (st != NULL) oprintf("%s=GG_ERR_OVERFLOW;\n", st);
                         oprintf ("%s=GG_EMPTY_STRING;}\n",to); 
@@ -7766,21 +7775,23 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("{ char *_gg_list_k; char *_gg_list_v; gg_list_retrieve (%s, &(_gg_list_k), (void**)&(_gg_list_v));\n", mtext);
                         if (upd || updkey || st) oprintf("if ((%s)->curr != NULL) {\n", mtext);
                         //
-                        oprintf ("gg_mem_set_process (_gg_list_k, false);\n%s = _gg_list_k;\n", key);
-                        oprintf ("gg_mem_set_process (_gg_list_v, false);\n%s = _gg_list_v;\n", value);
+                        oprintf ("%s = _gg_list_k; gg_mem_add_ref (%s);\n", key, key);
+                        oprintf ("%s = _gg_list_v; gg_mem_add_ref (%s);\n", value, value);
                     
                         // name,data surely existed, so 0 in add_ref
                         // 0 is fine in gg_mem_add_ref because in read-list an element can never be NULL
                         if (updkey) 
                         {
-                            oprintf("gg_mem_set_process (%s, false); \n", updkey);
+                            oprintf("gg_mem_set_process ((%s)->curr->name, %s, false, true); \n", mtext, updkey);
+                            oprintf ("gg_mem_replace_and_return ((%s)->curr->name, %s);\n", mtext, updkey);
                             oprintf("(%s)->curr->name = (%s);\n", mtext, updkey); 
                         }
                         //
                         // 0 is fine in gg_mem_add_ref because in read-list an element can never be NULL
                         if (upd) 
                         {
-                            oprintf("gg_mem_set_process (%s, false);\n", upd);
+                            oprintf("gg_mem_set_process ((%s)->curr->data, %s, false, true);\n", mtext, upd);
+                            oprintf ("gg_mem_replace_and_return ((%s)->curr->data, %s);\n", mtext, upd);
                             oprintf("(%s)->curr->data = (%s) ;\n", mtext, upd); 
                         }
                         //
@@ -8251,7 +8262,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("{ ");
                         if (st == NULL) oprintf ("gg_num _gg_astat; ");
                         oprintf("char *_gg_afind = gg_read_array (%s, %s, %s, &(%s));\n", mtext, key, delc, st==NULL?"_gg_astat":st);
-                        oprintf ("if ((%s) == GG_OKAY) %s = _gg_afind;\n", st==NULL?"_gg_astat":st, val);
+                        oprintf ("if ((%s) == GG_OKAY) { %s = _gg_afind; gg_mem_add_ref(%s);}\n", st==NULL?"_gg_astat":st, val, val);
                         oprintf("}\n");
 
                         gg_free(delc);
@@ -8355,7 +8366,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf("{ ");
                             if (st == NULL) oprintf ("gg_num _gg_hstat; ");
                             oprintf("char *_gg_hfind = gg_find_hash (%s, %s, NULL, %s, &(%s));\n", mtext, key, delc, st==NULL?"_gg_hstat":st);
-                            oprintf ("if ((%s) == GG_OKAY) %s = _gg_hfind;\n", st==NULL?"_gg_hstat":st, val);
+                            oprintf ("if ((%s) == GG_OKAY) { %s = _gg_hfind; gg_mem_add_ref(%s);}\n", st==NULL?"_gg_hstat":st, val, val);
                             oprintf("}\n");
 
                         }
@@ -8369,8 +8380,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                 if (st == NULL) oprintf ("gg_num _gg_hstat; ");
                                 oprintf("char *_gg_hfind_v; char *_gg_hfind_k=gg_next_hash (%s, (void*)&(_gg_hfind_v), &(%s), %s);\n", mtext, st==NULL?"_gg_hstat":st, delc);
                                 //
-                                oprintf ("if (%s == GG_OKAY) \n{%s = _gg_hfind_v;\n", st==NULL?"_gg_hstat":st, val);
-                                oprintf ("%s = _gg_hfind_k;\n}\n", key);
+                                oprintf ("if (%s == GG_OKAY) \n{%s = _gg_hfind_v; gg_mem_add_ref(%s);\n", st==NULL?"_gg_hstat":st, val, val);
+                                oprintf ("%s = _gg_hfind_k; gg_mem_add_ref(%s);\n}\n", key, key);
                                 //
                                 oprintf("}\n");
                             }
@@ -8402,8 +8413,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("if ((%s) != NULL && ((%s)->node_r < (%s)->node_c)) { \n;\n", mtext, mtext, mtext);
                         if (key != NULL) 
                         {
-                            oprintf ("gg_mem_set_process ((%s)->nodes[(%s)->node_r].name,false);\n", mtext, mtext);
                             oprintf ("(%s) = (%s)->nodes[(%s)->node_r].name;\n", key, mtext, mtext);
+                            oprintf ("gg_mem_add_ref(%s);\n", key);
                         }
                         // if value is asked for, we copy value (lazy approch, faster) and we mark this value as 'alloced' 
                         // so when deleting json, we know to free it
@@ -8411,7 +8422,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (val != NULL) 
                         {
                             oprintf ("{gg_num _gg_json_node = (%s)->node_r; char *_gg_json_str = (%s)->nodes[_gg_json_node].str = ((%s)->nodes[_gg_json_node].alloced ? (%s)->nodes[_gg_json_node].str : gg_strdup((%s)->nodes[_gg_json_node].str)); (%s)->nodes[_gg_json_node].alloced=true;\n", mtext, mtext, mtext, mtext, mtext, mtext);
-                            oprintf ("gg_mem_set_process (_gg_json_str,false);\n%s = _gg_json_str; }\n", val);
+                            oprintf ("%s = _gg_json_str; \n", val);
+                            oprintf ("gg_mem_add_ref(%s);}\n", val);
                         }
                         if (type != NULL) oprintf ("(%s) = (%s)->nodes[(%s)->node_r].type;\n", type, mtext, mtext);
                         if (next) oprintf ("(%s)->node_r++;\n", mtext);
@@ -8746,17 +8758,17 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("if ((%s)->status == GG_OKAY) {\n", ccursor);
                         if (value != NULL) 
                         {
-                            oprintf ("%s = (%s)->current->data;\n", value, ccursor);
+                            oprintf ("%s = (%s)->current->data; gg_mem_add_ref(%s);\n", value, ccursor, value);
                         }
                         if (getkey != NULL) 
                         {
-                            oprintf ("%s = (%s)->current->key;\n", getkey, ccursor);
+                            oprintf ("%s = (%s)->current->key; gg_mem_add_ref(%s);\n", getkey, ccursor, getkey);
                         }
                         if (upd != NULL) 
                         {
                             oprintf("gg_mem_process=(%s)->process;\n", mtext);
                             // 0 is fine in gg_mem_add_ref because in read-tree an element can never be NULL
-                            oprintf ("gg_mem_set_process (%s, false); (%s)->current->data = %s;\n", upd, ccursor, upd);
+                            oprintf ("gg_mem_set_process ((%s)->current->data, %s, false, true); gg_mem_replace_and_return ((%s)->current->data, %s); (%s)->current->data = %s; \n", ccursor, upd, ccursor, upd, ccursor, upd);
                             oprintf("gg_mem_process=false;\n");
                         }
                         oprintf ("}\n");
@@ -8863,18 +8875,18 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (value != NULL) 
                         {
                             // delete reference to where value/key was pointing to, assuming it existed
-                            oprintf ("%s = (%s)->current->data;\n", value, ucursor);
+                            oprintf ("%s = (%s)->current->data; gg_mem_add_ref(%s);\n", value, ucursor, value);
                         }
                         if (getkey != NULL) 
                         {
                             // delete reference to where value/key was pointing to, assuming it existed
-                            oprintf ("%s = (%s)->current->key;\n", getkey, ucursor);
+                            oprintf ("%s = (%s)->current->key; gg_mem_add_ref(%s);\n", getkey, ucursor, getkey);
                         }
                         if (upd != NULL) 
                         {
                             oprintf("gg_mem_process=(%s)->root->process;\n", ucursor);
                             // 0 is fine in gg_mem_add_ref because in use-cursor an element can never be NULL
-                            oprintf("gg_mem_set_process (%s, false);(%s)->current->data = %s;\n", upd,ucursor, upd);
+                            oprintf("gg_mem_set_process ((%s)->current->data, %s, false, true); gg_mem_replace_and_return ((%s)->current->data, %s); (%s)->current->data = %s; \n", ucursor, upd,ucursor, upd, ucursor, upd);
                             oprintf("gg_mem_process=false;\n");
                         }
                         oprintf ("}\n");
@@ -9743,21 +9755,10 @@ int main (int argc, char* argv[])
         setup_internal_hash(".reqlist","gg_dispatch", true); // setup request hash for near-instant request routing
         setup_internal_hash(".gg_sparam","gg_paramhash", false); // setup hash for list of set-params
 
-        oprintf ("while(gg_SERVICE_Accept() >= 0) {\n");
-        oprintf ("gg_in_request = 1;\n");
-        oprintf("GG_UNUSED (argc);\n");
-        oprintf("GG_UNUSED (argv);\n");
-
-
-        // BEFORE anything, initialize memory for this request - SERVICE only. We need to release memory at the end of SERVICE loop, so it doesn't hang there when iactive
-        // for SERVICE, we must initialize in the very first loop, but not later, since we're going it also at the end of the loop
-        oprintf("if (gg_done_init == 0) gg_memory_init();\n");
-
+        oprintf("gg_memory_init();\n");
+        oprintf("umask (007);\n");
         // user/group-only permissions
-        oprintf("if (!gg_done_init) umask (007);\n");
         oprintf("gg_get_tz ();\n");
-
-        oprintf("if (!gg_done_init) {\n"); 
         // first memset base struct, then connections (not the other way around as conn would be wiped out)
         oprintf("   memset (&gg_dbs, 0, sizeof(gg_dbs));\n");
         if (totconn == 0) oprintf("   gg_dbs.conn = NULL;\n"); else oprintf("   gg_dbs.conn = calloc (%ld, sizeof(one_db));\n    if (gg_dbs.conn ==  NULL) GG_FATAL (\"Cannot allocate database array memory\");\n", totconn);
@@ -9772,22 +9773,24 @@ int main (int argc, char* argv[])
             oprintf ("   gg_s_pc->ctx.db->conn[%ld].exit_on_error = 1;\n", i); // all db errors fatal
         }
         oprintf ("  gg_s_pc->ctx.tot_dbs = %ld;\n", totconn); // all db errors fatal
-        oprintf("}\n");
-
+        oprintf("GG_UNUSED (argc);\n");
+        oprintf("GG_UNUSED (argv);\n");
         //
         // Setup crash handler. Also print out all shared libraries loaded and their start/end addresses.
         //
         oprintf("if (!gg_done_init) gg_set_crash_handler (gg_s_pc->app.trace_dir);\n");
-
         //
         // Initialize curl
         //
         oprintf("#ifdef GG_CURL_USED\nif (!gg_done_init) curl_global_init(CURL_GLOBAL_ALL);\n#endif\n");
-
         //
         // Initialize crypto
         //
         oprintf("#ifdef GG_CRYPTO_USED\nif (!gg_done_init) gg_sec_load_algos();\n#endif\n");
+
+
+        oprintf ("while(gg_SERVICE_Accept() >= 0) {\n");
+        oprintf ("gg_in_request = 1;\n");
 
         // start request anew
         oprintf("gg_reset_config (gg_s_pc);\n");
@@ -9806,10 +9809,6 @@ int main (int argc, char* argv[])
 
         // input parameter(s) from the SERVICE process manager (mgrg),  but present for standalone too
         oprintf ("gg_s_pc->ctx.req->args.num_of_args = argc - 1;\ngg_s_pc->ctx.req->args.args = argv + 1;\n");
-
-        // Anything that should have been done before the first request
-        // one, MUST have been done by now.
-        oprintf("gg_done_init=1;\n");
 
         // This is if there was an error caught in the request, go to handler after all requests
         oprintf("gg_num ret_val = sigsetjmp(gg_err_jmp_buffer, 1);\n");

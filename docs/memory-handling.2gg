@@ -6,11 +6,11 @@ Golf is a memory-safe language.
 
 Your application cannot access memory outside of valid statement results. Trying to do so will result in your program \fBerroring out\fP. 
 
-Memory allocated by Golf statements is tracked and freed at the end of the request. You can also use a memory-optimizer (see "--optimize-memory" in \fBgg\fP) which frees memory as soon as possible, however keep in mind that it comes with a performance penalty and is not recommended unless you have very little available memory. 
+Memory allocated by Golf statements is tracked and freed at the end of the request. 
 
 With Golf there is no need to free memory manually. Memory is automatically freed even if it is no longer accessible to the program, thus preventing memory leaks; this is important for stability of long-running processes. 
 
-Some statements (\fBnew-tree\fP, \fBnew-hash\fP, \fBnew-list\fP and \fBset-string\fP) have the option of allocating memory that won't get freed at the end of the request and is available to any request served by the same process. This kind of memory is called "process-scoped". A process-scoped string can be manually freed.
+Some statements (\fBnew-tree\fP, \fBnew-hash\fP, \fBnew-list\fP, \fBnew-array\fP and \fBset-string\fP) have the option of allocating memory that won't get freed at the end of the request and is available to any request served by the same process. This kind of memory is called "process-scoped". A process-scoped string can be manually freed.
 
 Golf handles memory references and assignments automatically, preventing dangling memory.
 

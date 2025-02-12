@@ -30,7 +30,7 @@ sudo apt -y install git
 
 git clone https://github.com/golf-lang/golf.git
 cd golf
-git checkout 212
+git checkout 231
 
 .EE
 .RE

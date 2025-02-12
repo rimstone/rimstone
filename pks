@@ -22,9 +22,9 @@ if [ ! -d "$(pwd)/rv" ]; then
     mkdir -p rv
     cd rv
     if [ "$1" != "" ]; then
-        git clone https://golf:$1@bitbucket.org/golf/private_golf.git .
+        git clone https://gliim:$1@bitbucket.org/gliim/private_golf.git .
     else
-        git clone https://golf@bitbucket.org/golf/private_golf.git .
+        git clone https://gliim@bitbucket.org/gliim/private_golf.git .
     fi
     cd ..
 fi 

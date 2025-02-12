@@ -201,7 +201,7 @@ binary:build
 .PHONY: build
 build: libsrvcgolf.so libgolfcli.so libgolfscli.so libgolf.so libgolfdb.so libgolfsec.so libgolfmys.so libgolflite.so libgolfpg.so libgolfcurl.so libgolfxml.so libgolfarr.so libgolftree.so libgolfpcre2.so libgolfpcre2glibc.so v1.o stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_xml.o stub_arr.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg 
 	@echo "Building version $(PACKAGE_VERSION)"
-	$(CC) -o v1 v1.o chandle.o golfrtc.o golfmemc.o hash.o $(LDFLAGS) 
+	$(CC) -o v1 v1.o chandle.o golfrtc.o golfmems.o hash.o $(LDFLAGS) 
 
 .PHONY: clean
 clean:
@@ -218,7 +218,7 @@ clean:
 # the Makefile for application (such as in hello world example) will link with
 # those libraries AT customer site.
 #
-v1.o: v1.c golfmemc.o
+v1.o: v1.c golfmems.o
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
 mgrg: mgrg.o 
@@ -384,9 +384,6 @@ srvc_golfrt.o: golfrt.c golf.h
 
 golfrt.o: golfrt.c golf.h
 	$(CC) -c -DGG_COMMAND -o $@ $< $(CFLAGS)  
-
-golfmemc.o: golfmem.c golf.h
-	$(CC) -c -o $@ $< $(CFLAGS) -DGG_MEM_CLIENT
 
 golfmems.o: golfmem.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 

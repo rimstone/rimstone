@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "231"
+#define GG_VERSION "241"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -1098,9 +1098,11 @@ void gg_memory_init ();
 void *gg_malloc(size_t size);
 void *gg_calloc(size_t nmemb, size_t size);
 void *gg_realloc(gg_num r, size_t size);
-void gg_mem_set_process (char *m, bool force);
+void gg_mem_set_process (char *to, char *m, bool force, bool add_ref);
 void gg_mem_release(gg_num r);
+void gg_mem_add_ref (char *m);
 void gg_mem_delete_and_return (void *ptr);
+void gg_mem_replace_and_return (void *ptr, void *new_val);
 gg_num gg_get_memory_len (void *ptr);
 gg_num gg_memid (void *ptr);
 void gg_set_memory_len (void *ptr, gg_num len);

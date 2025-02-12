@@ -33,6 +33,23 @@ sudo apt install golf
 .EE
 .RE
 
+
+.LP
+.B ARCH LINUX
+.LP
+
+For Arch Linux, Golf's AUR page is \fBhttps://aur.archlinux.org/packages/golf\fP. To download, build package, and install from it (answer Yes to proceed):
+
+.RS 4
+.EX
+
+git clone https://aur.archlinux.org/golf.git
+cd golf
+makepkg -sirc
+
+.EE
+.RE
+
 Please note that binary distributions for other Linux distros should be available soon. In any case, you can always \fBinstall from source\fP.
 .SH SEE ALSO
  lrnDownload and buildelrn

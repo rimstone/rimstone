@@ -119,14 +119,6 @@ Skip generating line information when compiling .golf files. By default line inf
 
 .RS 4
 \[bu]    
---optimize-memory
-Use memory-optimizing garbage collection, which counts memory references and frees memory as soon as possible. Default is without memory optimization, which frees memory at the end of the request. Do not use this option unless your system is seriously starved for memory because it imposes a performance penatly.
-
-
-.RE
-
-.RS 4
-\[bu]    
 --public
 Change the default behavior of request handler safety so that request handlers without "public" or "private" clause are by default "public"; see \fBbegin-handler\fP for more details.
 

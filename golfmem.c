@@ -4,26 +4,20 @@
 // On the web http://golf-lang.com/ - this file is part of Golf framework. 
 
 // 
-// Memory handling, including garbage collector
-// GOLF memory is made for request-based processing. Simplest form of memory management is for 
-// memory to be allocated anywhere and released at the end of the request, GOLF will de-allocate 
-// it automatically. 'string' is memory and is any binary or text memory. Objects such as indexes, arrays,
-// lists, split strings etc are never freed; but the items they hold (aka elements, mostly key/values) can be freed when
-// an element is deleted; however superstructure of an index, array etc remains but is miniscule in memory footprint.
-// Process-scoped memory will never be automatically released, but it can be deleted with delete-string.
-// Each string has a reference count - note it's not a variable that has refcount, but a region of memory that variable(s) point to. 
-// When a new memory is created (such as write-string or random-string), and a variable points to it in a statement,
-// then its refcount is zero. When a variable X is assigned to variable Y (Y=X), then the refcount of memory pointed by Y is
-// decreased by 1, and refcount of memory pointed by X is increased by 1; except when Y==X (meaning both X and Y point to the 
-// same memory) in which case nothing is done. Data in elements (such as index, array etc) have refcount increased when created; so
-// insert into index or list from a variable means such data has refcount +1. When element data is updated, then old data's refcount
-// is decreased by 1, and variable's that's used to update is increased by 1. Parameters (get/set-param), cookies and request body (request-body)
-// get refcount of 1 when assigned to variable (get-param, request-body); set-param will decrease old param's refcount by 1 and increase
-// new one's by 1. When refcount is 0 and we decrease it, memory is freed. When a scope exits (like {} or start/end-loop) all local variables
-// are freed - the actual memory may still be there is memory has refcount>0 such as if assigned to process-scope variable. 
-// Scope also means call-handler and before/after handlers. Note that process-scope memory, even if refcount is 0, won't be freed until the end of
-// the request.
-//
+// Memory handling
+// GOLF memory is made for request-based processing. 
+// Memory can be ordinary or process-scoped (PS). Ordinary memory is always automatically released at the end of the request, and you 
+// don't have to release it. You can still do that immediately with delete-string, but only if memory is not referenced by another variable or by an object
+// like a tree, hash etc. If it is, it will be released at the end of the request. This eliminates excessive reference count updating, which can slow down
+// execution 20% or more.
+// PS memory is not released at the end of the request. It is used to create server applications, that keep data for the life of the process.
+// PS memory has a reference counter attached to it, and it is released when no other PS memory refers to it. For instance, you can have a string
+// in a tree and a hash. The element holding it must be deleted in both tree and hash in order to be truly deleted. Even then, such memory is only
+// deleted at the end of the request.
+// Memory in Golf is assigned by reference. Golf's memory safety system is minimal for performance reason and it uses the fact that requests are generally
+// quick and memory released at the of the request is likely to be faster and cause less memory fragmentation than otherwise. 
+// Memory is also checked for boundaries. This is however done only at the input of the statement, and the actual implementation doesn't do this (since
+// it's carefully crafted for memory safety), improving performance greatly.
 //
 //
 
@@ -55,15 +49,14 @@ char *GG_EMPTY_STRING="";
 #define GG_MEM_CONST 8
 
 // memory list, maximum of about 2^47-1 allocated memory blocks per request
-// len is the length of memory pointed by ptr. null byte is always there and is included. Max length is 63 bit max.
+// len is the length of memory pointed by ptr. null byte is always there and is included. Max length is 2^47-1.
 // next_free is index to next freed block, could be anything by default. This relates to the number of variables in the program,
 // status has: 
 // GG_MEM_FREE bit set if this is freed block, 0 if not. 
 // GG_MEM_FILE bit set if this is a file that eventually needs to close (unless closed already)
 // GG_MEM_PROCESS bit set if this is process memory, i.e. not to be released at the end of request
 // GG_MEM_CONST bit set if this is memory that can't be freed
-// ref is the number of references to process memory (max of 127), meaning max of 127 indexes, arrays and such can reference the same memory
-// ref is also the max number of vars that can reference a non-process memory.
+// ref is the number of references to process memory (max of 2^23-1), which is the number of "duplications" (by reference) of the same memory.
 typedef struct s_vml {
     void *ptr;
     gg_num next_free:48;  
@@ -72,6 +65,7 @@ typedef struct s_vml {
     gg_num ref:24;
 } vml;
 #define GG_MAX_REF ((1<<23)-1)
+#define GG_MAX_MEM (((gg_num)1<<47)-1)
 
 //
 // Header prior to alloced memory. id is index into vm[]
@@ -96,16 +90,13 @@ static gg_num vm_first_free = -1; // first free memory block
 
 
 // 
-// must be called at the very beginning of program. Initializes memory and 
-// cleans up any memory left over from a previous request.
+// must be called at the very end of program. 
+// cleans up any memory 
 //
 void gg_memory_init ()
 {
     assert (sizeof(gg_num) == 8); // if not, we need to rework GG_ALIGN-sized header placement (8 bytes)
-    // setup "non-initialized memory" (neither NULL nor initialized)
 
-    // release of previous request's memory and creation of new memory for the following request
-    // is done here; gg_memory_init() is called at the end of any request.
     gg_done ();
 
 }
@@ -146,7 +137,7 @@ inline void gg_mem_set_status (gg_num ind, unsigned char s)
 // Add point to the block of memory. 'p' is the memory pointer (allocated elsewhere here) added.
 // Returns the index in memory block where the pointer is.
 // Once a block of pointers is exhausted, add another block. We do not increase the blocks
-// size size requests are generally small and typically do not need much more memory, and increasing
+// size requests are generally small and typically do not need much more memory, and increasing
 // the block size might cause swaping elsewhere.
 //
 inline gg_num gg_add_mem (void *p)
@@ -154,10 +145,12 @@ inline gg_num gg_add_mem (void *p)
     gg_num r;
     if (vm_first_free != -1)
     {
+        // find next free
         r = vm_first_free;
         vm_first_free = vm[vm_first_free].next_free; // this block if free for sure b/c vm_first_free points to it
                                                      // next_free is -1 if there's no next, and -1 is vm_first_free when none
     } else {
+        // there's no free, get more memory
         r = vm_curr;
         vm_curr++;
         if (vm_curr >= vm_tot)
@@ -181,9 +174,6 @@ inline gg_num gg_add_mem (void *p)
     return r;
 }
 
-
-
-
 // 
 // Adds string constant to memory pool
 // 'r' is the index in vm[].
@@ -195,7 +185,7 @@ inline void *gg_mem_add_const (void *p, gg_num len)
 {
     gg_num id = gg_add_mem (p);
     void * pm = gg_vmset(p, id);
-    gg_mem_set_process(pm, true);
+    gg_mem_set_process(GG_EMPTY_STRING, pm, true, false);
     gg_mem_set_len(id, len);
     vm[id].status |= GG_MEM_CONST;
     return pm;
@@ -213,12 +203,13 @@ inline void *gg_vmset (void *p, gg_num r)
 {
     gg_head h;
 #ifdef DEBUG
-    if (r > ((gg_num)256*1024*1024*1024)) // check it's not a runaway program // 256 billion
+    if (r > GG_MAX_MEM) // check it's not a runaway program 
     {
         gg_mem_release(r); // otherwise final gg_done would fail at this one, as it's incomplete
         gg_report_error ("Too many variables [%ld]", r); 
     }
 #endif
+    // Copy ID just before memory
     h.id = r; 
     memcpy ((unsigned char*)p, (unsigned char*)&h, sizeof (gg_head));
     return (unsigned char*)p + GG_ALIGN;
@@ -288,7 +279,7 @@ inline gg_num gg_mem_get_len (gg_num r)
 
 
 //
-// Link new freed memory block r
+// Free block, Link new freed memory block r
 //
 void gg_mem_release(gg_num r)
 {
@@ -301,17 +292,12 @@ void gg_mem_release(gg_num r)
 
 //
 // Set length of memory. ptr is the memory alloc'd by Golf.
-// Memory in Golf is always sized exactly as needed
+// Memory in Golf is almost always sized exactly as needed
 // len is useful data plus 1 for nullbyte, so for "ab", it's 3
 //
 inline void gg_mem_set_len (gg_num r, gg_num len)
 {
-#ifndef GG_MEM_CLIENT
     vm[r].len = len;
-#else
-    GG_UNUSED(r);
-    GG_UNUSED(len);
-#endif
 }
 
 
@@ -325,27 +311,92 @@ inline void *gg_mem_get_data (gg_num r)
     
 }
 
+//
+// When process-scoped memory in an object is replaced, and old value returned
+//
+inline void gg_mem_replace_and_return (void *ptr, void *new_var)
+{
+    if (ptr == GG_EMPTY_STRING || ptr == NULL) return;
+    if (ptr == new_var) return; // don't do anything if replaced with the same value
+    gg_mem_delete_and_return (ptr); // it's as if we deleted and returned the value
+                                    // we do replace it with new value, but that's done in the caller
+}
+
+
+//
+// When process scoped element is deleted, but value returned, then this needs to happen.
+// We reduce ref by 1, and check if down to 0, if so and if it's a process-scoped memory, then
+// remove process-scoped designation, and increase ref back by 1. This way such memory will be 
+// released at the end of the request. If not, such memory would remain (because it would still be
+// process-scoped and it shouldn't be), resulting in ever-growing memory and eventual crash.
+//
+inline void gg_mem_delete_and_return (void *ptr)
+{
+    if (ptr == GG_EMPTY_STRING || ptr == NULL) return;
+    gg_num r = gg_mem_get_id(ptr); // index in the list of memory blocks
+#ifdef DEBUG
+    if (r < 0 || r >= vm_curr) gg_report_error ("Memory is not within valid virtual range [%ld]", r);
+    if (vm[r].ptr != ((unsigned char*)ptr-GG_ALIGN)) gg_report_error ("Memory header is invalid");
+#endif
+    if ((vm[r].status & GG_MEM_PROCESS))
+    {
+        if (vm[r].ref > 0) 
+        { 
+            vm[r].ref--; 
+            if (vm[r].ref == 0) vm[r].status &= ~GG_MEM_PROCESS;
+            vm[r].ref++; // restore or set back to 1
+            return; 
+        }
+    }
+}
 // 
 //
-// Set memory to be process-scoped. ptr is the memory alloc'd by Golf.
-// This is done only if gg_mem_process is true, or if force is true
+// Set ref count of memory when referenced by another variable, to 1. 
+// This is done only if it's not process-mem. If it's process-mem, it's subject to gg_mem_set_process()
+// which increases ref for those. 
 //
-inline void gg_mem_set_process (char *m, bool force)
+inline void gg_mem_add_ref (char *m)
+{
+    // if (from == to) return; // do not make circular references - we'd check for this if we kept accurate ref count
+                               // but for non-process, it's only 0 or 1
+    // but we only keep a boolean if attempted to assign
+    gg_num r = gg_mem_get_id (m);  // r is -1 if GG_EMPTY_STRING
+    if (r != -1 && !(vm[r].status & GG_MEM_PROCESS)) vm[r].ref = 1;
+}
+
+// 
+//
+// This increases ref count. For either, it won't do anything if same memory is overwritten.
+// For process-scoped, it will increase ref count and set process mem flag.
+// For ordinary memory, it will set ref to 1.
+//
+inline void gg_mem_set_process (char *to, char *m, bool force, bool add_ref)
 {
     if (m == GG_EMPTY_STRING) return; // no need to set for predefined empty string
-    gg_num r;
-    // if not optimized-memory, we only use ref to make process-scoped memory unfreeable until all those that
-    // reference it are deleted. For instance a set-string (constant or process-scope) is assigned to 5 other strings, all
-    // of which are not process-scope; or it is inserted as value in 10 index records. Deleting any  of those variables or less than
-    // all 10 index records should NOT free this variable, not even at the end of the request. In non-optimized-memory, this is the only 
-    // reference counting. All other variables will be released at the end of the request, no matter their scope or how they are used, which
-    // makes for about 20% speed improvement in highly computational request (probably 5% otherwise), still significant.
-    // this below is just if it's actually process-scoped
-    if (gg_mem_process || force) 
-    { 
+
+    // We consider this memory to be process-scoped if 1) is already so 2) gg_mem_process is true, or force is true
+    bool is_process = (gg_mem_process || force);
+    gg_num r = -1;
+    bool process_set = false;
+    if (is_process || add_ref) 
+    {
+        if (to == m) 
+        {
+            return; // no ref increase if going back to write the same data
+        }
         r = gg_mem_get_id (m); 
-        vm[r].ref++; 
+        process_set = (vm[r].status & GG_MEM_PROCESS);
+    }
+    if (is_process)
+    { 
+        // if this wasn't process variable, then wipe out references, since process-scoped works  on its own, they don't mix with non-process ones.
+        if (!process_set) vm[r].ref = 1; else vm[r].ref++; 
         vm[r].status |= GG_MEM_PROCESS;
+        process_set = true;
+    }
+    if (add_ref && !process_set)
+    {
+        if (r != -1) vm[r].ref = 1;
     }
 }
 
@@ -362,8 +413,7 @@ inline bool gg_mem_get_process (gg_num r)
 // 
 // Input and return the same as for realloc()
 // Checks memory to make sure it's valid block allocated here.
-// if safe is 1, perform additional checks to make sure it's okay memory
-// Golf never realloc's existing variable, b/c Golf variables reference each other
+// Golf will never realloc's existing variable, b/c Golf variables reference each other
 // directly, meaning there's no indirection (first to a structure, then pointer) for performance.
 //
 inline void *gg_realloc(gg_num r, size_t size)
@@ -392,45 +442,30 @@ inline void *gg_realloc(gg_num r, size_t size)
     r = gg_add_mem(p);
     void *pm = gg_vmset(p,r);
     gg_mem_set_len (r, size);
-    if (is_process) gg_mem_set_process (pm,1);
+    if (is_process) gg_mem_set_process (GG_EMPTY_STRING, pm,true, false);
     return pm;
 }
 
-//
-// When process scoped element is deleted, but value returned, then this needs to happen.
-// We reduce ref by 1, and check if down to 0, if so and if it's a process-scoped memory, then
-// remove process-scoped designation, and increase ref back by 1. This way such memory will be 
-// released at the end of the request. If not, such memory would remain (because it would still be
-// process-scoped and it shouldn't be), resulting in ever-growing memory and eventual crash.
-//
-inline void gg_mem_delete_and_return (void *ptr)
-{
-    if (ptr == GG_EMPTY_STRING || ptr == NULL) return;
-    gg_num r = gg_mem_get_id(ptr); // index in the list of memory blocks
-#ifdef DEBUG
-    if (r < 0 || r >= vm_curr) gg_report_error ("Memory is not within valid virtual range [%ld]", r);
-    if (vm[r].ptr != ((unsigned char*)ptr-GG_ALIGN)) gg_report_error ("Memory header is invalid");
-#endif
-    if ((vm[r].status & GG_MEM_PROCESS))
-    {
-        // only remove process scoped designation in non-optimized-memory case if all references to it have
-        // been freed; it means all process-scoped ones - see comments in gg_mem_set_process()
-        if (vm[r].ref > 0) 
-        { 
-            vm[r].ref--; 
-            if (vm[r].ref == 0) vm[r].status &= ~GG_MEM_PROCESS;
-            vm[r].ref++;
-            return; 
-        }
-    }
-}
 
 // 
-// Similar to free(), returns GG_OKAY if okay, others if not. If check is 1, it 
-// checks if memory is valid in debug mode. If check is 2, then this is free at the end of request, 3 for delete-string that is not defined as 
-// process-scoped, or 0 for string that's defined as process-scoped (meaning just that one, not any other this string gets assigned to!).
-// Checks memory to make sure it's valid block allocated here.
-// Returns GG_ERR_MEMORY if bad memory, GG_ERR_INVALID if cannot delete because it's not a string marked to have the ability for deletion
+// Similar to free()
+// Check is:
+// 0, this is free while request is running, and is just for process-scoped memory. Ordinary memory is never 
+//      freed with this, because we do NOT keep accurate ref count for it; we only mark it's ref count to 1 if
+//      it was ever referenced, and that's it (for performance). Because this is only for process-scoped memory,
+//      delete string will use this only for objects (such as tree, hash, array) or if string was defined 
+//      with set-string...proces-scope - meaning set-string A=B (if B is process), then A will NOT be freed - 
+//      only the original B will; this is because keeping track of these relationships would be expensive (and not really
+//      necessary). If ordinary memory is attempted to free with this, it just won't do anything.
+// 2, this is release of all ordinary memory at the end of request
+// 3, this is free while request is running, and is just for ordinary memory. Such memory is released ONLY if
+//      it was never referenced. It doesn't matter if it was dereferenced later, still can't be freed. 
+// Things we don't do, meaning keeping track of certain ref counts, aren't that important. For a request-based processor
+// what we have is enough to be able to control memory even for the most demanding requests.
+// Once a variable has been assigned from a process-scoped object (such as reading from hash, or assigned with set-string
+// from process-scoped), it is also process-scoped; however those can never be deleted unless process-scoped delete takes
+// place (such as for example delete hash, or delete-string on original process-scoped string). They are only references, so
+// no new memory is used for letting them live during the request execution.
 //
 inline void _gg_free (void *ptr, char check)
 {
@@ -456,25 +491,25 @@ inline void _gg_free (void *ptr, char check)
         // because otherwise we might remove process-scope designation
         return;
     }
-    // if memory is process, just mark it non-process and delay until the end of request, much faster
-    // and simpler than counting references. This will be freed at the end of request
-    // Do not do this if this is freeing at the end of request, of course.
-    if (check == 0)
-    { // this is free from delete-string etc (not from end of request)
-        // delete process-scoped delayed, only at the end of request, so if a variable takes its value
-        // it stays valid through the end of request - must to keep functionality intact!
-        if ((vm[r].status & GG_MEM_PROCESS)) 
+    if (check == 0) // this is while request is running, could be free from objects (like tree) or delete-string
+                    // it's only for process-scoped
+    { 
+        if ((vm[r].status & GG_MEM_PROCESS))  // if process, reduce ref count, and if 0, strip process-scope
         {
-            // only remove process scoped designation in non-optimized-memory case if all references to it have
-            // been freed; it means all process-scoped ones - see comments in gg_mem_set_process()
             if (vm[r].ref > 0)  vm[r].ref--; 
             if (vm[r].ref == 0) vm[r].status &= ~GG_MEM_PROCESS; 
-            return;
         }
-        return; // do not delete memory until the end of request, regardless of the reason! Takes the most
-                // memory but by far the fastest, not just b/c there's no overhead, but deleting memory in one go
-                // caches the vm[] and makes it faster
-    } else if (check != 2) return; // right now the only place memory is released is at the end of request (check==2)
+        return;     // if not process (or not anymore), then nothing will be done, see above
+    } else if (check == 3) // this is delete-string of non-process only
+                                                               // even variable A from A=B (where B is process-scoped)
+                                                               // cannot be deleted with this. A is just a reference to
+                                                               // process-scoped B, and only B can be deleted
+    {
+        if (vm[r].ref > 0 || (vm[r].status & GG_MEM_PROCESS)) return; // delete-string with 3 cannot work if memory
+                                                                      // if process-scoped or already referenced (even if
+                                                                      // dereferenced later!)
+    }  // else if (check != 2) return; // we could check, but there's only 0, 3 and 2, so if not zero or 3, then it's 2!
+       // ADD THIS if we have more values for check!!!
 
     //
     // if memory on the list of freed blocks, just ignore it, otherwise double free or free
@@ -536,11 +571,7 @@ inline char *gg_strdup (char *s)
 }
 
 // 
-// Frees all memory allocated so far.
-// This is called at the beginning of a request before memory is allocated again.
-// The reason this is NOT called at the end of the request is that web server NEEDS
-// some of the allocated memory even after the request ends, for example, the 
-// actual web output or header information.
+// Frees all memory allocated so far. Called at the end of request.
 //
 void gg_done ()
 {
