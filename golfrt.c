@@ -161,9 +161,8 @@ void gg_write_to_string (char **str)
             while (isspace(GG_WRSTR_BUF[GG_WRSTR_POS-1])) GG_WRSTR_POS--;  
             GG_WRSTR_BUF[GG_WRSTR_POS] = 0;
         }
-        gg_num id = gg_mem_get_id(GG_WRSTR_BUF);
-        GG_WRSTR_BUF = gg_realloc (id, GG_WRSTR_POS+1); // resize memory to just what's needed
-        gg_mem_set_len (id, GG_WRSTR_POS+1); // exact length of result
+        GG_WRSTR_BUF = gg_realloc (gg_mem_get_id(GG_WRSTR_BUF), GG_WRSTR_POS+1); // resize memory to just what's needed
+        gg_mem_set_len (gg_mem_get_id(GG_WRSTR_BUF), GG_WRSTR_POS+1); // exact length of result
                                                                      // this is the exact length of written string that's allocated
         *(GG_WRSTR.user_string) =  GG_WRSTR_BUF;
         // Do NOT set GG_WRSTR_POS = 0 because then function gg_write_to_string_length()

@@ -14,6 +14,8 @@
 // PS memory has a reference counter attached to it, and it is released when no other PS memory refers to it. For instance, you can have a string
 // in a tree and a hash. The element holding it must be deleted in both tree and hash in order to be truly deleted. Even then, such memory is only
 // deleted at the end of the request.
+// Ordinary memory is linked into a list that uses the same 'next' member as free memory. This list allows for very fast disposal of memory at the end
+// of the request, since PS memory isn't checked; this means process could hold millions of PS memory items and not be slowed down a bit from them.
 // Memory in Golf is assigned by reference. Golf's memory safety system is minimal for performance reason and it uses the fact that requests are generally
 // quick and memory released at the of the request is likely to be faster and cause less memory fragmentation than otherwise. 
 // Memory is also checked for boundaries. This is however done only at the input of the statement, and the actual implementation doesn't do this (since
@@ -27,8 +29,10 @@
 bool gg_mem_process = false; // if set to true, any allocs are process-scoped. Memory is not released with request's end. Process memory.
 
 // functions
-bool gg_mem_get_process (gg_num r);
-void *gg_mem_get_data (gg_num r);
+inline static bool gg_mem_get_process (gg_num r);
+inline static void *gg_mem_get_data (gg_num r);
+inline static void gg_mem_add_ord (gg_num r);
+inline static gg_num gg_mem_del_ord (gg_num r);
 
 char *gg_mem_msg_outmem = "Out of memory for [%ld] bytes";
 
@@ -50,7 +54,10 @@ char *GG_EMPTY_STRING="";
 
 // memory list, maximum of about 2^47-1 allocated memory blocks per request
 // len is the length of memory pointed by ptr. null byte is always there and is included. Max length is 2^47-1.
-// next_free is index to next freed block, could be anything by default. This relates to the number of variables in the program,
+// next is index to next freed block, could be anything by default. This relates to the number of variables in the program,
+// ordinary memory is also linked into it, and added to the list of free memory at the end of the request, which is the fastest way to
+// free it (imagine millions of process-scoped memory items interspersed, iterating through all that at the end of the request is very slow
+// as opposed to just setting a single variable!).
 // status has: 
 // GG_MEM_FREE bit set if this is freed block, 0 if not. 
 // GG_MEM_FILE bit set if this is a file that eventually needs to close (unless closed already)
@@ -59,7 +66,7 @@ char *GG_EMPTY_STRING="";
 // ref is the number of references to process memory (max of 2^23-1), which is the number of "duplications" (by reference) of the same memory.
 typedef struct s_vml {
     void *ptr;
-    gg_num next_free:48;  
+    gg_num next:48;  
     gg_num status:8; 
     gg_num len:48; 
     gg_num ref:24;
@@ -78,10 +85,12 @@ typedef struct s_gg_head {
 // We delete old's request memory at the very start of a new request in generated code before any user code,
 // (unless process scoped memory)
 //
-static vml *vm = NULL;
-static gg_num vm_curr = 0;
-static gg_num vm_tot = 0;
+static vml *vm = NULL; // memory list
+static gg_num vm_curr = 0; // last used-up index in memory list
+static gg_num vm_tot = 0; // total size of memory list
 static gg_num vm_first_free = -1; // first free memory block
+static gg_num vm_first_ord = -1; // first ordinary memory block
+static gg_num vm_tot_process = 0; // total # of process mem items
 
 
 // determines the size of the block allocated (and the size of consequent expansions) for the memory
@@ -147,8 +156,8 @@ inline gg_num gg_add_mem (void *p)
     {
         // find next free
         r = vm_first_free;
-        vm_first_free = vm[vm_first_free].next_free; // this block if free for sure b/c vm_first_free points to it
-                                                     // next_free is -1 if there's no next, and -1 is vm_first_free when none
+        vm_first_free = vm[vm_first_free].next; // this block if free for sure b/c vm_first_free points to it
+                                                     // next is -1 if there's no next, and -1 is vm_first_free when none
     } else {
         // there's no free, get more memory
         r = vm_curr;
@@ -170,8 +179,64 @@ inline gg_num gg_add_mem (void *p)
     // .len must be set always set by caller
     vm[r].status = 0; // not a freed block, not process, cannot delete, not a file
     vm[r].ref = 0;
-    if (gg_mem_process) vm[r].status |= GG_MEM_PROCESS;
+    if (gg_mem_process) { vm_tot_process++; vm[r].status |= GG_MEM_PROCESS;}
+    else gg_mem_add_ord (r);
     return r;
+}
+
+//
+// Delete memory r from list of ordinary memory
+// Since we don't keep prev to save memory, we swap the memory to delete with the first one in the list
+// and then delete the first one. Given this doesn't happen often, and in many cases ever, this is the cheapest
+// way to do this both in terms of performance and memory.
+// Returns new location where r was (in case we're deleting it too).
+//
+inline static gg_num gg_mem_del_ord (gg_num r)
+{
+    gg_num first_ord_next = vm[vm_first_ord].next; // save next ordinary memory, either real mem id or -1
+    if (r != vm_first_ord)
+    {
+        // swap index to memory in the headers of memory to delete and first free
+        void *ptr_first = vm[vm_first_ord].ptr;
+        void *ptr_r = vm[r].ptr;
+        gg_head h;
+        h.id = vm_first_ord;
+        memcpy ((unsigned char*)(ptr_r), (unsigned char*)&h, sizeof (gg_head));
+        h.id = r;
+        memcpy ((unsigned char*)(ptr_first), (unsigned char*)&h, sizeof (gg_head));
+        // swap the actual memory items in the list of items
+        vml temp;
+        temp = vm[vm_first_ord];
+        gg_num n = vm[r].next;
+        vm[vm_first_ord] = vm[r];
+        vm[r] = temp;
+        vm[r].next = n;
+        gg_num old_vm_first_ord = vm_first_ord;
+        vm_first_ord = first_ord_next;
+        return old_vm_first_ord;
+    }  
+    else 
+    {
+        vm_first_ord = first_ord_next;
+        return r;
+    }
+}
+
+//
+// Add memory r to list of ordinary memory
+//
+inline static void gg_mem_add_ord (gg_num r)
+{
+    if (vm_first_ord == -1)
+    {
+        vm_first_ord = r;
+        vm[r].next = -1;
+    }
+    else
+    {
+        vm[r].next = vm_first_ord;
+        vm_first_ord = r;
+    }
 }
 
 // 
@@ -286,7 +351,7 @@ void gg_mem_release(gg_num r)
     vm[r].ptr = NULL;
     vm[r].status = GG_MEM_FREE; // freed, all other flags cleared
     // Set memory marked as freed, would be -1 if there's no free blocks at this moment
-    vm[r].next_free = vm_first_free;
+    vm[r].next = vm_first_free;
     vm_first_free = r;
 }
 
@@ -304,7 +369,7 @@ inline void gg_mem_set_len (gg_num r, gg_num len)
 //
 // Get actual data from vm[] index
 //
-inline void *gg_mem_get_data (gg_num r)
+inline static void *gg_mem_get_data (gg_num r)
 {
     if (r == -1) return GG_EMPTY_STRING; // no need to set for predefined empty string
     return vm[r].ptr+GG_ALIGN;
@@ -343,7 +408,12 @@ inline void gg_mem_delete_and_return (void *ptr)
         if (vm[r].ref > 0) 
         { 
             vm[r].ref--; 
-            if (vm[r].ref == 0) vm[r].status &= ~GG_MEM_PROCESS;
+            if (vm[r].ref == 0) 
+            {
+                vm[r].status &= ~GG_MEM_PROCESS;
+                vm_tot_process--;
+                gg_mem_add_ord(r);
+            }
             vm[r].ref++; // restore or set back to 1
             return; 
         }
@@ -390,8 +460,13 @@ inline void gg_mem_set_process (char *to, char *m, bool force, bool add_ref)
     if (is_process)
     { 
         // if this wasn't process variable, then wipe out references, since process-scoped works  on its own, they don't mix with non-process ones.
-        if (!process_set) vm[r].ref = 1; else vm[r].ref++; 
-        vm[r].status |= GG_MEM_PROCESS;
+        if (!process_set) 
+        {
+            vm[r].ref = 1; 
+            vm[r].status |= GG_MEM_PROCESS;
+            vm_tot_process++;
+            r = gg_mem_del_ord (r);
+        } else vm[r].ref++; 
         process_set = true;
     }
     if (add_ref && !process_set)
@@ -404,7 +479,7 @@ inline void gg_mem_set_process (char *to, char *m, bool force, bool add_ref)
 //
 // Get if memory is process scoped, true or false, r is index into vm[]
 //
-inline bool gg_mem_get_process (gg_num r)
+inline static bool gg_mem_get_process (gg_num r)
 {
     if (r == -1) return true; // no need to set for predefined empty string
     return vm[r].status & GG_MEM_PROCESS;
@@ -436,11 +511,18 @@ inline void *gg_realloc(gg_num r, size_t size)
     {
         gg_report_error (gg_mem_msg_outmem, size+GG_ALIGN);
     }
-    // then nullify pointer and release vm[] entry
-    gg_mem_release(r);
-    // then add new vm[] entry
-    r = gg_add_mem(p);
-    void *pm = gg_vmset(p,r);
+    void *pm;
+    // If pointer returned is the same, there's no need to delete it, just change the length
+    if (p != vm[r].ptr)
+    {
+        // then nullify pointer and release vm[] entry
+        vm[r].ptr = p; // otherwise gg_mem_del_ord/gg_mem_release would operate on invalid memory
+        r = gg_mem_del_ord (r);
+        gg_mem_release(r);
+        // then add new vm[] entry
+        r = gg_add_mem(p);
+        pm = gg_vmset(p,r);
+    } else pm = vm[r].ptr + GG_ALIGN;
     gg_mem_set_len (r, size);
     if (is_process) gg_mem_set_process (GG_EMPTY_STRING, pm,true, false);
     return pm;
@@ -497,7 +579,12 @@ inline void _gg_free (void *ptr, char check)
         if ((vm[r].status & GG_MEM_PROCESS))  // if process, reduce ref count, and if 0, strip process-scope
         {
             if (vm[r].ref > 0)  vm[r].ref--; 
-            if (vm[r].ref == 0) vm[r].status &= ~GG_MEM_PROCESS; 
+            if (vm[r].ref == 0) 
+            {
+                vm[r].status &= ~GG_MEM_PROCESS; 
+                vm_tot_process--;
+                gg_mem_add_ord (r);
+            }
         }
         return;     // if not process (or not anymore), then nothing will be done, see above
     } else if (check == 3) // this is delete-string of non-process only
@@ -516,6 +603,8 @@ inline void _gg_free (void *ptr, char check)
     // of an invalid pointer ensues. 
     //
     if (vm[r].status & GG_MEM_FREE) return;
+    if (check != 2) r = gg_mem_del_ord (r); // no need to mess with ordinary memory list, since it will be entirely
+                                            // deleted in gg_done, and we'll just set it to empty there
 
     // free mem
 #ifdef DEBUG
@@ -575,33 +664,25 @@ inline char *gg_strdup (char *s)
 //
 void gg_done ()
 {
-    bool keep_mem = false;
     if (vm != NULL)
     {
-        gg_num i;
-        for (i = 0; i < vm_curr; i++)
+        gg_num i=vm_first_ord;
+        while (i != -1)
         {
-            // if already freed, continue; we can do such a check prior to actually freeing since
-            // we have the index into vm[] here
-            if (vm[i].status & GG_MEM_FREE) continue; 
-                                                                        
-            if (vm[i].ptr != NULL)
+            gg_num j = vm[i].next;
+            //GG_TRACE("Freeing [%ld] block of memory", i);
+            if (vm[i].status & GG_MEM_FILE)
             {
-                //GG_TRACE("Freeing [%ld] block of memory", i);
-                if (vm[i].status & GG_MEM_FILE)
-                {
-                    FILE **f = (FILE**)(vm[i].ptr);
-                    if (*f != NULL) fclose (*f);
-                    *f=NULL; // make sure it's NULL so the following request can use this file descriptor
-                }
-                else if (!(vm[i].status & GG_MEM_PROCESS))
-                {
-                    _gg_free ((unsigned char*)vm[i].ptr+GG_ALIGN, 2);
-                } else keep_mem = true;
+                FILE **f = (FILE**)(vm[i].ptr);
+                if (*f != NULL) fclose (*f);
+                *f=NULL; // make sure it's NULL so the following request can use this file descriptor
             }
+            else _gg_free ((unsigned char*)vm[i].ptr+GG_ALIGN, 2);
+            i = j;
         }
         //GG_TRACE("Freeing vm");
-        if (!keep_mem) 
+        if (vm_tot_process == 0)  // there can be strategy here not to free, if we're just going to calloc/realloc
+                                  // again anyway
         {
             free (vm);
             vm = NULL;
@@ -615,6 +696,7 @@ void gg_done ()
         vm_curr = 0;
         vm_first_free = -1;
     }
+    vm_first_ord = -1;
 }
 
 

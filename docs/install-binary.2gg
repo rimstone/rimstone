@@ -12,7 +12,7 @@ install-binary \- Golf documentation (download-and-build)
 .B UBUNTU
 .LP
 
-For Ubuntu (versions 20 through 24, as well as upcoming releases), use \fBGolf's Launchpad PPA\fP:
+For Ubuntu (versions 20 through 24, as well as upcoming releases), use https://launchpad.net/~golf-lang/+archive/ubuntu/golf, which is Golf's Launchpad PPA:
 
 .RS 4
 .EX
@@ -38,7 +38,7 @@ sudo apt install golf
 .B ARCH LINUX
 .LP
 
-For Arch Linux, Golf's AUR page is \fBhttps://aur.archlinux.org/packages/golf\fP. To download, build package, and install from it (answer Yes to proceed):
+For Arch Linux, Golf's AUR page is https://aur.archlinux.org/packages/golf . To download, build package, and install from it (answer Yes to proceed):
 
 .RS 4
 .EX

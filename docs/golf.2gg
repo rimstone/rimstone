@@ -2,23 +2,16 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
-Golf is a language, tools and application server for building and deploying web services and back-end solutions for any business. Its purpose is rapid and easy development of low-maintenance, memory-safe and high-performance business applications. It's about less coding and higher readability of code. Golf is extensible and built with industry-standard Free Open Source libraries.
+Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. 
 
-With Golf, you can develop web applications and services quicker and with a near-flat learning curve. Plus, experience faster run-time performance and smaller memory footprint. 
-
-Golf is licensed under \fBApache 2\fP Free Open Source License.
-
-Read more \fBabout Golf\fP.
-
-\fBHello World\fP with Golf.
-
-Install Golf \fBfrom source code\fP or by using \fBLinux packagers\fP (such as apt). 
-
-See \fBDocumentation\fP. 
-
-Source at \fBgithub.com\fP (note each change log is described on \fBGolf blog\fP). 
-
-Current version is 231. Check \fBBlog\fP for change log. This release passed 2288 automated functional tests.
+\fBApache 2\fP Free Open Source License. 
+\fBAbout Golf\fP. 
+\fBHello World\fP. 
+\fBInstall Golf\fP from source, or by using \fBLinux packagers\fP (such as apt). 
+\fBDocumentation\fP.  
+\fBSource on github.com\fP. 
+\fBBlog\fP has useful articles and changelog.
+Current version is 241. This release passed 2312 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
@@ -26,7 +19,13 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2025-02-04 \fBGolf&#39;s package page on AUR for Arch Linux\fP
+2025-02-12 \fBUse C language API to talk to Golf Server\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-02-04 \fBGolf package page on AUR for Arch Linux\fP
 .RE
 
 
@@ -198,6 +197,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .RE
 
 Releases:
+
+.RS 4
+\[bu]    
+2025-02-11 \fBGolf 241 released\fP
+.RE
+
 
 .RS 4
 \[bu]    

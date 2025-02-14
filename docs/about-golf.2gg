@@ -7,21 +7,9 @@ about-golf \- Golf documentation (general)
 .B WHAT IS IT
 .LP
 
-Golf is a language, tools and application server for building and deploying web services and back-end solutions for any business. Its purpose is rapid and easy development of low-maintenance, memory-safe and high-performance business applications. It's about much less coding and much higher readability of code.
+Golf is a memory-safe and high-performance programming language and application server. Golf is a compiled language that creates native executables. It's main purpose is easy and rapid development and deployment of web services, applications on Linux back-end.
 
-Golf is built with industry-standard Free Open Source libraries, extensible, and licensed under \fBApache 2\fP Free Open Source.
-
-.LP
-.B MODELING LANGUAGE
-.LP
-
-Golf is a very high-level modeling language. It's about solving problems by modeling the solution and connecting the components to create high-performance, low-footprint executables; and not about managing memory, manipulating bits and bytes or writing complex code.
-
-.LP
-.B SYNTAX MATTERS: EXPRESSIONLESS
-.LP
-
-Syntax of a language matters, not just for writing code now, but for someone else reading it years later. Golf language is designed to be intuitive, easy and rapid, and to be close to the way humans are wired, rather than machines. Golf is near-expressionless, featuring only very limited integer expressions. This is by design: it's simpler to use programmable features to build desired functionality then to build them yourself.
+Golf is built with industry-standard Free Open Source libraries, extensible with C programming language, and licensed under \fBApache 2\fP Free Open Source.
 
 .LP
 .B SERVICE ORIENTED

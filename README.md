@@ -1,25 +1,19 @@
-Golf is a language, tools and application server for building and deploying web services and back\-end solutions for any business\. Its purpose is rapid and easy development of low\-maintenance, memory\-safe and high\-performance business applications\. It's about less coding and higher readability of code\. Golf is extensible and built with industry\-standard Free Open Source libraries\.
+Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. 
 
-With Golf, you can develop web applications and services quicker and with a near\-flat learning curve\. Plus, experience faster run\-time performance and smaller memory footprint\. 
-
-Golf is licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\.
-
-Read more [about Golf](https://golf-lang.com//about-golf.html)\.
-
-[Hello World](https://golf-lang.com//123-hello-world.html) with Golf\.
-
-Install Golf [from source code](https://golf-lang.com//install.html) or by using [Linux packagers](https://golf-lang.com//install-binary.html) \(such as apt\)\. 
-
-See [Documentation](https://golf-lang.com//documentation.html)\. 
-
-Source at [github\.com](https://github.com/golf-lang/golf) \(note each change log is described on [Golf blog](https://golf-lang.blogspot.com)\)\. 
-
-Current version is 231\. Check [Blog](https://golf-lang.blogspot.com/) for change log\. This release passed 2288 automated functional tests\.
+[Apache 2](https://golf-lang.com//license.html) Free Open Source License\. 
+[About Golf](https://golf-lang.com//about-golf.html)\. 
+[Hello World](https://golf-lang.com//123-hello-world.html)\. 
+[Install Golf](https://golf-lang.com//install.html) from source, or by using [Linux packagers](https://golf-lang.com//install-binary.html) \(such as apt\)\. 
+[Documentation](https://golf-lang.com//documentation.html)\.  
+[Source on github\.com](https://github.com/golf-lang/golf)\. 
+[Blog](https://golf-lang.blogspot.com/) has useful articles and changelog\.
+Current version is 241\. This release passed 2312 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
-* 2025\-02\-04 [Golf&\#39;s package page on AUR for Arch Linux](https://golf-lang.blogspot.com/2025/02/golfs-package-page-on-aur-for-arch-linux.html)
+* 2025\-02\-12 [Use C language API to talk to Golf Server](https://golf-lang.blogspot.com/2025/02/use-c-language-api-to-talk-to-golf.html)
+* 2025\-02\-04 [Golf package page on AUR for Arch Linux](https://golf-lang.blogspot.com/2025/02/golfs-package-page-on-aur-for-arch-linux.html)
 * 2025\-02\-02 [Ubuntu apt package available for Golf](https://golf-lang.blogspot.com/2025/02/ubuntu-apt-package-available-for-golf.html)
 * 2025\-01\-30 [How to send email with Golf](https://golf-lang.blogspot.com/2025/01/how-to-send-email-with-golf.html)
 * 2025\-01\-28 [Fast JSON parser with little coding](https://golf-lang.blogspot.com/2025/01/fast-json-parser-with-little-coding.html)
@@ -49,6 +43,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 Releases:
+* 2025\-02\-11 [Golf 241 released](https://golf-lang.blogspot.com/2025/02/golf-241-released.html)
 * 2025\-02\-08 [Golf 231 released](https://golf-lang.blogspot.com/2025/02/golf-231-released.html)
 * 2025\-02\-02 [Golf 210 released](https://golf-lang.blogspot.com/2025/02/golf-210-released.html)
 * 2025\-01\-27 [Golf 191 released](https://golf-lang.blogspot.com/2025/01/golf-191-released.html)
