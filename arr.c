@@ -81,7 +81,7 @@ void gg_write_array (gg_array *arr, gg_num key, char *val, char **old_val, gg_nu
         memset (&(arr->arr[old_alloc]),0, sizeof(char*)*(arr->alloc_elem - old_alloc));
     }
 
-    if (arr->arr[key] != NULL) { if (st) *st = GG_INFO_EXIST; } else { if (st) *st = GG_OKAY; }
+    if (arr->arr[key] != NULL) { if (st) *st = GG_INFO_EXIST; } else { arr->arr[key] = GG_EMPTY_STRING; if (st) *st = GG_OKAY; }
     if (old_val != NULL) 
     {
         *old_val = arr->arr[key]; 

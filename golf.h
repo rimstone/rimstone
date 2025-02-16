@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "244"
+#define GG_VERSION "247"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -1116,7 +1116,6 @@ void *gg_mem_add_const (void *p, gg_num len);
 void gg_mem_set_status (gg_num id, unsigned char s);
 gg_num gg_add_mem (void *p);
 void *gg_vmset (void *p, gg_num r);
-gg_num gg_mem_items ();
 gg_num gg_mem_size ();
 void gg_done ();
 void gg_get_stack(char *fname);

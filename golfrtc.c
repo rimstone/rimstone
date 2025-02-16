@@ -551,10 +551,10 @@ void gg_store_l (gg_fifo *fdata, char *name, void *data)
     gg_fifo_item *np = gg_malloc (sizeof (gg_fifo_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    gg_mem_set_process (np->data, data, false, true); 
+    gg_mem_set_process (GG_EMPTY_STRING, data, false, true); 
     np->data = data;
     //
-    gg_mem_set_process (np->name, name, false, true); 
+    gg_mem_set_process (GG_EMPTY_STRING, name, false, true); 
     np->name = name;
     //
     np->next = NULL;
@@ -584,10 +584,10 @@ void gg_store (gg_fifo *fdata, char *name, void *data)
     gg_fifo_item *np = gg_malloc (sizeof (gg_fifo_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    gg_mem_set_process (np->data, data, false, true); 
+    gg_mem_set_process (GG_EMPTY_STRING, data, false, true); 
     np->data = data;
     //
-    gg_mem_set_process (np->name, name, false, true); 
+    gg_mem_set_process (GG_EMPTY_STRING, name, false, true); 
     np->name = name;
     //
     np->next = NULL;
@@ -708,10 +708,10 @@ void gg_list_store (gg_list *fdata, char *name, void *data, bool append)
     gg_list_item *np = gg_malloc (sizeof (gg_list_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    gg_mem_set_process (np->data, data, false, true); 
+    gg_mem_set_process (GG_EMPTY_STRING, data, false, true); 
     np->data = data;
     //
-    gg_mem_set_process (np->name, name, false, true); 
+    gg_mem_set_process (GG_EMPTY_STRING, name, false, true); 
     np->name = name;
     //
     np->next = NULL;

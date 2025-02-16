@@ -466,7 +466,7 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
             error "No Golf source source code found."
         fi
         if [[ ! -d "$GG_A" || ! -d "$GG_BLD" ]]; then
-            error "Golf application [$GG_C_NAME] does not exist. Use mgrg to create it."
+            error "Golf application [$GG_C_NAME] does not exist. Use 'gg -k' to create it."
         fi
     fi
     if [[ "$_DO_QUICK" == "0" && "$_DEVOPT" == "1" ]]; then

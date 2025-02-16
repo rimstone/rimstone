@@ -118,19 +118,6 @@ inline gg_num gg_mem_size ()
     return vm_tot;
 }
 
-//
-// Get number of actually alloc'd memory blocks
-//
-inline gg_num gg_mem_items ()
-{
-    gg_num res = 0;
-    gg_num i;
-    for (i = 0; i < vm_curr; i++)
-    {
-        if (!(vm[i].status & GG_MEM_FREE)) res++; else continue;
-    }
-    return res;
-}
 
 
 //
@@ -680,22 +667,30 @@ void gg_done ()
             else _gg_free ((unsigned char*)vm[i].ptr+GG_ALIGN, 2);
             i = j;
         }
-        //GG_TRACE("Freeing vm");
-        if (vm_tot_process == 0)  // there can be strategy here not to free, if we're just going to calloc/realloc
-                                  // again anyway
-        {
-            free (vm);
-            vm = NULL;
-        }
+        //vm_tot_process will almost certainly never be 0, because it includes constants (GG_MEM_CONST) which are also
+        //process-scoped. So TODO is probably (maybe) to devise a way to compact memory, but only upon request, since
+        //that would be an expensive operation.
     }
-    if (vm == NULL) 
+    // In order to test if all memory is released, change DEBUG0 to DEBUG below. It's not done normally since
+    // it makes everything very slow.
+#ifdef DEBUG0
+    {
+    int i;
+    for (i = 0; i < vm_curr; i++)
+    {
+        if (!(vm[i].status & GG_MEM_FREE) && !(vm[i].status & GG_MEM_PROCESS)) gg_report_error ("Memory not freed [%d]", i);
+    }
+    }
+#endif
+    // The following would be a part of compacting memory (a future maybe-feature)
+    /*if (vm == NULL) 
     {
         // init memory if it's not there. Keep it if it has process-memory, but release all others
         vm = calloc (vm_tot = GOLFMSIZE, sizeof (vml));
         if (vm == NULL) gg_report_error ("Out of memory");
         vm_curr = 0;
         vm_first_free = -1;
-    }
+    }*/
     vm_first_ord = -1;
 }
 

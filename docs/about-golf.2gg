@@ -7,7 +7,7 @@ about-golf \- Golf documentation (general)
 .B WHAT IS IT
 .LP
 
-Golf is a memory-safe and high-performance programming language and application server. Golf is a compiled language that creates native executables. It's main purpose is easy and rapid development and deployment of web services, applications on Linux back-end.
+Golf is a memory-safe and high-performance programming language and application server. Golf is a compiled language that creates native executables. It's main purpose is easy and rapid development and deployment of web services and applications on Linux back-end.
 
 Golf is built with industry-standard Free Open Source libraries, extensible with C programming language, and licensed under \fBApache 2\fP Free Open Source.
 

@@ -11,7 +11,7 @@ Golf is a programming language and  application server for building web services
 \fBDocumentation\fP.  
 \fBSource on github.com\fP. 
 \fBBlog\fP has useful articles and changelog.
-Current version is 241. This release passed 2312 automated functional tests.
+Current version is 244. This release passed 2312 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
@@ -197,6 +197,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .RE
 
 Releases:
+
+.RS 4
+\[bu]    
+2025-02-13 \fBGolf 244 released\fP
+.RE
+
 
 .RS 4
 \[bu]    
