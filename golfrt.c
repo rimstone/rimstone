@@ -42,7 +42,11 @@ static inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, 
 #define GG_WRSTR_BUF (GG_WRSTR.string)
 #define GG_WRSTR_POS (GG_WRSTR.buf_pos)
 #define GG_WRSTR_ADD (GG_WRSTR.wlen)
+#ifdef DEBUG
 #define GG_WRSTR_ADD_MIN 128 // min memory to add to write-string
+#else
+#define GG_WRSTR_ADD_MIN 1024 // min memory to add to write-string
+#endif
 #define GG_WRSTR_ADD_MAX 8192 // max memory to add to write-string
 #define GG_WRSTR_ADJMEM(x) ((x) = ((x) < GG_WRSTR_ADD_MAX ? 2*(x):(x)))
 
@@ -301,7 +305,7 @@ void gg_set_cookie (gg_input_req *req, char *cookie_name, char *cookie_value, ch
     }
     else
     {
-        gg_free (req->cookies[ind].data);
+        gg_free_int (req->cookies[ind].data);
     }
     char cookie_temp[GG_MAX_COOKIE_SIZE + 1];
     if (expires == NULL || expires[0] == 0)
@@ -425,7 +429,7 @@ gg_num gg_delete_cookie (gg_input_req *req, char *cookie_name, char *path, char 
     char *val = gg_find_cookie (req, cookie_name, &ci, &rpath, &exp);
     if (ci != -1)
     {
-        gg_free (req->cookies[ci].data);
+        gg_free_int (req->cookies[ci].data);
         char del_cookie[300];
         char safety_clause[200];
         gg_check_set_cookie (cookie_name, "deleted", secure, "", "", safety_clause, sizeof(safety_clause));
@@ -440,9 +444,9 @@ gg_num gg_delete_cookie (gg_input_req *req, char *cookie_name, char *path, char 
         }
         req->cookies[ci].data = gg_strdup (del_cookie);
         req->cookies[ci].is_set_by_program = 1;
-        gg_free (rpath);
-        gg_free (exp);
-        gg_free (val);
+        gg_free_int (rpath);
+        gg_free_int (exp);
+        gg_free_int (val);
         return ci;
     }
     return GG_ERR_EXIST;
@@ -961,14 +965,17 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     // and so we do NOT get cookies again from the client.
     if (req->cookies == NULL)
     {
-        // make a copy of cookies since we're going to change the string!
-        cookie = gg_strdup (gg_getenv ("HTTP_COOKIE"));
-        req->cookies = gg_calloc (GG_MAX_COOKIES, sizeof (gg_cookies)); // regardless of whether there are cookies in input or not
-                                // since we can set them. This also SETS TO ZERO is_set_by_program which is a MUST, so HAVE to use gg_calloc.
+        cookie = gg_getenv ("HTTP_COOKIE"); 
+        // we can set cookies, so whether they come in or not from the caller, we have to have them and they are set to zero
+        // since is_set_by_program flag MUST be zero, so memset() is a must.
+        static gg_cookies cookies[GG_MAX_COOKIES];
+        memset (cookies, 0, sizeof (cookies));
+        req->cookies = cookies;
         if (cookie[0] != 0)
         {
             GG_TRACE ("Cookie [%s]", cookie);
             gg_num tot_cookies = 0;
+            char *semi;
             while (1)
             {
                 if (tot_cookies >= GG_MAX_COOKIES) 
@@ -979,11 +986,13 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                 char *ew = strchr (cookie, ';');
                 if (ew != NULL)
                 {
-                    *ew = 0;
+                    semi = ew;
+                    *ew = 0; // changing environment memory! (reverting to it below)
                     ew++;
                     while (isspace(*ew)) ew++;
-                }
+                } else semi = NULL;
                 req->cookies[tot_cookies].data = gg_strdup (cookie);
+                if (semi != NULL) *semi = ';'; // make sure environment memory is unchanged!
                 GG_TRACE("Cookie [%s]",req->cookies[tot_cookies].data);
                 tot_cookies++;
                 if (ew == NULL) break;
@@ -1017,10 +1026,56 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 
     gg_num is_multipart = 0;
 
-    GG_TRACE ("Request Method: %s", req_method);
+    // if method,input used, then we only take input for GET, not POST
+    // because we convert any POST to GET in the previous code (or not and it remains body) and any files
+    // are already saved as actual files
+    if (method != NULL)
+    {
+        qry = input;
+    }
+    else
+    {
+        // get GET/DELETE query string
+        // POST/PATCH/PUT request can also have additional query string in URL string. Add it if present
+        qry = gg_getenv ("QUERY_STRING");
+    }
+    gg_num qry_len = (gg_num)strlen (qry); // length of query string
 
-    char *new_cont = (char*)gg_malloc (GG_MAX_SIZE_OF_URL + 1);
-    gg_num new_cont_ptr = 0;
+    GG_TRACE ("Request Method: %s", req_method);
+    // content type is generally not specified for GET or DELETE, but it may be
+    // so this is generic processing with a few constraints
+    cont_type = gg_getenv ("CONTENT_TYPE");
+    // size of input data
+    cont_len = gg_getenv ("CONTENT_LENGTH");
+    if (cont_type[0] != 0) 
+    {
+        if (cont_len[0] != 0)
+        {
+            cont_len_byte = atoi (cont_len);
+        } else cont_len_byte = 0;
+    } else cont_len_byte = 0;
+
+
+    static bool one_inp = false;
+    static char *inp_body = NULL;
+    static char *inp_url = NULL;
+    if (!one_inp)
+    {
+        gg_mem_process = true;
+        inp_body = gg_malloc (GG_MAX_SIZE_OF_BODY);
+        inp_url = gg_malloc (GG_MAX_SIZE_OF_URL);
+        gg_mem_process = false;
+        // these are indestructible, cannot be deleted no matter one
+        gg_mem_set_const (inp_body);
+        gg_mem_set_const (inp_url);
+        one_inp = true;
+    }
+
+    char *new_url = inp_url;
+    char *new_body;
+    if (cont_len_byte + 32 < GG_MAX_SIZE_OF_BODY) new_body = inp_body; else new_body = (char*)gg_malloc (cont_len_byte + 32);
+
+    gg_num new_url_ptr = 0;
     gg_num would_write;
 
     bool is_post = false;
@@ -1038,11 +1093,6 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     else if (!strcasecmp(req_method, "DELETE")) {is_delete=true;req->method=GG_DELETE;}
     else {is_other=true;req->method=GG_OTHER;}
 
-    // content type is generally not specified for GET or DELETE, but it may be
-    // so this is generic processing with a few constraints
-    cont_type = gg_getenv ("CONTENT_TYPE");
-    // size of input data
-    cont_len = gg_getenv ("CONTENT_LENGTH");
     if (cont_type[0] != 0)
     {
         // handle POST request, first check content type
@@ -1060,47 +1110,43 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
             }
         }
         if (!strcasecmp (cont_type, "application/x-www-form-urlencoded")) is_query_string = true;
-        if (cont_len[0] != 0)
+        if (cont_len_byte  != 0)
         {
-            cont_len_byte = atoi (cont_len);
-            if (cont_len_byte != 0)
+            // If query string, then limit of URL, otherwise max upload for file 
+            if (!is_query_string)
             {
-                // If query string, then limit of URL, otherwise max upload for file 
-                if (!is_query_string)
-                {
-                    if (cont_len_byte >= pc->app.max_upload_size)
-                    {
-                        gg_bad_request();
-                        gg_report_error ("Upload file size too large [%ld]", cont_len_byte);
-                    }
-                }
-                else
-                {
-                    if (cont_len_byte >= GG_MAX_SIZE_OF_URL)
-                    {
-                        gg_bad_request();
-                        gg_report_error ("Query string larger than the limit of [%d] bytes (1)", GG_MAX_SIZE_OF_URL);
-                    }
-                }
-                // Must have 2 extra bytes b/c for URL two nulls in a row signify the end of name/value pairs
-                // which are normally separated by a null
-                content = (char*)gg_malloc (cont_len_byte + 2);
-                // get input data
-                if (gg_gen_util_read (content, cont_len_byte) != 1)
+                if (cont_len_byte >= pc->app.max_upload_size)
                 {
                     gg_bad_request();
-                    gg_report_error ("Error reading request body");
+                    gg_report_error ("Upload file size too large [%ld]", cont_len_byte);
                 }
-                content [cont_len_byte] = content[cont_len_byte+1] = 0;
-
-                // for example, GET might use body to convey an image of an object that needs to be found
-                // plain query string may not be enough. Or a json document needed to find the resource.
-                // Here we check if body of message is not multipart
-                req->body = content;                
-                req->body_len = cont_len_byte;
-                gg_num id = gg_mem_get_id (req->body);
-                gg_mem_set_len(id, cont_len_byte+1);
             }
+            else
+            {
+                if (cont_len_byte >= GG_MAX_SIZE_OF_URL)
+                {
+                    gg_bad_request();
+                    gg_report_error ("Query string larger than the limit of [%d] bytes (1)", GG_MAX_SIZE_OF_URL);
+                }
+            }
+            // Must have 2 extra bytes b/c for URL two nulls in a row signify the end of name/value pairs
+            // which are normally separated by a null
+            content = new_body;
+            // get input data
+            if (gg_gen_util_read (content, cont_len_byte) != 1)
+            {
+                gg_bad_request();
+                gg_report_error ("Error reading request body");
+            }
+            content [cont_len_byte] = content[cont_len_byte+1] = 0;
+
+            // for example, GET might use body to convey an image of an object that needs to be found
+            // plain query string may not be enough. Or a json document needed to find the resource.
+            // Here we check if body of message is not multipart
+            req->body = content;                
+            req->body_len = cont_len_byte;
+            gg_num id = gg_mem_get_id (req->body);
+            gg_mem_set_len(id, cont_len_byte+1);
         }
     }
     else
@@ -1111,8 +1157,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
         // This works for POST/PUT/PATCH and for GET/DELETE (where content will be created for them)
         // Must have 2 extra bytes b/c for URL two nulls in a row signify the end of name/value pairs
         // which are normally separated by a null
-        cont_len_byte = 0;
-        content = (char*)gg_malloc (cont_len_byte + 2);
+        content = new_url;
         content[0] = 0;
     }
 
@@ -1140,7 +1185,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
             cont_len_byte = 0; // if there is any query string after this, those params are on their own,
             // Must have 2 extra bytes b/c for URL two nulls in a row signify the end of name/value pairs
             // which are normally separated by a null
-            content = (char*)gg_malloc (cont_len_byte + 2);
+            content = new_url;
             content[0] = 0;
         }
     }
@@ -1331,27 +1376,27 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                     enc = NULL;
                     // name of attachment input parameter
                     gg_encode (GG_URL, name_val, len_of_name_val, &enc, false);
-                    would_write = snprintf (new_cont + new_cont_ptr, avail = GG_MAX_SIZE_OF_URL - new_cont_ptr - 2, "%s=%s&", name, enc);
-                    gg_free (enc);
+                    would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s=%s&", name, enc);
+                    gg_free_int (enc);
                     if (would_write >= avail)
                     {
                         gg_bad_request();
                         gg_report_error ("Web input larger than the limit of [%d] bytes (2)", GG_MAX_SIZE_OF_URL);
                     }
-                    new_cont_ptr += would_write;
+                    new_url_ptr += would_write;
                     if (file_name[0] != 0)
                     {
                         // provide original (client) file name
                         enc = NULL;
                         gg_encode (GG_URL, file_name, filename_len, &enc, false);
-                        gg_num would_write = snprintf (new_cont + new_cont_ptr, avail = GG_MAX_SIZE_OF_URL - new_cont_ptr - 2, "%s_filename=%s&", name, enc);
-                        gg_free (enc);
+                        gg_num would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_filename=%s&", name, enc);
+                        gg_free_int (enc);
                         if (would_write  >= avail)
                         {
                             gg_bad_request();
                             gg_report_error ("Web input larger than the limit of [%d] bytes (3)", GG_MAX_SIZE_OF_URL);
                         }
-                        new_cont_ptr += would_write;
+                        new_url_ptr += would_write;
                     }
                     // write file
                     // generate unique number for file and directory, create dir if it doesn't exist
@@ -1394,56 +1439,56 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                             // provide location where file is actually stored on server
                             enc = NULL;
                             gg_encode (GG_URL, write_dir, -1, &enc, true); // write_dir is an allocated memory with length, so -1 here is fine
-                            gg_num would_write = snprintf (new_cont + new_cont_ptr, avail = GG_MAX_SIZE_OF_URL - new_cont_ptr - 2, "%s_location=%s&", name, enc);
-                            gg_free (enc);
+                            gg_num would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_location=%s&", name, enc);
+                            gg_free_int (enc);
                             if (would_write  >= avail)
                             {
                                 gg_bad_request();
                                 gg_report_error ("Web input larger than the limit of [%d] bytes (4)", GG_MAX_SIZE_OF_URL);
                             }
-                            new_cont_ptr += would_write;
+                            new_url_ptr += would_write;
 
                             // provide extension of the file
-                            would_write = snprintf (new_cont + new_cont_ptr, avail = GG_MAX_SIZE_OF_URL - new_cont_ptr - 2, "%s_ext=%s&", name, ext);
+                            would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_ext=%s&", name, ext);
                             if (would_write  >= avail)
                             {
                                 gg_bad_request();
                                 gg_report_error ("Web input larger than the limit of [%d] bytes (5)", GG_MAX_SIZE_OF_URL);
                             }
-                            new_cont_ptr += would_write;
+                            new_url_ptr += would_write;
 
                             // provide size in bytes of the file
-                            would_write = snprintf (new_cont + new_cont_ptr, avail = GG_MAX_SIZE_OF_URL - new_cont_ptr - 2, "%s_size=%ld&", name, multi_ctype_len);
+                            would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_size=%ld&", name, multi_ctype_len);
                             if (would_write  >= avail)
                             {
                                 gg_bad_request();
                                 gg_report_error ("Web input larger than the limit of [%d] bytes (6)", GG_MAX_SIZE_OF_URL);
                             }
-                            new_cont_ptr += would_write;
+                            new_url_ptr += would_write;
 
                         }
                         else
                         {
                             // no file uploaded, just empty filename as an indicator
-                            gg_num would_write = snprintf (new_cont + new_cont_ptr, avail = GG_MAX_SIZE_OF_URL - new_cont_ptr - 2, "%s_filename=&", name);
+                            gg_num would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_filename=&", name);
                             if (would_write >= avail)
                             {
                                 gg_bad_request();
                                 gg_report_error ("Web input larger than the limit of [%d] bytes (8)", GG_MAX_SIZE_OF_URL);
                             }
-                            new_cont_ptr += would_write;
+                            new_url_ptr += would_write;
                         }
                     }
 
                 }
-                if (new_cont_ptr > 0) 
+                if (new_url_ptr > 0) 
                 {
-                    new_cont_ptr--;
-                    new_cont[new_cont_ptr] = 0; // the extra '&' which is always appended
+                    new_url_ptr--;
+                    new_url[new_url_ptr] = 0; // the extra '&' which is always appended
                 }
 
-                content = new_cont; // have URL (built) and pass it along as if it were a regular URL GET
-                cont_len_byte = new_cont_ptr;
+                content = new_url; // have URL (built) and pass it along as if it were a regular URL GET
+                cont_len_byte = new_url_ptr;
             }
             else
             {
@@ -1454,7 +1499,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                     cont_len_byte = 0; // if there is any query string after this, those params are on their own,
                     // Must have 2 extra bytes b/c for URL two nulls in a row signify the end of name/value pairs
                     // which are normally separated by a null
-                    content = (char*)gg_malloc (cont_len_byte + 2);
+                    content = new_url;
                     content[0] = 0;
                 }
             }
@@ -1481,32 +1526,25 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     // regardless if this is multipart or not. This is for any method (get, post, put, delete, patch)
     //
 
-    // if method,input used, then we only take input for GET, not POST
-    // because we convert any POST to GET in the previous code (or not and it remains body) and any files
-    // are already saved as actual files
-    if (method != NULL)
-    {
-        qry = input;
-    }
-    else
-    {
-        // get GET/DELETE query string
-        // POST/PATCH/PUT request can also have additional query string in URL string. Add it if present
-        qry = gg_getenv ("QUERY_STRING");
-    }
 
     if (qry != NULL && qry[0] != 0)
     {
         // cont_len_byte is the index where this query string is to be copied, so length alloced is cont_len_byte+1
-        gg_num ql = (gg_num)strlen (qry);
-        content = (char*)gg_realloc(gg_mem_get_id(content), cont_len_byte + ql + 3); // 1 for & (below) and 1 for \0, 1 for good luck
+        if (cont_len_byte + qry_len +3 >= GG_MAX_SIZE_OF_URL)
+        {
+            gg_bad_request();
+            gg_report_error ("URL too long [%ld]", cont_len_byte+qry_len+3);
+        }
+        // content is the memory that's already prefilled
+        // based on which path we took to get here, so if there's query
+        // already in content, which would have come from body, we append to it
         if (cont_len_byte > 0) 
         {
             content[cont_len_byte] = '&'; // add & to the end of existing URL, if any
             cont_len_byte++; // and move one byte forward, to the point where we can copy query string from URL alone (as like GET)
         }
-        memcpy (content + cont_len_byte, qry, ql+1);
-        cont_len_byte = cont_len_byte+ql+1; // where any additional text would go to
+        memcpy (content + cont_len_byte, qry, qry_len+1);
+        cont_len_byte = cont_len_byte+qry_len+1; // where any additional text would go to
     }
     // Now the URL is actually built from the POST request that can be parsed as an actual request
 
@@ -2299,7 +2337,7 @@ gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
         char *write_to = (char*)gg_malloc (GG_MAX_ENC_BLOWUP(vLen));
         gg_num total_written = gg_encode_base (enc_type, s, vLen, &(write_to), 0);
         res = gg_write_web (false, pc, write_to, total_written);
-        gg_free (write_to);
+        gg_free_int (write_to);
         if (res < 0) GG_TRACE ("Error in writing direct (puts) of length [%ld], error [%s]", total_written, strerror(errno));
         else GG_TRACE("Wrote direct (puts) [%ld] bytes", res);
         return res;
@@ -2372,8 +2410,11 @@ gg_num gg_printf (bool iserr, gg_num enc_type, char *format, ...)
 
     if (GG_WRSTR_CUR == -1)
     {
-
+#ifdef DEBUG
         gg_num ebuf_size=256;
+#else
+        gg_num ebuf_size=1024;
+#endif
         char *ebuf = (char*)gg_malloc (ebuf_size);
         while (1)
         {
@@ -2398,13 +2439,13 @@ gg_num gg_printf (bool iserr, gg_num enc_type, char *format, ...)
             // here final_out is allocated in gg_encode, and so is free 3 lines down
             gg_num final_len = gg_encode (enc_type, ebuf, tot_written, &final_out, false); // must state total_written, since we haven't set exact length for ebuf
             tot_written = gg_write_web (iserr, pc, final_out, final_len);
-            gg_free (final_out);
+            gg_free_int (final_out);
         }
         else
         {
             tot_written = gg_write_web (iserr, pc, ebuf, tot_written);
         }
-        gg_free (ebuf); // so there is no leak when unmanaged memory
+        gg_free_int (ebuf); // so there is no leak when unmanaged memory
         if (tot_written < 0) GG_TRACE ("Error in writing direct, error [%s]", strerror(errno));
         else GG_TRACE("Wrote direct [%ld] bytes", tot_written);
         return tot_written;
@@ -2450,7 +2491,7 @@ gg_num gg_printf (bool iserr, gg_num enc_type, char *format, ...)
             GG_WRSTR_POS-=tot_written;
             gg_num final_len = gg_encode (enc_type, GG_WRSTR_BUF+GG_WRSTR_POS, tot_written, &final_out, false); // must set length to total_written, since we haven't set exact length for GG_WRSTR_BUF+GG_WRSTR_POS, and we can't either, since it's a part of continuous write-string built buffer, which is being built right here
             tot_written = gg_puts_to_string (final_out, final_len);
-            gg_free (final_out);
+            gg_free_int (final_out);
             break;
         case GG_NOENC:
             // nothing to do, what's printed to output buffer is there to stay unchanged
@@ -2634,7 +2675,7 @@ FILE *gg_make_document (char **write_dir, gg_num is_temp)
     }
     gg_num wb = snprintf (ufile, file_size, "%s/%ldXXXXXX", path, (gg_num)getpid());
     gg_mem_set_len (id, wb+1);
-    gg_free (rnd);
+    gg_free_int (rnd);
     //
     // CANNOT USE RND BEYOND THIS POINT
     //
@@ -3567,6 +3608,7 @@ void gg_out_file (char *fname, gg_header *header)
         char *str = gg_malloc(fsize + 1);
         if (fread(str, fsize, 1, f) != 1)
         {
+            gg_free_int (str);
             GG_TRACE ("Cannot read [%ld] bytes from file [%s], error [%s]", fsize, fname, strerror(errno));
             gg_cant_find_file();
             return;
@@ -3632,6 +3674,7 @@ void gg_out_file (char *fname, gg_header *header)
                     // to get length from header->file_name, which isn't Gliim alloc-memory!
                     int bw = (int)gg_encode (GG_URL, header->file_name, strlen(header->file_name), &enc, false); // header->file_name is not alloc'd mem
                     snprintf (disp_name, sizeof(disp_name), "%s; filename*=UTF8''%.*s", header->disp, bw, enc);
+                    gg_free_int (enc);
                 } 
                 else 
                 {
@@ -3693,7 +3736,7 @@ void gg_out_file (char *fname, gg_header *header)
             // In this case, since gg_gen_write is synchronous, the server couldn't send all the data and it closed the connection
             // with the client. Nothing else to do for us.  
         }
-        gg_free (str);
+        gg_free_int (str);
 
     }
 }
@@ -3910,7 +3953,7 @@ char *gg_realpath (char *path)
     char *pcopy = gg_strdup (path);
     if ((res = realpath (dirname (pcopy), NULL)) != NULL)
     {
-        gg_free (pcopy);
+        gg_free_int (pcopy);
         char *retval = gg_strdup(res); // in order to avoid memory leaks
                                           // correct length set in strdup
         free (res);
@@ -3919,7 +3962,7 @@ char *gg_realpath (char *path)
     else 
     {
         GG_ERR;
-        gg_free (pcopy);
+        gg_free_int (pcopy);
         return GG_EMPTY_STRING;
     }
 }
@@ -4010,7 +4053,7 @@ char *gg_getheader(char *h)
     gg_num i;
     for (i = 5; i < hlen + 5; i ++) if (hd[i] == '-') hd[i]='_'; // replace - with _, skip HTTP_
     char *res = gg_getenv(hd);
-    gg_free (hd);
+    gg_free_int (hd);
     return res;
 }
 

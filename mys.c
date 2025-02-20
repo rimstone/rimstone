@@ -181,9 +181,9 @@ int gg_maria_stmt_rows (char ***row, unsigned long **lens)
     }
 
     // free allocations
-    gg_free (GG_CURR_DB.dbc->maria.bindout);
-    gg_free (rlen);
-    gg_free (isnull);
+    gg_free_int (GG_CURR_DB.dbc->maria.bindout);
+    gg_free_int (rlen);
+    gg_free_int (isnull);
     return 0;
 }
 
@@ -427,7 +427,7 @@ int gg_maria_prep_stmt(void **prep, char *stmt, gg_num num_of_args)
             cerror = "Cannot prepare statement";
             return 1;
         }
-        if (stmt != origs) gg_free (stmt); // release statement if actually allocated
+        if (stmt != origs) gg_free_int (stmt); // release statement if actually allocated
         // save it for reuse for as long as the process lives (minus reconnects to db, but those are rare)
         *prep = GG_CURR_DB.dbc->maria.stmt;
     }
@@ -508,7 +508,7 @@ gg_num gg_maria_stmt_exec()
     // bind ptr would remain and double free would be attempted
     if (GG_CURR_DB.dbc->maria.bind != NULL)
     {
-        gg_free (GG_CURR_DB.dbc->maria.bind);
+        gg_free_int (GG_CURR_DB.dbc->maria.bind);
         GG_CURR_DB.dbc->maria.bind = NULL;
     }
     return res;

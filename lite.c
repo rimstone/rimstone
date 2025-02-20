@@ -159,10 +159,10 @@ int gg_lite_get_data ()
                 gg_num i;
                 for (i = 0; i < cdata; i ++) 
                 {
-                    gg_free ((qrows)[i]);
+                    gg_free_int ((qrows)[i]);
                 }
-                if (qrows != NULL) gg_free (qrows);
-                if (qlens != NULL) gg_free (qlens);
+                if (qrows != NULL) gg_free_int (qrows);
+                if (qlens != NULL) gg_free_int (qlens);
                 return 1;
             } 
         }
@@ -258,7 +258,7 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
         snprintf (em, sizeof(em), "Database file [%s] cannot have new line", ts);
         GG_TRACE ("%s", em);
         if (abort_if_bad == 1) gg_report_error ("%s", em);
-        gg_free(cinfo);
+        gg_free_int(cinfo);
         return NULL;
     }
     // make connection to database
@@ -269,10 +269,10 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
         GG_TRACE ("%s", em);
         if (abort_if_bad == 1) gg_report_error ("%s", em);
         gg_end_connection (0); // without it, we would think connection exists
-        gg_free(cinfo);
+        gg_free_int(cinfo);
         return NULL;
     }
-    gg_free(cinfo);
+    gg_free_int(cinfo);
 
     return GG_CURR_DB.dbc;
 }
@@ -349,7 +349,7 @@ int gg_lite_prep_stmt(char is_prep, void **prep, char *stmt, gg_num num_of_args)
             cerror = "Cannot prepare statement";
             return 1;
         }
-        if (stmt != origs) gg_free (stmt); // release statement if actually allocated
+        if (stmt != origs) gg_free_int (stmt); // release statement if actually allocated
         // save it for reuse for as long as the process lives (minus reconnects to db, but those are rare)
         if (prep != NULL) *prep = GG_CURR_DB.dbc->sqlite.stmt;
     }

@@ -370,15 +370,15 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
                       /* This is the new absolute URL that you could redirect to, even if
                        *            * the Location: response header may have been a relative URL. */
                       GG_TRACE("Redirecting to [%s]", location);
-                      gg_free (sresp.ptr); // free the old result
-                      gg_free (shead.ptr); // free the old result
+                      gg_free_int (sresp.ptr); // free the old result
+                      gg_free_int (shead.ptr); // free the old result
                       //
                       // Recursive call to this function is done so that its result is always immediately
                       // passed back to the caller, so that it is a clean winding and unwinding. There is no unwinding followed
                       // by winding followed by unwinding etc. There is only winding and then unwinding back to the original caller.
                       // So 'tries' is increased up to the last recursive call, and after that one returns without a recursion it goes
                       // back to the original one without any interruption. THat's why we can set tries to zero right away.
-                      // So, when 'res' is obtained it MUST BE immediate passed back.
+                      // So, when 'res' is obtained it MUST BE immediately passed back.
                       //
                       gg_num res = gg_post_url_with_response(location, result, head, cc.error, cert, cookiejar, resp_code, timeout, bodyreq, fields, files, vh, method, payload, payload_len);
                       tries = 0;

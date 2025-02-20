@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "247"
+#define GG_VERSION "253"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -207,7 +207,8 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #define GG_MAX_NESTED_WRITE_STRING 5 // max # of nests of write-string
 // max # of custom header a programmer can add to custom reply when replying with a file
 #define GG_MAX_HTTP_HEADER 32
-#define GG_MAX_SIZE_OF_URL 32000 /* maximum length of browser url (get) */
+#define GG_MAX_SIZE_OF_BODY 32768 /* maximum length of body that uses fixed buffer */
+#define GG_MAX_SIZE_OF_URL 4096 /* maximum length of browser url (get) that uses fixed buffer */
 #define GG_MAX_ERR_LEN 12000 /* maximum error length in report error */
 #define GG_MAX_UPLOAD_DIR  64000 /* max directories in file directory */
 #define GG_MAX_FILENAME_LEN 512 /* max file name for make document */
@@ -422,6 +423,8 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 // memory alignment of 8 bytes for alloc'd data storage
 #define GG_ALIGN (sizeof(uint64_t))
 #define gg_free(x) _gg_free(x,0)
+// gg_free_int() is internal version of gg_free() which DOES always delete memory (gg_free() in general doesn't unless at the end of request)
+#define gg_free_int(x) _gg_free(x,3)
 
 // 
 // Data type definitions
@@ -1113,6 +1116,7 @@ gg_num gg_mem_get_len (gg_num r);
 char *gg_strdupl (char *s, gg_num from, gg_num l);
 char *gg_strdup (char *s);
 void *gg_mem_add_const (void *p, gg_num len);
+void gg_mem_set_const (void *p);
 void gg_mem_set_status (gg_num id, unsigned char s);
 gg_num gg_add_mem (void *p);
 void *gg_vmset (void *p, gg_num r);

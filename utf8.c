@@ -350,7 +350,7 @@ gg_num gg_utf8_to_text (char *val, gg_num len, char **resptr, char **err)
     {
         gg_num wres = gg_puts (GG_NOENC, res, r, true);
         if (wres < 0) GG_TRACE ("Error in writing direct, error [%s]", strerror(errno)); else GG_TRACE("Wrote direct [%ld] bytes", wres);
-        gg_free (res); // free output string
+        gg_free_int (res); // free output string
     }
     return r;
 }

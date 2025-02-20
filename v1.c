@@ -2224,7 +2224,7 @@ void do_numstr (char *to, char *num0, char *olen, char *base)
     if (go_out) 
     {
         oprintf ("gg_puts (GG_NOENC, %s, %s, true);\n", to, olen);
-        oprintf ("gg_free (%s);\n", to); // for printing, release memory right away
+        oprintf ("gg_free_int (%s);\n", to); // for printing, release memory right away
 
         oprintf ("}\n");
     }
@@ -3079,9 +3079,9 @@ void generate_sql_code (gg_gen_ctx *gen_ctx, char is_prep)
     }
 
     // deallocate _gg_sql_buf_<query name> if not prepared and no input params (which is the condition for it to be allocated)
-    if (gen_ctx->qry[query_id].qry_found_total_inputs > 0 && is_prep == 0) oprintf("gg_free (_gg_sql_buf_%s);\n", gen_ctx->qry[query_id].name);
+    if (gen_ctx->qry[query_id].qry_found_total_inputs > 0 && is_prep == 0) oprintf("gg_free_int (_gg_sql_buf_%s);\n", gen_ctx->qry[query_id].name);
     // deallocate SQL params used for prepared query
-    oprintf("if (_gg_sql_params_%s != NULL) gg_free (_gg_sql_params_%s);\n", gen_ctx->qry[query_id].name, gen_ctx->qry[query_id].name);
+    oprintf("if (_gg_sql_params_%s != NULL) gg_free_int (_gg_sql_params_%s);\n", gen_ctx->qry[query_id].name, gen_ctx->qry[query_id].name);
 }
 
 //
@@ -7523,7 +7523,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         gg_num mtext_p = check_var (&mtext, GG_DEFUNKN, NULL);
                         if (mtext_p == GG_DEFSTRINGSTATIC) oprintf("_gg_free ((void*)(%s),0);\n", mtext);
-                        else oprintf("_gg_free ((void*)(%s),3);\n", mtext);
+                        else oprintf("gg_free_int ((void*)(%s));\n", mtext);
                         oprintf("%s=GG_EMPTY_STRING;\n", mtext);
                         continue;
                     }
@@ -9186,7 +9186,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, false); 
                         // must assign "" in the loop, checking after loop for this pointer in case there was a break from the loop, but by setting to ""
                         // here, we won't free again
-                        oprintf ("if (gg_rl_local_memptr_%ld!=GG_EMPTY_STRING) {gg_free (gg_rl_local_memptr_%ld); gg_rl_local_memptr_%ld = GG_EMPTY_STRING;}\n", open_readline-1, open_readline-1, open_readline-1);
+                        oprintf ("if (gg_rl_local_memptr_%ld!=GG_EMPTY_STRING) {gg_free_int (gg_rl_local_memptr_%ld); gg_rl_local_memptr_%ld = GG_EMPTY_STRING;}\n", open_readline-1, open_readline-1, open_readline-1);
                         oprintf("}\n");
                         oprintf ("if (!feof(gg_rl_%ld)) {GG_ERR;*gg_rl_read_%ld = (gg_num)GG_ERR_READ;} else {*gg_rl_read_%ld = (gg_num)GG_OKAY;}\n", open_readline-1, open_readline-1, open_readline-1); // this is if there was an error, not end of file
                         oprintf ("fclose (gg_rl_%ld);\n", open_readline-1); // open_readline was ++ after generating the code, so this is it
@@ -9194,7 +9194,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // set "to" to empty, otherwise it's pointing to a freed pointer and Golf will try to free it again in optimized-memory mode, and crash
                         // so 'to' pointer is set to empty either way - we do equivalent of delete-string on it (which is free+set to empty)
                         // this is different because freeing setting to empty are not in the same place here
-                        oprintf ("if (gg_rl_local_memptr_%ld!=GG_EMPTY_STRING) gg_free (gg_rl_local_memptr_%ld);\n*gg_to_local_memptr_%ld = GG_EMPTY_STRING;\n", open_readline-1, open_readline-1, open_readline-1);
+                        oprintf ("if (gg_rl_local_memptr_%ld!=GG_EMPTY_STRING) gg_free_int (gg_rl_local_memptr_%ld);\n*gg_to_local_memptr_%ld = GG_EMPTY_STRING;\n", open_readline-1, open_readline-1, open_readline-1);
                         oprintf ("if (gg_rl_memptr_%ld != NULL) free(gg_rl_memptr_%ld);\n",  open_readline-1, open_readline-1);
                         oprintf("}\n");
                         open_readline--;
@@ -9737,7 +9737,7 @@ int main (int argc, char* argv[])
         // The following are static variables, i.e. those that need not be seen outside this module
         oprintf ("static gg_db_connections gg_dbs;\n");
         oprintf("static gg_num gg_done_init=0;\n");
-        oprintf("static gg_input_req *gg_req;\n");
+        oprintf("static gg_input_req gg_req;\n");
         oprintf("static gg_config *gg_s_pc;\n");
 
         oprintf("int main (int argc, char *argv[])\n");
@@ -9797,11 +9797,10 @@ int main (int argc, char* argv[])
 
         // need to startprint, it is automatic with first gg_printf
 
-        oprintf("gg_req = (gg_input_req*)gg_malloc (sizeof (gg_input_req));\n");
-        oprintf("gg_init_input_req(gg_req);\n");
+        oprintf("gg_init_input_req(&gg_req);\n");
 
-        oprintf("gg_s_pc->ctx.req = gg_req;\n"); 
-        oprintf("gg_req->app = &(gg_s_pc->app);\n");
+        oprintf("gg_s_pc->ctx.req = &gg_req;\n"); 
+        oprintf("gg_req.app = &(gg_s_pc->app);\n");
 
 
         oprintf("GG_TRACE (\"STARTING REQUEST [%%s]\", gg_s_pc->app.trace_dir);\n");
@@ -9820,7 +9819,7 @@ int main (int argc, char* argv[])
         // handled (such as Forbidden reply) (otherwise there would be an erorring out). If return
         // value is 0, we just go directly to gg_shut() to flush the response out.
         //
-        oprintf("if (gg_get_input(gg_req, NULL, NULL) == 1)\n");
+        oprintf("if (gg_get_input(&gg_req, NULL, NULL) == 1)\n");
         oprintf("{\n");
         // main function that handles everything - programmer must implement this or use generated
         oprintf("gg_dispatch_request();\n");
@@ -9838,7 +9837,7 @@ int main (int argc, char* argv[])
         //
         // gg_shut MUST ALWAYS be called at the end - no request can bypass it
         //
-        oprintf("gg_shut(gg_req);\n");
+        oprintf("gg_shut(&gg_req);\n");
         // now we now at this point gg_req is valid; if it was NULL, gg_shut would exit
 
         // by setting gg_done_err_setjmp to 0 here, we make sure that report-error will jump to 

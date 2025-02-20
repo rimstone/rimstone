@@ -172,8 +172,8 @@ gg_num gg_begin_transaction(char *t, char erract, char **err, char **errt)
         GG_CURR_DB.is_begin_transaction = 0;
         return 0;
     }
-    if (err != NULL) *err = er; else gg_free((void*)er);
-    if (errt != NULL) *errt = errm; else gg_free((void*)errm);
+    if (err != NULL) *err = er; else gg_free_int((void*)er);
+    if (errt != NULL) *errt = errm; else gg_free_int((void*)errm);
     GG_CURR_DB.is_begin_transaction = 1;
     return 1;
 }
@@ -245,8 +245,8 @@ gg_num gg_commit(char *t, char erract, char **err, char **errt)
     {
         return 0;
     }
-    if (err != NULL) *err = er; else gg_free((void*)er);
-    if (errt != NULL) *errt = errm; else gg_free((void*)errm);
+    if (err != NULL) *err = er; else gg_free_int((void*)er);
+    if (errt != NULL) *errt = errm; else gg_free_int((void*)errm);
     return 1;
 }
 
@@ -273,8 +273,8 @@ gg_num gg_rollback(char *t, char erract, char **err, char **errt)
     {
         return 0;
     }
-    if (err != NULL) *err = er; else gg_free((void*)er);
-    if (errt != NULL) *errt = errm; else gg_free((void*)errm);
+    if (err != NULL) *err = er; else gg_free_int((void*)er);
+    if (errt != NULL) *errt = errm; else gg_free_int((void*)errm);
     return 1;
 }
 
@@ -1076,52 +1076,43 @@ int gg_db_escape(char *from, char *to, gg_num *len)
 
 
 // 
-// Run-time construction of SQL statement. 'dest' is the output SQL text, destSize is the size of
-// memory currently available for SQL text in 'dest'. 'num_of_args' is the number of input arguments that follow
-// 'format' which is a string that can only contain '%s' as a format placeholder. The input arguments following
-// 'format' can be NULL or otherwise (if NULL it's empty string).
+// Run-time construction of SQL statement. 'dest' is the output SQL text, 
+// 'num_of_args' is the number of input arguments that follow.
+// 'format' which is a string that can only contain '%s' as a format placeholder. The number of inputs
+// must match the number of '%s'. This function detects and prevents SQL injection.
 // In dynamic queries, the SQL text is a run-time variable, so we don't know the number of '%s' in there ahead of time (i.e. # of inp. params).
 // This function makes sure that SQL injection cannot happen by handling single quotes and slashes within strings. 
-// We will also adjust buffer destSize to what's needed, this avoids allocating fixed buffers and allows for unlimited query size. 'dest' is always a golf string so we will adjust it here.
 // The method is not one of binding but of constructing a full SQL text with data in it, but under sterile conditions not conducive to SQL injection.
-// We increase destSize to match what's needed and dest changes too. The caller code will free dest after SQL executes, so if in a loop,
+// The caller code will free dest after SQL executes, so if in a loop,
 // it will allocate again and so on.
 //
 void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...) 
 {
     GG_TRACE("");
-    assert (format);
     
     // Double quotes are allowed in format because ANSI_QUOTES  is set at the session's beginning.
     // So double quotes can NOT be used for string literals, ONLY single quotes.
-
     gg_num num_of_percents;
     gg_num count_percents;
     count_percents = gg_count_substring (format, _GG_LOOK_S, sizeof(_GG_LOOK_S)-1, 1);
     num_of_percents = count_percents; // used in a countdown later in this code
 
     
-    // For the format, there has to be an even number of single quotes. An uneven number suggests
+    // For the format, there has to be an even number of single quotes. An uneven number means
     // faulty query. For example, insert ... values 'xyz', 'aaa  - in this case the last string
     // never ends
     gg_num count_single_quote;
     count_single_quote = gg_count_substring (format, "'", 1, 1);
     if (count_single_quote % 2 != 0)
     {
-        gg_report_error ("Incorrect number of single quotes, must be an even number, query [%s]", format);
+        gg_report_error ("Unbalanced single quotes in query [%s]", format);
     }
 
     // Format must be smaller than the destination size to begin with
-    gg_num flen = strlen (format);
-    gg_num destSize;
-    *dest = (char*)gg_malloc (destSize = flen + 1);
-    memcpy (*dest, format, flen + 1);
-
-    char *curr_sql_arg = (char*)gg_malloc(1); // current argument is constantly re-allocated for args and dealloced at the end
+    gg_num flen = gg_mem_get_len (gg_mem_get_id(format));
 
     // All %s must be quoted, otherwise in select ... where id=%s, it could be made to be
     // select ... where id=2;drop table x; if input parameters is id=2;drop table x;
-#define _GG_LOOK_S "'%s'"
     gg_num numPlaceWithQuotes = gg_count_substring (format, _GG_LOOK_S, sizeof(_GG_LOOK_S)-1, 1);
     if (numPlaceWithQuotes != count_percents)
     {
@@ -1129,46 +1120,71 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
     }
 
     // num_of_args isn't the same as count_percents. num_of_args is the total number of input params, some of which may be NULL
-    // count_percentss is the number of '%s' in SQL statement, which must be equal to # of non-NULL input params (among num_of_args params)
+    // count_percents is the number of '%s' in SQL statement, which must be equal to # of non-NULL input params (among num_of_args params)
 
     va_list vl;
+    // First, find out the maximum length of all input params
+    // and also the maximum length of any of the params
     va_start (vl, format);
-
+    gg_num max_inlen = 0;
+    gg_num max_arglen = 0;
     gg_num i;
-    char *curr = *dest;
     char *curr_input;
+
+    for (i = 0; i < num_of_args; i++)
+    {
+        curr_input = va_arg (vl, char *);
+        gg_num alen;
+        max_inlen += 2*(alen=gg_mem_get_len (gg_mem_get_id(curr_input))); // twice for worst case of each character escaped
+        if (alen >= max_arglen) max_arglen = alen;
+    }
+    max_arglen = 2*max_arglen + 1; // to allow for maximum 
+    va_end (vl);
+
+    // restart and rewind variadic arg list
+    va_start (vl, format);
+    // First, allocate the result (*dest), its length will be adjusted below
+    *dest = (char*)gg_malloc (flen + 1 + max_inlen); // includes max possible length, this is sufficient as it doesn't even
+                                                      // account for %s which is replaced (so -2 bytes for each param when replacing)
+    char sarg[2048]; // use this for argument if max_arglen less than 2K
+    char *curr_sql_arg;
+    if (max_arglen <= (gg_num)sizeof (sarg)) curr_sql_arg = sarg;
+    else curr_sql_arg = (char*)gg_malloc(max_arglen); // allocate max possible argument length, this way done only once
+    
+    char *curr = *dest;
+    char *pholder = NULL;
+    char *cformat = format;
+    // Add parameters, and copy only format as we go along, ensuring the minimum possible memory copy to produce the final SQL
     for (i = 0; i < num_of_args; i++)
     {
         curr_input = va_arg (vl, char *);
 
-        if (curr_input == NULL) // such as with dynamic params if add-query-input is used
+        if (curr_input == NULL) // parameter expected but not found
         {
-            continue;
+            gg_report_error ("Input parameters expected in SQL statement [%s] at position [%ld], but not found", format, i+1);
         }
 
         num_of_percents--;
         // make sure number of non-NULL params isn't greater than what's expected at run-time
         if (num_of_percents < 0)
         {
-            gg_report_error ("Too many non-NULL input parameters in input parameter list for SQL statement [%s], expected [%ld] non-NULL run-time arguments", format, count_percents);
+            gg_report_error ("Too many input parameters in input parameter list for SQL statement [%s], expected [%ld] input parameters", format, count_percents);
         }
-        gg_num l_curr_input = strlen (curr_input);
-        gg_num l_curr_sql_arg = 2 * l_curr_input + 1;
-        curr_sql_arg = (char*)gg_realloc (gg_mem_get_id(curr_sql_arg), l_curr_sql_arg); // worse case scenario, all back-slashes and single-quotes
-        // Escape: single quote and escape backslash in an single quote string
-        // Some parameters might not be quoted, and we will catch that as an erro
+        gg_num l_curr_input = gg_mem_get_len (gg_mem_get_id(curr_input));
 
+        // Escape: single quote and escape backslash in an single quote string
+        // Some parameters might not be quoted, and we will catch that as an error
+        // curr_sql_arg is already allocated to hold the max escaped string, so it can never run out of space
         if (gg_db_escape (curr_input, curr_sql_arg, &l_curr_input) != 0)
         {
             va_end (vl);
-            gg_report_error ("Argument #%ld cannot be escaped as input parameter [%s], argument [%.100s]", i, format, curr_sql_arg);
+            gg_report_error ("Argument #%ld cannot be escaped as input parameter [%s], argument [%.100s]", i+1, format, curr_sql_arg);
         }
 
         // substitute input parameters, one by one
-        // but first trim each value if so by [no-]trim-query-input
+        // but first trim each value
         // We worked with a copy of data here, so no need to put anything back (like the zero character at the end we may put)
         char *val = curr_sql_arg;
-
         // trim right
         gg_num len_of = l_curr_input; // length is from gg_db_escape
         if (len_of != 0)
@@ -1176,21 +1192,34 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
             while (len_of!=0 && isspace(*(val+len_of-1))) len_of--;
             *(val+len_of)=0;
         }
-        // trim left
+        // trim left, val is now trimmed value!
         while (*val!=0 && isspace(*val)) val++;
 
-        gg_num curr_offset = curr - *dest;
-        *dest = (char*)gg_realloc (gg_mem_get_id(*dest), destSize += (len_of + 1)); // increase destSize to account for val size
-        curr = *dest + curr_offset; // make curr (current within dest) remain properly within it since we
-                                   // just realloced dest
-        if (gg_replace_string (curr, destSize - 1 - (curr - *dest + 1), "%s", val, 0, &curr, 1) == -1)
+        pholder = strstr (cformat, "'%s'"); // find the next '%s', cformat is zero delimited like all golf strings (including binary ones)
+        if (pholder == NULL)
         {
             va_end (vl);
-            gg_report_error ("SQL too large, format [%s], argument [%.100s]", format, curr_sql_arg);
+            gg_report_error ("SQL not properly formatted (could not find '%%s' placeholder), text [%s], argument [%.100s]", format, curr_sql_arg);
         }
+        memcpy (curr, cformat, pholder - cformat + 1); // + 1 to copy '  so we can start copyig input data
+        curr += pholder - cformat + 1; // one passed '
+        cformat = pholder + 4; // 3 is strlen("'%s'"), position to one passed trailing ' in '%s'
+        memcpy (curr, val, len_of); // copy data
+        curr += len_of; // advance data
+        *curr = '\''; // add trailing '
+        curr++; // get passed ', since cformat is passed it too
     }
+    // copy remainder of cformat after last '%s'
+    gg_num done_len;
+    memcpy (curr, cformat, done_len = (flen - (cformat -format)));  // done_len here is the length of final piece of format
+                                                                    // after last '%s'
+    curr += done_len;
+    *curr = 0; // make sure null terminated, this is the end of *dest
+    done_len = curr - *dest; // done_len here is final length of *dest
+    *dest = gg_realloc (gg_mem_get_id (*dest), done_len+1); // realloc mem so we don't use more than needed
+    gg_mem_set_len (gg_mem_get_id (*dest), done_len+1); // set length to be correct
 
-    gg_free (curr_sql_arg);
+    if (curr_sql_arg != sarg) gg_free_int (curr_sql_arg); // free up argument if we actually alloc'd it
 
     // make sure number of non-NULL input params isn't lesser than what's expected at run-time
     // num_of_args is # of non-NULL input params in va_arg. # of actual params in va_arg can be different than num_of_percents

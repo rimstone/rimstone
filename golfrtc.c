@@ -930,7 +930,7 @@ gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len)
     if (ferror (f))
     {
         GG_ERR;
-        gg_free (*data);
+        gg_free_int (*data);
         fclose(f);
         *data = GG_EMPTY_STRING;
         return GG_ERR_READ;
@@ -1004,9 +1004,9 @@ gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos
 
 // 
 // Encode string v, producing output result res. enc_type is GG_WEB (for
-// web encoding) or GG_URL (for url encoding). Pointer to pointer 'res' is allocated
+// web encoding) or GG_URL (for url encoding). Pointer to pointer 'res' is allocated here
 // with sufficient memory in the worst case scenario
-// vlen is the length of v, -1 if strlen(), otherwise length
+// vlen is the length of v, -1 if strlen() needed, otherwise length
 // alloc is true if v is golf alloc'd mem
 // Returns length of an encoded string.
 //
@@ -1511,7 +1511,7 @@ char *gg_basename (char *path)
     GG_TRACE("");
     char *pcopy = gg_strdup(path);
     char *res = gg_strdup(basename (pcopy)); // res has exact length set with strdup
-    gg_free (pcopy);     
+    gg_free_int (pcopy);     
     return res;
 }
 

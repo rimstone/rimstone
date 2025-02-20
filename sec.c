@@ -229,7 +229,7 @@ char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_c
         }
         *p = 0;
         gg_mem_set_len (id, p - out+1); // set exact memory length
-        gg_free (key);
+        gg_free_int (key);
         return out;
     }
 
@@ -401,7 +401,7 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
 
         hex_ciphertext[*len = tot_len] = 0;
         gg_mem_set_len (id, tot_len+1);
-        gg_free (ciphertext); // free binary encrypted value
+        gg_free_int (ciphertext); // free binary encrypted value
         return hex_ciphertext; // return hex value
     }
     else
@@ -474,7 +474,7 @@ char *gg_decrypt(EVP_CIPHER_CTX *e, unsigned char *ciphertext, gg_num *len, gg_n
    plaintext[*len] = 0; 
    gg_mem_set_len (pid, *len+1);
 
-   if (is_binary == 0) gg_free (cipher_bin); // deallocate binary encrypted if allocated
+   if (is_binary == 0) gg_free_int (cipher_bin); // deallocate binary encrypted if allocated
    return (char*)plaintext;
 }
 

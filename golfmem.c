@@ -227,6 +227,16 @@ inline static void gg_mem_add_ord (gg_num r)
 }
 
 // 
+// Sets allocated memory to be constant (i.e. can't be deleted, though it's contents can be changed!)
+// p is the useful pointer
+//
+inline void gg_mem_set_const (void *p)
+{
+    gg_num id = gg_mem_get_id (p);
+    vm[id].status |= GG_MEM_CONST;
+}
+
+// 
 // Adds string constant to memory pool
 // 'r' is the index in vm[].
 // The memory returned is the actually a pointer to useful memory (that a GOLF program can use). We place
@@ -273,8 +283,7 @@ inline void *gg_vmset (void *p, gg_num r)
 //
 inline void *gg_malloc(size_t size)
 {
-    size_t t;
-    void *p = malloc (t=size + GG_ALIGN);
+    void *p = malloc (size + GG_ALIGN);
     if (p == NULL) 
     {
         gg_report_error (gg_mem_msg_outmem, size+GG_ALIGN);
@@ -480,7 +489,6 @@ inline static bool gg_mem_get_process (gg_num r)
 //
 inline void *gg_realloc(gg_num r, size_t size)
 {
-    size_t t;
     //
     // Check if string uninitialized, if so, allocate it for the first time
     // Also, if pointer is a NULL ptr, just allocate memory.
@@ -493,7 +501,7 @@ inline void *gg_realloc(gg_num r, size_t size)
     bool is_process = gg_mem_get_process (r);
 
     // first realloc pointer
-    void *p= realloc ((unsigned char*)(vm[r].ptr), t=size + GG_ALIGN);
+    void *p= realloc ((unsigned char*)(vm[r].ptr), size + GG_ALIGN);
     if (p == NULL) 
     {
         gg_report_error (gg_mem_msg_outmem, size+GG_ALIGN);
@@ -502,16 +510,21 @@ inline void *gg_realloc(gg_num r, size_t size)
     // If pointer returned is the same, there's no need to delete it, just change the length
     if (p != vm[r].ptr)
     {
+        // 
+        // What's done here must match what's done in _gg_free, i.e. gg_mem_del_ord, gg_mem_release
+        // and then what's done in gg_malloc, i.e. gg_add_mem, gg_vmset
+        // finally always set new length with gg_mem_set_len
+        //
         // then nullify pointer and release vm[] entry
         vm[r].ptr = p; // otherwise gg_mem_del_ord/gg_mem_release would operate on invalid memory
-        r = gg_mem_del_ord (r);
+        if (!(vm[r].status & GG_MEM_PROCESS)) r = gg_mem_del_ord (r);
         gg_mem_release(r);
         // then add new vm[] entry
         r = gg_add_mem(p);
         pm = gg_vmset(p,r);
+        if (is_process) gg_mem_set_process (GG_EMPTY_STRING, pm,true, false);
     } else pm = vm[r].ptr + GG_ALIGN;
     gg_mem_set_len (r, size);
-    if (is_process) gg_mem_set_process (GG_EMPTY_STRING, pm,true, false);
     return pm;
 }
 
@@ -592,6 +605,7 @@ inline void _gg_free (void *ptr, char check)
     if (vm[r].status & GG_MEM_FREE) return;
     if (check != 2) r = gg_mem_del_ord (r); // no need to mess with ordinary memory list, since it will be entirely
                                             // deleted in gg_done, and we'll just set it to empty there
+                                            // we can delete from list of ordinary, because ONLY ordinary memory is deleted here
 
     // free mem
 #ifdef DEBUG

@@ -110,7 +110,7 @@ gg_dbc *gg_pg_connect (gg_num abort_if_bad)
     // make connection to database
     GG_CURR_DB.dbc->pg.con = PQconnectdb(cinfo);
     GG_CURR_DB.dbc->pg.res = NULL;
-    gg_free (cinfo);
+    gg_free_int (cinfo);
 
     if (PQstatus (GG_CURR_DB.dbc->pg.con) != CONNECTION_OK)
     {
@@ -224,7 +224,7 @@ int gg_pg_prep_stmt(void **prep, char *stmt, gg_num num_of_args)
             cerror = "Cannot prepare statement";
             return 1;
         }
-        if (stmt != origs) gg_free (stmt); // release statement if actually allocated
+        if (stmt != origs) gg_free_int (stmt); // release statement if actually allocated
         *prep = GG_CURR_DB.dbc->pg.name; // the name of prepared statements, lives for the life of the process
                                         // minus reconnects, which are rare
     }
