@@ -4,7 +4,7 @@
 #On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 Name:   golf
-Version:    263
+Version:    265
 Release:    1%{?dist}
 Summary:    Programming language, tools and server for web services and applications
 Vendor:     Gliim LLC
@@ -20,13 +20,6 @@ Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{versi
 #suse_build_requires *must* be identical to build_requires - do *not* change its definition
 %define suse_build_requires %build_requires
 %define run_requires make gcc openssl-devel libcurl-devel pcre2-devel libxml2-devel
-
-#devel lib for mariadb
-%if 0%{?el9} 
-%define maria_devel mariadb-connector-c-devel
-%else
-%define maria_devel mariadb-devel
-%endif
 
 #python utils for selinux, only for rhel
 %if 0%{?rhel} 
@@ -59,8 +52,8 @@ Requires:    %run_requires mariadb-devel fcgi libfcgi-devel apache-mod_proxy lib
 %else
 #SELINUX:policycoreutils policycoreutils-devel libselinux-utils
 #fcgi is for cgi-fcgi utility; sometimes it's packaged within fcgi-devel and sometimes not.
-BuildRequires: %build_requires %{?maria_devel} fcgi-devel libpq-devel policycoreutils policycoreutils-devel libselinux-utils sqlite-devel
-Requires:    %run_requires %{?maria_devel} %{?rhel_sel} fcgi fcgi-devel libpq-devel policycoreutils policycoreutils-devel libselinux-utils sqlite-devel
+BuildRequires: %build_requires mariadb-connector-c-devel fcgi-devel libpq-devel policycoreutils policycoreutils-devel libselinux-utils sqlite-devel
+Requires:    %run_requires mariadb-connector-c-devel %{?rhel_sel} fcgi fcgi-devel libpq-devel policycoreutils policycoreutils-devel libselinux-utils sqlite-devel
 %endif
 %endif
 
@@ -72,7 +65,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}
 Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. 
 
 %prep
-%autosetup -n %{name}-263
+%autosetup -n %{name}-265
 
 #For faster building on Fedora 38, you can define special_build to yes. In this case, a step prior to rpmbuild must
 #actually make Golf in $HOME/golf directory and build it in $HOME/golf/build directory. Otherwise, do not use this flag.
