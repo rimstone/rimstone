@@ -11,6 +11,11 @@
 
 #define _GG_SERVICE_INC
 
+// Needed for memmem
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 // Include basics
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +24,7 @@
 
 
 // Version+Release. We use major plus minor plus release, as in 1.3.34,2.1.11,3.7.41... 
-#define GG_VERSION "259"
+#define GG_VERSION "261"
 
 // Client error codes
 #define GG_OKAY 0 // success

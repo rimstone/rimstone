@@ -12,6 +12,11 @@
 // proofed for leaks with tools like asan, valgrind etc.
 //
 
+// Public API prototypes, must come before any other include because of _GNU_SOURCE, which
+// allows golf.h's memmem, strcasestr and such. Once say string.h is included without _GNU_SOURCE
+// it doesn't matter that it's defined further down in golf.h!
+#include "gcli.h"
+
 // General includes
 #include <fcntl.h>
 #include <stdio.h>
@@ -30,8 +35,6 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/time.h>
-// Public API prototypes
-#include "gcli.h"
 
 // If memory allocation fails in Golf, this is handled by gg_* functions
 // For a SERVICE client, the handling is explicit here in code
