@@ -4,7 +4,7 @@
 #On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 Name:   golf
-Version:    258
+Version:    259
 Release:    1%{?dist}
 Summary:    Programming language, tools and server for web services and applications
 Vendor:     Gliim LLC
@@ -15,11 +15,11 @@ Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{versi
 
 #Make sure to install EPEL (currently just for fcgi/fcgi_devel): sudo dnf install epel-release
 
-%define build_requires make gcc openssl-devel libcurl-devel rpm-build createrepo rpmlint pcre2-devel
+%define build_requires make gcc openssl-devel libcurl-devel rpm-build createrepo rpmlint pcre2-devel libxml2-devel
 #due to a bug in building dependencies for opensuse, must have this to build a dependency statement via bash script
 #suse_build_requires *must* be identical to build_requires - do *not* change its definition
 %define suse_build_requires %build_requires
-%define run_requires make gcc openssl-devel libcurl-devel pcre2-devel
+%define run_requires make gcc openssl-devel libcurl-devel pcre2-devel libxml2-devel
 
 #devel lib for mariadb
 %if 0%{?el9} 
@@ -72,7 +72,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}
 Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. 
 
 %prep
-%autosetup -n %{name}-258
+%autosetup -n %{name}-259
 
 #For faster building on Fedora 38, you can define special_build to yes. In this case, a step prior to rpmbuild must
 #actually make Golf in $HOME/golf directory and build it in $HOME/golf/build directory. Otherwise, do not use this flag.
