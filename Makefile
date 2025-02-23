@@ -391,12 +391,12 @@ golfmems.o: golfmem.c golf.h
 mgrg.o: mgrg.c 
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
-libgolfcli.so: gcli.c gcli.h
+libgolfcli.so: gcli.c gcli.h golf.h
 	rm -f libgolfcli.so
 	$(CC) -shared -o libgolfcli.so $^ $(CFLAGS)
 	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfcli.so ; fi
 
-libgolfscli.so: gcli.c gcli.h
+libgolfscli.so: gcli.c gcli.h golf.h
 	rm -f libgolfscli.so
 	$(CC) -shared -o libgolfscli.so $^ $(CFLAGS) -DGG_GOLFSRV
 	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfscli.so ; fi

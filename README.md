@@ -7,11 +7,12 @@ Golf is a programming language and  application server for building web services
 [Documentation](https://golf-lang.com//documentation.html)\.  
 [Source on github\.com](https://github.com/golf-lang/golf)\. 
 [Blog](https://golf-lang.blogspot.com/) has useful articles and changelog\.
-Current version is 244\. This release passed 2312 automated functional tests\.
+Current version is 253\. This release passed 2313 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-02\-21 [34000 requests per second on a modest laptop](https://golf-lang.blogspot.com/2025/02/34000-server-requests-per-second-to.html)
 * 2025\-02\-12 [Use C language API to talk to Golf Server](https://golf-lang.blogspot.com/2025/02/use-c-language-api-to-talk-to-golf.html)
 * 2025\-02\-04 [Golf package page on AUR for Arch Linux](https://golf-lang.blogspot.com/2025/02/golfs-package-page-on-aur-for-arch-linux.html)
 * 2025\-02\-02 [Ubuntu apt package available for Golf](https://golf-lang.blogspot.com/2025/02/ubuntu-apt-package-available-for-golf.html)
@@ -43,6 +44,8 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 Releases:
+* 2025\-02\-19 [Golf 253 released](https://golf-lang.blogspot.com/2025/02/golf-253-released.html)
+* 2025\-02\-16 [Golf 247 released](https://golf-lang.blogspot.com/2025/02/golf-247-released.html)
 * 2025\-02\-13 [Golf 244 released](https://golf-lang.blogspot.com/2025/02/golf-244-released.html)
 * 2025\-02\-11 [Golf 241 released](https://golf-lang.blogspot.com/2025/02/golf-241-released.html)
 * 2025\-02\-08 [Golf 231 released](https://golf-lang.blogspot.com/2025/02/golf-231-released.html)

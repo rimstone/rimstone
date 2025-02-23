@@ -17,14 +17,14 @@
 gg_tree_cursor *gg_cursor; // internal cursor for the current tree operation
 
 // Function prototypes for the implementation
-void gg_tree_rotate_left (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
-void gg_tree_rotate_right (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
+static inline void gg_tree_rotate_left (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
+static inline void gg_tree_rotate_right (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
 void gg_tree_insert(gg_tree_node *parent_tree, int dir, gg_tree_node *tree, void *data);
-int gg_tree_compare(char *k2);
+static inline int gg_tree_compare(char *k2);
 void gg_tree_search (gg_tree_node *tree);
-void gg_tree_height (gg_tree_node *tree, gg_num *factor);
+static inline void gg_tree_height (gg_tree_node *tree, gg_num *factor);
 void gg_tree_show (gg_tree_node *tree, gg_num ident);
-void gg_tree_balance (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
+static inline void gg_tree_balance (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
 void gg_tree_delete (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
 void gg_tree_find_leaf_del (gg_tree_node *parent_tree, int dir, gg_tree_node *tree_greater_node, gg_tree_node *found);
 void gg_tree_search_lesser_equal (gg_tree_node *tree, bool equal);
@@ -46,7 +46,7 @@ void gg_tree_node_delete(gg_tree_node *tree);
 // Default key evaluation function. Compares current tree node key with gg_cursor->key. Return -1, 0, or 1 if node-key lesser, equal or greater than given key.
 // Note: POSIX actually specifies that strncmp() works if the length compared is greater than the length of one of the strings (memcmp doesn't do that)
 // gg_cursor holds the key and key_len members, which are precomputed. k2 is the tree node key.
-inline int gg_tree_compare(char *k2)
+static inline int gg_tree_compare(char *k2)
 {
     GG_TRACE("");
     if (gg_cursor->root->key_type == GG_TREE_TYPE_NUM)
@@ -127,7 +127,7 @@ gg_tree *gg_tree_create(char key_type, bool sorted, bool process)
 // Node's ->height member is updated by doing this. 
 // A node without any children has a height of 1, with at least one child it's 2 etc.
 //
-inline void gg_tree_height (gg_tree_node *tree, gg_num *factor)
+static inline void gg_tree_height (gg_tree_node *tree, gg_num *factor)
 {
     GG_TRACE("");
     gg_num left_height;
@@ -143,7 +143,7 @@ inline void gg_tree_height (gg_tree_node *tree, gg_num *factor)
 // Rotate the node to the right. parent_tree is the parent of the node being rotated, dir is the direction from parent
 // to the node being rotated, which is tree.
 //
-inline void gg_tree_rotate_right (gg_tree_node *parent_tree, int dir, gg_tree_node *tree)
+static inline void gg_tree_rotate_right (gg_tree_node *parent_tree, int dir, gg_tree_node *tree)
 {
     // rotate right
     // save data to use when shuffling below. Old:
@@ -169,7 +169,7 @@ inline void gg_tree_rotate_right (gg_tree_node *parent_tree, int dir, gg_tree_no
 // Rotate the node to the left. parent_tree is the parent of the node being rotated, dir is the direction from parent
 // to the node being rotated, which is tree.
 //
-inline void gg_tree_rotate_left (gg_tree_node *parent_tree, int dir, gg_tree_node *tree)
+static inline void gg_tree_rotate_left (gg_tree_node *parent_tree, int dir, gg_tree_node *tree)
 {
     // rotate left 
     // save data to use when shuffling below. Old:
@@ -194,7 +194,7 @@ inline void gg_tree_rotate_left (gg_tree_node *parent_tree, int dir, gg_tree_nod
 //
 // Balance 'tree', with parent parent_tree coming to 'tree' by dir direction (left/lesser or right/greater)
 //
-inline void gg_tree_balance (gg_tree_node *parent_tree, int dir, gg_tree_node *tree)
+static inline void gg_tree_balance (gg_tree_node *parent_tree, int dir, gg_tree_node *tree)
 {
     GG_TRACE("");
     // get the balance factor of the node to balance

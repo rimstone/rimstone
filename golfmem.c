@@ -52,41 +52,14 @@ char *GG_EMPTY_STRING="";
 // memory that's made from string literal
 #define GG_MEM_CONST 8
 
-// memory list, maximum of about 2^47-1 allocated memory blocks per request
-// len is the length of memory pointed by ptr. null byte is always there and is included. Max length is 2^47-1.
-// next is index to next freed block, could be anything by default. This relates to the number of variables in the program,
-// ordinary memory is also linked into it, and added to the list of free memory at the end of the request, which is the fastest way to
-// free it (imagine millions of process-scoped memory items interspersed, iterating through all that at the end of the request is very slow
-// as opposed to just setting a single variable!).
-// status has: 
-// GG_MEM_FREE bit set if this is freed block, 0 if not. 
-// GG_MEM_FILE bit set if this is a file that eventually needs to close (unless closed already)
-// GG_MEM_PROCESS bit set if this is process memory, i.e. not to be released at the end of request
-// GG_MEM_CONST bit set if this is memory that can't be freed
-// ref is the number of references to process memory (max of 2^23-1), which is the number of "duplications" (by reference) of the same memory.
-typedef struct s_vml {
-    void *ptr;
-    gg_num next:48;  
-    gg_num status:8; 
-    gg_num len:48; 
-    gg_num ref:24;
-} vml;
-#define GG_MAX_REF ((1<<23)-1)
-#define GG_MAX_MEM (((gg_num)1<<47)-1)
 
-//
-// Header prior to alloced memory. id is index into vm[]
-//
-typedef struct s_gg_head {
-    gg_num id;
-} gg_head;
 
 // static variables used in memory handling
 // We delete old's request memory at the very start of a new request in generated code before any user code,
 // (unless process scoped memory)
 //
-static vml *vm = NULL; // memory list
-static gg_num vm_curr = 0; // last used-up index in memory list
+vml *vm = NULL; // memory list
+gg_num vm_curr = 0; // last used-up index in memory list
 static gg_num vm_tot = 0; // total size of memory list
 static gg_num vm_first_free = -1; // first free memory block
 static gg_num vm_first_ord = -1; // first ordinary memory block
@@ -311,31 +284,6 @@ inline void *gg_calloc(size_t nmemb, size_t size)
     void *pm = gg_vmset(p,r);
     gg_mem_set_len (r, t);
     return pm;
-}
-
-//
-// Get index of pointer in memory block, -1 if empty or NULL
-//
-inline gg_num gg_mem_get_id (void *ptr)
-{
-    if (ptr == GG_EMPTY_STRING) return -1; // this is just empty string
-    if (ptr == NULL) gg_report_error ("Invalid memory detected");
-    gg_head *h = (gg_head*)((unsigned char*)ptr-GG_ALIGN);
-    gg_num r = h->id;
-#ifdef DEBUG
-    // at debug time, check each memory accessed is actually correct!
-    if ((r < 0 || r >= vm_curr) || vm[r].ptr != ((unsigned char*)ptr-GG_ALIGN)) gg_report_error("Attempted to get length of invalid memory");
-#endif
-    return r;
-}
-
-//
-// Get length of memory block. GG_ALIGN is 2*sizeof(gg_num)
-//
-inline gg_num gg_mem_get_len (gg_num r)
-{
-    if (r == -1) return 0; // this is just empty string
-    return vm[r].len-1; // there's always trailing 0 set by all golf statements, so .len is useful length + 1
 }
 
 

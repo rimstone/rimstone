@@ -772,7 +772,7 @@ void gg_list_retrieve (gg_list *fdata, char **name, void **data)
 // Delete current element in linked list 'fdata'
 // Inline so purge doesn't waste time
 //
-inline gg_num gg_list_delete (gg_list *fdata)
+gg_num gg_list_delete (gg_list *fdata)
 {
     GG_TRACE ("");
     gg_list_item *temp = fdata->curr;
@@ -1465,7 +1465,7 @@ char gg_decorate_path (char *reqname, gg_num reqname_len, char **p, gg_num p_len
 // Convert str to resulting number (return value) in base 'base', with *st being status (VV_OKAY if okay).
 // st can be NULL. If base is 0, automatic base discovery (see docs).
 //
-inline gg_num gg_str2num (char *str, int base, gg_num *st)
+gg_num gg_str2num (char *str, int base, gg_num *st)
 {
     char *numend;
     gg_num val;

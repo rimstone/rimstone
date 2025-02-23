@@ -4073,7 +4073,7 @@ char *gg_getheader(char *h)
 // This particular function is the new algorithm I wrote, that in my tests is faster than any other implementation
 // I tried. It also has the most (or equal) functionality.
 //
-inline char *gg_num2str (gg_num al, gg_num *res_len, int base)
+char *gg_num2str (gg_num al, gg_num *res_len, int base)
 {
     GG_TRACE("");
     if (base < 2 || base > 36) { if (res_len != NULL) *res_len = 0; return NULL;}
@@ -4106,208 +4106,13 @@ inline char *gg_num2str (gg_num al, gg_num *res_len, int base)
     return res; // result out
 }
 
-//
-// Set of comparison functions used by _Generic to perform type-specific operation
-// Self-explanatory. "_c" in function name means case insensitive. "_l" means length
-// comparison. "cm" means compare. "str" is for strngs". "num" is for numbers". "less"
-// is lesser than, "gr" is greater than", greq is greater or equal, lesseq is lesser or
-// equal. 
-// strncmp (and similar) compares "at most" l bytes, so there's never invalid memory access. Even for binary memory, there's ALWAYS and ending 0 byte after
-// the useful (actual) data, so it can never happen that comparison continues beyond either memory comparison operand.
-// Equality for string works for binary as well, b/c it uses memcmp.
-//
-inline bool gg_cm_str (char *a,char *b) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    if (la != lb) return false; // strings not equal if lengths not equal
-    return !memcmp(a,b, (size_t) la);
-}
-inline bool gg_cm_str_l (char *a,char *b, gg_num l) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    if ((l > la || l > lb)) {
-        if (la != lb) return false; else return !memcmp(a,b, (size_t) la);
-    } else {
-        // l is smaller or equal than both la and lb
-        return !memcmp(a,b, (size_t) l);
-    }
-} 
-inline bool gg_cm_str_c (char *a,char *b) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    if (la != lb) return false; // strings not equal if lengths not equal
-    return !strcasecmp(a,b);
-}
-inline bool gg_cm_str_c_l (char *a,char *b, gg_num l) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    if ((l > la || l > lb)) {
-        if (la != lb) return false; else return !strncasecmp(a,b, (size_t) la);
-    } else {
-        // l is smaller than both la and lb
-        return !strncasecmp(a,b, (size_t) l);
-    }
-} 
-inline bool gg_cm_str_less (char *a,char *b) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb)+1; 
-    return strncmp(a,b,lmin)<0;
-}
-inline bool gg_cm_str_less_l (char *a,char *b, gg_num l) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
-    return strncmp(a,b,l)<0;
-} 
-inline bool gg_cm_str_less_c (char *a,char *b) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb)+1;
-    return strncasecmp(a,b,lmin)<0;
-}
-inline bool gg_cm_str_less_c_l (char *a,char *b,gg_num l) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
-    return strncasecmp(a,b,l)<0;
-}
-inline bool gg_cm_str_gr (char *a,char *b) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb)+1; 
-    return strncmp(a,b,lmin)>0;
-}
-inline bool gg_cm_str_gr_l (char *a,char *b, gg_num l) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
-    return strncmp(a,b,l)>0;
-} 
-inline bool gg_cm_str_gr_c (char *a,char *b) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb)+1;
-    return strncasecmp(a,b,lmin)>0;
-}
-inline bool gg_cm_str_gr_c_l (char *a,char *b,gg_num l) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
-    return strncasecmp(a,b,l)>0;
-}
-inline bool gg_cm_str_lesseq (char *a,char *b) {
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb)+1; 
-    return strncmp(a,b,lmin)<=0;
-}
-inline bool gg_cm_str_lesseq_l (char *a,char *b, gg_num l)
-{
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
-    return strncmp(a,b,l)<=0;
-} 
-inline bool gg_cm_str_lesseq_c (char *a,char *b) 
-{
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb)+1;
-    return strncasecmp(a,b,lmin)<=0;
-}
-inline bool gg_cm_str_lesseq_c_l (char *a,char *b,gg_num l) 
-{
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
-    return strncasecmp(a,b,l)<=0;
-}
-inline bool gg_cm_str_greq (char *a,char *b) 
-{
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb)+1; 
-    return strncmp(a,b,lmin)>=0;
-}
-inline bool gg_cm_str_greq_l (char *a,char *b, gg_num l) 
-{
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
-    return strncmp(a,b,l)>=0;
-} 
-inline bool gg_cm_str_greq_c (char *a,char *b) 
-{
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb)+1; // handles lesser/greater-or-equal and such. compare the lesser length +1
-                             // +1 to avoid equality when they are not the same length
-    return strncasecmp(a,b,lmin)>=0;
-}
-inline bool gg_cm_str_greq_c_l (char *a,char *b,gg_num l) 
-{
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1; // handles length clause, if length > lesser of lengths, use lesser+1
-                                                     // +1 to avoid equality when they are not the same length
-    return strncasecmp(a,b,l)>=0;
-}
-inline char* gg_contain_str (char* a,char *b) 
-{ // works for binary!
-    GG_TRACE("");
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
-    return memmem(a,la,b,lb);
-}
-inline char* gg_contain_str_c (char* a,char *b) 
-{
-    GG_TRACE("");
-    return strcasestr(a,b);
-}
-inline char* gg_contain_int (char* a,int b) {
-    GG_TRACE("");
-    return strchr(a,b);
-}
-inline char* gg_contain_int_c (char* a,int b) {
-    GG_TRACE("");
-    char *res; res = strchr(a,b); if (res!=NULL) return res; else return strchr(a,isupper(b)?tolower(b):toupper(b));
-}
-inline bool gg_cm_num (gg_num a,gg_num b) {
-    GG_TRACE("");
-    return a==b;
-}
-inline bool gg_cm_num_less (gg_num a,gg_num b) {
-    GG_TRACE("");
-    return a<b;
-}
-inline bool gg_cm_num_gr (gg_num a,gg_num b) {
-    GG_TRACE("");
-    return a>b;
-}
-inline bool gg_cm_num_lesseq (gg_num a,gg_num b) {
-    GG_TRACE("");
-    return a<=b;
-}
-inline bool gg_cm_num_greq (gg_num a,gg_num b) {
-    GG_TRACE("");
-    return a>=b;
-}
-inline bool gg_cm_bool (bool a,bool b) {
-    GG_TRACE("");
-    return a==b;
-}
-inline bool gg_cm_err () {
-    GG_TRACE("");
-    gg_report_error("Wrong type in comparison"); return false;
-}
-
 
 //
 // Copy string src to dst, max of len bytes. Copies from byte from, which starts at 0.
 // Works with binary strings as well
 // Checks souce length, even if binary, so as not to over-read
 //
-inline void gg_copy_string (char *src, gg_num from, char **dst, gg_num len)
+void gg_copy_string (char *src, gg_num from, char **dst, gg_num len)
 {
     GG_TRACE("");
     if (from > len)  gg_report_error ("Cannot copy from byte [%ld] when length is [%ld]", from, len);
@@ -4348,7 +4153,7 @@ bool gg_is_service()
 // if len is negative, take the whole 'copy'. if swith is negative, it's zero if begin is true, or length(tgt)-length(copy) if false. 
 // If len is zero, do nothing.
 //
-inline void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bool begin)
+void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bool begin)
 {
     GG_TRACE("");
     if (len == 0) return;

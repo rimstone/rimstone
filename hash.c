@@ -11,7 +11,7 @@
 
 
 // prototypes
-static gg_num gg_compute_hash (char* d, char **dlist, gg_num size);
+static inline gg_num gg_compute_hash (char* d, char **dlist, gg_num size);
 static gg_hash_table *gg_new_hash_item (char *key, void *data);
 
 //
@@ -425,7 +425,7 @@ void gg_add_hash (gg_hash *h, char *key, char **keylist, void *data, void **old_
 // authors: fnvhash-mail@asthe.com
 //
 #define GG_FNVCOMP(h,c) h ^= (c); h *= GG_FNVPRIME;
-inline gg_num gg_compute_hash (char* d, char **dlist, gg_num size)
+static inline gg_num gg_compute_hash (char* d, char **dlist, gg_num size)
 {
     GG_TRACE("");
     uint32_t h = GG_FNVOFFSETBASIS;
