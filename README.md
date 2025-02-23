@@ -7,7 +7,7 @@ Golf is a programming language and  application server for building web services
 [Documentation](https://golf-lang.com//documentation.html)\.  
 [Source on github\.com](https://github.com/golf-lang/golf)\. 
 [Blog](https://golf-lang.blogspot.com/) has useful articles and changelog\.
-Current version is 253\. This release passed 2313 automated functional tests\.
+Current version is 261\. This release passed 2313 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
