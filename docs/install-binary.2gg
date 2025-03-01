@@ -35,6 +35,41 @@ sudo apt install golf
 
 
 .LP
+.B FEDORA, REDHAT, AMAZON LINUX
+.LP
+
+Golf builds are available at https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/ which you can use as described here. If you're running RedHat (or similar like Rocky), you must install EPEL first:
+
+.RS 4
+.EX
+
+sudo dnf install epel-release
+
+.EE
+.RE
+
+Enable Golf COPR repo:
+
+.RS 4
+.EX
+
+sudo dnf copr enable golf-lang/golf-lang
+
+.EE
+.RE
+
+After that you can install/manage Golf with apt, as in:
+
+.RS 4
+.EX
+
+sudo apt install golf
+
+.EE
+.RE
+
+
+.LP
 .B ARCH LINUX
 .LP
 
@@ -50,7 +85,7 @@ makepkg -sirc
 .EE
 .RE
 
-Please note that binary distributions for other Linux distros should be available soon. In any case, you can always \fBinstall from source\fP.
+If your distro isn't described here, or you don't want to install this way, you can \fBinstall from source\fP.
 .SH SEE ALSO
  lrnDownload and buildelrn
 .B - Download and build

@@ -5,17 +5,42 @@ index \- Golf documentation ()
 Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. 
 
 \fBApache 2\fP Free Open Source License. 
+
 \fBAbout Golf\fP. 
+
 \fBHello World\fP. 
+
 \fBInstall Golf\fP from source, or by using \fBLinux packagers\fP (such as apt). 
+
 \fBDocumentation\fP.  
+
 \fBSource on github.com\fP. 
+
 \fBBlog\fP has useful articles and changelog.
-Current version is 263. This release passed 2313 automated functional tests.
+
+Current version is 265. This release passed 2313 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-03-01 \fBWeb framework for C programming language\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-02-24 \fBMake RPM package on Fedora and RedHat\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-02-23 \fBDEB package on Ubuntu and Debian\fP
+.RE
+
 
 .RS 4
 \[bu]    

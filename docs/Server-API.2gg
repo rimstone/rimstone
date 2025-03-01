@@ -84,7 +84,7 @@ If you have memory that's already provided from elsewhere, you can use gg_strdup
 
 If Golf memory you created with these functions has extra unused bytes, you can use either gg_realloc() to reduce its footprint, or you can use gg_mem_set_len() to set its length.
 
-Note that if you use C code included with a Golf project, you must include "gliim.h" file in each of them. You do not need to manually include any other ".h" files (header files), as they will be automatically picked up.
+Note that if you use C code included with a Golf project, you must include "golf.h" file in each of them. You do not need to manually include any other ".h" files (header files), as they will be automatically picked up.
 
 .SH EXAMPLES
 Place the following files in a separate directory for demonstration purposes.
@@ -94,7 +94,7 @@ In this example, "example.golf" will use C functions from "example.c", and "exam
 .RS 4
 .EX
 
-\[char35]include "gliim.h"
+\[char35]include "golf.h"
 
 void get_factorial(gg_num f, gg_num *res)
 {
@@ -108,7 +108,7 @@ void get_factorial(gg_num f, gg_num *res)
 \[char35]define MEMSIZE 200
 void fact_msg (gg_num i, char **res)
 {
-    // gliim rule: outgoing string must NOT free or realloc its incoming value
+    // golf rule: outgoing string must NOT free or realloc its incoming value
     // all else is allowed
     char *r = gg_malloc (MEMSIZE);
     gg_num f;

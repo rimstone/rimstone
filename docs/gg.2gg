@@ -220,7 +220,7 @@ Show the last <num of trace files> most recent trace files for the application. 
 .RS 4
 \[bu]    
 -o
-Show documentation directory - web page documentation is located here in the form of a gliimdoc.html file.
+Show documentation directory - web page documentation is located here in the form of a golfdoc.html file.
 
 
 .RE

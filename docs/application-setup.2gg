@@ -44,9 +44,9 @@ then you must have files "mydb" and "sales_db" present. For example, MariaDB con
 .EX
 
 [client]
-user=gliimuser
+user=golfuser
 password=pwd
-database=gliimdb
+database=golfdb
 protocol=TCP
 host=127.0.0.1
 port=3306

@@ -191,6 +191,12 @@ prepared SQL statements for high performance.
 Golf uses well-known and widely used Free Open Source libraries like cURL, OpenSSL, crypto, FastCGI, standard database-connectivity libraries from MariaDB, PostgreSQL, SQLite etc., for compliance, performance and reliability.
 
 .LP
+.B WEB FRAMEWORK FOR C PROGRAMMING LANGUAGE
+.LP
+
+In extended mode, Golf is also a \fBweb-framework-for-C-programming-language\fP.
+
+.LP
 .B NAMES OF OBJECTS
 .LP
 

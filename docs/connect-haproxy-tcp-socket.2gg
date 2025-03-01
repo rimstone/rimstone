@@ -35,15 +35,15 @@ frontend front_server
     use_backend backend_servers if { path_reg -i ^.*\e/func_test\e/.*$ } 
     option forwardfor
 
-fcgi-app gliim-fcgi
+fcgi-app golf-fcgi
     log-stderr global
     docroot /var/lib/gg/func_test/app
     path-info ^.+(/func_test)(/.+)$ 
 
 backend backend_servers                                                                                                                     
     mode http
-    filter fcgi-app gliim-fcgi
-    use-fcgi-app gliim-fcgi
+    filter fcgi-app golf-fcgi
+    use-fcgi-app golf-fcgi
     server s1 127.0.0.1:2301 proto fcgi
 
 .EE

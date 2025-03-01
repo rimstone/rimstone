@@ -176,8 +176,8 @@ install:
 	for i in $$(ls $(DESTDIR)$(V_MAN)/*.2gg); do gzip -f $$i; done
 	install -m 0755 -d $(DESTDIR)$(V_GG_DOCS)
 	install -D -m 0644 docs/golfdoc.html -t $(DESTDIR)$(V_GG_DOCS)/
-	echo -n "$(PCRE2_VER)" > pcre2_version; install -D -m 0755 pcre2_version -t $(DESTDIR)$(V_LIB)/
-	echo -n "$(PCRE2_LIBS)" > pcre2_libs; install -D -m 0755 pcre2_libs -t $(DESTDIR)$(V_LIB)/
+	echo -n "$(PCRE2_VER)" > pcre2_version; install -D -m 0644 pcre2_version -t $(DESTDIR)$(V_LIB)/
+	echo -n "$(PCRE2_LIBS)" > pcre2_libs; install -D -m 0644 pcre2_libs -t $(DESTDIR)$(V_LIB)/
 #This must be last, in this order, as it saves and then applies SELinux policy where applicable. 
 #This runs during rpm creation or during sudo make install
 #it does NOT run during rpm installation, there is post scriptlet that calls golf.sel to do that (GG_NO_SEL)

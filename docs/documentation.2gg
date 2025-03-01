@@ -4,11 +4,11 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 263
+.B REFERENCE FOR GOLF VERSION 265
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
-Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl,   lrlBase64elrl,   lrlCookieselrl,   lrlDatabaseelrl,   lrlDebuggingelrl,   lrlDistributed computingelrl,   lrlDocumentationelrl,   lrlDownload and buildelrl,   lrlEncryptionelrl,   lrlError handlingelrl,   lrlFIFOelrl,   lrlFileselrl,   lrlGeneralelrl,   lrlGolf compiler and utilityelrl,   lrlHashelrl,   lrlHex encodingelrl,   lrlJSON parsingelrl,   lrlLanguageelrl,   lrlLicenseelrl,   lrlLIFOelrl,   lrlLinked listelrl,   lrlMemoryelrl,   lrlMessageselrl,   lrlNumberselrl,   lrlOutputelrl,   lrlProgram executionelrl,   lrlProgram flowelrl,   lrlQuick startelrl,   lrlRegexelrl,   lrlRequest dataelrl,   lrlRequest informationelrl,   lrlRequestselrl,   lrlRunning applicationelrl,   lrlSafetyelrl,   lrlService managerelrl,   lrlService processingelrl,   lrlStringselrl,   lrlSystem informationelrl,   lrlTimeelrl,   lrlTreeelrl,   lrlURL encodingelrl,   lrlUTF8elrl,   lrlWebelrl,   lrlWeb encodingelrl,   lrlWeb serverselrl
+Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl,   lrlBase64elrl,   lrlC languageelrl,   lrlCookieselrl,   lrlDatabaseelrl,   lrlDebuggingelrl,   lrlDistributed computingelrl,   lrlDocumentationelrl,   lrlDownload and buildelrl,   lrlEncryptionelrl,   lrlError handlingelrl,   lrlFIFOelrl,   lrlFileselrl,   lrlGeneralelrl,   lrlGolf compiler and utilityelrl,   lrlHashelrl,   lrlHex encodingelrl,   lrlJSON parsingelrl,   lrlLanguageelrl,   lrlLicenseelrl,   lrlLIFOelrl,   lrlLinked listelrl,   lrlMemoryelrl,   lrlMessageselrl,   lrlNumberselrl,   lrlOutputelrl,   lrlProgram executionelrl,   lrlProgram flowelrl,   lrlQuick startelrl,   lrlRegexelrl,   lrlRequest dataelrl,   lrlRequest informationelrl,   lrlRequestselrl,   lrlRunning applicationelrl,   lrlService managerelrl,   lrlService processingelrl,   lrlStringselrl,   lrlSystem informationelrl,   lrlTimeelrl,   lrlTreeelrl,   lrlURL encodingelrl,   lrlUTF8elrl,   lrlWebelrl,   lrlWeb encodingelrl,   lrlWeb serverselrl
 
 
 
@@ -53,6 +53,18 @@ lrnBase64elrn
 
 \fBdecode-base64\fP  
 \fBencode-base64\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+lrnC languageelrn
+.B - C language
+
+\fBcall-extended\fP  
+\fBextended-mode\fP  
+\fBweb-framework-for-C-programming-language\fP   
 .RE
 
 
@@ -471,17 +483,6 @@ lrnRunning applicationelrn
 \fBCGI\fP  
 \fBcommand-line\fP  
 \fBservice\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-lrnSafetyelrn
-.B - Safety
-
-\fBcall-extended\fP  
-\fBextended-mode\fP   
 .RE
 
 

@@ -105,7 +105,7 @@ To send a document back to the browser and show it (i.e. display):
 .RS 4
 .EX
 
-send-file "/home/gliim/files/myfile.jpg" headers content-type "image/jpg"
+send-file "/home/golf/files/myfile.jpg" headers content-type "image/jpg"
 
 .EE
 .RE

@@ -17,7 +17,7 @@ The above will create a syntax file in your local Vim syntax directory:
 .RS 4
 .EX
 
-$HOME/.vim/syntax/gliim.vim
+$HOME/.vim/syntax/golf.vim
 
 .EE
 .RE

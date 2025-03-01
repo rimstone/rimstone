@@ -9,7 +9,7 @@ Inline Golf code in an output statement.
 .RS 4
 .EX
 
-<<gliim code>>
+<<golf code>>
 
 .EE
 .RE

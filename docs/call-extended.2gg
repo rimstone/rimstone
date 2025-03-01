@@ -1,6 +1,6 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-call-extended \-  (safety)
+call-extended \-  (C-language)
 .SH PURPOSE
 Call external function or macro (extended mode only).
 
@@ -63,13 +63,19 @@ Each <variable> can be of C type (or a pointer to C type):
 
 A <function> should not return a value. Rather, use a variable passed as a pointer if you wish to pass the function's output back to your Golf code.
 
+.LP
+.B WEB FRAMEWORK FOR C PROGRAMMING LANGUAGE
+.LP
+
+Note that when you use call-extended, Golf becomes a \fBweb-framework-for-C-programming-language\fP.
+
 .SH EXAMPLES
 For instance, consider C file "calc.c":
 
 .RS 4
 .EX
 
-\[char35]include "gliim.h"
+\[char35]include "golf.h"
 
 // Compute factorial of f, and store result into res
 void factorial(gg_num f, gg_num *res)
@@ -144,10 +150,11 @@ end-handler
 
 In this example, you are using a C macro, so number "fact" is assigned a value directly, per C language rules. The result printed out is "3".
 .SH SEE ALSO
- lrnSafetyelrn
-.B - Safety
+ lrnC languageelrn
+.B - C language
 
 \fBcall-extended\fP  
-\fBextended-mode\fP   
+\fBextended-mode\fP  
+\fBweb-framework-for-C-programming-language\fP   
 See all 
 \fBdocumentation\fP

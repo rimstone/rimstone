@@ -1,6 +1,6 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-extended-mode \-  (safety)
+extended-mode \-  (C-language)
 .SH PURPOSE
 Use external libraries or C code with Golf.
 
@@ -34,10 +34,11 @@ end-handler
 .RE
 
 .SH SEE ALSO
- lrnSafetyelrn
-.B - Safety
+ lrnC languageelrn
+.B - C language
 
 \fBcall-extended\fP  
-\fBextended-mode\fP   
+\fBextended-mode\fP  
+\fBweb-framework-for-C-programming-language\fP   
 See all 
 \fBdocumentation\fP
