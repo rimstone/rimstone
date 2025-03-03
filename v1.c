@@ -2103,7 +2103,7 @@ void setup_internal_hash(char *fname, char *hash, bool is_req)
             if (is_req) gg_add_hash (gg_hardhash, gg_strdup(req), NULL, GG_EMPTY_STRING, NULL, NULL);
             else 
             {
-                // this is the address of index into param array added as value associated with hash key (which is the name of param), _gg_sprm_xxxx is generated in vmakefile
+                // this is the address of index into param array added as value associated with hash key (which is the name of param), _gg_aprm_xxxx is generated in vmakefile
                 char hdata[300];
                 snprintf(hdata, sizeof(hdata), "(void*)&_gg_aprm_%s", req);
                 gg_add_hash (gg_hardhash, gg_strdup(req), NULL, gg_strdup(hdata), NULL, NULL);
@@ -7071,7 +7071,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
 
      
-                            oprintf("gg_set_input (_gg_sprm_%s, ", mtext);
+                            oprintf("gg_set_input (_gg_aprm_%s, ", mtext);
                             if (cmp_type(type, GG_DEFNUMBER)) oprintf ("&(%s)", eq);
                             else if (cmp_type(type, GG_DEFBOOL)) oprintf ("((%s)?&gg_true:&gg_false)", eq);
                             else oprintf ("%s", eq);
