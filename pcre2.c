@@ -35,10 +35,10 @@ void gg_regfree(regex_t *preg)
 // If 'replace' is NULL, then we don't replace. Otherwise, all occurances are replaced.
 // If case_insensitive is 1, then case doesn't matter (0 otherwise).
 // If single_match is 1, then only a single match/replacement is done.
-// If utf8 is 1, then characters are treated as UTF8
+// If utf is 1, then characters are treated as UTF
 // cached is a compiled regex_t. If NULL, it's not used. If *cached is NULL, it's assigned. If *cached is not-NULL, it's used.
 //
-gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_num utf8, gg_num case_insensitive, gg_num single_match, regex_t **cached)
+gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_num utf, gg_num case_insensitive, gg_num single_match, regex_t **cached)
 {
     GG_TRACE("");
     gg_num reg_ret=0;
@@ -46,35 +46,23 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
     regex_t lreg; // local compiled regex_t used when cache is not used
 
     // If not using glibc-regex, load symbols with dlopen
-#ifndef GG_C_POSIXREGEX
+#ifndef GG_C_GLIBC_REGEX
     // Since PCRE2 in earlier days used the same symbols as glibc regex, you could never know which library will
-    // be used, resulting in a guaranteed SIGSEGV. We will read the actual library and use symbols from it, making
-    // sure regex from glibs is never called.
+    // be used, resulting in a guaranteed SIGSEGV. We will use pcre2_ names in pcre2 version greater than 10.37
     if (!pcre2_resolved) 
     {
-        // Open libpcre2-posix.so, should be in path if installed
-        void *lpcre2 = dlopen("lib" PCRE2_LIB_DL, RTLD_NOW);
-        if (lpcre2 == NULL) gg_report_error ("Cannot find PCRE2 library [%s]", dlerror());
-        // Get symbols, check for non pcre2_ in case of earlier version (ubuntu 18, debian 10, redhat 8 etc)
-        gg_pcre2_regcomp = dlsym(lpcre2, "pcre2_regcomp");
-        if (gg_pcre2_regcomp == NULL) gg_pcre2_regcomp = dlsym(lpcre2, "regcomp");
-        gg_pcre2_regexec = dlsym(lpcre2, "pcre2_regexec");
-        if (gg_pcre2_regexec == NULL) gg_pcre2_regexec = dlsym(lpcre2, "regexec");
-        gg_pcre2_regerror = dlsym(lpcre2, "pcre2_regerror");
-        if (gg_pcre2_regerror == NULL) gg_pcre2_regerror = dlsym(lpcre2, "regerror");
-        gg_pcre2_regfree = dlsym(lpcre2, "pcre2_regfree");
-        if (gg_pcre2_regfree == NULL) gg_pcre2_regfree = dlsym(lpcre2, "regfree");
-        // Check we got them all
-        if (gg_pcre2_regcomp == NULL || gg_pcre2_regexec == NULL || gg_pcre2_regerror == NULL || gg_pcre2_regfree == NULL) gg_report_error ("Cannot resolve PCRE2 library symbols");
+        gg_pcre2_regcomp = pcre2_regcomp;
+        gg_pcre2_regexec = pcre2_regexec;
+        gg_pcre2_regerror = pcre2_regerror;
+        gg_pcre2_regfree = pcre2_regfree;
         pcre2_resolved = true; // do this only once per process
     }
 #else
     // Some distros will link in pcre2 even though libc is present, because regcomp/... is the same function names used
-    // for both for prior versions of pcre2. It was not the best idea to duplicate function names in pcre2 prior to 
-    // version 10.37.
+    // for both for prior versions of pcre2. 
+    // Open libc, and use ONLY those (so no mixing with pre-10.37 pcre2 lib names, which are the same)
     if (!pcre2_resolved) 
     {
-        // Open libpcre2-posix.so, should be in path if installed
         void *lposix = dlopen(LIBC_SO, RTLD_NOW);
         if (lposix == NULL) gg_report_error ("Cannot find libc library [%s]", dlerror());
         // Get symbols for libc regex
@@ -88,16 +76,16 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
     }
 #endif
 
-#if defined(GG_C_POSIXREGEX)
+#if defined(GG_C_GLIBC_REGEX)
     gg_num rflags = REG_EXTENDED;
 #else
     gg_num rflags = REG_EXTENDED|REG_DOTALL|REG_UCP|REG_NEWLINE;
 #endif
     if (case_insensitive) rflags |= REG_ICASE;
-#if defined(GG_C_POSIXREGEX)
-    GG_UNUSED(utf8);
+#if defined(GG_C_GLIBC_REGEX)
+    GG_UNUSED(utf);
 #else
-    if (utf8) rflags |= REG_UTF;
+    if (utf) rflags |= REG_UTF;
 #endif
 
     // no cache, use local regex_t
@@ -341,7 +329,7 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
         // free reg *after* gg_pcre2_regerror
         if (cached != NULL) *cached = NULL; // if tried to cache, invalidate as it is ... invalid
         // Should not free it if it's a failure. This is different from stdlibc's regex, where you do need to.
-#ifdef GG_C_POSIXREGEX
+#ifdef GG_C_GLIBC_REGEX
         gg_pcre2_regfree (reg); // do not free gg_pcre2_regcomp resources when it's an error, unless glibc regex
 #endif
         if (cached != NULL) free (reg); // if tried to cache, dealloc it

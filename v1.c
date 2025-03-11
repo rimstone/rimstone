@@ -29,7 +29,7 @@
 // SQL query input, per input.
 #define GG_MAX_QUERY_INPUT_LEN 250
 // maximum length of input line in a  source code file.
-#define GG_FILE_LINE_LEN 8192
+#define GG_FILE_LINE_LEN 65536
 // maximum length of file name
 #define GG_FILE_NAME_LEN 200
 // maximum space to write out all output columns of a query
@@ -235,7 +235,7 @@
 #define GG_KEYRESULT "result "
 #define GG_KEYNOTRIM "notrim"
 #define GG_KEYCASEINSENSITIVE "case-insensitive"
-#define GG_KEYUTF8 "utf8"
+#define GG_KEYUTF "utf"
 #define GG_KEYTEMPORARY "temporary"
 #define GG_KEYSINGLEMATCH "single-match"
 #define GG_KEYENVIRONMENT "environment "
@@ -257,7 +257,7 @@
 #define GG_IN 1
 #define GG_INOUT 2
 // maximum length of generated code line (in .c file, final line)
-#define GG_MAX_CODE_LINE 8192
+#define GG_MAX_CODE_LINE GG_FILE_LINE_LEN
 // error messages
 #define GG_NAME_INVALID "Name [%s] is not valid, must be a valid identifier because a variable is required in this context, or this clause has already been specified"
 #define GG_VAR_NOT_EXIST "Variable [%s] does not exist"
@@ -1440,8 +1440,11 @@ void make_unq (char ** clause)
     for (i = 0; i < len; i++)
     {
         if ((*clause)[i] == '"') { *(curr++) = '\\'; *(curr++) = '"'; }
-        else if ((*clause)[i] == '\\') { *(curr++) = '\\'; *(curr++) = '\\';}
-        else if ((*clause)[i] == '\n') { *(curr++) = '\\'; *(curr++) = 'n';}
+        // NOTE: removed the following line, because it makes more sense to keep escaped characters, or otherwise you
+        // wouldn't be able to have them in the first place in unquoted string!
+        /*else if ((*clause)[i] == '\\') { *(curr++) = '\\'; *(curr++) = '\\';}*/
+        else if ((*clause)[i] == '\n') { *(curr++) = '\\'; *(curr++) = 'n';} // this is when \\ is used at the end of the line,
+                                                                             // which inserts 
         else *(curr++) = (*clause)[i];
     }
     *(curr++) = '"';
@@ -2355,7 +2358,6 @@ void query_result (gg_gen_ctx *gen_ctx, char *mtext, gg_num cur_query_result)
 void gg_is_valid_app_path (char *name)
 {
     GG_TRACE ("");
-    assert (name);
 
     gg_num i = 0;
     while (name[i] != 0)
@@ -2713,7 +2715,7 @@ void check_golf (char *c)
 //
 // Trim string var in-place. Returns its length.
 //
-gg_num  trimit(char *var)
+gg_num trimit(char *var)
 {
     gg_num var_len = strlen (var);
     gg_trim (var, &var_len, false);
@@ -2804,7 +2806,6 @@ void name_query (gg_gen_ctx *gen_ctx)
 //
 void prepare_query (gg_gen_ctx *gen_ctx, gg_db_parse *vp)
 {
-    assert (vp->eq); // must be non NULL by parsing 
 
     // new_query either adds a query or uses existing one
     new_query (gen_ctx, vp);
@@ -2957,7 +2958,6 @@ void query_execution (gg_gen_ctx *gen_ctx, const gg_num run_query, const gg_num 
 //
 void generate_query_result (gg_gen_ctx *gen_ctx, gg_db_parse *vp)
 {
-    assert (vp->query_result); // must be present for query-result
     char *col_out = vp->query_result;
 
     // get column encoding when retrieving query column
@@ -3673,7 +3673,7 @@ void end_query (gg_gen_ctx *gen_ctx, gg_num close_block)
     }
     // Ending of query with ID of leaving ID
     gg_num leaving_id = gen_ctx->curr_qry_ptr;
-    assert (leaving_id != -1);
+    // must be (leaving_id != -1);
 
     // no longer active, and its variables are defined, in case we
     // need to use them again - but they won't be defined again 
@@ -3688,7 +3688,7 @@ void end_query (gg_gen_ctx *gen_ctx, gg_num close_block)
 
     // go down one level
     gen_ctx->curr_qry_ptr --;
-    assert (gen_ctx->curr_qry_ptr >= 0);
+    // must be (gen_ctx->curr_qry_ptr >= 0);
 
     if (close_block == 1)
     {
@@ -3779,7 +3779,7 @@ void oprintf (char *format, ...)
         static gg_num in_lnum = 0;
         if (old_lnum != lnum) { old_lnum = lnum; in_lnum = 0; } else in_lnum++;
         gg_num tot_written = snprintf (oline + oline_len, oline_size - oline_len - 1, "#line %ld \"%s\"\n", gg_plain_diag == 1 ? lnum : lnum*10000+in_lnum, src_file_name);
-        if (tot_written >= oline_size - 1)
+        if (tot_written >= oline_size - oline_len - 1)
         {
             gg_report_error ("Source code line too long, exiting");
             exit (1);
@@ -3811,7 +3811,7 @@ void oprintf (char *format, ...)
 
     }
     else oline_written = vsnprintf (oline + oline_len, oline_size - oline_len - 1, format, args);
-    if (oline_len + oline_written >= oline_size - 1)
+    if (oline_written >= oline_size - oline_len- 1)
     {
         gg_report_error ("Source code line too long, exiting");
         exit (1);
@@ -3830,7 +3830,7 @@ void oprintf (char *format, ...)
         oline_prev_line_beg = oline_len;
     }
 
-    // expand if getting long, meaning what's left is less than GG_MAX_CODE_LINE(4k)
+    // expand if getting long, meaning what's left is less than GG_MAX_CODE_LINE
     if (oline_size-oline_len <= GG_MAX_CODE_LINE)
     {
         oline = gg_realloc (gg_mem_get_id(oline), oline_size += 2*GG_MAX_CODE_LINE + 1);
@@ -3904,8 +3904,6 @@ void _gg_report_error (char *format, ...)
 //
 void new_query (gg_gen_ctx *gen_ctx, gg_db_parse *vp)
 {
-    assert (gen_ctx);
-    assert (vp);
     char *orig_qry = vp->eq; // orig_qry is the SQL text of query
 
     //
@@ -3971,7 +3969,6 @@ void new_query (gg_gen_ctx *gen_ctx, gg_db_parse *vp)
 //
 gg_num find_query (gg_gen_ctx *gen_ctx)
 {
-    assert (gen_ctx);
     return gen_ctx->curr_qry_ptr - 1;
 }
 
@@ -3982,7 +3979,6 @@ gg_num find_query (gg_gen_ctx *gen_ctx)
 //
 void get_until_comma (char **s)
 {
-    assert (*s != NULL);
     gg_num i = 0;
     while (((*s)[i])!=',' && (*s)[i]!=0) i++;
     *s = *s + i;
@@ -3994,7 +3990,6 @@ void get_until_comma (char **s)
 //
 void get_until_whitespace (char **s)
 {
-    assert (*s != NULL);
     gg_num i = 0;
     while (!isspace ((*s)[i])) i++;
     *s = *s + i;
@@ -4006,7 +4001,6 @@ void get_until_whitespace (char **s)
 //
 void get_passed_whitespace (char **s)
 {
-    assert (*s != NULL);
     gg_num i = 0;
     while (isspace ((*s)[i])) i++;
     *s = *s + i;
@@ -4027,9 +4021,6 @@ void get_passed_whitespace (char **s)
 //
 gg_num recog_statement (char *cinp, gg_num pos, char *opt, char **mtext, gg_num *msize, gg_num isLast, gg_num *is_inline)
 {
-    assert (cinp);
-    assert (opt);
-    assert(msize);
 
 
     *is_inline = 0; // by default this isn't closed by >>
@@ -4208,6 +4199,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
     GG_VERBOSE(0,"Opened your file [%s]",file_name);
 
     gg_num json_id = 0;
+    gg_num xml_id = 0;
     gg_num open_readline = 0;
     gg_num open_ifs = 0;
     gg_num line_len = 0; // unlike 'len' below, used only for concatenation of lines
@@ -4260,6 +4252,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
             oprintf("\n#line %ld \"%s\"\n", gg_plain_diag == 1 ? lnum : lnum*10000, file_name);
         }
 
+        gg_num len;
         // 
         // if this is continuation, trim the continuation to avoid big gaps in between pieces
         // Lines can be concatenated
@@ -4268,26 +4261,29 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
         {
             gg_num cont_len = strlen (line+line_len);
             // check if continuation starts with space. If it doesn't, we cannot trim.
-            if (cont_len > 1 && isspace(line[line_len])) 
+            if (cont_len > 0)
             {
-                // We used to leave a space when lines are concatenated with / but NO MORE. The space
-                // should be made in the code, if needed. The reason is that space-sensitive parsing will NOT 
-                // work if we arbitrarily leave a space in between lines. Concatenation means just that - concatenation.
-                // form incorrect syntax because there would be no spaces at all in between them
+                // Concatenation means just that - concatenation.
+                // each line in concatenation is trimmed both ends
                 gg_trim (line+line_len, &cont_len, false);
             }
+            len = line_len + cont_len;
+        }
+        else
+        {
+            // if line_len is zero then we trim line (meaning also on the left). If line_line > 0, then the above will trim on the right,
+            // no need to trim on the left too again
+            len = strlen (line);
+            gg_trim (line, &len, false);
         }
 
-        gg_num i;
-        gg_num len = strlen (line);
 
-        if (len >= (gg_num)sizeof (line) - 2) // don't allow too big of a line
+        if (len >= (gg_num)sizeof (line) - 16) // don't allow too big of a line
         {
             gg_report_error( "Line too long");
         }
 
-        gg_trim (line, &len, false);
-
+        gg_num i;
 
         if (len > 0 && line[len - 1] == '\\')
         {
@@ -5889,7 +5885,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "utf8-text", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "utf-text", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
@@ -5898,44 +5894,44 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
                         char *errt = find_keyword (mtext, GG_KEYERRORTEXT, 1);
                         char *to = find_keyword (mtext, GG_KEYTO, 1);
-                        carve_statement (&len, "utf8-text", GG_KEYLENGTH, 0, 1);
-                        carve_statement (&status, "utf8-text", GG_KEYSTATUS, 0, 1);
-                        carve_statement (&errt, "utf8-text", GG_KEYERRORTEXT, 0, 1);
-                        carve_statement (&to, "utf8-text", GG_KEYTO, 0, 1);
+                        carve_statement (&len, "utf-text", GG_KEYLENGTH, 0, 1);
+                        carve_statement (&status, "utf-text", GG_KEYSTATUS, 0, 1);
+                        carve_statement (&errt, "utf-text", GG_KEYERRORTEXT, 0, 1);
+                        carve_statement (&to, "utf-text", GG_KEYTO, 0, 1);
                         carve_stmt_obj (&mtext, true);
                         define_statement (&status, GG_DEFNUMBER, false);
-                        define_statement (&errt, GG_DEFSTRING, false); // exact length set in glim_utf8_to_text
-                        define_statement (&to, GG_DEFSTRING, false); // exact length set in glim_utf8_to_text
+                        define_statement (&errt, GG_DEFSTRING, false); // exact length set in glim_utf_to_text
+                        define_statement (&to, GG_DEFSTRING, false); // exact length set in glim_utf_to_text
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
 
                         oprintf ("char *_gg_errt%ld = NULL;\n", code_text);
-                        oprintf ("gg_num _gg_res%ld = gg_utf8_to_text (%s, %s, %s%s%s, &_gg_errt%ld);\n", code_text, mtext, len == NULL ? "-1":len, to==NULL?"":"&(", to==NULL?"NULL":to, to==NULL?"":")", code_text);
-                        if (status != NULL) oprintf ("if (_gg_res%ld == -1) {GG_ERR0;%s=GG_ERR_UTF8;} else %s=_gg_res%ld;\n", code_text, status, status, code_text); else oprintf("GG_UNUSED(_gg_res%ld);\n", code_text);
+                        oprintf ("gg_num _gg_res%ld = gg_utf_to_text (%s, %s, %s%s%s, &_gg_errt%ld);\n", code_text, mtext, len == NULL ? "-1":len, to==NULL?"":"&(", to==NULL?"NULL":to, to==NULL?"":")", code_text);
+                        if (status != NULL) oprintf ("if (_gg_res%ld == -1) {GG_ERR0;%s=GG_ERR_UTF;} else %s=_gg_res%ld;\n", code_text, status, status, code_text); else oprintf("GG_UNUSED(_gg_res%ld);\n", code_text);
                         if (errt != NULL) oprintf ("%s = _gg_errt%ld;\n", errt, code_text); 
 
                         code_text++;
 
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "text-utf8", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "text-utf", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
 
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
                         char *errt = find_keyword (mtext, GG_KEYERRORTEXT, 1);
-                        carve_statement (&status, "text-utf8", GG_KEYSTATUS, 0, 1);
-                        carve_statement (&errt, "text-utf8", GG_KEYERRORTEXT, 0, 1);
+                        carve_statement (&status, "text-utf", GG_KEYSTATUS, 0, 1);
+                        carve_statement (&errt, "text-utf", GG_KEYERRORTEXT, 0, 1);
                         carve_stmt_obj (&mtext, true);
                         define_statement (&status, GG_DEFNUMBER, false);
-                        define_statement (&errt, GG_DEFSTRING, false); // exact length set in glim_text_to_utf8
+                        define_statement (&errt, GG_DEFSTRING, false); // exact length set in glim_text_to_utf
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
 
                         oprintf ("char *_gg_errt%ld = NULL;\n", code_text);
-                        oprintf ("char *_gg_res%ld = gg_text_to_utf8 (%s, 0, &_gg_errt%ld, 1, true);\n", code_text, mtext, code_text);
-                        if (status != NULL) oprintf ("if (_gg_res%ld != NULL) %s=GG_OKAY; else {GG_ERR0;%s=GG_ERR_UTF8;}\n", code_text, status, status); else oprintf("GG_UNUSED(_gg_res%ld);\n", code_text);
+                        oprintf ("char *_gg_res%ld = gg_text_to_utf (%s, 0, &_gg_errt%ld, 1, true);\n", code_text, mtext, code_text);
+                        if (status != NULL) oprintf ("if (_gg_res%ld != NULL) %s=GG_OKAY; else {GG_ERR0;%s=GG_ERR_UTF;}\n", code_text, status, status); else oprintf("GG_UNUSED(_gg_res%ld);\n", code_text);
                         if (errt != NULL) oprintf ("%s = _gg_errt%ld;\n", errt, code_text);
 
 
@@ -6361,7 +6357,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *result = find_keyword (mtext, GG_KEYRESULT, 1);
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
                         char *case_insensitive = find_keyword (mtext, GG_KEYCASEINSENSITIVE, 1);
-                        char *utf8 = find_keyword (mtext, GG_KEYUTF8, 1);
+                        char *utf = find_keyword (mtext, GG_KEYUTF, 1);
                         char *single_match = find_keyword (mtext, GG_KEYSINGLEMATCH, 1);
 
                         //
@@ -6375,7 +6371,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&result, "match-regex", GG_KEYRESULT, 0, 1);
                         carve_statement (&status, "match-regex", GG_KEYSTATUS, 0, 1);
                         carve_statement (&case_insensitive, "match-regex", GG_KEYCASEINSENSITIVE, 0, 2);
-                        carve_statement (&utf8, "match-regex", GG_KEYUTF8, 0, 2);
+                        carve_statement (&utf, "match-regex", GG_KEYUTF, 0, 2);
                         carve_statement (&single_match, "match-regex", GG_KEYSINGLEMATCH, 0, 2);
                         carve_stmt_obj (&mtext, true);
                         char *pattern = mtext;
@@ -6384,7 +6380,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&replace_with);
 
                         char *case_insensitivec = opt_clause(case_insensitive, "1", "0", GG_DEFNUMBER);
-                        char *utf8c = opt_clause(utf8, "1", "0", GG_DEFNUMBER);
+                        char *utfc = opt_clause(utf, "1", "0", GG_DEFNUMBER);
                         char *single_matchc = opt_clause(single_match, "1", "0", GG_DEFNUMBER);
 
                         if (result != NULL && replace_with == NULL)
@@ -6407,7 +6403,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         check_var (&mtext, GG_DEFSTRING, NULL);
                         check_var (&case_insensitivec, GG_DEFNUMBER, NULL);
                         check_var (&ccache, GG_DEFBOOL, NULL);
-                        check_var (&utf8c, GG_DEFNUMBER, NULL);
+                        check_var (&utfc, GG_DEFNUMBER, NULL);
                         check_var (&single_matchc, GG_DEFNUMBER, NULL);
                         check_var (&in, GG_DEFSTRING, NULL);
 
@@ -6427,11 +6423,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf ("if ((%s)) {if (%s != NULL) gg_regfree(%s); %s = NULL;}\n", ccache, regname, regname, regname);
                         }
 
-                        if (replace_with == NULL) oprintf ("%s%sgg_regex(%s, %s, %s, %s, %s, %s, %s, %s%s);\n", status==NULL?"":status,status==NULL?"":"=", in, pattern, "NULL", "NULL", utf8c, case_insensitivec, single_matchc, cache==NULL?"":"&",cache==NULL?"NULL":regname);
-                        else oprintf ("%s%sgg_regex(%s, %s, %s, &(%s), %s, %s, %s, %s%s);\n", status==NULL?"":status,status==NULL?"":"=", in, pattern, replace_with, result, utf8c, case_insensitivec, single_matchc, cache==NULL?"":"&",cache==NULL?"NULL":regname);
+                        if (replace_with == NULL) oprintf ("%s%sgg_regex(%s, %s, %s, %s, %s, %s, %s, %s%s);\n", status==NULL?"":status,status==NULL?"":"=", in, pattern, "NULL", "NULL", utfc, case_insensitivec, single_matchc, cache==NULL?"":"&",cache==NULL?"NULL":regname);
+                        else oprintf ("%s%sgg_regex(%s, %s, %s, &(%s), %s, %s, %s, %s%s);\n", status==NULL?"":status,status==NULL?"":"=", in, pattern, replace_with, result, utfc, case_insensitivec, single_matchc, cache==NULL?"":"&",cache==NULL?"NULL":regname);
                         gg_free(case_insensitivec);
                         gg_free(single_matchc);
-                        gg_free(utf8c);
+                        gg_free(utfc);
 
                         regex_cache++;
                         continue;
@@ -8435,6 +8431,48 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
+                    else if ((newI=recog_statement(line, i, "read-xml", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+                        char *key = find_keyword (mtext, GG_KEYKEY, 1);
+                        char *val = find_keyword (mtext, GG_KEYVALUE, 1);
+                        char *next = find_keyword (mtext, GG_KEYNEXT, 1);
+                        char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
+
+
+                        carve_statement (&key, "read-xml", GG_KEYKEY, 0, 1);
+                        carve_statement (&val, "read-xml", GG_KEYVALUE, 0, 1);
+                        carve_statement (&next, "read-xml", GG_KEYNEXT, 0, 0);
+                        carve_statement (&st, "read-xml", GG_KEYSTATUS, 0, 1);
+                        carve_stmt_obj (&mtext, true);
+
+                        define_statement (&key, GG_DEFSTRING, false); 
+                        define_statement (&val, GG_DEFSTRING, false); 
+                        define_statement (&st, GG_DEFNUMBER, false); 
+
+                        check_var (&mtext, GG_DEFXML, NULL);
+                        oprintf ("if ((%s) != NULL && ((%s)->node_r < (%s)->node_c)) { \n;\n", mtext, mtext, mtext);
+                        if (key != NULL) 
+                        {
+                            oprintf ("(%s) = (%s)->nodes[(%s)->node_r].name;\n", key, mtext, mtext);
+                            oprintf ("gg_mem_add_ref(%s);\n", key);
+                        }
+                        if (val != NULL) 
+                        {
+                            oprintf ("%s = (%s)->nodes[(%s)->node_r].str; \n", val, mtext,mtext);
+                            oprintf ("gg_mem_add_ref(%s);\n", val);
+                        }
+                        if (next) oprintf ("(%s)->node_r++;\n", mtext);
+                        if (st) oprintf ("%s=GG_OKAY;\n", st);
+                        oprintf ("} else { ;\n");
+                        if (key != NULL) oprintf ("(%s) = GG_EMPTY_STRING;\n", key);
+                        if (val != NULL) oprintf ("(%s) = GG_EMPTY_STRING;\n", val);
+                        if (st) oprintf ("%s=GG_ERR_EXIST;\n", st);
+                        oprintf ("}\n");
+
+                        continue;
+                    }
                     else if ((newI=recog_statement(line, i, "json-doc", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
@@ -8450,8 +8488,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *errt = find_keyword (mtext, GG_KEYERRORTEXT, 1);
                         char *len = find_keyword (mtext, GG_KEYLENGTH, 1);
                         char *del = find_keyword (mtext, GG_KEYDELETE, 1);
-
-
 
                         if (del != NULL && to != NULL) gg_report_error ("Only one of 'to' or 'delete' can be used");
                         if (del == NULL && to == NULL) gg_report_error ("At least one of 'to' or 'delete' must be used");
@@ -8509,6 +8545,75 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                 oprintf ("%s = gg_json_err();\n", errt);
                             }
                             json_id++;
+                        }
+
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "xml-doc", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        char *to = find_keyword (mtext, GG_KEYTO, 1);
+                        char *errl = find_keyword (mtext, GG_KEYERRORLINE, 1);
+                        char *errc = find_keyword (mtext, GG_KEYERRORCHAR, 1);
+                        char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
+                        char *errt = find_keyword (mtext, GG_KEYERRORTEXT, 1);
+                        char *len = find_keyword (mtext, GG_KEYLENGTH, 1);
+                        char *del = find_keyword (mtext, GG_KEYDELETE, 1);
+
+                        if (del != NULL && to != NULL) gg_report_error ("Only one of 'to' or 'delete' can be used");
+                        if (del == NULL && to == NULL) gg_report_error ("At least one of 'to' or 'delete' must be used");
+                        if ((errl != NULL || errc != NULL || status != NULL || errt != NULL || len != NULL) && to == NULL) gg_report_error ("no other options can be used with 'delete'");
+
+                        if (to != NULL) 
+                        {
+                            carve_statement (&errt, "xml-doc", GG_KEYERRORTEXT, 0, 1);
+                            carve_statement (&status, "xml-doc", GG_KEYSTATUS, 0, 1);
+                            carve_statement (&errc, "xml-doc", GG_KEYERRORCHAR, 0, 1);
+                            carve_statement (&errl, "xml-doc", GG_KEYERRORLINE, 0, 1);
+                            carve_statement (&len, "xml-doc", GG_KEYLENGTH, 0, 1);
+                            carve_statement (&to, "xml-doc", GG_KEYTO, 0, 1);
+                            carve_stmt_obj (&mtext, true);
+                            define_statement (&errt, GG_DEFSTRING, false);
+                            define_statement (&status, GG_DEFNUMBER, false);
+                            define_statement (&errl, GG_DEFNUMBER, false);
+                            define_statement (&errc, GG_DEFNUMBER, false);
+                            define_statement (&to, GG_DEFXML, true);
+                            check_var (&len, GG_DEFNUMBER, NULL);
+                            check_var (&mtext, GG_DEFSTRING, NULL);
+                        }
+                        if (del != NULL) 
+                        {
+                            carve_statement (&del, "xml-doc", GG_KEYDELETE, 0, 1);
+                            carve_stmt_obj (&mtext, false);
+                            check_var (&del, GG_DEFXML, NULL);
+                        }
+
+                        if (del != NULL) oprintf ("gg_del_xml (&(%s));\n", del);
+                        //
+
+
+                        //
+                        // Look for each option and collect relevant info
+                        //
+                        if (to != NULL)
+                        {
+                            oprintf ("gg_set_xml (&(%s));\n", to);
+                            oprintf ("gg_num gg_xml_status_%ld = gg_xml_new ((%s), (%s), %s%s%s, %s%s%s);\n", xml_id, mtext, len == NULL ? "-1" : len,    errc==NULL?"":"&(",        errc==NULL?"NULL":errc,          errc==NULL?"":")",  errl==NULL?"":"&(",errl==NULL?"NULL":errl,errl==NULL?"":")");
+                            if (status != NULL)
+                            {
+                                oprintf ("GG_ERR0; %s = (gg_xml_status_%ld == -1 ? GG_OKAY : GG_ERR_XML);\n", status, xml_id);
+                            }
+                            else
+                            {
+                                oprintf ("GG_UNUSED(gg_xml_status_%ld);\n", xml_id);
+                            }
+                            if (errt != NULL)
+                            {
+                                oprintf ("%s = gg_xml_err();\n", errt);
+                            }
+                            xml_id++;
                         }
 
                         continue;
@@ -9664,7 +9769,7 @@ int main (int argc, char* argv[])
     add_var ("GG_ERR_INVALID", GG_DEFNUMBER, NULL);
     add_var ("GG_ERR_RENAME", GG_DEFNUMBER, NULL);
     add_var ("GG_ERR_MEMORY", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_UTF8", GG_DEFNUMBER, NULL);
+    add_var ("GG_ERR_UTF", GG_DEFNUMBER, NULL);
     add_var ("GG_ERR_FORMAT", GG_DEFNUMBER, NULL);
     add_var ("GG_ERR_CLOSE", GG_DEFNUMBER, NULL);
     add_var ("GG_ERR_OVERFLOW", GG_DEFNUMBER, NULL);

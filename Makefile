@@ -17,7 +17,6 @@ ASAN=$(A)
 #get pcre2 version and libs
 PCRE2_VER=$(shell pcre2-config --version)
 PCRE2_LIBS=$(shell pcre2-config --libs-posix)
-PCRE2_LIB_DL=$(shell echo -n "$(PCRE2_LIBS)" |sed -n 's/-l\([^[:space:]]*\).*$$/\1/gp')
 #these must be the same (GG_PLATFORM_ID,GG_PLATFORM_VERSION) used in sys
 OSNAME=$(shell . ./sys; echo -n $${GG_PLATFORM_ID})
 OSVERSION=$(shell . ./sys; echo -n $${GG_PLATFORM_VERSION})
@@ -139,7 +138,6 @@ install:
 	install -D -m 0755 libgolfxml.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolfarr.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolfpcre2.so -t $(DESTDIR)$(V_LIB)/
-	install -D -m 0755 libgolfpcre2glibc.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libsrvcgolf.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolf.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolfcli.so -t $(DESTDIR)$(V_LIB)/
@@ -176,8 +174,6 @@ install:
 	for i in $$(ls $(DESTDIR)$(V_MAN)/*.2gg); do gzip -f $$i; done
 	install -m 0755 -d $(DESTDIR)$(V_GG_DOCS)
 	install -D -m 0644 docs/golfdoc.html -t $(DESTDIR)$(V_GG_DOCS)/
-	echo -n "$(PCRE2_VER)" > pcre2_version; install -D -m 0644 pcre2_version -t $(DESTDIR)$(V_LIB)/
-	echo -n "$(PCRE2_LIBS)" > pcre2_libs; install -D -m 0644 pcre2_libs -t $(DESTDIR)$(V_LIB)/
 #This must be last, in this order, as it saves and then applies SELinux policy where applicable. 
 #This runs during rpm creation or during sudo make install
 #it does NOT run during rpm installation, there is post scriptlet that calls golf.sel to do that (GG_NO_SEL)
@@ -199,7 +195,7 @@ binary:build
 	@;
 
 .PHONY: build
-build: libsrvcgolf.so libgolfcli.so libgolfscli.so libgolf.so libgolfdb.so libgolfsec.so libgolfmys.so libgolflite.so libgolfpg.so libgolfcurl.so libgolfxml.so libgolfarr.so libgolftree.so libgolfpcre2.so libgolfpcre2glibc.so v1.o stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_xml.o stub_arr.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg 
+build: libsrvcgolf.so libgolfcli.so libgolfscli.so libgolf.so libgolfdb.so libgolfsec.so libgolfmys.so libgolflite.so libgolfpg.so libgolfcurl.so libgolfxml.so libgolfarr.so libgolftree.so libgolfpcre2.so v1.o stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_xml.o stub_arr.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg 
 	@echo "Building version $(PACKAGE_VERSION)"
 	$(CC) -o v1 v1.o chandle.o golfrtc.o golfmems.o hash.o $(LDFLAGS) 
 
@@ -209,7 +205,6 @@ clean:
 	touch *.h
 	rm -rf debian/golf
 	rm -rf *.tar.gz
-	rm -f pcre2_version pcre2_libs
 
 
 
@@ -224,12 +219,12 @@ v1.o: v1.c golfmems.o
 mgrg: mgrg.o 
 	$(CC) -o mgrg mgrg.o $(LDFLAGS)
 
-libsrvcgolf.so: chandle.o hash.o json.o msg.o utf8.o srvc_golfrt.o golfrtc.o golfmems.o 
+libsrvcgolf.so: chandle.o hash.o json.o msg.o utf.o srvc_golfrt.o golfrtc.o golfmems.o 
 	rm -f libsrvcgolf.so
 	$(CC) -shared -o libsrvcgolf.so $^ 
 	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libsrvcgolf.so ; fi
 
-libgolf.so: chandle.o hash.o json.o msg.o utf8.o golfrt.o golfrtc.o golfmems.o 
+libgolf.so: chandle.o hash.o json.o msg.o utf.o golfrt.o golfrtc.o golfmems.o 
 	rm -f libgolf.so
 	$(CC) -shared -o libgolf.so $^ 
 	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolf.so ; fi
@@ -284,12 +279,7 @@ libgolfpcre2.so: pcre2.o
 	$(CC) -shared -o libgolfpcre2.so $^ 
 	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfpcre2.so ; fi
 
-libgolfpcre2glibc.so: pcre2glibc.o 
-	rm -f libgolfpcre2glibc.so
-	$(CC) -shared -o libgolfpcre2glibc.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfpcre2glibc.so ; fi
-
-utf8.o: utf8.c golf.h
+utf.o: utf.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
 hash.o: hash.c golf.h
@@ -371,10 +361,8 @@ arr.o: arr.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
 pcre2.o: pcre2.c golf.h
-	NEWPCRE2=$$(./sys greater_than_eq "$(PCRE2_VER)" "10.37"); if [ "$$NEWPCRE2" == "0" ]; then FORCE_POSIXREGEX="-DGG_C_POSIXREGEX"; else FORCE_POSIXREGEX="-DPCRE2_LIB_DL=\"$(PCRE2_LIB_DL)\""; fi ; $(CC) -c -o $@ $< $$FORCE_POSIXREGEX $(CFLAGS) 
+	NEWPCRE2=$$(./sys greater_than_eq "$(PCRE2_VER)" "10.37"); if [ "$$NEWPCRE2" == "0" ]; then GLIBC_REGEX="-DGG_C_GLIBC_REGEX"; fi ; $(CC) -c -o $@ $< $$GLIBC_REGEX $(CFLAGS) 
 
-pcre2glibc.o: pcre2.c golf.h
-	$(CC) -c -o $@ $< -DGG_C_POSIXREGEX $(CFLAGS) 
 
 golfrtc.o: golfrtc.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS)

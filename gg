@@ -403,9 +403,6 @@ _DO_QUICK=0
         fi
     fi
 
-    #check if old pcre2 lib, use glibc regex
-    if [ "$GG_PCRE2_NEW" == "0" ]; then export GG_C_POSIXREGEX="1"; fi
-
 #handle client fastcgi app building
     if [[ "$_DO_QUICK" == "1" && "$_DO_CLIENT" == "1" ]]; then
         error "Cannot use both -i and -q options. Use one or the other"
@@ -974,18 +971,10 @@ function read_modules() {
 #pcre2 module
     if [ "$_ISMOD_PCRE2" == "1" ]; then
         #this is if not using plain posix regex, otherwise nothing to do
-        if [ "$GG_C_POSIXREGEX" != "1" ]; then
-            GG_PCRE2_USED="-DGG_PCRE2_INCLUDE"
-            GG_MODULES="$GG_MODULES $GG_PCRE2_LIBS"
-            GG_MOD_LIBS="$GG_MOD_LIBS -lgolfpcre2 -ldl"
-            GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
-        else
-            #pcre is not used, but we still use glibc regex, so include regex.h and compile pcre2.c (which does both
-            #glibc and pcre2)
-            GG_PCRE2_USED="-DGG_PCRE2_INCLUDE"
-            GG_MOD_LIBS="$GG_MOD_LIBS -lgolfpcre2glibc -ldl"
-            GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
-        fi
+        GG_PCRE2_USED="-DGG_PCRE2_INCLUDE"
+        GG_MODULES="$GG_MODULES $(pcre2-config --libs-posix)"
+        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfpcre2"
+        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
     else
         GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_pcre2.o"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
@@ -1002,6 +991,7 @@ function read_modules() {
 #xml module
     if [ "$_ISMOD_XML" == "1" ]; then
         GG_XML_USED="-DGG_XML_INCLUDE"
+        GG_MODULES="$GG_MODULES -lxml2"
         GG_MOD_LIBS="$GG_MOD_LIBS -lgolfxml"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES xml"
     else

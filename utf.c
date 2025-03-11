@@ -4,11 +4,11 @@
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 // 
-// UTF8-related module
+// UTF-related module
 //
 
 //
-// Based on UTF8 standard: https://www.rfc-editor.org/rfc/rfc3629
+// Based on UTF standard: https://www.rfc-editor.org/rfc/rfc3629
 //
 
 #include "golf.h"
@@ -16,17 +16,17 @@
 //
 // get original unicode from two surrogates. Return that value.
 //
-gg_num32 gg_make_from_utf8_surrogate (gg_num32 u0, gg_num32 u1)
+gg_num32 gg_make_from_utf_surrogate (gg_num32 u0, gg_num32 u1)
 {
     GG_TRACE("");
     return (u0 << 10) + u1 + (0x10000 - (0xD800 << 10) - 0xDC00);
 }
 
 //
-// Encode binary UTF8 string 'r' to unicode value 'u'. Return number of bytes of UTF8 picked up (1,2,3 or 4) or -1 if error
+// Encode binary UTF string 'r' to unicode value 'u'. Return number of bytes of UTF picked up (1,2,3 or 4) or -1 if error
 // 'e' is error text
 //
-gg_num gg_encode_utf8 (char *r, gg_num32 *u, char **e)
+gg_num gg_encode_utf (char *r, gg_num32 *u, char **e)
 {
     GG_TRACE("");
     *e = GG_EMPTY_STRING;
@@ -43,11 +43,11 @@ gg_num gg_encode_utf8 (char *r, gg_num32 *u, char **e)
         // four byte
         *u = (r[0] & 7) << 18;
         if ((r[1] & 128) == 128) *u += ((r[1] & 63)<<12);
-        else { *e = gg_strdup(GG_UTF8_ERR_SECOND_BYTE); return -1;}
+        else { *e = gg_strdup(GG_UTF_ERR_SECOND_BYTE); return -1;}
         if ((r[2] & 128) == 128) *u += ((r[2] & 63)<<6);
-        else { *e = gg_strdup(GG_UTF8_ERR_THIRD_BYTE); return -1;}
+        else { *e = gg_strdup(GG_UTF_ERR_THIRD_BYTE); return -1;}
         if ((r[3] & 128) == 128) *u += (r[3] & 63);
-        else { *e = gg_strdup(GG_UTF8_ERR_FOURTH_BYTE); return -1;}
+        else { *e = gg_strdup(GG_UTF_ERR_FOURTH_BYTE); return -1;}
         return 4;
     }
     else if ((r[0] & 224) == 224)
@@ -55,9 +55,9 @@ gg_num gg_encode_utf8 (char *r, gg_num32 *u, char **e)
         // three byte
         *u = (r[0] & 15) << 12;
         if ((r[1] & 128) == 128) *u += ((r[1] & 63)<<6);
-        else { *e = gg_strdup(GG_UTF8_ERR_SECOND_BYTE); return -1;}
+        else { *e = gg_strdup(GG_UTF_ERR_SECOND_BYTE); return -1;}
         if ((r[2] & 128) == 128) *u += (r[2] & 63);
-        else { *e = gg_strdup(GG_UTF8_ERR_THIRD_BYTE); return -1;}
+        else { *e = gg_strdup(GG_UTF_ERR_THIRD_BYTE); return -1;}
         return 3;
     }
     else if ((r[0] & 192) == 192)
@@ -65,12 +65,12 @@ gg_num gg_encode_utf8 (char *r, gg_num32 *u, char **e)
         // two byte
         *u = (r[0] & 31) << 6;
         if ((r[1] & 128) == 128) *u += (r[1] & 63);
-        else { *e = gg_strdup(GG_UTF8_ERR_SECOND_BYTE); return -1;}
+        else { *e = gg_strdup(GG_UTF_ERR_SECOND_BYTE); return -1;}
         return 2;
     }
     else
     {
-        *e = gg_strdup(GG_UTF8_INVALID); return -1;
+        *e = gg_strdup(GG_UTF_INVALID); return -1;
     }
 }
 
@@ -78,7 +78,7 @@ gg_num gg_encode_utf8 (char *r, gg_num32 *u, char **e)
 // Break unicode u into surrogate u0 and u1. 
 // 
 //
-void gg_get_utf8_surrogate (gg_num32 u, gg_num32 *u0, gg_num32 *u1)
+void gg_get_utf_surrogate (gg_num32 u, gg_num32 *u0, gg_num32 *u1)
 {
     GG_TRACE("");
     *u0 = (0xD800 - (0x10000 >> 10)) + (u>>10);
@@ -86,13 +86,13 @@ void gg_get_utf8_surrogate (gg_num32 u, gg_num32 *u0, gg_num32 *u1)
 }
 
 //
-// Decode 32 bit Unicode to 1,2,3 or 4 UTF8 string
+// Decode 32 bit Unicode to 1,2,3 or 4 UTF string
 // 'u' is unicode number of a character, range 0 to 10FFFF.
-// 'r' is the result string of UTF8 (1,2,3 or 4 bytes), r must point to at least 5 bytes of memory (4+null)
+// 'r' is the result string of UTF (1,2,3 or 4 bytes), r must point to at least 5 bytes of memory (4+null)
 // 'e' is error message. 
 // returns -1 on error, number of bytes (excluding 0) if okay
 //
-gg_num gg_decode_utf8 (gg_num32 u, unsigned char *r, char **e)
+gg_num gg_decode_utf (gg_num32 u, unsigned char *r, char **e)
 {
     GG_TRACE("");
     *e = GG_EMPTY_STRING;
@@ -106,7 +106,7 @@ gg_num gg_decode_utf8 (gg_num32 u, unsigned char *r, char **e)
     }
     else if (u >= 0x800 && u <= 0xFFFF) 
     {
-        if (u == 0xFEFF) {*e = gg_strdup(GG_UTF8_ERR_ILLEGAL_CHARACTER_FEFF); return -1;}
+        if (u == 0xFEFF) {*e = gg_strdup(GG_UTF_ERR_ILLEGAL_CHARACTER_FEFF); return -1;}
         // 224 = 11100000
         r[0] = 224+(u>>12); // get top 4 (out of 16) bits
         r[1] = 128+((u>>6)&63); // get middle 6 from 4+6+6 group of bits
@@ -122,7 +122,7 @@ gg_num gg_decode_utf8 (gg_num32 u, unsigned char *r, char **e)
         r[3] = 128+(u&63); // get lower 6 bits
         return 4;
     }
-    else { *e = gg_strdup(GG_UTF8_ERR_OUT_OF_RANGE); return -1; }
+    else { *e = gg_strdup(GG_UTF_ERR_OUT_OF_RANGE); return -1; }
     return -1; // just to satisfy compiler
 }
 
@@ -141,7 +141,7 @@ gg_num32 gg_get_hex(char *v, char **err)
         if (*v >= '0' && *v <= '9') r += (*v - '0')*gg_topower(16,3-k);
             else if (*v >= 'a' && *v <= 'f') r += (*v - 'a' + 10)*gg_topower(16,3-k);
             else if (*v >= 'A' && *v <= 'F') r += (*v - 'A' + 10)*gg_topower(16,3-k);
-            else { *err = GG_ERR_UTF8_BADUTF; return 0;} // not a hex value
+            else { *err = GG_ERR_UTF_BADUTF; return 0;} // not a hex value
         v++;
     }
     return r;
@@ -155,7 +155,7 @@ gg_num32 gg_get_hex(char *v, char **err)
 // If 'enc' is 0, do not enccode strings at all.
 // alloced is true if val is allocated memory
 //
-char *gg_text_to_utf8 (char *val, char quoted, char **o_errm, char enc, bool alloced)
+char *gg_text_to_utf (char *val, char quoted, char **o_errm, char enc, bool alloced)
 {
     GG_TRACE("");
     *o_errm = GG_EMPTY_STRING;
@@ -219,21 +219,21 @@ char *gg_text_to_utf8 (char *val, char quoted, char **o_errm, char enc, bool all
                             if (val[c] != '\\' || val[c+1] != 'u')
                             {
                                 GG_ERR0;
-                                *o_errm = gg_strdup(GG_ERR_UTF8_SURROGATE); return NULL;
+                                *o_errm = gg_strdup(GG_ERR_UTF_SURROGATE); return NULL;
                             }
                             gg_num r1 = gg_get_hex (val + c + 2 , o_errm); // c+2 to skip \u
                             if ((*o_errm)[0] != 0) return NULL;
-                            rtot = gg_make_from_utf8_surrogate (r, r1);
+                            rtot = gg_make_from_utf_surrogate (r, r1);
                         } else rtot = r;
                         // turn unicode to binary
-                        gg_num32 bytes = gg_decode_utf8 (rtot, (unsigned char*) (val+i-1-pull), o_errm);
+                        gg_num32 bytes = gg_decode_utf (rtot, (unsigned char*) (val+i-1-pull), o_errm);
                         if ((*o_errm)[0] != 0) return NULL;
                         pull += totjv - bytes; // binary is less space than \uXXXX 
                         i += totjv - 1 - 1; // 1 for getting passed \ and one for i++ further down
                         
                         break;
                     }
-                    default: { GG_ERR0; *o_errm = gg_strdup(GG_ERR_UTF8_BADESCAPE); return NULL;} // unknown escape sequence
+                    default: { GG_ERR0; *o_errm = gg_strdup(GG_ERR_UTF_BADESCAPE); return NULL;} // unknown escape sequence
                 }
                 i++; // to account for \, ", /, b, f, u etc.
             }
@@ -250,19 +250,19 @@ char *gg_text_to_utf8 (char *val, char quoted, char **o_errm, char enc, bool all
         val[i-pull] = 0; // if pulled whole string back, finish it with 0
         if (alloced) gg_mem_set_len (gg_mem_get_id(val), i-pull+1); // set it before gg_puts because it needs length to output below (if so)
     }
-    if (val[i] == 0 && quoted == 1) { GG_ERR0; *o_errm = gg_strdup(GG_ERR_UTF8_NOQUOTE); return NULL;} // must have double quote at the end if quoted set
+    if (val[i] == 0 && quoted == 1) { GG_ERR0; *o_errm = gg_strdup(GG_ERR_UTF_NOQUOTE); return NULL;} // must have double quote at the end if quoted set
     return val+i; // return where the end is
 }
 
 
 
 //
-// Convert binary utf8 val of len 'len' into text/unicode text 'resptr' (which is allocated here), 
+// Convert binary utf val of len 'len' into text/unicode text 'resptr' (which is allocated here), 
 // any error in err (also set here)
 // If error, return -1, otherwise length of res
 // len can be -1 in which case it's computed
 //
-gg_num gg_utf8_to_text (char *val, gg_num len, char **resptr, char **err)
+gg_num gg_utf_to_text (char *val, gg_num len, char **resptr, char **err)
 {
     GG_TRACE("");
 
@@ -272,8 +272,8 @@ gg_num gg_utf8_to_text (char *val, gg_num len, char **resptr, char **err)
     else if (len > gg_mem_get_len(id)) gg_report_error ("Memory used is of length [%ld] but only [%ld] allocated", len, gg_mem_get_len(id));
 
 
-    // allocate 3x memory, worst case scenario 2-byte utf8 to 6 byte unicode like \uXXXX
-    // or 4-byte utf8 to 2x 6 byte surrogate unicodes. For others it's only 2x (such as \t)
+    // allocate 3x memory, worst case scenario 2-byte utf to 6 byte unicode like \uXXXX
+    // or 4-byte utf to 2x 6 byte surrogate unicodes. For others it's only 2x (such as \t)
     char *res = (char*)gg_malloc(3*len + 1);
     res[0] = 0; // by default it's empty in case of error
     if (resptr != NULL) *resptr = res;
@@ -285,15 +285,15 @@ gg_num gg_utf8_to_text (char *val, gg_num len, char **resptr, char **err)
     {
         if ((val[i] & 192) == 192)
         {
-            // this is the beginning of utf8 sequence of bytes (2,3 or 4 bytes)
+            // this is the beginning of utf sequence of bytes (2,3 or 4 bytes)
             // create \uXXXX (and possibly a surrogate pair)
             gg_num32 u;
-            gg_num bytes = gg_encode_utf8 (val+i, &u, err);
+            gg_num bytes = gg_encode_utf (val+i, &u, err);
             if (bytes == -1) return -1; else i+=(bytes-1); // since for loop will do i++
             if (u >= 0x10000) { // this means we need a surrogate pair
                 gg_num32 u0;
                 gg_num32 u1;
-                gg_get_utf8_surrogate (u, &u0, &u1);
+                gg_get_utf_surrogate (u, &u0, &u1);
                 //
                 //Use direct memory manipulation instead of sprintf which is many times slower
                 //
@@ -345,7 +345,7 @@ gg_num gg_utf8_to_text (char *val, gg_num len, char **resptr, char **err)
     }
     res[r] = 0;
     gg_mem_set_len (gg_mem_get_id(res), r+1); // set it before gg_puts because it needs length to output below (if so)
-    // if "to" is not used in utf8-text, output string
+    // if "to" is not used in utf-text, output string
     if (resptr == NULL) 
     {
         gg_num wres = gg_puts (GG_NOENC, res, r, true);

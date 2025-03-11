@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "273"
+#define GG_VERSION "288"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -86,7 +86,7 @@
 #include <endian.h>
 
 
-// PCRE2 calls
+// PCRE2 calls, include pcre2 and use only one (pcre2 or glibc), depending on pcre2 version (use pcre2 if its version >=10.37, see pcre2.c)
 #if GG_APPMAKE==1 
 #   if defined(GG_PCRE2_INCLUDE)
 #       define GG_INC_PCRE2
@@ -95,7 +95,7 @@
 #   define GG_INC_PCRE2
 #endif
 #ifdef GG_INC_PCRE2
-#   ifdef GG_C_POSIXREGEX
+#   ifdef GG_C_GLIBC_REGEX
 #       include "regex.h"
 #   else
 #       include "pcre2posix.h"
@@ -361,7 +361,7 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_ERR_INVALID -12
 #define GG_ERR_RENAME -13
 #define GG_ERR_MEMORY -14
-#define GG_ERR_UTF8 -15
+#define GG_ERR_UTF -15
 #define GG_ERR_FORMAT -16
 #define GG_ERR_CLOSE -17
 #define GG_ERR_OVERFLOW -18
@@ -474,19 +474,19 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_ERR_JSON_SURROGATE "Surrogate UTF-8 value missing"
 #define GG_ERR_JSON_INTERRUPTED "JSON parsing interrupted by a request handler"
 
-//UTF8 errors
-#define GG_UTF8_ERR_ILLEGAL_CHARACTER_FEFF "Illegal character code 0xFEFF"
-#define GG_UTF8_ERR_UTF16_SURROGATE "Illegal UTF16 surrogate range"
-#define GG_UTF8_ERR_OUT_OF_RANGE "UTF8 character out of range"
-#define GG_UTF8_ERR_SECOND_BYTE "Second UTF8 byte invalid"
-#define GG_UTF8_ERR_THIRD_BYTE "Third UTF8 byte invalid"
-#define GG_UTF8_ERR_FOURTH_BYTE "Fourth UTF8 byte invalid"
-#define GG_UTF8_INVALID "Invalid UTF8 value"
-#define GG_UTF8_NO_SURROGATE "Invalid surrogate UTF8 value"
-#define GG_ERR_UTF8_BADUTF "Bad UTF character"
-#define GG_ERR_UTF8_SURROGATE "Surrogate UTF-8 value missing"
-#define GG_ERR_UTF8_BADESCAPE "Unknown escape sequence"
-#define GG_ERR_UTF8_NOQUOTE "Double quote is missing"
+//UTF errors
+#define GG_UTF_ERR_ILLEGAL_CHARACTER_FEFF "Illegal character code 0xFEFF"
+#define GG_UTF_ERR_UTF16_SURROGATE "Illegal UTF16 surrogate range"
+#define GG_UTF_ERR_OUT_OF_RANGE "UTF character out of range"
+#define GG_UTF_ERR_SECOND_BYTE "Second UTF byte invalid"
+#define GG_UTF_ERR_THIRD_BYTE "Third UTF byte invalid"
+#define GG_UTF_ERR_FOURTH_BYTE "Fourth UTF byte invalid"
+#define GG_UTF_INVALID "Invalid UTF value"
+#define GG_UTF_NO_SURROGATE "Invalid surrogate UTF value"
+#define GG_ERR_UTF_BADUTF "Bad UTF character"
+#define GG_ERR_UTF_SURROGATE "Surrogate UTF-8 value missing"
+#define GG_ERR_UTF_BADESCAPE "Unknown escape sequence"
+#define GG_ERR_UTF_NOQUOTE "Double quote is missing"
 
 //Linked list positioning constants
 #define GG_LIST_FIRST 0
@@ -877,6 +877,36 @@ typedef struct gg_json_s
     bool noenum; // true if do not enumerate names (i.e. with [] for arrays
     char *data; // data to parse (copied from original, but then parsed items are not copied, which is overall faster!
 } gg_json;
+
+
+//
+// An array of normalized XML name/value pairs
+// Cannot use "lazy" approach where Golf memory is allocated later due to how libxml2 works
+// (chunky values)
+//
+typedef struct gg_xmln_s
+{
+    char *name; // name of object, normalized
+    char *str; // string value
+} gg_xmln;
+//
+// A normalized path in json file being traversed
+//
+typedef struct gg_s_xml_node
+{
+    char *name; // name of node
+    gg_num name_len; // length of name of node
+} xml_node;
+//
+// XML structure sent back to Golf
+//
+typedef struct gg_xml_s
+{
+    gg_xmln *nodes; // list of nodes
+    gg_num node_c; // number of nodes
+    gg_num node_r; // node to be read
+} gg_xml;
+
 
 
 //
@@ -1411,6 +1441,10 @@ void gg_set_json (gg_json **j, bool noenum, char *data);
 void gg_del_json (gg_json **j);
 char *gg_json_err();
 gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec, gg_num *errc, gg_num *errl);
+gg_num gg_xml_new (char *val, gg_num len, gg_num *errc, gg_num *errl);
+void gg_set_xml (gg_xml **x);
+void gg_del_xml (gg_xml **x);
+char *gg_xml_err();
 char *gg_web_name(char *url);
 void gg_check_transaction(gg_num check_mode);
 void gg_break_down (char *value, char *delim, gg_split_str **broken);
@@ -1429,7 +1463,7 @@ gg_num gg_total_so(gg_so_info **sos);
 FILE *gg_fopen (char *file_name, char *mode);
 int gg_fclose (FILE *f);
 #ifdef GG_INC_PCRE2
-gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_num utf8, gg_num case_insensitive, gg_num single_match, regex_t **cached);
+gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_num utf, gg_num case_insensitive, gg_num single_match, regex_t **cached);
 void gg_regfree(regex_t *preg);
 #endif 
 void gg_set_env(char *arg);
@@ -1454,11 +1488,11 @@ void gg_hex2bin(char *src, char **dst, gg_num ilen);
 void gg_bin2hex(char *src, char **dst, gg_num ilen, char *pref);
 void gg_db_free_result (char is_prep);
 gg_num gg_topower(gg_num b,gg_num p);
-gg_num gg_decode_utf8 (gg_num32 u, unsigned char *r, char **e);
-gg_num gg_encode_utf8 (char *r, gg_num32 *u, char **e);
-gg_num32 gg_make_from_utf8_surrogate (gg_num32 u0, gg_num32 u1);
+gg_num gg_decode_utf (gg_num32 u, unsigned char *r, char **e);
+gg_num gg_encode_utf (char *r, gg_num32 *u, char **e);
+gg_num32 gg_make_from_utf_surrogate (gg_num32 u0, gg_num32 u1);
 gg_num32 gg_get_hex(char *v, char **err);
-void gg_get_utf8_surrogate (gg_num32 u, gg_num32 *u0, gg_num32 *u1);
+void gg_get_utf_surrogate (gg_num32 u, gg_num32 *u0, gg_num32 *u1);
 void gg_create_hash (gg_hash **hres_ptr, gg_num size, gg_hash_table **in_h, bool process);
 void gg_delete_hash (gg_hash **h, bool del);
 void *gg_find_hash (gg_hash *h, char *key, char **keylist, bool del, gg_num *found);
@@ -1471,8 +1505,8 @@ gg_num gg_total_hash (gg_hash *h);
 gg_num gg_hash_size (gg_hash *h);
 void gg_resize_hash (gg_hash **h, gg_num newsize);
 gg_num gg_hash_reads (gg_hash *h);
-char *gg_text_to_utf8 (char *val, char quoted, char **o_errm, char dec, bool alloced);
-gg_num gg_utf8_to_text (char *val, gg_num len, char **res, char **err);
+char *gg_text_to_utf (char *val, char quoted, char **o_errm, char dec, bool alloced);
+gg_num gg_utf_to_text (char *val, gg_num len, char **res, char **err);
 char *gg_getheader(char *h);
 void gg_bad_request ();
 gg_num gg_set_input (gg_num name_id, void *val, gg_num type);

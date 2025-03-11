@@ -331,14 +331,15 @@ gg_dbc *gg_maria_connect (gg_num abort_if_bad)
     // web communication.
     // So in short, do NOT change either one of these settings!
     //
-    if (mysql_set_character_set(GG_CURR_DB.dbc->maria.con, "utf8"))
+    // Removed character set, since that can be set in the connection file! No need to hardcode.
+    /*if (mysql_set_character_set(GG_CURR_DB.dbc->maria.con, "utf8mb4"))
     {
-        char *em = "Cannot set character set to utf8";
+        char *em = "Cannot set character set to utf8mb4";
         GG_TRACE ("%s", em);
         gg_end_connection (1);
         if (abort_if_bad == 1) gg_report_error ("%s", em);
         return NULL;
-    }
+    }*/
 
     if (mysql_query(GG_CURR_DB.dbc->maria.con, "set session sql_mode=ansi_quotes")) 
     {

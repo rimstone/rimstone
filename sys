@@ -143,20 +143,6 @@ if [ "$GG_SYSTEM_DONE" != "1" ]; then
     export GG_INCLUDE_PATH=/usr/include/golf
     export GG_VERSION=100.100
 
-#also obtain the libraries to link with for pcre2
-#pcre2_version may not exist until sys is called to produce GG_LIBRARY_PATH, so must guard if it exists
-#we use library path for golf, because this must work with our without source
-    if [ -f $GG_LIBRARY_PATH/pcre2_version ]; then
-        export GG_PCRE2_LIBS=$(cat $GG_LIBRARY_PATH/pcre2_libs)
-        if [ "$_GG_PCRE2_LO" == "10.37" ]; then
-            export GG_PCRE2_NEW="1"
-        else
-            export GG_PCRE2_NEW="0"
-        fi
-    fi
-
-    
-
     if [ "$GG_ISFEDORA" == "1" ]; then
         if [ "$GG_PLATFORM_ID" == "opensuse" ]; then
             export GG_PKG="zypper"

@@ -333,8 +333,6 @@ void gg_arows(gg_num *arows, char is_prep)
 gg_dbc *gg_execute_SQL (char *s,  gg_num *arows, char **er, char **err_message, gg_num returns_tuple, gg_num user_check, char is_prep, void **prep, gg_num paramcount, char **params, char erract)
 {
     GG_TRACE("");
-    assert (s);
-    assert (er);
 
     // get location in source code (if set, GOLF automatically does this)
     char *sname = "";
@@ -530,8 +528,6 @@ gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, ch
     // This static is fine - it is used only within a single request, i.e. it doesn't span multiple request.
     // Errm is set HERE and used right after it - it doesn't go beyond a request.
     static char errm[8192];
-    assert (s != NULL);
-    assert (er != NULL);
 
     *er = GG_EMPTY_STRING;
     if (err_message!=NULL) *err_message=GG_EMPTY_STRING;
@@ -694,11 +690,6 @@ void gg_select_table (char *s,
                   
 {
     GG_TRACE("");
-    assert (nrow);
-    assert (ncol);
-    assert (s);
-    assert (er);
-    assert (errm);
 
     char *sname = "";
     gg_num lnum = 0;

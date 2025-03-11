@@ -77,8 +77,6 @@ static gg_num vm_tot_process = 0; // total # of process mem items
 //
 void gg_memory_init ()
 {
-    assert (sizeof(gg_num) == 8); // if not, we need to rework GG_ALIGN-sized header placement (8 bytes)
-
     gg_done ();
 
 }

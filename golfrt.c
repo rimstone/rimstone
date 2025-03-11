@@ -120,7 +120,7 @@ void gg_init_input_req (gg_input_req *req)
 void gg_write_to_string_notrim ()
 {
     GG_TRACE("");
-    assert (GG_WRSTR_CUR < GG_MAX_NESTED_WRITE_STRING); // see comment in gg_write_to_string_length ()
+    // must be (GG_WRSTR_CUR < GG_MAX_NESTED_WRITE_STRING); // see comment in gg_write_to_string_length ()
     GG_WRSTR.notrim = 1;
 }
 
@@ -132,7 +132,7 @@ gg_num gg_write_to_string_length ()
 {
     GG_TRACE ("");
     gg_input_req *req = gg_get_config()->ctx.req;
-    assert (GG_WRSTR_CUR < GG_MAX_NESTED_WRITE_STRING); // overflow if asking within the last level 
+    // it must be GG_WRSTR_CUR < GG_MAX_NESTED_WRITE_STRING); // overflow if asking within the last level 
                 // because the level above it does not exist. We always show the length of previous write-string
                 // and that is one level up
     return req->write_string_arr[req->curr_write_to_string+1].buf_pos;
@@ -800,7 +800,7 @@ gg_num gg_decode (gg_num enc_type, char *v, gg_num inlen, bool alloc, gg_num *st
     }
     else 
     {
-        assert (1==2);
+        gg_report_error ("Unknown decoding type");
     }
     //
     // Should never realloc because decoding is done in place of an existing input, and realloc would create a new pointer
@@ -1889,7 +1889,6 @@ gg_num gg_copy_data_at_offset (char **data, gg_num off, char *value)
 
     if (*data == NULL) 
     {
-        assert (off==0);
         GG_STRDUP (*data, value);
         return 0;
     }
@@ -1897,7 +1896,6 @@ gg_num gg_copy_data_at_offset (char **data, gg_num off, char *value)
     {
         if (*data == value) 
         {
-            assert (off==0);
             return 0; // copying to itself, with SIGSEGV
         }
         if (value == NULL) value = "";
@@ -2029,7 +2027,6 @@ void gg_set_arg0 (char *program, char **arg0)
 {
     GG_TRACE("");
     gg_num i =strlen(program) - 1;
-    assert (i >= 0); // program cannot be empty
     while (i >= 0)
     {
         if (program[i]=='/')
@@ -2107,9 +2104,6 @@ void gg_read_child (int ofd, char **out_buf)
 gg_num gg_exec_program (char *prg, char *argv[], gg_num num_args, FILE *fin, FILE **fout, FILE **ferr, char *inp, gg_num inp_len, char **out_buf, char **err_buf)
 {
     GG_TRACE("");
-    assert (argv);
-    assert (num_args > 0);
-    assert (prg);
 
     if (argv[num_args] != NULL)
     {

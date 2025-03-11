@@ -177,8 +177,6 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
     // so the unwind of recursive calls happens without any further action.
     // Also this static is for a single request only.
     static gg_num tries = 0;
-    assert (url != NULL);
-    assert (result != NULL);
 
     if (cc.error != NULL && *(cc.error) != NULL) *(cc.error) = GG_EMPTY_STRING;
     if (resp_code != NULL) *resp_code = 0; // default

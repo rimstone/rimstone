@@ -1,7 +1,7 @@
 " Language: Golf
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2025-January-31
+" Latest Revision: 2025-March-08
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link golfConstruct Statement
@@ -273,6 +273,21 @@ syn region gg_r_construct_new_tree start="^[[:space:]]*new-tree" skip="\\[[:spac
     hi def link gg_h_clause_output_new_tree    golfClauseOutput
     hi def link gg_h_construct_new_tree    golfConstruct
     hi def link gg_h_print_inline_new_tree    golfConstruct
+syn region gg_r_construct_xml_doc start="^[[:space:]]*xml-doc" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_xml_doc,gg_r_inline_xml_doc,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_xml_doc,gg_r_inline_xml_doc,gg_r_at
+    syn match gg_h_construct_xml_doc "^[[:space:]]*xml-doc" contained containedin=gg_r_construct_xml_doc
+    syn match gg_h_clause_xml_doc " delete \@=" contained containedin=gg_r_construct_xml_doc
+    syn match gg_h_clause_output_xml_doc " error-char \@=" contained containedin=gg_r_construct_xml_doc
+    syn match gg_h_clause_output_xml_doc " error-line \@=" contained containedin=gg_r_construct_xml_doc
+    syn match gg_h_clause_output_xml_doc " error-text \@=" contained containedin=gg_r_construct_xml_doc
+    syn match gg_h_clause_xml_doc " length \@=" contained containedin=gg_r_construct_xml_doc
+    syn match gg_h_clause_output_xml_doc " status \@=" contained containedin=gg_r_construct_xml_doc
+    syn match gg_h_clause_output_xml_doc " to \@=" contained containedin=gg_r_construct_xml_doc
+    hi def link gg_h_clause_xml_doc    golfClause
+    hi def link gg_h_clause_output_xml_doc    golfClauseOutput
+    hi def link gg_h_construct_xml_doc    golfConstruct
+    hi def link gg_h_print_inline_xml_doc    golfConstruct
 syn region gg_r_construct_json_doc start="^[[:space:]]*json-doc" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_json_doc,gg_r_inline_json_doc,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_json_doc,gg_r_inline_json_doc,gg_r_at
@@ -295,6 +310,20 @@ syn region gg_r_construct_json_doc start="^[[:space:]]*json-doc" skip="\\[[:spac
     hi def link gg_h_clause_output_json_doc    golfClauseOutput
     hi def link gg_h_construct_json_doc    golfConstruct
     hi def link gg_h_print_inline_json_doc    golfConstruct
+syn region gg_r_construct_read_xml start="^[[:space:]]*read-xml" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_read_xml,gg_r_inline_read_xml,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_read_xml,gg_r_inline_read_xml,gg_r_at
+    syn match gg_h_construct_read_xml "^[[:space:]]*read-xml" contained containedin=gg_r_construct_read_xml
+    syn match gg_h_clause_output_read_xml " key \@=" contained containedin=gg_r_construct_read_xml
+    syn match gg_h_clause_read_xml " next \@=" contained containedin=gg_r_construct_read_xml
+    syn match gg_h_clause_read_xml " next,\@=" contained containedin=gg_r_construct_read_xml
+    syn match gg_h_clause_read_xml " next$" contained containedin=gg_r_construct_read_xml
+    syn match gg_h_clause_output_read_xml " status \@=" contained containedin=gg_r_construct_read_xml
+    syn match gg_h_clause_output_read_xml " value \@=" contained containedin=gg_r_construct_read_xml
+    hi def link gg_h_clause_read_xml    golfClause
+    hi def link gg_h_clause_output_read_xml    golfClauseOutput
+    hi def link gg_h_construct_read_xml    golfConstruct
+    hi def link gg_h_print_inline_read_xml    golfConstruct
 syn region gg_r_construct_read_json start="^[[:space:]]*read-json" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_read_json,gg_r_inline_read_json,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_read_json,gg_r_inline_read_json,gg_r_at
@@ -1277,9 +1306,9 @@ syn region gg_r_construct_match_regex start="^[[:space:]]*match-regex" skip="\\[
     syn match gg_h_clause_match_regex " single-match,\@=" contained containedin=gg_r_construct_match_regex
     syn match gg_h_clause_match_regex " single-match$" contained containedin=gg_r_construct_match_regex
     syn match gg_h_clause_output_match_regex " status \@=" contained containedin=gg_r_construct_match_regex
-    syn match gg_h_clause_match_regex " utf8 \@=" contained containedin=gg_r_construct_match_regex
-    syn match gg_h_clause_match_regex " utf8,\@=" contained containedin=gg_r_construct_match_regex
-    syn match gg_h_clause_match_regex " utf8$" contained containedin=gg_r_construct_match_regex
+    syn match gg_h_clause_match_regex " utf \@=" contained containedin=gg_r_construct_match_regex
+    syn match gg_h_clause_match_regex " utf,\@=" contained containedin=gg_r_construct_match_regex
+    syn match gg_h_clause_match_regex " utf$" contained containedin=gg_r_construct_match_regex
     hi def link gg_h_clause_match_regex    golfClause
     hi def link gg_h_clause_output_match_regex    golfClauseOutput
     hi def link gg_h_construct_match_regex    golfConstruct
@@ -1454,28 +1483,28 @@ syn region gg_r_construct_rename_file start="^[[:space:]]*rename-file" skip="\\[
     hi def link gg_h_clause_output_rename_file    golfClauseOutput
     hi def link gg_h_construct_rename_file    golfConstruct
     hi def link gg_h_print_inline_rename_file    golfConstruct
-syn region gg_r_construct_text_utf8 start="^[[:space:]]*text-utf8" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_text_utf8,gg_r_inline_text_utf8,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_text_utf8,gg_r_inline_text_utf8,gg_r_at
-    syn match gg_h_construct_text_utf8 "^[[:space:]]*text-utf8" contained containedin=gg_r_construct_text_utf8
-    syn match gg_h_clause_output_text_utf8 " error-text \@=" contained containedin=gg_r_construct_text_utf8
-    syn match gg_h_clause_output_text_utf8 " status \@=" contained containedin=gg_r_construct_text_utf8
-    hi def link gg_h_clause_text_utf8    golfClause
-    hi def link gg_h_clause_output_text_utf8    golfClauseOutput
-    hi def link gg_h_construct_text_utf8    golfConstruct
-    hi def link gg_h_print_inline_text_utf8    golfConstruct
-syn region gg_r_construct_utf8_text start="^[[:space:]]*utf8-text" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_utf8_text,gg_r_inline_utf8_text,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_utf8_text,gg_r_inline_utf8_text,gg_r_at
-    syn match gg_h_construct_utf8_text "^[[:space:]]*utf8-text" contained containedin=gg_r_construct_utf8_text
-    syn match gg_h_clause_output_utf8_text " error-text \@=" contained containedin=gg_r_construct_utf8_text
-    syn match gg_h_clause_utf8_text " length \@=" contained containedin=gg_r_construct_utf8_text
-    syn match gg_h_clause_output_utf8_text " status \@=" contained containedin=gg_r_construct_utf8_text
-    syn match gg_h_clause_output_utf8_text " to \@=" contained containedin=gg_r_construct_utf8_text
-    hi def link gg_h_clause_utf8_text    golfClause
-    hi def link gg_h_clause_output_utf8_text    golfClauseOutput
-    hi def link gg_h_construct_utf8_text    golfConstruct
-    hi def link gg_h_print_inline_utf8_text    golfConstruct
+syn region gg_r_construct_text_utf start="^[[:space:]]*text-utf" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_text_utf,gg_r_inline_text_utf,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_text_utf,gg_r_inline_text_utf,gg_r_at
+    syn match gg_h_construct_text_utf "^[[:space:]]*text-utf" contained containedin=gg_r_construct_text_utf
+    syn match gg_h_clause_output_text_utf " error-text \@=" contained containedin=gg_r_construct_text_utf
+    syn match gg_h_clause_output_text_utf " status \@=" contained containedin=gg_r_construct_text_utf
+    hi def link gg_h_clause_text_utf    golfClause
+    hi def link gg_h_clause_output_text_utf    golfClauseOutput
+    hi def link gg_h_construct_text_utf    golfConstruct
+    hi def link gg_h_print_inline_text_utf    golfConstruct
+syn region gg_r_construct_utf_text start="^[[:space:]]*utf-text" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_utf_text,gg_r_inline_utf_text,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_utf_text,gg_r_inline_utf_text,gg_r_at
+    syn match gg_h_construct_utf_text "^[[:space:]]*utf-text" contained containedin=gg_r_construct_utf_text
+    syn match gg_h_clause_output_utf_text " error-text \@=" contained containedin=gg_r_construct_utf_text
+    syn match gg_h_clause_utf_text " length \@=" contained containedin=gg_r_construct_utf_text
+    syn match gg_h_clause_output_utf_text " status \@=" contained containedin=gg_r_construct_utf_text
+    syn match gg_h_clause_output_utf_text " to \@=" contained containedin=gg_r_construct_utf_text
+    hi def link gg_h_clause_utf_text    golfClause
+    hi def link gg_h_clause_output_utf_text    golfClauseOutput
+    hi def link gg_h_construct_utf_text    golfConstruct
+    hi def link gg_h_print_inline_utf_text    golfConstruct
 syn region gg_r_construct_stat_file start="^[[:space:]]*stat-file" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_stat_file,gg_r_inline_stat_file,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_stat_file,gg_r_inline_stat_file,gg_r_at

@@ -9,6 +9,7 @@
 
 // Implementation based on JSON standard https://datatracker.ietf.org/doc/html/rfc7159
 // See examples of JSON at https://www.json.org/example.html (by douglas@crockford.com)
+// Note by standard, JSON is always UTF8 encoded, so this provides implicit UTF8/16 support
 
 
 #include "golf.h"
@@ -399,7 +400,7 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec, gg_num *errc,
                 if (expected_comma_or_end_object == 1) { ec = *i; GG_ERR0; errm = gg_strdup(GG_ERR_JSON_COMMA_END_OBJECT_EXPECTED); goto endj; }
                 char *end;
                 // get length of string
-                end=gg_text_to_utf8 (val+*i, 1, &errm, dec, false);
+                end=gg_text_to_utf (val+*i, 1, &errm, dec, false);
                 if (end == NULL) { goto endj; }
                 int lstr = (end - (val+*i)); 
                 BINDV(end); // put 0 at the end, do NOT set nulled because there's double quote 

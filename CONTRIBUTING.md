@@ -1,6 +1,6 @@
 You can contribute to Golf by 
 * testing of features and bug fixes,
-* suggesting bug fixes and enhancements both for code and documentation. You can use [Issues](https://github.com/golf-lang/golf) for most of those, or for security or private issues you can contact us via the contact form at [Golf blog](https://golf-lang.blogspot.com/) or via [email](mailto:golf-lang@proton.me).
+* suggesting bug fixes and enhancements both for code and documentation. You can use [Issues](https://github.com/golf-lang/golf) for most of those, or for security or private issues you can contact us via the contact form at [Golf blog](https://golf-lang.blogspot.com/) or via [email](mailto:team@golf-lang.com).
 * giving credit by including Golf home page link (golf-lang.com) and its logo in your web pages,
 * spreading the word on blogs, forums and social media, 
 * asking questions at [Issues](https://github.com/golf-lang/golf) on how-to do things that can help you and others using Golf. 

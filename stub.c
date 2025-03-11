@@ -12,11 +12,11 @@
 
 
 #ifdef GG_PCRE2
-gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_num utf8, gg_num case_insensitive, gg_num single_match, regex_t **cached) {
+gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_num utf, gg_num case_insensitive, gg_num single_match, regex_t **cached) {
     GG_UNUSED(look_here);
     GG_UNUSED(find_this);
     GG_UNUSED(replace);
-    GG_UNUSED(utf8);
+    GG_UNUSED(utf);
     GG_UNUSED(case_insensitive);
     GG_UNUSED(single_match);
     GG_UNUSED(cached);

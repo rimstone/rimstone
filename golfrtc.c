@@ -220,8 +220,6 @@ gg_config *gg_alloc_config()
 //
 void gg_init_config(gg_config *pc)
 {
-    assert (pc);
-
     // pc->* are set to 0 or NULL - set here only what's not zero
     pc->app.max_upload_size = 5000000;
 
@@ -233,7 +231,6 @@ void gg_init_config(gg_config *pc)
 //
 void gg_reset_config(gg_config *pc)
 {
-    assert (pc);
     // these need to reset with each request
     // DO NOT RESET debug structure - should stay as it is for all request during the life of process!
     pc->ctx.req = NULL;
@@ -284,9 +281,6 @@ gg_num gg_count_substring (char *str, char *find, gg_num len_find, gg_num case_s
 gg_num gg_replace_string (char *str, gg_num strsize, char *find, char *subst, gg_num all, char **last, gg_num case_sensitive)
 {
     GG_TRACE("");
-    assert (str);
-    assert (find);
-    assert (subst);
 
     gg_num len = strlen (str);
     gg_num lenf = strlen (find);
@@ -342,8 +336,6 @@ gg_num gg_replace_string (char *str, gg_num strsize, char *find, char *subst, gg
 void gg_trim (char *str, gg_num *len, bool alloc)
 {
     GG_TRACE("");
-    assert (str);
-    assert (len);
     
     gg_num i = 0;
     // clear leading spaces
@@ -373,8 +365,6 @@ void gg_trim (char *str, gg_num *len, bool alloc)
 char *gg_trim_ptr (char *str, gg_num *len)
 {
     GG_TRACE("");
-    assert (str);
-    assert (len);
 
     char *res = str;
     
@@ -502,7 +492,6 @@ gg_num gg_get_file_size(char *fn)
 gg_num gg_is_valid_param_name (char *name, bool hyphen, bool conv_hyphen)
 {
     GG_TRACE ("");
-    assert (name);
 
     gg_num i = 1; // we already check the first byte before entering while loop
     if (!isalpha(name[0])) return 0;
@@ -613,7 +602,6 @@ void gg_store (gg_fifo *fdata, char *name, void *data)
 gg_num gg_retrieve (gg_fifo *fdata, char **name, void **data)
 {
     GG_TRACE ("");
-    assert (fdata != NULL);
 
     if (fdata->retrieve_ptr == NULL)
     {
@@ -639,7 +627,6 @@ gg_num gg_retrieve (gg_fifo *fdata, char **name, void **data)
 void gg_rewind (gg_fifo *fdata)
 {
     GG_TRACE ("");
-    assert (fdata != NULL);
     fdata->retrieve_ptr = fdata->first_ptr;
 }
 
@@ -1067,9 +1054,6 @@ bool cmp_type (gg_num t1, gg_num t2)
 gg_num gg_encode_base (gg_num enc_type, char *v, gg_num vLen, char **res, gg_num allocate_new)
 {
     GG_TRACE("");
-    assert (res != NULL);
-    assert (v != NULL);
-
 
     if (allocate_new==1)
     {
@@ -1114,7 +1098,7 @@ gg_num gg_encode_base (gg_num enc_type, char *v, gg_num vLen, char **res, gg_num
     }
     else 
     {
-        assert (1==2);
+        gg_report_error ("Unknown encoding type");
     }
     (*res)[j] = 0;
     if (allocate_new==1)

@@ -29,7 +29,7 @@ sudo dnf -y install git
 
 git clone https://github.com/golf-lang/golf.git
 cd golf
-git checkout 271
+git checkout 273
 
 .EE
 .RE

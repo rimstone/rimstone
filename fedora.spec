@@ -4,7 +4,7 @@
 #On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 Name:   golf
-Version:    273
+Version:    288
 Release:    1%{?dist}
 Summary:    Programming language, tools and server for web services and applications
 Vendor:     Gliim LLC
@@ -65,7 +65,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}
 Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. 
 
 %prep
-%autosetup -n %{name}-273
+%autosetup -n %{name}-288
 
 #For faster building on Fedora 38, you can define special_build to yes. In this case, a step prior to rpmbuild must
 #actually make Golf in $HOME/golf directory and build it in $HOME/golf/build directory. Otherwise, do not use this flag.
@@ -163,5 +163,5 @@ exit 0
 #SELINUXEND
 
 %changelog
-* Fri Jan 31 2025 Gliim LLC <golf-lang@proton.me> - 2.0.0-1
+* Fri Jan 31 2025 Gliim LLC <team@golf-lang.com> - 2.0.0-1
 - Initial version. 
