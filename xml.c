@@ -79,7 +79,7 @@ void gg_set_xml (gg_xml **x)
 
 // prototypes
 void gg_xml_beg( void *ctx, const xmlChar *localname, const xmlChar *prefix, const xmlChar *URI, int nb_namespaces, const xmlChar **namespaces, int nb_attributes, int nb_defaulted, const xmlChar **attributes);
-#if LIBXML_VERSION>21000
+#if LIBXML_VERSION>=21200
 void gg_xml_seterr(void *userData, const struct _xmlError *error);
 #else
 void gg_xml_seterr(void *userData, struct _xmlError *error);
