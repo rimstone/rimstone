@@ -29,7 +29,7 @@ sudo pacman --noconfirm -Sy --overwrite "*" git
 
 git clone https://github.com/golf-lang/golf.git
 cd golf
-git checkout 273
+git checkout 288
 
 .EE
 .RE

@@ -4,11 +4,11 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 273
+.B REFERENCE FOR GOLF VERSION 288
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
-Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl,   lrlBase64elrl,   lrlC languageelrl,   lrlCookieselrl,   lrlDatabaseelrl,   lrlDebuggingelrl,   lrlDistributed computingelrl,   lrlDocumentationelrl,   lrlDownload and buildelrl,   lrlEncryptionelrl,   lrlError handlingelrl,   lrlFIFOelrl,   lrlFileselrl,   lrlGeneralelrl,   lrlGolf compiler and utilityelrl,   lrlHashelrl,   lrlHex encodingelrl,   lrlJSON parsingelrl,   lrlLanguageelrl,   lrlLicenseelrl,   lrlLIFOelrl,   lrlLinked listelrl,   lrlMemoryelrl,   lrlMessageselrl,   lrlNumberselrl,   lrlOutputelrl,   lrlProgram executionelrl,   lrlProgram flowelrl,   lrlQuick startelrl,   lrlRegexelrl,   lrlRequest dataelrl,   lrlRequest informationelrl,   lrlRequestselrl,   lrlRunning applicationelrl,   lrlService managerelrl,   lrlService processingelrl,   lrlStringselrl,   lrlSystem informationelrl,   lrlTimeelrl,   lrlTreeelrl,   lrlURL encodingelrl,   lrlUTF8elrl,   lrlWebelrl,   lrlWeb encodingelrl,   lrlWeb serverselrl
+Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl,   lrlBase64elrl,   lrlC languageelrl,   lrlCookieselrl,   lrlDatabaseelrl,   lrlDebuggingelrl,   lrlDistributed computingelrl,   lrlDocumentationelrl,   lrlDownload and buildelrl,   lrlEncryptionelrl,   lrlError handlingelrl,   lrlFIFOelrl,   lrlFileselrl,   lrlGeneralelrl,   lrlGolf compiler and utilityelrl,   lrlHashelrl,   lrlHex encodingelrl,   lrlJSON parsingelrl,   lrlLanguageelrl,   lrlLicenseelrl,   lrlLIFOelrl,   lrlLinked listelrl,   lrlMemoryelrl,   lrlMessageselrl,   lrlNumberselrl,   lrlOutputelrl,   lrlProgram executionelrl,   lrlProgram flowelrl,   lrlQuick startelrl,   lrlRegexelrl,   lrlRequest dataelrl,   lrlRequest informationelrl,   lrlRequestselrl,   lrlRunning applicationelrl,   lrlService managerelrl,   lrlService processingelrl,   lrlStringselrl,   lrlSystem informationelrl,   lrlTimeelrl,   lrlTreeelrl,   lrlURL encodingelrl,   lrlUTFelrl,   lrlWebelrl,   lrlWeb encodingelrl,   lrlWeb serverselrl,   lrlXML parsingelrl
 
 
 
@@ -581,11 +581,11 @@ lrnURL encodingelrn
 
 .RS 4
 \[bu]    
-lrnUTF8elrn
-.B - UTF8
+lrnUTFelrn
+.B - UTF
 
-\fBtext-utf8\fP  
-\fButf8-text\fP   
+\fBtext-utf\fP  
+\fButf-text\fP   
 .RE
 
 
@@ -624,6 +624,17 @@ lrnWeb serverselrn
 \fBconnect-haproxy-tcp-socket\fP  
 \fBconnect-nginx-tcp-socket\fP  
 \fBconnect-nginx-unix-socket\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+lrnXML parsingelrn
+.B - XML parsing
+
+\fBread-xml\fP  
+\fBxml-doc\fP   
 .RE
 
 

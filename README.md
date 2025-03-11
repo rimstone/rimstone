@@ -14,11 +14,12 @@ Golf is a programming language and  application server for building web services
 
 [Blog](https://golf-lang.blogspot.com/) has useful articles and changelog\.
 
-Current version is 273\. This release passed 2313 automated functional tests\.
+Current version is 288\. This release passed 2346 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-03\-10 [How to know Golf version](https://golf-lang.blogspot.com/2025/03/how-to-know-golf-version.html)
 * 2025\-03\-01 [Web framework for C programming language](https://golf-lang.blogspot.com/2025/03/web-framework-for-c-programming-language.html)
 * 2025\-02\-24 [Make RPM package on Fedora and RedHat](https://golf-lang.blogspot.com/2025/02/how-to-create-installation-package-for.html)
 * 2025\-02\-23 [DEB package on Ubuntu and Debian](https://golf-lang.blogspot.com/2025/02/create-deb-installation-package-for-golf.html)
@@ -54,6 +55,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 Releases:
+* 2025\-03\-02 [Golf 273 released](https://golf-lang.blogspot.com/2025/03/golf-273-released.html)
 * 2025\-02\-23 [Golf 261 released](https://golf-lang.blogspot.com/2025/02/golf-261-released.html)
 * 2025\-02\-19 [Golf 253 released](https://golf-lang.blogspot.com/2025/02/golf-253-released.html)
 * 2025\-02\-16 [Golf 247 released](https://golf-lang.blogspot.com/2025/02/golf-247-released.html)
@@ -83,7 +85,7 @@ Releases:
 * 2024\-09\-27 [Golf 44 released](https://golf-lang.blogspot.com/2024/09/golf-44-released_27.html)
 * 2024\-09\-24 [Golf 37 released](https://golf-lang.blogspot.com/2024/09/golf-37-released_24.html)
 * 2024\-09\-20 [Golf 32 released](https://golf-lang.blogspot.com/2024/09/golf-32-released_20.html)
-Contact email [team@golf\-lang.com](mailto:team@golf-lang.com)
+Contact email [team@golf\-lang\.com](mailto:team@golf-lang.com)
 
 Visit [official Golf home page](https://golf-lang.com).
 

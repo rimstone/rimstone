@@ -18,7 +18,7 @@ match-regex <pattern> in <target> \\
         ( status <status> \\
             [ case-insensitive [ <case-insensitive> ] ] \\
             [ single-match [ <single-match> ] ] \\
-            [ utf8 [ <utf8> ] ] ) \\
+            [ utf [ <utf> ] ] ) \\
     ] \\
     [ cache ] \\
     [ clear-cache <clear cache> ) 
@@ -37,7 +37,7 @@ If "case-insensitive" is used without boolean variable <case-insensitive>, or if
 
 If "single-match" is specified without boolean variable <single-match>, or if <single-match> evaluates to true, then only the very first occurrence of <pattern> in <target> is processed. Otherwise, all occurrences are processed.
 
-If "utf8" is used, then the pattern itself and all data strings used for matching are treated as UTF-8 strings.
+If "utf" is used, then the pattern itself and all data strings used for matching are treated as UTF-8 strings.
 
 <result> and <status> variables can be created within the statement.
 
@@ -123,7 +123,7 @@ match-regex "\\ew*foo(?=bar)" in "foofoo" status st single-match
 .B LIMITATIONS
 .LP
 
-If you are using older versions of PCRE2 (10.36 or earlier) such as by default in Debian 10 or Ubuntu 18, then instead of PCRE2, an \fBExtended Regex Expressions\fP (ERE) from the  built-in Linux regex library is used, due to older PCRE2 versions having name conflicts with other libraries. In this case, "utf8" clause will have no effect, and lookaheads/lookbehinds functionality will not work; possibly a few others as well, however for the most part the two are compatible. If your system uses an older PCRE2 library, you can upgrade to 10.37 or later to use PCRE2.
+If you are using older versions of PCRE2 (10.36 or earlier) such as by default in Debian 10 or Ubuntu 18, then instead of PCRE2, an \fBExtended Regex Expressions\fP (ERE) from the  built-in Linux regex library is used, due to older PCRE2 versions having name conflicts with other libraries. In this case, "utf" clause will have no effect, and lookaheads/lookbehinds functionality will not work; possibly a few others as well, however for the most part the two are compatible. If your system uses an older PCRE2 library, you can upgrade to 10.37 or later to use PCRE2.
 
 In any case, if you need to use Posix ERE instead of PCRE2 (for compatibility, to reduce memory footprint or some other reason), you can use "--posix-regex" option of \fBgg\fP; the same limitations as above apply. Note that PCRE2 (the default) is generally faster than ERE.
 

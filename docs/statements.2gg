@@ -85,7 +85,7 @@ encrypt-data orig_data to res password "mypass" salt newsalt binary input-length
 .EE
 .RE
 
-Golf documentation provides a concise BNF-like notation of how each statement works, which in case of \fBencrypt-data\fP is (backslash simply allows continuing to multiple lines, while two backslashes add a new line in between):
+Golf documentation provides a concise BNF-like notation of how each statement works, which in case of \fBencrypt-data\fP is (backslash simply allows continuing to multiple lines):
 
 .RS 4
 .EX

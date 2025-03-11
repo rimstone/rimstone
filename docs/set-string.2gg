@@ -9,7 +9,7 @@ Set value of a string variable.
 .RS 4
 .EX
 
-set-string <variable> [ = <string> ] [ process-scope ] [ unquoted ]
+set-string <variable> [ unquoted ] [ process-scope ] [ = <string> ] 
 
 set-string <variable> [ <index> ] = <number>
 
@@ -36,12 +36,47 @@ This is the same as:
 .RS 4
 .EX
 
-set-string my_string = "this is \[char92]"some\[char92]" string where there escape characters like \\en do \[char92]"not work\[char92]""
+set-string my_string = "this is \[char92]"some\[char92]" string where there escape characters like \en do \[char92]"not work\[char92]""
 
 .EE
 .RE
 
-"unquoted" clause is useful when writing string literals that would otherwise need lots of escaping.
+"unquoted" clause is useful when writing string literals that would otherwise need lots of escaping. You can use double backslash at the end of the line to split the line with new line in between:
+
+.RS 4
+.EX
+
+set-string unq1 unquoted =This is one line\\\
+        second line and\\\
+        third!
+
+.EE
+.RE
+
+The above will create a string:
+
+.RS 4
+.EX
+
+This is one line
+second line and
+third!
+
+.EE
+.RE
+
+A string can be represented as a concatenation of string literals; this is useful when you want to preserve spaces, for instance:
+
+.RS 4
+.EX
+
+set-string a="something is " \\
+    "  very good " \\
+    " with spaces!! "
+// string is "something is   very good  with spaces!! "
+
+.EE
+.RE
 
 You can also use set-string to set a byte in it; in this case <index> byte in <variable> string is set to <number>. <index> starts with 0 for the first byte. For instance, the resulting "str" will be "Aome string" since 65 is a number representation of 'A':
 
