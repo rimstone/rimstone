@@ -79,11 +79,7 @@ void gg_set_xml (gg_xml **x)
 
 // prototypes
 void gg_xml_beg( void *ctx, const xmlChar *localname, const xmlChar *prefix, const xmlChar *URI, int nb_namespaces, const xmlChar **namespaces, int nb_attributes, int nb_defaulted, const xmlChar **attributes);
-#if LIBXML_VERSION>=21200
 void gg_xml_seterr(void *userData, const struct _xmlError *error);
-#else
-void gg_xml_seterr(void *userData, struct _xmlError *error);
-#endif
 void gg_xml_end( void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI);
 void gg_xml_data(void* ctx, const xmlChar * ch, int len);
 
@@ -218,11 +214,7 @@ void gg_xml_data(void* ctx, const xmlChar * ch, int len)
 // Called when there's an error. Set error message (errm), line_ec/char_ec and is_error static flags
 // to be given to the caller in v1.c
 //
-#if LIBXML_VERSION>21000
 void gg_xml_seterr(void *userData, const struct _xmlError *error)
-#else
-void gg_xml_seterr(void *userData, struct _xmlError *error)
-#endif
 {
     GG_UNUSED(userData);
     errm = gg_strdup(error->message);
@@ -324,7 +316,7 @@ gg_num gg_xml_new (char *val, gg_num len, gg_num *errc, gg_num *errl)
     handler.characters = gg_xml_data; // data of node
     handler.initialized = XML_SAX2_MAGIC; 
 
-    xmlSetStructuredErrorFunc(NULL, gg_xml_seterr); // set error callback
+    xmlSetStructuredErrorFunc(NULL, (xmlStructuredErrorFunc)gg_xml_seterr); // set error callback
 
     // use either length of data, or passed length, but passed length cannot be greater than
     // the actually data length (memory safety)
