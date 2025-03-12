@@ -4,7 +4,7 @@
 #On the web http://golf-lang.com/ - this file is part of Golf framework.
 
 Name:   golf
-Version:    294
+Version:    295
 Release:    1%{?dist}
 Summary:    Programming language, tools and server for web services and applications
 Vendor:     Gliim LLC
@@ -65,7 +65,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}
 Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. 
 
 %prep
-%autosetup -n %{name}-294
+%autosetup -n %{name}-295
 
 #For faster building on Fedora 38, you can define special_build to yes. In this case, a step prior to rpmbuild must
 #actually make Golf in $HOME/golf directory and build it in $HOME/golf/build directory. Otherwise, do not use this flag.
@@ -120,7 +120,6 @@ exit 0
 %{_libdir}/golf/libgolfcurl.so 
 %{_libdir}/golf/libgolfxml.so 
 %{_libdir}/golf/libgolfpcre2.so
-%{_libdir}/golf/libgolfpcre2glibc.so
 %{_libdir}/golf/libsrvcgolf.so 
 %{_libdir}/golf/libgolf.so 
 %{_libdir}/golf/libgolfcli.so 
@@ -142,8 +141,6 @@ exit 0
 %{_libdir}/golf/vdiag
 %{_libdir}/golf/golf.vim
 %{_libdir}/golf/sys
-%{_libdir}/golf/pcre2_version
-%{_libdir}/golf/pcre2_libs
 %{_libdir}/golf/v1
 %{_bindir}/mgrg
 %{_bindir}/gg
