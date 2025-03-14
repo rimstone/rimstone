@@ -804,15 +804,7 @@ GG_DBS='$_ALLDB'
 #
 #
 function docdir() {
-    if [ "$GG_ISFEDORA" == "1" ]; then
-        echo "$(rpm -E '%{_datadir}')/golf"
-    elif [ "$GG_ISDEBIAN" == "1" ]; then
-        echo "/usr/share/golf"
-    elif [ "$GG_ISARCH" == "1" ]; then
-        echo "/usr/share/golf"
-    else
-        error "Unknown Operating System"
-    fi
+    echo "/usr/share/golf"
 }
 
 #

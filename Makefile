@@ -20,11 +20,7 @@ PCRE2_LIBS=$(shell pcre2-config --libs-posix)
 #these must be the same (GG_PLATFORM_ID,GG_PLATFORM_VERSION) used in sys
 OSNAME=$(shell . ./sys; echo -n $${GG_PLATFORM_ID})
 OSVERSION=$(shell . ./sys; echo -n $${GG_PLATFORM_VERSION})
-OSNAMEID=$(shell . ./sys; echo -n $${GG_OSNAME_ID})
-SYSTEMTYPE=$(shell ./sys showtype)
-SYSTEMID=$(shell ./sys showid)
 PGCONF=$(shell ./sys pgconf)
-ANNOBIN=$(shell ./sys annobin)
 DATE=$(shell date +"%b-%d-%Y")
 GG_OS_CLOSE_2=$(shell grep OS_Close /usr/include/fcgios.h|grep shutdown|wc -l)
 
@@ -40,46 +36,19 @@ ifeq ($(strip $(PACKAGE_VERSION)),)
 PACKAGE_VERSION=2
 endif
 
-ifeq ($(strip $(SYSTEMTYPE)),fedora)
-    V_LIB=$(shell rpm -E '%{_libdir}')/golf
-else
-    V_LIB=/usr/lib/golf
-endif
+V_LIB=/usr/lib64/golf
+V_INC=/usr/include/golf
+V_BIN=/usr/bin
+V_MAN=/usr/share/man/man2
 
-ifeq ($(strip $(SYSTEMTYPE)),fedora)
-    V_INC=$(shell rpm -E '%{_includedir}')/golf
-else
-    V_INC=/usr/include/golf
-endif
-
-ifeq ($(strip $(SYSTEMTYPE)),fedora)
-    V_BIN=$(shell rpm -E '%{_bindir}')
-else
-    V_BIN=/usr/bin
-endif
-
-ifeq ($(strip $(SYSTEMTYPE)),fedora)
-    V_MAN=$(shell rpm -E '%{_mandir}')/man2
-else
-    V_MAN=/usr/share/man/man2
-endif
 #see if man pages exist (or if not, need reindex)
 MANEXIST=$(shell if [ -d "$(V_MAN)" ]; then echo "1"; else echo "0"; fi)
 
 
-ifeq ($(strip $(SYSTEMTYPE)),fedora)
-    V_GG_DATADIR=$(shell rpm -E '%{_datadir}')
-    V_GG_DOCS=$(shell rpm -E '%{_datadir}')/golf
-else
-    V_GG_DATADIR=/usr/share
-    V_GG_DOCS=/usr/share/golf
-endif
+V_GG_DATADIR=/usr/share
+V_GG_DOCS=/usr/share/golf
 
-ifeq ($(strip $(SYSTEMID)),opensuse)
-    GG_SERVICE_INCLUDE=-I /usr/include/fastcgi
-else
-    GG_SERVICE_INCLUDE=
-endif
+GG_SERVICE_INCLUDE=-I /usr/include/fastcgi
 
 ifeq ($(strip $(PGCONF)),yes)
     GG_POSTGRES_INCLUDE=-I $(shell pg_config --includedir) 
@@ -114,7 +83,7 @@ ASAN=
 endif
 
 #C flags are as strict as we can do, in order to discover as many bugs as early on
-CFLAGS=-std=gnu99 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME_ID=$(OSNAMEID) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5
+CFLAGS=-std=gnu99 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
@@ -177,7 +146,7 @@ install:
 #This must be last, in this order, as it saves and then applies SELinux policy where applicable. 
 #This runs during rpm creation or during sudo make install
 #it does NOT run during rpm installation, there is post scriptlet that calls golf.sel to do that (GG_NO_SEL)
-	if [[ "$(SYSTEMTYPE)" == "fedora" && "$(SYSTEMID)" != "opensuse" ]]; then install -D -m 0644 gg.te -t $(DESTDIR)$(V_LIB)/selinux ; install -D -m 0644 golf.te -t $(DESTDIR)$(V_LIB)/selinux ; install -D -m 0644 gg.fc -t $(DESTDIR)$(V_LIB)/selinux ; install -D -m 0755 golf.sel -t $(DESTDIR)$(V_LIB)/selinux ; if [ "$(GG_NO_SEL)" != "1" ]; then ./golf.sel "$(DESTDIR)$(V_LIB)/selinux" "$(DESTDIR)$(V_GG_DATADIR)" "$(DESTDIR)$(V_BIN)"; fi ; fi
+	if [[ -f /etc/selinux/config ]]; then install -D -m 0644 gg.te -t $(DESTDIR)$(V_LIB)/selinux ; install -D -m 0644 golf.te -t $(DESTDIR)$(V_LIB)/selinux ; install -D -m 0644 gg.fc -t $(DESTDIR)$(V_LIB)/selinux ; install -D -m 0755 golf.sel -t $(DESTDIR)$(V_LIB)/selinux ; if [ "$(GG_NO_SEL)" != "1" ]; then ./golf.sel "$(DESTDIR)$(V_LIB)/selinux" "$(DESTDIR)$(V_GG_DATADIR)" "$(DESTDIR)$(V_BIN)"; fi ; fi
 
 .PHONY: uninstall
 uninstall:
