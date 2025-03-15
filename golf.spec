@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    297
+Version:    310
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Gliim LLC
@@ -25,10 +25,10 @@ Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{versi
 
 #requirements:
 #sudo dnf -y install rpmdevtools dnf-utils
-#sudo dnf builddep -y fedora.spec
+#sudo dnf builddep -y golf.spec
 
 #OPENSUSE:sudo zypper -n install rpmdevtools yum-utils 
-#OPENSUSE:sudo yum-builddep -y fedora.spec (bug with rpmutils missing, however)
+#OPENSUSE:sudo yum-builddep -y golf.spec (bug with rpmutils missing, however)
 #OPENSUSE has no default policy: no SELINUX
 #OPENSUSE:FastCGI is for cgi-fcgi utility
 %if 0%{?is_opensuse} == 1
@@ -63,7 +63,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-297
+%autosetup -n %{name}-310
 
 %build
 make clean
