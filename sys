@@ -39,7 +39,7 @@ if [ "$GG_SYSTEM_DONE" != "1" ]; then
 
 
 #the following three should not be changed manually, make tools set them
-    export GG_LIBRARY_PATH=/usr/lib64/golf
+    export GG_LIBRARY_PATH=/usr/lib/golf
     export GG_INCLUDE_PATH=/usr/include/golf
     export GG_VERSION=100.100
 

@@ -72,7 +72,7 @@ make
 %install
 rm -rf %{buildroot}
 %if 0%{?is_opensuse} == 0
-install -m 0755 -d "%{buildroot}"/usr/lib64/golf/selinux
+install -m 0755 -d "%{buildroot}"/usr/lib/golf/selinux
 %endif
 make DESTDIR="%{buildroot}" GG_NO_SEL=1 install
 
@@ -84,7 +84,7 @@ make DESTDIR="%{buildroot}" GG_NO_SEL=1 install
 #difficult to make it without.
 %post
 %if 0%{?is_opensuse} == 0
-/usr/lib64/golf/selinux/golf.sel  "/usr/lib64/golf/selinux" "/usr/share" "/usr/bin"
+/usr/lib/golf/selinux/golf.sel  "/usr/lib/golf/selinux" "/usr/share" "/usr/bin"
 exit 0
 %endif
 #SELINUXEND
@@ -95,46 +95,46 @@ exit 0
 %license LICENSE
 %dir /var/lib/gg
 %dir /var/lib/gg/bld/
-%dir /usr/lib64/golf/
+%dir /usr/lib/golf/
 %dir /usr/include/golf/
 %dir /usr/share/golf/
 %if 0%{?is_opensuse} == 0
-%dir /usr/lib64/golf/selinux
+%dir /usr/lib/golf/selinux
 %endif
 /usr/include/golf/golf.h
 /usr/include/golf/gcli.h
-/usr/lib64/golf/libgolfarr.so 
-/usr/lib64/golf/libgolfpg.so 
-/usr/lib64/golf/libgolfdb.so 
-/usr/lib64/golf/libgolflite.so 
-/usr/lib64/golf/libgolfmys.so 
-/usr/lib64/golf/libgolfsec.so 
-/usr/lib64/golf/libgolftree.so
-/usr/lib64/golf/libgolfcurl.so 
-/usr/lib64/golf/libgolfxml.so 
-/usr/lib64/golf/libgolfpcre2.so
-/usr/lib64/golf/libsrvcgolf.so 
-/usr/lib64/golf/libgolf.so 
-/usr/lib64/golf/libgolfcli.so 
-/usr/lib64/golf/libgolfscli.so 
-/usr/lib64/golf/stub_arr.o   
-/usr/lib64/golf/stub_after.o   
-/usr/lib64/golf/stub_crypto.o  
-/usr/lib64/golf/stub_gendb.o    
-/usr/lib64/golf/stub_pcre2.o     
-/usr/lib64/golf/stub_sqlite.o  
-/usr/lib64/golf/stub_tree.o
-/usr/lib64/golf/stub_before.o  
-/usr/lib64/golf/stub_curl.o    
-/usr/lib64/golf/stub_mariadb.o  
-/usr/lib64/golf/stub_postgres.o  
-/usr/lib64/golf/stub_srvc.o    
-/usr/lib64/golf/stub_xml.o
-/usr/lib64/golf/vmakefile
-/usr/lib64/golf/vdiag
-/usr/lib64/golf/golf.vim
-/usr/lib64/golf/sys
-/usr/lib64/golf/v1
+/usr/lib/golf/libgolfarr.so 
+/usr/lib/golf/libgolfpg.so 
+/usr/lib/golf/libgolfdb.so 
+/usr/lib/golf/libgolflite.so 
+/usr/lib/golf/libgolfmys.so 
+/usr/lib/golf/libgolfsec.so 
+/usr/lib/golf/libgolftree.so
+/usr/lib/golf/libgolfcurl.so 
+/usr/lib/golf/libgolfxml.so 
+/usr/lib/golf/libgolfpcre2.so
+/usr/lib/golf/libsrvcgolf.so 
+/usr/lib/golf/libgolf.so 
+/usr/lib/golf/libgolfcli.so 
+/usr/lib/golf/libgolfscli.so 
+/usr/lib/golf/stub_arr.o   
+/usr/lib/golf/stub_after.o   
+/usr/lib/golf/stub_crypto.o  
+/usr/lib/golf/stub_gendb.o    
+/usr/lib/golf/stub_pcre2.o     
+/usr/lib/golf/stub_sqlite.o  
+/usr/lib/golf/stub_tree.o
+/usr/lib/golf/stub_before.o  
+/usr/lib/golf/stub_curl.o    
+/usr/lib/golf/stub_mariadb.o  
+/usr/lib/golf/stub_postgres.o  
+/usr/lib/golf/stub_srvc.o    
+/usr/lib/golf/stub_xml.o
+/usr/lib/golf/vmakefile
+/usr/lib/golf/vdiag
+/usr/lib/golf/golf.vim
+/usr/lib/golf/sys
+/usr/lib/golf/v1
 /usr/bin/mgrg
 /usr/bin/gg
 /usr/share/man/man2/*.2gg*
@@ -142,12 +142,12 @@ exit 0
 #SELINUX
 #Always distribute source selinux policy files; support for pp distribution is shaky
 %if 0%{?is_opensuse} == 0
-/usr/lib64/golf/selinux/gg.te
-/usr/lib64/golf/selinux/gg.fc
-/usr/lib64/golf/selinux/golf.te
-/usr/lib64/golf/selinux/golf.sel
-#/usr/lib64/selinux/golf.pp
-#/usr/lib64/selinux/gg.pp
+/usr/lib/golf/selinux/gg.te
+/usr/lib/golf/selinux/gg.fc
+/usr/lib/golf/selinux/golf.te
+/usr/lib/golf/selinux/golf.sel
+#/usr/lib/selinux/golf.pp
+#/usr/lib/selinux/gg.pp
 %endif
 #SELINUXEND
 
