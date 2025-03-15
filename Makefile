@@ -36,7 +36,7 @@ ifeq ($(strip $(PACKAGE_VERSION)),)
 PACKAGE_VERSION=2
 endif
 
-V_LIB=/usr/lib64/golf
+V_LIB=/usr/lib/golf
 V_INC=/usr/include/golf
 V_BIN=/usr/bin
 V_MAN=/usr/share/man/man2
