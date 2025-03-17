@@ -109,6 +109,11 @@ GG_HEADER_FILES:=$(GG_HEADER_FILES)
 #the same for C files in GG_SOURCE_C_FILES
 _OBJ_FILES=$(GG_SOURCE_FILES:%.golf=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG_BLD)/%.oc)
 
+#strip symbols but keep _dbg for when needed (gdb->core or addr2line)
+define strip_sym
+	if [ "$(GG_C_DEBUG)" != "1" ]; then objcopy --only-keep-debug $@ $@_dbg ; objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@_dbg $@ ; fi
+endef
+
 #when making source, start with compiling; then if error, check if plain diagnostic; if not, recompile with error processed by vdiag script to produce highlights (in which
 #case we don't use caret, we produce one ourselves instead of gcc)
 #use ECODE (as exit code) to make sure non-zero exit code doesn't stop the build rule. Also use basename of the source file in .comperr... in order not to mix up output from different source files when makefile runs in parallel
@@ -145,8 +150,10 @@ _LDFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) $(GG_C_LFLAGS)  -L$(G
 
 $(GG_BLD)/$(GG_C_NAME).srvc: $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) $(GG_BLD)/gg_dispatch_request.o
 	$(_CC) -o $@ $^ $(_LDFLAGS) $(GG_EVENT_STUBS) -lsrvcgolf -lfcgi $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
+	$(call strip_sym)
 
 $(GG_BLD)/$(GG_C_NAME): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) $(GG_BLD)/gg_dispatch_request.o
 	$(_CC) -o $@ $^ $(_LDFLAGS) $(GG_EVENT_STUBS) -lgolf $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
+	$(call strip_sym)
 
 

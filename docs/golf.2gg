@@ -18,11 +18,17 @@ Golf is a programming language and  application server for building web services
 
 \fBBlog\fP has useful articles and changelog.
 
-Current version is 310. This release passed 2346 automated functional tests.
+Current version is 324. This release passed 2346 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-03-15 \fBHow to make Arch Linux pacman package\fP
+.RE
+
 
 .RS 4
 \[bu]    
@@ -235,6 +241,12 @@ Example of Golf code (from \fBSaaS example\fP):
 
 
 Releases:
+
+.RS 4
+\[bu]    
+2025-03-16 \fBGolf 324 released\fP
+.RE
+
 
 .RS 4
 \[bu]    

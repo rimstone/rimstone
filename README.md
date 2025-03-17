@@ -14,11 +14,12 @@ Golf is a programming language and  application server for building web services
 
 [Blog](https://golf-lang.blogspot.com/) has useful articles and changelog\.
 
-Current version is 310\. This release passed 2346 automated functional tests\.
+Current version is 324\. This release passed 2346 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-03\-15 [How to make Arch Linux pacman package](https://golf-lang.blogspot.com/2025/03/how-to-make-arch-linux-pacman-package.html)
 * 2025\-03\-10 [How to know Golf version](https://golf-lang.blogspot.com/2025/03/how-to-know-golf-version.html)
 * 2025\-03\-01 [Web framework for C programming language](https://golf-lang.blogspot.com/2025/03/web-framework-for-c-programming-language.html)
 * 2025\-02\-24 [Make RPM package on Fedora and RedHat](https://golf-lang.blogspot.com/2025/02/how-to-create-installation-package-for.html)
@@ -56,6 +57,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 
 Releases:
+* 2025\-03\-16 [Golf 324 released](https://golf-lang.blogspot.com/2025/03/golf-324-released.html)
 * 2025\-03\-11 [Golf 297 released](https://golf-lang.blogspot.com/2025/03/golf-297-released.html)
 * 2025\-03\-11 [Golf 295 released](https://golf-lang.blogspot.com/2025/03/golf-295-released.html)
 * 2025\-03\-10 [Golf 288 released](https://golf-lang.blogspot.com/2025/03/golf-288-released.html)

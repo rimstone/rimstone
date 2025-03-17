@@ -3,10 +3,6 @@
 #Copyright 2018 Gliim LLC.
 
 %:
-	dh $@
+	GG_DEBIAN_BUILD=1 dh $@ 
 
-#on ubuntu22, default compression is zstd, however dkpg-sig doesn't yet
-#know about. Go with xz.
-override_dh_builddeb:
-	dh_builddeb -- -Zxz
 

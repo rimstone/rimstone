@@ -32,11 +32,13 @@ CC=gcc
 PACKAGE_VERSION=$(shell . .version; echo $${PACKAGE_VERSION})
 
 
+
 ifeq ($(strip $(PACKAGE_VERSION)),)
 PACKAGE_VERSION=2
 endif
 
 V_LIB=/usr/lib/golf
+V_LIBD=/usr/lib/debug/golf
 V_INC=/usr/include/golf
 V_BIN=/usr/bin
 V_MAN=/usr/share/man/man2
@@ -46,7 +48,6 @@ MANEXIST=$(shell if [ -d "$(V_MAN)" ]; then echo "1"; else echo "0"; fi)
 
 
 V_GG_DATADIR=/usr/share
-V_GG_DOCS=/usr/share/golf
 
 GG_SERVICE_INCLUDE=-I /usr/include/fastcgi
 
@@ -66,7 +67,7 @@ GG_LIBXML2_INCLUDE=$(shell pkg-config --cflags libxml-2.0)
 #Note: we always use -g in order to get line number of where the problem is
 #(optimization is still valid though)
 OPTIM_COMP_DEBUG=-g3 -DDEBUG -rdynamic
-OPTIM_COMP_PROD=-O3 
+OPTIM_COMP_PROD=-g -O3 
 OPTIM_LINK_PROD=
 OPTIM_LINK_DEBUG=-rdynamic
 ifeq ($(DEBUGINFO),1)
@@ -89,7 +90,17 @@ CFLAGS=-std=gnu99 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
 LDFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN)
 
+#note that for make DI=1, DEBUGINFO will work. But we don't specify DEBUGINFO for sudo make install, so there we check if one of these files exists. If it does
+#then we wanted to have them all. Otherwise, none will be there, because we explicitly delete them here.
+define strip_sym
+if [[ "$(GG_DEBIAN_BUILD)" != "1" &&  "$(DEBUGINFO)" != "1" ]]; then objcopy --only-keep-debug $@ $@.dbg ; objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@.dbg $@ ; else rm -f $@.dbg ; fi
+endef
+
+
 #Libraries and executables must be 0755 or the packager (RPM) will say they are not satisfied
+#SELinux directory is created and files put there just so if it ever gets selinux installed
+#We only actually enable selinux polices if 1) not a fakeroot and 2) selinux actually installed (doesn't have to be enabled)
+#SELinux can be enabled only if DESTDIR is empty, i.e. not a fake root. Otherwise, we're setting policies for fake root files, which of course doesn't work
 .PHONY: install
 install:
 	install -m 0755 -d $(DESTDIR)/var/lib/gg/bld
@@ -97,6 +108,7 @@ install:
 	install -D -m 0644 golf.h -t $(DESTDIR)$(V_INC)/
 	install -D -m 0644 gcli.h -t $(DESTDIR)$(V_INC)/
 	install -m 0755 -d $(DESTDIR)$(V_LIB)
+	install -m 0755 -d $(DESTDIR)$(V_LIB)/selinux
 	install -D -m 0755 libgolfpg.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolfdb.so -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 libgolflite.so -t $(DESTDIR)$(V_LIB)/
@@ -131,6 +143,7 @@ install:
 	install -D -m 0755 vdiag -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 gg  -t $(DESTDIR)$(V_BIN)/
 	install -D -m 0755 mgrg  -t $(DESTDIR)$(V_BIN)/
+	if [[ "$(GG_DEBIAN_BUILD)" != "1" &&  -f v1.dbg ]]; then install -m 0755 -d $(DESTDIR)$(V_LIBD) ; install -D -m 0644 v1.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 mgrg.dbg  -t $(DESTDIR)$(V_LIBD)/ ;  install -D -m 0644 libgolfpg.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfdb.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolflite.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfmys.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfsec.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolftree.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcurl.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfxml.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfarr.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfpcre2.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libsrvcgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfscli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; fi
 	install -m 0755 -d $(DESTDIR)$(V_MAN)
 	install -D -m 0644 docs/*.2gg -t $(DESTDIR)$(V_MAN)/
 	install -D -m 0755 sys -t $(DESTDIR)$(V_LIB)/
@@ -141,12 +154,14 @@ install:
 	if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi
 	if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$DATE/$(DATE)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi
 	for i in $$(ls $(DESTDIR)$(V_MAN)/*.2gg); do gzip -f $$i; done
-	install -m 0755 -d $(DESTDIR)$(V_GG_DOCS)
-	install -D -m 0644 docs/golfdoc.html -t $(DESTDIR)$(V_GG_DOCS)/
 #This must be last, in this order, as it saves and then applies SELinux policy where applicable. 
 #This runs during rpm creation or during sudo make install
 #it does NOT run during rpm installation, there is post scriptlet that calls golf.sel to do that (GG_NO_SEL)
-	if [[ -d $(DESTDIR)$(V_LIB)/selinux ]]; then install -D -m 0644 gg.te -t $(DESTDIR)$(V_LIB)/selinux ; install -D -m 0644 golf.te -t $(DESTDIR)$(V_LIB)/selinux ; install -D -m 0644 gg.fc -t $(DESTDIR)$(V_LIB)/selinux ; install -D -m 0755 golf.sel -t $(DESTDIR)$(V_LIB)/selinux ; if [ "$(GG_NO_SEL)" != "1" ]; then ./golf.sel "$(DESTDIR)$(V_LIB)/selinux" "$(DESTDIR)$(V_GG_DATADIR)" "$(DESTDIR)$(V_BIN)"; fi ; fi
+	install -D -m 0644 gg.te -t $(DESTDIR)$(V_LIB)/selinux 
+	install -D -m 0644 golf.te -t $(DESTDIR)$(V_LIB)/selinux 
+	install -D -m 0644 gg.fc -t $(DESTDIR)$(V_LIB)/selinux 
+	install -D -m 0755 golf.sel -t $(DESTDIR)$(V_LIB)/selinux ; 
+	if [[ "$(DESTDIR)" == "" && -f /etc/selinux/config ]]; then ./golf.sel "$(DESTDIR)$(V_LIB)/selinux" "$(DESTDIR)$(V_GG_DATADIR)" "$(DESTDIR)$(V_BIN)"; fi 
 
 .PHONY: uninstall
 uninstall:
@@ -156,17 +171,16 @@ uninstall:
 	rm -f $(DESTDIR)$(V_BIN)/gg
 	rm -f $(DESTDIR)$(V_BIN)/mgrg
 	rm -f $(DESTDIR)$(V_MAN)/*.2gg
-	rm -rf $(DESTDIR)$(V_GG_DOCS)
 	rm -rf $(DESTDIR)$(V_LIB)
+	rm -rf $(DESTDIR)$(V_LIBD)
 
 .PHONY: binary
 binary:build
 	@;
 
 .PHONY: build
-build: libsrvcgolf.so libgolfcli.so libgolfscli.so libgolf.so libgolfdb.so libgolfsec.so libgolfmys.so libgolflite.so libgolfpg.so libgolfcurl.so libgolfxml.so libgolfarr.so libgolftree.so libgolfpcre2.so v1.o stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_xml.o stub_arr.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg 
+build: libsrvcgolf.so libgolfcli.so libgolfscli.so libgolf.so libgolfdb.so libgolfsec.so libgolfmys.so libgolflite.so libgolfpg.so libgolfcurl.so libgolfxml.so libgolfarr.so libgolftree.so libgolfpcre2.so stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_xml.o stub_arr.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg v1
 	@echo "Building version $(PACKAGE_VERSION)"
-	$(CC) -o v1 v1.o chandle.o golfrtc.o golfmems.o hash.o $(LDFLAGS) 
 
 .PHONY: clean
 clean:
@@ -174,6 +188,9 @@ clean:
 	touch *.h
 	rm -rf debian/golf
 	rm -rf *.tar.gz
+	rm -f *.o
+	rm -f *.so
+	rm -f *.dbg
 
 
 
@@ -182,71 +199,76 @@ clean:
 # the Makefile for application (such as in hello world example) will link with
 # those libraries AT customer site.
 #
-v1.o: v1.c golfmems.o
+v1.o: v1.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
+
+v1: v1.o golfmems.o chandle.o golfrtc.o hash.o  
+	$(CC) -o v1 $^ $(LDFLAGS) 
+	$(call strip_sym)
 
 mgrg: mgrg.o 
 	$(CC) -o mgrg mgrg.o $(LDFLAGS)
+	$(call strip_sym)
 
 libsrvcgolf.so: chandle.o hash.o json.o msg.o utf.o srvc_golfrt.o golfrtc.o golfmems.o 
 	rm -f libsrvcgolf.so
 	$(CC) -shared -o libsrvcgolf.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libsrvcgolf.so ; fi
+	$(call strip_sym)
 
 libgolf.so: chandle.o hash.o json.o msg.o utf.o golfrt.o golfrtc.o golfmems.o 
 	rm -f libgolf.so
 	$(CC) -shared -o libgolf.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolf.so ; fi
+	$(call strip_sym)
 
 libgolfpg.so: pg.o 
 	rm -f libgolfpg.so
 	$(CC) -shared -o libgolfpg.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfpg.so ; fi
+	$(call strip_sym)
 
 libgolflite.so: lite.o 
 	rm -f libgolflite.so
 	$(CC) -shared -o libgolflite.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolflite.so ; fi
+	$(call strip_sym)
 
 libgolfmys.so: mys.o 
 	rm -f libgolfmys.so
 	$(CC) -shared -o libgolfmys.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfmys.so ; fi
+	$(call strip_sym)
 
 libgolfdb.so: db.o 
 	rm -f libgolfdb.so
 	$(CC) -shared -o libgolfdb.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfdb.so ; fi
+	$(call strip_sym)
 
 libgolfsec.so: sec.o 
 	rm -f libgolfsec.so
 	$(CC) -shared -o libgolfsec.so  $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfsec.so ; fi
+	$(call strip_sym)
 
 libgolfxml.so: xml.o 
 	rm -f libgolfxml.so
 	$(CC) -shared -o libgolfxml.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfxml.so ; fi
+	$(call strip_sym)
 
 libgolfarr.so: arr.o 
 	rm -f libgolfarr.so
 	$(CC) -shared -o libgolfarr.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfarr.so ; fi
+	$(call strip_sym)
 
 libgolfcurl.so: curl.o 
 	rm -f libgolfcurl.so
 	$(CC) -shared -o libgolfcurl.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfcurl.so ; fi
+	$(call strip_sym)
 
 libgolftree.so: tree.o 
 	rm -f libgolftree.so
 	$(CC) -shared -o libgolftree.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolftree.so ; fi
+	$(call strip_sym)
 
 libgolfpcre2.so: pcre2.o 
 	rm -f libgolfpcre2.so
 	$(CC) -shared -o libgolfpcre2.so $^ 
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfpcre2.so ; fi
+	$(call strip_sym)
 
 utf.o: utf.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
@@ -351,12 +373,12 @@ mgrg.o: mgrg.c
 libgolfcli.so: gcli.c gcli.h golf.h
 	rm -f libgolfcli.so
 	$(CC) -shared -o libgolfcli.so $^ $(CFLAGS)
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfcli.so ; fi
+	$(call strip_sym)
 
 libgolfscli.so: gcli.c gcli.h golf.h
 	rm -f libgolfscli.so
 	$(CC) -shared -o libgolfscli.so $^ $(CFLAGS) -DGG_GOLFSRV
-	if [ "$(DEBUGINFO)" != "1" ]; then strip --strip-unneeded libgolfscli.so ; fi
+	$(call strip_sym)
 
 
 

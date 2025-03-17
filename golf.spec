@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    310
+Version:    324
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Gliim LLC
@@ -33,7 +33,6 @@ Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{versi
 #OPENSUSE:FastCGI is for cgi-fcgi utility
 %if 0%{?is_opensuse} == 1
 BuildRequires: %suse_build_requires libmariadb-devel gpg sshpass FastCGI-devel postgresql-devel sqlite3-devel
-
 
 %else
 #MAGEIA:sudo dnf -y install rpmdevtools dnf-utils
@@ -63,47 +62,43 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-310
+%autosetup -n %{name}-324
 
 %build
 make clean
 make 
 
 %install
-rm -rf %{buildroot}
-%if 0%{?is_opensuse} == 0
-install -m 0755 -d "%{buildroot}"/usr/lib/golf/selinux
-%endif
-make DESTDIR="%{buildroot}" GG_NO_SEL=1 install
-
-#SELINUX
-#This must be after make install above; otherwise /var/lib/gg wouldn't exist yet (it exists in fakeroot, but that won't work for SELINUX)
-#changing context (golf.sel 1) is done again here after being done in make install, because when rpm is installed, make install works
-#in a fakeroot env, and restorecon isn't really operating on /var/lib/gg; thus it is worthless for when sudo dnf install is done.
-#But, when installing from source with sudo make install, i.e. without dnf, that works on real /var/lib/gg. Some redundancy but it's
-#difficult to make it without.
-%post
-%if 0%{?is_opensuse} == 0
-/usr/lib/golf/selinux/golf.sel  "/usr/lib/golf/selinux" "/usr/share" "/usr/bin"
-exit 0
-%endif
-#SELINUXEND
-
-
+rm -rf %{buildroot}/*
+make DESTDIR="%{buildroot}" install
 
 %files
 %license LICENSE
 %dir /var/lib/gg
 %dir /var/lib/gg/bld/
 %dir /usr/lib/golf/
+%dir /usr/lib/debug/golf/
 %dir /usr/include/golf/
-%dir /usr/share/golf/
-%if 0%{?is_opensuse} == 0
 %dir /usr/lib/golf/selinux
-%endif
 /usr/include/golf/golf.h
 /usr/include/golf/gcli.h
-/usr/lib/golf/libgolfarr.so 
+/usr/lib/debug/golf/libgolfarr.so.dbg 
+/usr/lib/debug/golf/libgolfpg.so.dbg 
+/usr/lib/debug/golf/libgolfdb.so.dbg 
+/usr/lib/debug/golf/libgolflite.so.dbg 
+/usr/lib/debug/golf/libgolfmys.so.dbg 
+/usr/lib/debug/golf/libgolfsec.so.dbg 
+/usr/lib/debug/golf/libgolftree.so.dbg
+/usr/lib/debug/golf/libgolfcurl.so.dbg 
+/usr/lib/debug/golf/libgolfxml.so.dbg 
+/usr/lib/debug/golf/libgolfpcre2.so.dbg
+/usr/lib/debug/golf/libsrvcgolf.so.dbg 
+/usr/lib/debug/golf/libgolf.so.dbg 
+/usr/lib/debug/golf/libgolfcli.so.dbg 
+/usr/lib/debug/golf/libgolfscli.so.dbg 
+/usr/lib/debug/golf/v1.dbg
+/usr/lib/debug/golf/mgrg.dbg
+/usr/lib/golf/libgolfarr.so
 /usr/lib/golf/libgolfpg.so 
 /usr/lib/golf/libgolfdb.so 
 /usr/lib/golf/libgolflite.so 
@@ -138,17 +133,14 @@ exit 0
 /usr/bin/mgrg
 /usr/bin/gg
 /usr/share/man/man2/*.2gg*
-/usr/share/golf/golfdoc.html
 #SELINUX
-#Always distribute source selinux policy files; support for pp distribution is shaky
-%if 0%{?is_opensuse} == 0
+#Always distribute source selinux policy files; support for pp distribution is shaky, so none given (we generate pp files)
 /usr/lib/golf/selinux/gg.te
 /usr/lib/golf/selinux/gg.fc
 /usr/lib/golf/selinux/golf.te
 /usr/lib/golf/selinux/golf.sel
 #/usr/lib/selinux/golf.pp
 #/usr/lib/selinux/gg.pp
-%endif
 #SELINUXEND
 
 %changelog
