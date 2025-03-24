@@ -29,7 +29,7 @@ sudo zypper -n install git
 
 git clone https://github.com/golf-lang/golf.git
 cd golf
-git checkout 324
+git checkout 335
 
 .EE
 .RE

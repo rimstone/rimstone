@@ -14,11 +14,13 @@ Golf is a programming language and  application server for building web services
 
 [Blog](https://golf-lang.blogspot.com/) has useful articles and changelog\.
 
-Current version is 324\. This release passed 2346 automated functional tests\.
+Current version is 335\. This release passed 2346 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-03\-23 [How to debug Golf programs with gdb](https://golf-lang.blogspot.com/2025/03/how-to-debug-golf-programs-with-gdb.html)
+* 2025\-03\-19 [Maximum file size uploaded to Golf server](https://golf-lang.blogspot.com/2025/03/maximum-file-size-uploaded-to-golf.html)
 * 2025\-03\-15 [How to make Arch Linux pacman package](https://golf-lang.blogspot.com/2025/03/how-to-make-arch-linux-pacman-package.html)
 * 2025\-03\-10 [How to know Golf version](https://golf-lang.blogspot.com/2025/03/how-to-know-golf-version.html)
 * 2025\-03\-01 [Web framework for C programming language](https://golf-lang.blogspot.com/2025/03/web-framework-for-c-programming-language.html)

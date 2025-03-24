@@ -70,7 +70,9 @@ OPTIM_COMP_DEBUG=-g3 -DDEBUG -rdynamic
 OPTIM_COMP_PROD=-g -O3 
 OPTIM_LINK_PROD=
 OPTIM_LINK_DEBUG=-rdynamic
+#if DEBUGINFO is 1, then no dbg files will be created, so delete any old ones as they wouldn't be accurate now
 ifeq ($(DEBUGINFO),1)
+NONE=$(shell rm -f *.dbg)
 OPTIM_COMP=$(OPTIM_COMP_DEBUG)
 OPTIM_LINK=$(OPTIM_LINK_DEBUG)
 else
@@ -90,10 +92,13 @@ CFLAGS=-std=gnu99 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
 LDFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN)
 
-#note that for make DI=1, DEBUGINFO will work. But we don't specify DEBUGINFO for sudo make install, so there we check if one of these files exists. If it does
+#note that for make DI=1, DEBUGINFO can be checked. But we don't specify DEBUGINFO for sudo make install.
 #then we wanted to have them all. Otherwise, none will be there, because we explicitly delete them here.
+#If debugging build, no need to do anything, the executable is fully endowed with debugging symbols; but if
+#not, then separate debugging info, and strip the executable and then link it to debugging info. The only
+#exception is if this is debian build which does that (and lintian complains if we strip it ourselves).
 define strip_sym
-if [[ "$(GG_DEBIAN_BUILD)" != "1" &&  "$(DEBUGINFO)" != "1" ]]; then objcopy --only-keep-debug $@ $@.dbg ; objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@.dbg $@ ; else rm -f $@.dbg ; fi
+if [[ "$(DEBUGINFO)" != "1" ]]; then objcopy --only-keep-debug $@ $@.dbg ; if [ "$(GG_DEBIAN_BUILD)" != "1" ]; then objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@.dbg $@ ; else rm -f $@.dbg ; fi ; fi
 endef
 
 
@@ -138,12 +143,16 @@ install:
 	install -D -m 0644 stub_xml.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 golf.vim -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 vmakefile -t $(DESTDIR)$(V_LIB)/
+	install -D -m 0644 LICENSE -t $(DESTDIR)$(V_LIB)/
+	install -D -m 0644 NOTICE -t $(DESTDIR)$(V_LIB)/
+	install -D -m 0644 README.md -t $(DESTDIR)$(V_LIB)/
+	install -D -m 0644 CONTRIBUTING.md -t $(DESTDIR)$(V_LIB)/
 	install -m 0755 -d $(DESTDIR)$(V_BIN)
 	install -D -m 0755 v1 -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 vdiag -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 gg  -t $(DESTDIR)$(V_BIN)/
 	install -D -m 0755 mgrg  -t $(DESTDIR)$(V_BIN)/
-	if [[ "$(GG_DEBIAN_BUILD)" != "1" &&  -f v1.dbg ]]; then install -m 0755 -d $(DESTDIR)$(V_LIBD) ; install -D -m 0644 v1.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 mgrg.dbg  -t $(DESTDIR)$(V_LIBD)/ ;  install -D -m 0644 libgolfpg.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfdb.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolflite.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfmys.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfsec.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolftree.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcurl.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfxml.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfarr.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfpcre2.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libsrvcgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfscli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; fi
+	if [[ "$(GG_DEBIAN_BUILD)" != "1" && -f v1.dbg ]]; then install -m 0755 -d $(DESTDIR)$(V_LIBD) ; install -D -m 0644 v1.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 mgrg.dbg  -t $(DESTDIR)$(V_LIBD)/ ;  install -D -m 0644 libgolfpg.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfdb.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolflite.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfmys.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfsec.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolftree.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcurl.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfxml.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfarr.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfpcre2.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libsrvcgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfscli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; fi
 	install -m 0755 -d $(DESTDIR)$(V_MAN)
 	install -D -m 0644 docs/*.2gg -t $(DESTDIR)$(V_MAN)/
 	install -D -m 0755 sys -t $(DESTDIR)$(V_LIB)/
