@@ -16,9 +16,9 @@ install-package \- Golf documentation (download-and-build)
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/debian-ubuntu-24/golf_338_amd64.deb" -O golf-338_amd64.deb
+wget "https://golf-lang.com/packages/debian-ubuntu-24/golf_340_amd64.deb" -O golf-340_amd64.deb
 sudo apt update
-sudo apt install golf-338_amd64.deb
+sudo apt install golf-340_amd64.deb
 
 .EE
 .RE
@@ -32,9 +32,9 @@ sudo apt install golf-338_amd64.deb
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/debian-debian-12/golf_338_amd64.deb" -O golf-338_amd64.deb
+wget "https://golf-lang.com/packages/debian-debian-12/golf_340_amd64.deb" -O golf-340_amd64.deb
 sudo apt update
-sudo apt install golf-338_amd64.deb
+sudo apt install golf-340_amd64.deb
 
 .EE
 .RE
@@ -48,8 +48,8 @@ sudo apt install golf-338_amd64.deb
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/arch-archlinux-rolling/golf-338-0-x86_64.pkg.tar.zst" -O golf-338-0-x86_64.pkg.tar.zst
-sudo pacman -U --noconfirm golf-338-0-x86_64.pkg.tar.zst
+wget "https://golf-lang.com/packages/arch-archlinux-rolling/golf-340-0-x86_64.pkg.tar.zst" -O golf-340-0-x86_64.pkg.tar.zst
+sudo pacman -U --noconfirm golf-340-0-x86_64.pkg.tar.zst
 
 .EE
 .RE
@@ -63,8 +63,8 @@ sudo pacman -U --noconfirm golf-338-0-x86_64.pkg.tar.zst
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/fedora-redhat-9/golf-338-1.el9.x86_64.rpm" -O golf-338-1.el9.x86_64.rpm
-sudo dnf install golf-338-1.el9.x86_64.rpm
+wget "https://golf-lang.com/packages/fedora-redhat-9/golf-340-1.el9.x86_64.rpm" -O golf-340-1.el9.x86_64.rpm
+sudo dnf install golf-340-1.el9.x86_64.rpm
 
 .EE
 .RE
@@ -93,8 +93,8 @@ sudo dnf install golf-335-1.fc41.x86_64.rpm
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/opensuse-opensuse-tumbleweed/golf-338-1.x86_64.rpm" -O golf-335-1.x86_64.rpm
-sudo zypper -n install  --replacefiles golf-338-1.x86_64.rpm
+wget "https://golf-lang.com/packages/opensuse-opensuse-tumbleweed/golf-340-1.x86_64.rpm" -O golf-335-1.x86_64.rpm
+sudo zypper -n install  --replacefiles golf-340-1.x86_64.rpm
 
 .EE
 .RE

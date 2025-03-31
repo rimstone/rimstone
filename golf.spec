@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    338
+Version:    340
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Gliim LLC
@@ -32,7 +32,7 @@ Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{versi
 #OPENSUSE has no default policy: no SELINUX
 #OPENSUSE:FastCGI is for cgi-fcgi utility
 %if 0%{?is_opensuse} == 1
-BuildRequires: %suse_build_requires libmariadb-devel gpg sshpass FastCGI-devel postgresql-devel sqlite3-devel
+BuildRequires: %suse_build_requires libmariadb-devel gpg sshpass FastCGI FastCGI-devel postgresql-devel sqlite3-devel
 
 %else
 #MAGEIA:sudo dnf -y install rpmdevtools dnf-utils
@@ -62,7 +62,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-338
+%autosetup -n %{name}-340
 
 %build
 make clean
