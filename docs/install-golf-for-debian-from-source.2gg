@@ -1,0 +1,69 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+install-golf-for-debian-from-source \- Golf documentation (download-and-build)
+.SH DESCRIPTION
+
+.LP
+.B GET LATEST GOLF SOURCE CODE
+.LP
+
+Get Golf source code for the latest version:
+
+.RS 4
+.EX
+
+sudo apt update
+sudo apt -y install git
+git clone --depth 1 https://github.com/golf-lang/golf.git
+cd golf
+
+.EE
+.RE
+
+
+.LP
+.B INSTALL DEPENDENCIES
+.LP
+
+
+.RS 4
+.EX
+
+sudo apt update
+sudo apt -y install devscripts equivs build-essential 
+yes|mk-build-deps -i -s sudo debian/control
+
+.EE
+.RE
+
+
+.LP
+.B BUILD GOLF
+.LP
+
+Use DI=1 to build debug version, leave it as-is for production:
+
+.RS 4
+.EX
+
+make clean
+make DI=0
+sudo make install
+
+.EE
+.RE
+
+.SH SEE ALSO
+ lrnDownload and buildelrn
+.B - Download and build
+
+\fBinstall\fP  
+\fBinstall-from-external-sources\fP  
+\fBinstall-golf-for-arch-from-source\fP  
+\fBinstall-golf-for-debian-from-source\fP  
+\fBinstall-golf-for-fedora-from-source\fP  
+\fBinstall-golf-for-opensuse-from-source\fP  
+\fBinstall-package\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP

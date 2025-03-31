@@ -1,0 +1,80 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+install-from-external-sources \- Golf documentation (download-and-build)
+.SH DESCRIPTION
+The following explains how to install Golf from external sources. These sources fetch Golf source code from its github repo and may provide binary builds. These builds are not under Golf team's control.
+
+.LP
+.B UBUNTU
+.LP
+
+For Ubuntu (versions 20 through 24, as well as upcoming releases), use:
+
+.RS 4
+.EX
+
+sudo add-apt-repository ppa:golf-lang/golf
+sudo apt update
+sudo apt install golf
+
+.EE
+.RE
+
+
+.LP
+.B FEDORA, REDHAT, AMAZON LINUX
+.LP
+
+If you're running RedHat (or similar like Rocky), you must install EPEL first:
+
+.RS 4
+.EX
+
+sudo dnf install epel-release
+
+.EE
+.RE
+
+Enable Golf COPR repo and install Golf:
+
+.RS 4
+.EX
+
+sudo dnf copr enable golf-lang/golf-lang
+sudo apt install golf
+
+.EE
+.RE
+
+
+.LP
+.B ARCH LINUX
+.LP
+
+To download, build package, and install from it (answer Yes to proceed):
+
+.RS 4
+.EX
+
+git clone https://aur.archlinux.org/golf.git
+cd golf
+makepkg -sirc
+
+.EE
+.RE
+
+If your distro isn't described here, or you don't want to install this way, you can \fBinstall from source\fP.
+.SH SEE ALSO
+ lrnDownload and buildelrn
+.B - Download and build
+
+\fBinstall\fP  
+\fBinstall-from-external-sources\fP  
+\fBinstall-golf-for-arch-from-source\fP  
+\fBinstall-golf-for-debian-from-source\fP  
+\fBinstall-golf-for-fedora-from-source\fP  
+\fBinstall-golf-for-opensuse-from-source\fP  
+\fBinstall-package\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP

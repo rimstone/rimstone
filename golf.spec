@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    335
+Version:    338
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Gliim LLC
@@ -62,7 +62,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-335
+%autosetup -n %{name}-338
 
 %build
 make clean

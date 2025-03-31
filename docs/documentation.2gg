@@ -4,7 +4,7 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 335
+.B REFERENCE FOR GOLF VERSION 338
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -140,11 +140,12 @@ lrnDownload and buildelrn
 .B - Download and build
 
 \fBinstall\fP  
-\fBinstall-arch\fP  
-\fBinstall-binary\fP  
-\fBinstall-debian\fP  
-\fBinstall-fedora\fP  
-\fBinstall-opensuse\fP  
+\fBinstall-from-external-sources\fP  
+\fBinstall-golf-for-arch-from-source\fP  
+\fBinstall-golf-for-debian-from-source\fP  
+\fBinstall-golf-for-fedora-from-source\fP  
+\fBinstall-golf-for-opensuse-from-source\fP  
+\fBinstall-package\fP  
 \fBuninstall\fP   
 .RE
 

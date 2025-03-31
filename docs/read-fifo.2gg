@@ -43,7 +43,7 @@ start-loop
 
     // Check if no more data
     if-true st not-equal GG_OKAY
-        break
+        break-loop
     end-if
 
     @Obtained key <<p-out k>> with value <<p-out v>>
@@ -55,7 +55,7 @@ rewind-fifo mylist
 start-loop
     read-fifo mylist key k value v status st
     if-true st not-equal GG_OKAY
-        break
+        break-loop
     end-if
     @Again obtained key <<p-out k>> with value <<p-out v>>
 end-loop

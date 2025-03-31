@@ -1,24 +1,26 @@
 Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. 
 
-[Apache 2](https://golf-lang.com//license.html) Free Open Source License\. 
-
-[About Golf](https://golf-lang.com//about-golf.html)\. 
+[Install Golf](https://golf-lang.com//install.html)\.
 
 [Hello World](https://golf-lang.com//123-hello-world.html)\. 
 
-[Install Golf](https://golf-lang.com//install.html) from source, or by using [Linux packagers](https://golf-lang.com//install-binary.html) \(such as apt\)\. 
+[Blog](https://golf-lang.blogspot.com/) has useful articles and changelog\.
 
 [Documentation](https://golf-lang.com//documentation.html)\.  
 
+[About Golf](https://golf-lang.com//about-golf.html)\. 
+
+[Apache 2](https://golf-lang.com//license.html) Free Open Source License\. 
+
 [Source on github\.com](https://github.com/golf-lang/golf)\. 
 
-[Blog](https://golf-lang.blogspot.com/) has useful articles and changelog\.
 
-Current version is 335\. This release passed 2346 automated functional tests\.
+Current version is 338\. This release passed 2346 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-03\-29 [FIFO in Golf](https://golf-lang.blogspot.com/2025/03/fifo-in-golf.html)
 * 2025\-03\-23 [How to debug Golf programs with gdb](https://golf-lang.blogspot.com/2025/03/how-to-debug-golf-programs-with-gdb.html)
 * 2025\-03\-19 [Maximum file size uploaded to Golf server](https://golf-lang.blogspot.com/2025/03/maximum-file-size-uploaded-to-golf.html)
 * 2025\-03\-15 [How to make Arch Linux pacman package](https://golf-lang.blogspot.com/2025/03/how-to-make-arch-linux-pacman-package.html)
@@ -59,6 +61,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 
 Releases:
+* 2025\-03\-31 [Golf 338 released](https://golf-lang.blogspot.com/2025/03/golf-338-released.html)
 * 2025\-03\-16 [Golf 324 released](https://golf-lang.blogspot.com/2025/03/golf-324-released.html)
 * 2025\-03\-11 [Golf 297 released](https://golf-lang.blogspot.com/2025/03/golf-297-released.html)
 * 2025\-03\-11 [Golf 295 released](https://golf-lang.blogspot.com/2025/03/golf-295-released.html)
