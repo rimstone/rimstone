@@ -74,7 +74,12 @@ If your distro isn't described here, or you don't want to install this way, you 
 \fBinstall-golf-for-debian-from-source\fP  
 \fBinstall-golf-for-fedora-from-source\fP  
 \fBinstall-golf-for-opensuse-from-source\fP  
-\fBinstall-package\fP  
+\fBinstall-golf-package-for-arch\fP  
+\fBinstall-golf-package-for-debian\fP  
+\fBinstall-golf-package-for-fedora\fP  
+\fBinstall-golf-package-for-opensuse\fP  
+\fBinstall-golf-package-for-redhat\fP  
+\fBinstall-golf-package-for-ubuntu\fP  
 \fBuninstall\fP   
 See all 
 \fBdocumentation\fP

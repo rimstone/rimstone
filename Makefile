@@ -170,7 +170,7 @@ install:
 	install -D -m 0644 golf.te -t $(DESTDIR)$(V_LIB)/selinux 
 	install -D -m 0644 gg.fc -t $(DESTDIR)$(V_LIB)/selinux 
 	install -D -m 0755 golf.sel -t $(DESTDIR)$(V_LIB)/selinux ; 
-	if [[ "$(DESTDIR)" == "" && -f /etc/selinux/config ]]; then ./golf.sel "$(DESTDIR)$(V_LIB)/selinux" "$(DESTDIR)$(V_GG_DATADIR)" "$(DESTDIR)$(V_BIN)"; fi 
+	if [ -f /etc/selinux/config ]; then $(DESTDIR)$(V_LIB)/selinux/golf.sel "$(DESTDIR)$(V_LIB)/selinux" "$(DESTDIR)$(V_GG_DATADIR)" "$(DESTDIR)$(V_BIN)"; fi
 
 .PHONY: uninstall
 uninstall:

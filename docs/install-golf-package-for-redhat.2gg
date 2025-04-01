@@ -1,54 +1,18 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-install-golf-for-debian-from-source \- Golf documentation (download-and-build)
+install-golf-package-for-redhat \- Golf documentation (download-and-build)
 .SH DESCRIPTION
 
 .LP
-.B GET LATEST GOLF SOURCE CODE
-.LP
-
-Get Golf source code for the latest version:
-
-.RS 4
-.EX
-
-sudo apt update
-sudo apt -y install git
-git clone --depth 1 https://github.com/golf-lang/golf.git
-cd golf
-
-.EE
-.RE
-
-
-.LP
-.B INSTALL DEPENDENCIES
+.B INSTALL GOLF PACKAGE ON REDHAT 9
 .LP
 
 
 .RS 4
 .EX
 
-sudo apt update
-sudo apt -y install devscripts equivs build-essential 
-yes|mk-build-deps -i -s sudo debian/control
-
-.EE
-.RE
-
-
-.LP
-.B BUILD GOLF
-.LP
-
-Use DI=1 to build debug version, leave it as-is for production:
-
-.RS 4
-.EX
-
-make clean
-make DI=0
-sudo make install
+wget "https://golf-lang.com/packages/fedora-redhat-9/golf-343-1.el9.x86_64.rpm" -O golf-343-1.el9.x86_64.rpm
+sudo dnf -y install ./golf-343-1.el9.x86_64.rpm
 
 .EE
 .RE
