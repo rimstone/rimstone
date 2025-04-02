@@ -19,7 +19,7 @@ Golf is a programming language and  application server for building web services
 \fBSource on github.com\fP. 
 
 
-Current version is 351. This release passed 2346 automated functional tests.
+Current version is 353. This release passed 2346 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
@@ -263,7 +263,7 @@ Releases:
 
 .RS 4
 \[bu]    
-2025-03-31 \fBGolf 351 released\fP
+2025-03-31 \fBGolf 353 released\fP
 .RE
 
 

@@ -11,8 +11,8 @@ install-golf-package-for-opensuse \- Golf documentation (download-and-build)
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/opensuse-opensuse-tumbleweed/golf-351-1.x86_64.rpm" -O golf-351-1.x86_64.rpm
-sudo zypper -n install --allow-unsigned-rpm --replacefiles ./golf-351-1.x86_64.rpm
+wget "https://golf-lang.com/packages/opensuse-opensuse-tumbleweed/golf-353-1.x86_64.rpm" -O golf-353-1.x86_64.rpm
+sudo zypper -n install --allow-unsigned-rpm --replacefiles ./golf-353-1.x86_64.rpm
 
 .EE
 .RE

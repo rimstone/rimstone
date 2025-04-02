@@ -11,8 +11,8 @@ install-golf-package-for-fedora \- Golf documentation (download-and-build)
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/fedora-fedora-41/golf-351-1.fc41.x86_64.rpm" -O golf-351-1.fc41.x86_64.rpm
-sudo dnf -y install ./golf-351-1.fc41.x86_64.rpm
+wget "https://golf-lang.com/packages/fedora-fedora-41/golf-353-1.fc41.x86_64.rpm" -O golf-353-1.fc41.x86_64.rpm
+sudo dnf -y install ./golf-353-1.fc41.x86_64.rpm
 
 .EE
 .RE
