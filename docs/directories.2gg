@@ -72,7 +72,6 @@ ln -s /home/disk0/file /var/lib/gg/<app name>/app/file
 .B - General
 
 \fBabout-golf\fP  
-\fBdirectories\fP  
-\fBSELinux\fP   
+\fBdirectories\fP   
 See all 
 \fBdocumentation\fP

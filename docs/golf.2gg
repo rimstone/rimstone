@@ -2,24 +2,39 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
-Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. 
+Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBabout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBBlog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP. 
 
-\fBInstall Golf\fP.
+.LP
+.B INSTALL
+.LP
 
-\fBHello World\fP. 
+Install Golf on Ubuntu (or similar):
 
-\fBBlog\fP has useful articles and changelog.
+.RS 4
+.EX
 
-\fBDocumentation\fP.  
+sudo add-apt-repository ppa:golf-lang/golf -y
+sudo apt update
+sudo apt -y install golf
 
-\fBAbout Golf\fP. 
+.EE
+.RE
 
-\fBApache 2\fP Free Open Source License. 
+or install Golf on Redhat (and similar):
 
-\fBSource on github.com\fP. 
+.RS 4
+.EX
 
+sudo dnf install epel-release
+sudo dnf copr enable golf-lang/golf-lang
+sudo apt install golf
 
-Current version is 353. This release passed 2346 automated functional tests.
+.EE
+.RE
+
+You can also \fBinstall-golf-for-ubuntu-from-source\fP or \fBinstall-golf-for-redhat-from-source\fP
+
+Current version is 358. This release passed 2346 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
@@ -45,12 +60,6 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2025-03-15 \fBHow to make Arch Linux pacman package\fP
-.RE
-
-
-.RS 4
-\[bu]    
 2025-03-10 \fBHow to know Golf version\fP
 .RE
 
@@ -58,12 +67,6 @@ Example of Golf code (from \fBSaaS example\fP):
 .RS 4
 \[bu]    
 2025-03-01 \fBWeb framework for C programming language\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2025-02-24 \fBMake RPM package on Fedora and RedHat\fP
 .RE
 
 
@@ -263,7 +266,7 @@ Releases:
 
 .RS 4
 \[bu]    
-2025-03-31 \fBGolf 353 released\fP
+2025-03-31 \fBGolf 358 released\fP
 .RE
 
 

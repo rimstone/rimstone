@@ -24,7 +24,7 @@
 
 
 // Version+Release. We use major plus minor plus release, as in 1.3.34,2.1.11,3.7.41... 
-#define GG_VERSION "353"
+#define GG_VERSION "358"
 
 // Client error codes
 #define GG_OKAY 0 // success

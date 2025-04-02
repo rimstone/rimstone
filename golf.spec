@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    353
+Version:    358
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Gliim LLC
@@ -13,10 +13,10 @@ Group:      Development/Tools
 License:    Apache-2.0
 Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{version}.tar.gz 
 
+
 #Make sure to install EPEL (currently just for fcgi/fcgi_devel): sudo dnf install epel-release
 
-%define build_requires make gcc openssl-devel libcurl-devel rpm-build rpmlint pcre2-devel libxml2-devel
-%define suse_build_requires %build_requires
+%define all_requires make gcc openssl-devel libcurl-devel pcre2-devel libxml2-devel
 
 #python utils for selinux, only for rhel
 %if 0%{?rhel} 
@@ -32,7 +32,9 @@ Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{versi
 #OPENSUSE has no default policy: no SELINUX
 #OPENSUSE:FastCGI is for cgi-fcgi utility
 %if 0%{?is_opensuse} == 1
-BuildRequires: %suse_build_requires libmariadb-devel gpg sshpass FastCGI FastCGI-devel postgresql-devel sqlite3-devel
+%define suse_requires %all_requires libmariadb-devel gpg sshpass FastCGI FastCGI-devel postgresql-devel sqlite3-devel
+BuildRequires: %suse_requires 
+Requires: %suse_requires 
 
 %else
 #MAGEIA:sudo dnf -y install rpmdevtools dnf-utils
@@ -40,12 +42,16 @@ BuildRequires: %suse_build_requires libmariadb-devel gpg sshpass FastCGI FastCGI
 #MAGEIA:fcgi is for cgi-fcgi utility
 %if 0%{?mgaversion} >= 8
 #SELINUX:policycoreutils policycoreutils-devel libselinux-utils
-BuildRequires: %build_requires mariadb-devel libfcgi-devel postgresql-devel policycoreutils policycoreutils-devel libselinux-utils sqlite3-devel
+%define mga_requires %all_requires mariadb-devel libfcgi-devel postgresql-devel policycoreutils policycoreutils-devel libselinux-utils sqlite3-devel
+BuildRequires: %mga_requires 
+Requires: %mga_requires 
 
 %else
 #SELINUX:policycoreutils policycoreutils-devel libselinux-utils
 #fcgi is for cgi-fcgi utility; sometimes it's packaged within fcgi-devel and sometimes not.
-BuildRequires: %build_requires mariadb-connector-c-devel fcgi-devel libpq-devel policycoreutils policycoreutils-devel libselinux-utils sqlite-devel
+%define rh_requires %all_requires mariadb-connector-c-devel fcgi-devel libpq-devel policycoreutils policycoreutils-devel libselinux-utils sqlite-devel
+BuildRequires: %rh_requires %{?rhel_sel}
+Requires: %rh_requires %{?rhel_sel}
 %endif
 %endif
 
@@ -62,7 +68,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-353
+%autosetup -n %{name}-358
 
 %build
 make clean

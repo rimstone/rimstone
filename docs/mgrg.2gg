@@ -58,7 +58,7 @@ Run in the foreground. The process does not return to the command line prompt un
 .RS 4
 \[bu]    
 -p <port number>
-TCP/IP port number your service program will listen on (and accept connections), if you are using TCP/IP. You typically need to specify ProxyPass, "location" or similar FastCGI directives in your proxy web server so it can connect to your application. If you are using \fBClient-API\fP or \fBcall-remote\fP, you would use "<host name>:<port number>", for instance "127.0.0.1:2301" if the server is local and <port number> is 2301. You can either use TCP/IP or Unix domain sockets (-x option). Typically, you would use Unix domain sockets if proxy web server runs on the same computer as your application server. If you specify neither -x nor -p, -x (unix domain socket) is the default. See \fBSELinux\fP if you are using it, as additional steps may be required.
+TCP/IP port number your service program will listen on (and accept connections), if you are using TCP/IP. You typically need to specify ProxyPass, "location" or similar FastCGI directives in your proxy web server so it can connect to your application. If you are using \fBClient-API\fP or \fBcall-remote\fP, you would use "<host name>:<port number>", for instance "127.0.0.1:2301" if the server is local and <port number> is 2301. You can either use TCP/IP or Unix domain sockets (-x option). Typically, you would use Unix domain sockets if proxy web server runs on the same computer as your application server. If you specify neither -x nor -p, -x (unix domain socket) is the default. 
 
 .RE
 

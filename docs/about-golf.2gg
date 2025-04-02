@@ -206,7 +206,6 @@ Do not use object names (such as variables and request names) that start with "_
 .B - General
 
 \fBabout-golf\fP  
-\fBdirectories\fP  
-\fBSELinux\fP   
+\fBdirectories\fP   
 See all 
 \fBdocumentation\fP

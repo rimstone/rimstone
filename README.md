@@ -1,21 +1,20 @@
-Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. 
+Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [about Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf)\. 
+## Install
+Install Golf on Ubuntu \(or similar\):
+```
+sudo add-apt-repository ppa:golf-lang/golf -y
+sudo apt update
+sudo apt -y install golf
+```
+or install Golf on Redhat \(and similar\):
+```
+sudo dnf install epel-release
+sudo dnf copr enable golf-lang/golf-lang
+sudo apt install golf
+```
+You can also [install\-golf\-for\-ubuntu\-from\-source](https://golf-lang.com/install-golf-for-ubuntu-from-source.html) or [install\-golf\-for\-redhat\-from\-source](https://golf-lang.com/install-golf-for-redhat-from-source.html)
 
-[Install Golf](https://golf-lang.com//install.html)\.
-
-[Hello World](https://golf-lang.com//123-hello-world.html)\. 
-
-[Blog](https://golf-lang.blogspot.com/) has useful articles and changelog\.
-
-[Documentation](https://golf-lang.com//documentation.html)\.  
-
-[About Golf](https://golf-lang.com//about-golf.html)\. 
-
-[Apache 2](https://golf-lang.com//license.html) Free Open Source License\. 
-
-[Source on github\.com](https://github.com/golf-lang/golf)\. 
-
-
-Current version is 353\. This release passed 2346 automated functional tests\.
+Current version is 358\. This release passed 2346 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
@@ -23,10 +22,8 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2025\-03\-29 [FIFO in Golf](https://golf-lang.blogspot.com/2025/03/fifo-in-golf.html)
 * 2025\-03\-23 [How to debug Golf programs with gdb](https://golf-lang.blogspot.com/2025/03/how-to-debug-golf-programs-with-gdb.html)
 * 2025\-03\-19 [Maximum file size uploaded to Golf server](https://golf-lang.blogspot.com/2025/03/maximum-file-size-uploaded-to-golf.html)
-* 2025\-03\-15 [How to make Arch Linux pacman package](https://golf-lang.blogspot.com/2025/03/how-to-make-arch-linux-pacman-package.html)
 * 2025\-03\-10 [How to know Golf version](https://golf-lang.blogspot.com/2025/03/how-to-know-golf-version.html)
 * 2025\-03\-01 [Web framework for C programming language](https://golf-lang.blogspot.com/2025/03/web-framework-for-c-programming-language.html)
-* 2025\-02\-24 [Make RPM package on Fedora and RedHat](https://golf-lang.blogspot.com/2025/02/how-to-create-installation-package-for.html)
 * 2025\-02\-23 [DEB package on Ubuntu and Debian](https://golf-lang.blogspot.com/2025/02/create-deb-installation-package-for-golf.html)
 * 2025\-02\-21 [34000 requests per second on a modest laptop](https://golf-lang.blogspot.com/2025/02/34000-server-requests-per-second-to.html)
 * 2025\-02\-12 [Use C language API to talk to Golf Server](https://golf-lang.blogspot.com/2025/02/use-c-language-api-to-talk-to-golf.html)
@@ -61,7 +58,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 
 Releases:
-* 2025\-03\-31 [Golf 353 released](https://golf-lang.blogspot.com/2025/03/golf-338-released.html)
+* 2025\-03\-31 [Golf 358 released](https://golf-lang.blogspot.com/2025/03/golf-338-released.html)
 * 2025\-03\-16 [Golf 324 released](https://golf-lang.blogspot.com/2025/03/golf-324-released.html)
 * 2025\-03\-11 [Golf 297 released](https://golf-lang.blogspot.com/2025/03/golf-297-released.html)
 * 2025\-03\-11 [Golf 295 released](https://golf-lang.blogspot.com/2025/03/golf-295-released.html)

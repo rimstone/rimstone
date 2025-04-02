@@ -104,7 +104,7 @@ During building of an application, emit a maximum of <max errors> diagnostic mes
 .RS 4
 \[bu]    
 --debug
-Generate debugging information when compiling your application. Debugging information is required to produce a backtrace file with the stack that contains source code line numbers, in order to pinpoint the exact location where report-error statement was used, or where the application crashed. It is also needed to use gdb for debugging purposes. Note that stack information is produced only when Golf is built in debugging mode (see "DI=1" option when \fBinstall\fPing Golf).
+Generate debugging information when compiling your application. Debugging information is required to produce a backtrace file with the stack that contains source code line numbers, in order to pinpoint the exact location where report-error statement was used, or where the application crashed. It is also needed to use gdb for debugging purposes. Note that stack information is produced only when Golf is built in debugging mode (see "DI=1" option when \fBinstalling\fP Golf).
 
 
 .RE

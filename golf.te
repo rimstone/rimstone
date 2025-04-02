@@ -25,4 +25,3 @@ allow httpd_t gg_t:unix_stream_socket connectto;
 allow httpd_t ggfile_t:sock_file write;
 #allow web server to connect to golf processes only
 allow httpd_t ggport_t:tcp_socket name_connect;
-

@@ -22,12 +22,22 @@ sudo make uninstall
 .B UNINSTALL GOLF IF INSTALLED FROM PACKAGE
 .LP
 
-Use your distribution packager, for instance for Debian:
+For Ubuntu:
 
 .RS 4
 .EX
 
 sudo apt remove golf
+
+.EE
+.RE
+
+For Redhat:
+
+.RS 4
+.EX
+
+sudo dnf remove golf
 
 .EE
 .RE
@@ -42,18 +52,8 @@ Note that /var/lib/gg directory is not removed, as it generally contains applica
  lrnDownload and buildelrn
 .B - Download and build
 
-\fBinstall\fP  
-\fBinstall-from-external-sources\fP  
-\fBinstall-golf-for-arch-from-source\fP  
-\fBinstall-golf-for-debian-from-source\fP  
-\fBinstall-golf-for-fedora-from-source\fP  
-\fBinstall-golf-for-opensuse-from-source\fP  
-\fBinstall-golf-package-for-arch\fP  
-\fBinstall-golf-package-for-debian\fP  
-\fBinstall-golf-package-for-fedora\fP  
-\fBinstall-golf-package-for-opensuse\fP  
-\fBinstall-golf-package-for-redhat\fP  
-\fBinstall-golf-package-for-ubuntu\fP  
+\fBinstall-golf-for-redhat-from-source\fP  
+\fBinstall-golf-for-ubuntu-from-source\fP  
 \fBuninstall\fP   
 See all 
 \fBdocumentation\fP

@@ -394,6 +394,3 @@ libgolfscli.so: gcli.c gcli.h golf.h
 	rm -f libgolfscli.so
 	$(CC) -shared -o libgolfscli.so $^ $(CFLAGS) -DGG_GOLFSRV
 	$(call strip_sym)
-
-
-
