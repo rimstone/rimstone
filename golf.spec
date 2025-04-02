@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    343
+Version:    351
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Gliim LLC
@@ -62,7 +62,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-343
+%autosetup -n %{name}-351
 
 %build
 make clean
@@ -70,7 +70,15 @@ make
 
 %install
 rm -rf %{buildroot}/*
-make DESTDIR="%{buildroot}" install
+#GG_FAKEROOT=1 means do not install selinux script to generate policy. This should be done only when sudo make install (from source)
+#or when actually installing the rpm (in which case install doesn't run at all)
+#GG_FAKEROOT=1 basically means this is fake root.
+make DESTDIR="%{buildroot}" GG_FAKEROOT=1 install
+
+%post
+#since %post runs during installation, execute selinux.setup
+/usr/lib/golf/selinux/selinux.setup
+
 
 %files
 %license LICENSE
@@ -143,6 +151,7 @@ make DESTDIR="%{buildroot}" install
 /usr/lib/golf/selinux/gg.fc
 /usr/lib/golf/selinux/golf.te
 /usr/lib/golf/selinux/golf.sel
+/usr/lib/golf/selinux/selinux.setup
 #/usr/lib/selinux/golf.pp
 #/usr/lib/selinux/gg.pp
 #SELINUXEND

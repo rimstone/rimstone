@@ -11,8 +11,8 @@ install-golf-package-for-redhat \- Golf documentation (download-and-build)
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/fedora-redhat-9/golf-343-1.el9.x86_64.rpm" -O golf-343-1.el9.x86_64.rpm
-sudo dnf -y install ./golf-343-1.el9.x86_64.rpm
+wget "https://golf-lang.com/packages/fedora-redhat-9/golf-351-1.el9.x86_64.rpm" -O golf-351-1.el9.x86_64.rpm
+sudo dnf -y install ./golf-351-1.el9.x86_64.rpm
 
 .EE
 .RE

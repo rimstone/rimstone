@@ -169,8 +169,14 @@ install:
 	install -D -m 0644 gg.te -t $(DESTDIR)$(V_LIB)/selinux 
 	install -D -m 0644 golf.te -t $(DESTDIR)$(V_LIB)/selinux 
 	install -D -m 0644 gg.fc -t $(DESTDIR)$(V_LIB)/selinux 
-	install -D -m 0755 golf.sel -t $(DESTDIR)$(V_LIB)/selinux ; 
-	if [ -f /etc/selinux/config ]; then $(DESTDIR)$(V_LIB)/selinux/golf.sel "$(DESTDIR)$(V_LIB)/selinux" "$(DESTDIR)$(V_GG_DATADIR)" "$(DESTDIR)$(V_BIN)"; fi
+	install -D -m 0755 golf.sel -t $(DESTDIR)$(V_LIB)/selinux 
+#this selinux.setup will be executed in rpm post section, and here (below) if this is a system with SELinux
+#the text saved to selinux.setup does NOT use DESTDIR, since this script never runs in fake root, meaning if it does run, then DESTDIR is empty (which is
+#sudo make install from source) or it runs during %post section when installing package. So in either case, not a fake root.
+#This way we also have a script to re-run policy setup if something isn't right
+	echo '$(V_LIB)/selinux/golf.sel "$(V_LIB)/selinux" "$(V_GG_DATADIR)" "$(V_BIN)"'>selinux.setup; install -D -m 0755 selinux.setup -t $(DESTDIR)$(V_LIB)/selinux
+#this has to be double negation because it's purpose is to prevent selinux setup in fake root, which is only from golf.spec rpmbuild where GG_NOSEL is set to 1
+	if [[ "$(GG_FAKEROOT)" != "1" && -f /etc/selinux/config ]]; then $(DESTDIR)$(V_LIB)/selinux/selinux.setup; fi
 
 .PHONY: uninstall
 uninstall:

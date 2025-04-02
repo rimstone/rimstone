@@ -11,8 +11,8 @@ install-golf-package-for-arch \- Golf documentation (download-and-build)
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/arch-archlinux-rolling/golf-343-0-x86_64.pkg.tar.zst" -O golf-343-0-x86_64.pkg.tar.zst
-sudo pacman -U --noconfirm ./golf-343-0-x86_64.pkg.tar.zst
+wget "https://golf-lang.com/packages/arch-archlinux-rolling/golf-351-0-x86_64.pkg.tar.zst" -O golf-351-0-x86_64.pkg.tar.zst
+sudo pacman -U --noconfirm ./golf-351-0-x86_64.pkg.tar.zst
 
 .EE
 .RE

@@ -11,9 +11,9 @@ install-golf-package-for-ubuntu \- Golf documentation (download-and-build)
 .RS 4
 .EX
 
-wget "https://golf-lang.com/packages/debian-ubuntu-24/golf_343_amd64.deb" -O golf_343_amd64.deb
+wget "https://golf-lang.com/packages/debian-ubuntu-24/golf_351_amd64.deb" -O golf_351_amd64.deb
 sudo apt update
-sudo apt -y install ./golf_343_amd64.deb
+sudo apt -y install ./golf_351_amd64.deb
 
 .EE
 .RE
