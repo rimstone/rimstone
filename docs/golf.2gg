@@ -25,16 +25,16 @@ or install Golf on Redhat (and similar):
 .RS 4
 .EX
 
-sudo dnf install epel-release
-sudo dnf copr enable golf-lang/golf-lang
-sudo apt install golf
+sudo dnf -y install epel-release
+sudo dnf -y copr enable golf-lang/golf-lang
+sudo dnf -y install golf
 
 .EE
 .RE
 
 You can also \fBinstall-golf-for-ubuntu-from-source\fP or \fBinstall-golf-for-redhat-from-source\fP
 
-Current version is 358. This release passed 2346 automated functional tests.
+Current version is 361. This release passed 2346 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
@@ -266,7 +266,7 @@ Releases:
 
 .RS 4
 \[bu]    
-2025-03-31 \fBGolf 358 released\fP
+2025-03-31 \fBGolf 361 released\fP
 .RE
 
 

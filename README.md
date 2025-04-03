@@ -8,13 +8,13 @@ sudo apt -y install golf
 ```
 or install Golf on Redhat \(and similar\):
 ```
-sudo dnf install epel-release
-sudo dnf copr enable golf-lang/golf-lang
-sudo apt install golf
+sudo dnf -y install epel-release
+sudo dnf -y copr enable golf-lang/golf-lang
+sudo dnf -y install golf
 ```
 You can also [install\-golf\-for\-ubuntu\-from\-source](https://golf-lang.com/install-golf-for-ubuntu-from-source.html) or [install\-golf\-for\-redhat\-from\-source](https://golf-lang.com/install-golf-for-redhat-from-source.html)
 
-Current version is 358\. This release passed 2346 automated functional tests\.
+Current version is 361\. This release passed 2346 automated functional tests\.
 
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
@@ -58,7 +58,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 
 Releases:
-* 2025\-03\-31 [Golf 358 released](https://golf-lang.blogspot.com/2025/03/golf-338-released.html)
+* 2025\-03\-31 [Golf 361 released](https://golf-lang.blogspot.com/2025/03/golf-338-released.html)
 * 2025\-03\-16 [Golf 324 released](https://golf-lang.blogspot.com/2025/03/golf-324-released.html)
 * 2025\-03\-11 [Golf 297 released](https://golf-lang.blogspot.com/2025/03/golf-297-released.html)
 * 2025\-03\-11 [Golf 295 released](https://golf-lang.blogspot.com/2025/03/golf-295-released.html)

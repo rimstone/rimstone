@@ -174,7 +174,7 @@ install:
 #the text saved to selinux.setup does NOT use DESTDIR, since this script never runs in fake root, meaning if it does run, then DESTDIR is empty (which is
 #sudo make install from source) or it runs during %post section when installing package. So in either case, not a fake root.
 #This way we also have a script to re-run policy setup if something isn't right
-	echo '$(V_LIB)/selinux/golf.sel "$(V_LIB)/selinux" "$(V_GG_DATADIR)" "$(V_BIN)"'>selinux.setup; install -D -m 0755 selinux.setup -t $(DESTDIR)$(V_LIB)/selinux
+	install -D -m 0755 selinux.setup -t $(DESTDIR)$(V_LIB)/selinux
 #this has to be double negation because it's purpose is to prevent selinux setup in fake root, which is only from golf.spec rpmbuild where GG_NOSEL is set to 1
 	if [[ "$(GG_FAKEROOT)" != "1" && -f /etc/selinux/config ]]; then $(DESTDIR)$(V_LIB)/selinux/selinux.setup; fi
 
@@ -194,7 +194,7 @@ binary:build
 	@;
 
 .PHONY: build
-build: libsrvcgolf.so libgolfcli.so libgolfscli.so libgolf.so libgolfdb.so libgolfsec.so libgolfmys.so libgolflite.so libgolfpg.so libgolfcurl.so libgolfxml.so libgolfarr.so libgolftree.so libgolfpcre2.so stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_xml.o stub_arr.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg v1
+build: libsrvcgolf.so libgolfcli.so libgolfscli.so libgolf.so libgolfdb.so libgolfsec.so libgolfmys.so libgolflite.so libgolfpg.so libgolfcurl.so libgolfxml.so libgolfarr.so libgolftree.so libgolfpcre2.so stub_sqlite.o stub_postgres.o stub_mariadb.o stub_gendb.o stub_curl.o stub_xml.o stub_arr.o stub_tree.o stub_pcre2.o stub_srvc.o stub_crypto.o stub_after.o stub_before.o mgrg v1 selinux.setup
 	@echo "Building version $(PACKAGE_VERSION)"
 
 .PHONY: clean
@@ -206,6 +206,7 @@ clean:
 	rm -f *.o
 	rm -f *.so
 	rm -f *.dbg
+	rm -f selinux.setup
 
 
 
@@ -220,6 +221,9 @@ v1.o: v1.c golf.h
 v1: v1.o golfmems.o chandle.o golfrtc.o hash.o  
 	$(CC) -o v1 $^ $(LDFLAGS) 
 	$(call strip_sym)
+
+selinux.setup:
+	echo '$(V_LIB)/selinux/golf.sel "$(V_LIB)/selinux" "$(V_GG_DATADIR)" "$(V_BIN)"'>selinux.setup; chmod 0755 selinux.setup
 
 mgrg: mgrg.o 
 	$(CC) -o mgrg mgrg.o $(LDFLAGS)

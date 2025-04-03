@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 #SPDX-License-Identifier: Apache-2.0
 #Copyright 2018 Gliim LLC. 
 #Licensed under Apache License v2. See LICENSE file.
@@ -13,9 +13,9 @@ DDIR="$2"
 BDIR="$3"
 
 cd $LDIR
-mkdir -p tmp
-cp -f gg.te gg.fc golf.te tmp/
-cd tmp
+mkdir -p $LDIR/tmp
+cp -f gg.te gg.fc golf.te $LDIR/tmp/
+cd $LDIR/tmp
 make -f /usr/share/selinux/devel/Makefile gg.pp 
 install -D -m 0600 gg.pp -t $DDIR/selinux/packages/ 
 checkmodule -M -m -o golf.mod golf.te 
@@ -38,4 +38,4 @@ if [ -d "/var/lib/gg" ]; then
 fi
 
 cd $LDIR
-rm -rf tmp
+rm -rf $LDIR/tmp
