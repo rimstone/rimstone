@@ -223,7 +223,9 @@ v1: v1.o golfmems.o chandle.o golfrtc.o hash.o
 	$(call strip_sym)
 
 selinux.setup:
-	echo '$(V_LIB)/selinux/golf.sel "$(V_LIB)/selinux" "$(V_GG_DATADIR)" "$(V_BIN)"'>selinux.setup; chmod 0755 selinux.setup
+	echo '#!/usr/bin/bash'>selinux.setup
+	echo '$(V_LIB)/selinux/golf.sel "$(V_LIB)/selinux" "$(V_GG_DATADIR)" "$(V_BIN)"'>>selinux.setup
+	chmod 0755 selinux.setup
 
 mgrg: mgrg.o 
 	$(CC) -o mgrg mgrg.o $(LDFLAGS)

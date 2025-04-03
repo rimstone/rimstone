@@ -34,7 +34,7 @@ sudo dnf -y install golf
 
 You can also \fBinstall-golf-for-ubuntu-from-source\fP or \fBinstall-golf-for-redhat-from-source\fP
 
-Current version is 361. This release passed 2346 automated functional tests.
+Current version is 363. This release passed 2346 automated functional tests.
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
@@ -266,7 +266,7 @@ Releases:
 
 .RS 4
 \[bu]    
-2025-03-31 \fBGolf 361 released\fP
+2025-03-31 \fBGolf 363 released\fP
 .RE
 
 

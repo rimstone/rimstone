@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    361
+Version:    363
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Gliim LLC
@@ -68,7 +68,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-361
+%autosetup -n %{name}-363
 
 %build
 make clean
@@ -83,7 +83,7 @@ make DESTDIR="%{buildroot}" GG_FAKEROOT=1 install
 
 %post
 #since %post runs during installation, execute selinux.setup
-/usr/lib/golf/selinux/selinux.setup
+sudo /usr/lib/golf/selinux/selinux.setup
 
 
 %files
