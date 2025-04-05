@@ -2868,7 +2868,7 @@ void gg_break_down (char *value, char *delim, gg_split_str **broken_ptr)
         // right trim
         char *end_piece;
         char first_of_delim=0;
-        char trim_char;
+        char trim_char=0;
         // end when no delimiter found
         if (pos_delim==NULL) 
         {

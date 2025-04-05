@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    363
+Version:    366
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Gliim LLC
@@ -31,7 +31,8 @@ Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{versi
 #OPENSUSE:sudo yum-builddep -y golf.spec (bug with rpmutils missing, however)
 #OPENSUSE has no default policy: no SELINUX
 #OPENSUSE:FastCGI is for cgi-fcgi utility
-%if 0%{?is_opensuse} == 1
+#Note: is_opensuse does seem to work on Tumbleweed, but not on Leap (where sle_version works)
+%if 0%{?sle_version} ||  0%{?is_opensuse}
 %define suse_requires %all_requires libmariadb-devel gpg sshpass FastCGI FastCGI-devel postgresql-devel sqlite3-devel
 BuildRequires: %suse_requires 
 Requires: %suse_requires 
@@ -68,7 +69,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-363
+%autosetup -n %{name}-366
 
 %build
 make clean

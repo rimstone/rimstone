@@ -2,13 +2,12 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
-Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBabout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBBlog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP. 
+Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBBlog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP. 
 
 .LP
-.B INSTALL
+.B INSTALL GOLF ON UBUNTU (VERSIONS 20, 22, 24 AND 25):
 .LP
 
-Install Golf on Ubuntu (or similar):
 
 .RS 4
 .EX
@@ -20,7 +19,12 @@ sudo apt -y install golf
 .EE
 .RE
 
-or install Golf on Redhat (and similar):
+You can also \fBinstall from source\fP.
+
+.LP
+.B INSTALL GOLF ON REDHAT (INCL. ROCKY, ALMA, CENTOS), FEDORA, AMAZON LINUX, MAGEIA OR OPENSUSE:
+.LP
+
 
 .RS 4
 .EX
@@ -32,13 +36,32 @@ sudo dnf -y install golf
 .EE
 .RE
 
-You can also \fBinstall-golf-for-ubuntu-from-source\fP or \fBinstall-golf-for-redhat-from-source\fP
+Note: install dnf on OpenSUSE first. You can also \fBinstall from source\fP.
 
-Current version is 363. This release passed 2346 automated functional tests.
+.LP
+.B CURRENT VERSION
+.LP
+
+Current version is 366. This release passed 2346 automated functional tests.
+
+.LP
+.B EXAMPLE
+.LP
 
 Example of Golf code (from \fBSaaS example\fP):
 (Image home-example.png not available in man page, see web page documentation)
+
+.LP
+.B ARTICLES
+.LP
+
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-04-02 \fBFragmentation of Linux and impact on packaging\fP
+.RE
+
 
 .RS 4
 \[bu]    
@@ -67,6 +90,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .RS 4
 \[bu]    
 2025-03-01 \fBWeb framework for C programming language\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-02-24 \fBMake RPM package on Fedora and RedHat\fP
 .RE
 
 
@@ -262,11 +291,14 @@ Example of Golf code (from \fBSaaS example\fP):
 .RE
 
 
-Releases:
+.LP
+.B RELEASES
+.LP
+
 
 .RS 4
 \[bu]    
-2025-03-31 \fBGolf 363 released\fP
+2025-03-31 \fBGolf 366 released\fP
 .RE
 
 
@@ -472,5 +504,10 @@ Releases:
 \[bu]    
 2024-09-20 \fBGolf 32 released\fP
 .RE
+
+
+.LP
+.B CONTACT
+.LP
 
 Contact email \fBteam@golf-lang.com\fP

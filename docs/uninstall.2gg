@@ -52,8 +52,8 @@ Note that /var/lib/gg directory is not removed, as it generally contains applica
  lrnDownload and buildelrn
 .B - Download and build
 
-\fBinstall-golf-for-redhat-from-source\fP  
-\fBinstall-golf-for-ubuntu-from-source\fP  
+\fBinstall-golf-from-source-using-apt\fP  
+\fBinstall-golf-from-source-using-dnf\fP  
 \fBuninstall\fP   
 See all 
 \fBdocumentation\fP

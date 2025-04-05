@@ -4,7 +4,7 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 363
+.B REFERENCE FOR GOLF VERSION 366
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -139,8 +139,8 @@ lrnDocumentationelrn
 lrnDownload and buildelrn
 .B - Download and build
 
-\fBinstall-golf-for-redhat-from-source\fP  
-\fBinstall-golf-for-ubuntu-from-source\fP  
+\fBinstall-golf-from-source-using-apt\fP  
+\fBinstall-golf-from-source-using-dnf\fP  
 \fBuninstall\fP   
 .RE
 

@@ -1,6 +1,6 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-install-golf-for-redhat-from-source \- Golf documentation (download-and-build)
+install-golf-from-source-using-apt \- Golf documentation (download-and-build)
 .SH DESCRIPTION
 
 .LP
@@ -12,7 +12,8 @@ Get Golf source code for the latest version:
 .RS 4
 .EX
 
-sudo dnf -y install git
+sudo apt update
+sudo apt -y install git
 git clone --depth 1 https://github.com/golf-lang/golf.git
 cd golf
 
@@ -28,9 +29,9 @@ cd golf
 .RS 4
 .EX
 
-sudo dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-sudo dnf install -y rpmdevtools
-sudo dnf builddep -y golf.spec
+sudo apt update
+sudo apt -y install devscripts equivs build-essential 
+yes|mk-build-deps -i -s sudo debian/control
 
 .EE
 .RE
@@ -57,8 +58,8 @@ Here's how to \fBuninstall\fP.
  lrnDownload and buildelrn
 .B - Download and build
 
-\fBinstall-golf-for-redhat-from-source\fP  
-\fBinstall-golf-for-ubuntu-from-source\fP  
+\fBinstall-golf-from-source-using-apt\fP  
+\fBinstall-golf-from-source-using-dnf\fP  
 \fBuninstall\fP   
 See all 
 \fBdocumentation\fP
