@@ -54,6 +54,7 @@ Note that /var/lib/gg directory is not removed, as it generally contains applica
 
 \fBinstall-golf-from-source-using-apt\fP  
 \fBinstall-golf-from-source-using-dnf\fP  
+\fBinstall-golf-from-source-using-zypper\fP  
 \fBuninstall\fP   
 See all 
 \fBdocumentation\fP

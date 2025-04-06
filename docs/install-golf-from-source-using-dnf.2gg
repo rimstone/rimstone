@@ -59,6 +59,7 @@ Here's how to \fBuninstall\fP.
 
 \fBinstall-golf-from-source-using-apt\fP  
 \fBinstall-golf-from-source-using-dnf\fP  
+\fBinstall-golf-from-source-using-zypper\fP  
 \fBuninstall\fP   
 See all 
 \fBdocumentation\fP

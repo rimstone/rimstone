@@ -4,7 +4,7 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 366
+.B REFERENCE FOR GOLF VERSION 370
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -141,6 +141,7 @@ lrnDownload and buildelrn
 
 \fBinstall-golf-from-source-using-apt\fP  
 \fBinstall-golf-from-source-using-dnf\fP  
+\fBinstall-golf-from-source-using-zypper\fP  
 \fBuninstall\fP   
 .RE
 

@@ -53,6 +53,7 @@ fi
 export GG_C_MAXERRORS="5"
 #plain diagnostics must have value, as it's passed in a script (vdiag) in vmakefile
 export GG_C_PLAINDIAG="0"
+FCGI_INC0="/usr/include/fastcgi"
 
 #defaults for quick install
 _PROXYPORT="80"
@@ -522,6 +523,19 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
 #
 #
 #
+#Get FastCGI include dir
+#
+#
+#
+function fcgi_inc() {
+    #OpenSUSE has FastCGI in fastcgi directory, check in general if it exists, if it does, use it
+    FCGI_INC=FCGI_INC0;
+    if [ ! -f "$FCGI_INC" ]; then FCGI_INC="" ; else FCGI_INC="-I$FCGI_INC" ; fi
+}
+
+#
+#
+#
 #Show flags for client FastCGI app building. 
 #
 #
@@ -534,7 +548,8 @@ function show_client_bld() {
     fi
 #print the flag asked for, if both, place them on the same line
     if [ "$_DO_CLIENT_INCLUDE" == "1" ]; then
-        echo -n "-I$GG_INCLUDE_PATH "
+        fcgi_inc
+        echo -n "-I$GG_INCLUDE_PATH $FCGI_INC "
     fi
     if [ "$_DO_CLIENT_LINK" == "1" ]; then
         echo -n "-L$GG_LIBRARY_PATH -lgolfcli -Wl,--rpath=$GG_LIBRARY_PATH "
@@ -954,6 +969,8 @@ function read_modules() {
     if [ "$_ISMOD_SERVICE" == "1" ]; then
         GG_SERVICE_USED="-DGG_SERVICE_INCLUDE"
         #GG_MODULES="$GG_MODULES -lfcgi" - nothing here since fcgi client implemented from scratch
+        fcgi_inc
+        GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE $FCGI_INC"
         GG_MOD_LIBS="$GG_MOD_LIBS -lgolfscli"
         GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES fcgi"
     else

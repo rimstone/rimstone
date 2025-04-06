@@ -5,7 +5,7 @@ index \- Golf documentation ()
 Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBBlog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP. 
 
 .LP
-.B INSTALL GOLF ON UBUNTU (VERSIONS 20, 22, 24 AND 25):
+.B INSTALL GOLF ON UBUNTU (VERSIONS 20, 22, 24, 25):
 .LP
 
 
@@ -22,7 +22,7 @@ sudo apt -y install golf
 You can also \fBinstall from source\fP.
 
 .LP
-.B INSTALL GOLF ON REDHAT (INCL. ROCKY, ALMA, CENTOS), FEDORA, AMAZON LINUX, MAGEIA OR OPENSUSE:
+.B INSTALL GOLF ON REDHAT (INCL. ROCKY, ALMA, CENTOS), FEDORA, AMAZON LINUX, MAGEIA:
 .LP
 
 
@@ -36,13 +36,41 @@ sudo dnf -y install golf
 .EE
 .RE
 
-Note: install dnf on OpenSUSE first. You can also \fBinstall from source\fP.
+You can also \fBinstall from source\fP.
+
+.LP
+.B INSTALL GOLF ON OPENSUSE:
+.LP
+
+Install OpenSUSE Tumbleweed:
+
+.RS 4
+.EX
+
+sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-tumbleweed/golf-lang-golf-lang-opensuse-tumbleweed.repo
+sudo zypper -n install  golf
+
+.EE
+.RE
+
+Install OpenSUSE Leap 15.6:
+
+.RS 4
+.EX
+
+sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-leap-15.6/golf-lang-golf-lang-opensuse-leap-15.6.repo
+sudo zypper -n install  golf
+
+.EE
+.RE
+
+You can also \fBinstall from source\fP.
 
 .LP
 .B CURRENT VERSION
 .LP
 
-Current version is 366. This release passed 2346 automated functional tests.
+Current version is 370. This release passed 2346 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -56,6 +84,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .LP
 
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-04-05 \fBHow to build OpenSUSE zypper package for Golf\fP
+.RE
+
 
 .RS 4
 \[bu]    
@@ -298,7 +332,7 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2025-03-31 \fBGolf 366 released\fP
+2025-03-31 \fBGolf 370 released\fP
 .RE
 
 

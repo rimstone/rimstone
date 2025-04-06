@@ -224,7 +224,7 @@ v1: v1.o golfmems.o chandle.o golfrtc.o hash.o
 
 selinux.setup:
 	echo '#!/usr/bin/bash'>selinux.setup
-	echo '$(V_LIB)/selinux/golf.sel "$(V_LIB)/selinux" "$(V_GG_DATADIR)" "$(V_BIN)"'>>selinux.setup
+	echo 'if [ -f /etc/selinux/config ]; then $(V_LIB)/selinux/golf.sel "$(V_LIB)/selinux" "$(V_GG_DATADIR)" "$(V_BIN)" ; fi'>>selinux.setup
 	chmod 0755 selinux.setup
 
 mgrg: mgrg.o 

@@ -1,19 +1,18 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-install-golf-from-source-using-apt \- Golf documentation (download-and-build)
+install-golf-from-source-using-zypper \- Golf documentation (download-and-build)
 .SH DESCRIPTION
 
 .LP
 .B GET LATEST GOLF SOURCE CODE
 .LP
 
-Get Golf source code for the latest version:
+You must have git installed. Get Golf source code for the latest version:
 
 .RS 4
 .EX
 
-sudo apt update
-sudo apt -y install git
+sudo zypper --non-interactive in git
 git clone --depth 1 https://github.com/golf-lang/golf.git
 cd golf
 
@@ -29,9 +28,8 @@ cd golf
 .RS 4
 .EX
 
-sudo apt update
-sudo apt -y install devscripts equivs build-essential 
-yes|mk-build-deps -i -s sudo debian/control
+sudo zypper --non-interactive in --replacefiles --force-resolution rpm-build 
+sudo zypper -n install $(rpmspec --parse golf.spec | grep BuildRequires|sed 's/^.*:\e(.*\e)$/\e1/g')
 
 .EE
 .RE
@@ -53,7 +51,6 @@ sudo make install
 .EE
 .RE
 
-Here's how to \fBuninstall\fP.
 .SH SEE ALSO
  lrnDownload and buildelrn
 .B - Download and build
