@@ -26,7 +26,7 @@ sudo zypper -n install  golf
 ```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-zypper.html)\.
 ## Current version
-Current version is 370\. This release passed 2346 automated functional tests\.
+Current version is 373\. This release passed 2346 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
@@ -73,7 +73,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 ## Releases
-* 2025\-03\-31 [Golf 370 released](https://golf-lang.blogspot.com/2025/03/golf-338-released.html)
+* 2025\-03\-31 [Golf 373 released](https://golf-lang.blogspot.com/2025/03/golf-338-released.html)
 * 2025\-03\-16 [Golf 324 released](https://golf-lang.blogspot.com/2025/03/golf-324-released.html)
 * 2025\-03\-11 [Golf 297 released](https://golf-lang.blogspot.com/2025/03/golf-297-released.html)
 * 2025\-03\-11 [Golf 295 released](https://golf-lang.blogspot.com/2025/03/golf-295-released.html)
