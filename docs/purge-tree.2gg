@@ -33,7 +33,7 @@ purge-tree mytree
 .RE
 
 .SH SEE ALSO
- lrnTreeelrn
+ 
 .B - Tree
 
 \fBdelete-tree\fP  

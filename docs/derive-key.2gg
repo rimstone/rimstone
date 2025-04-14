@@ -54,7 +54,7 @@ derive-key mk from "clave secreta" digest "sha-256" salt rs9 salt-length 10 iter
 .RE
 
 .SH SEE ALSO
- lrnEncryptionelrn
+ 
 .B - Encryption
 
 \fBdecrypt-data\fP  

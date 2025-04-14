@@ -132,7 +132,7 @@ send-file "/home/user/file.pdf" headers download content-type "application/pdf"
 .RE
 
 .SH SEE ALSO
- lrnWebelrn
+ 
 .B - Web
 
 \fBcall-web\fP  

@@ -43,9 +43,10 @@ file-position file-id nf get pos
 
 See also \fBopen-file\fP.
 .SH SEE ALSO
- lrnFileselrn
+ 
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  

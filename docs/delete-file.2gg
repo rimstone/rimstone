@@ -30,9 +30,10 @@ delete-file "/home/user/some_file" status st
 .RE
 
 .SH SEE ALSO
- lrnFileselrn
+ 
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  

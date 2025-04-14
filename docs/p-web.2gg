@@ -34,7 +34,7 @@ p-web "We use <hr/> markup"
 
 See \fBp-out\fP for more examples.
 .SH SEE ALSO
- lrnOutputelrn
+ 
 .B - Output
 
 \fBfinish-output\fP  

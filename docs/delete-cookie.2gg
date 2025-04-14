@@ -23,7 +23,7 @@ Newer client implementations require a cookie deletion to use a secure context i
 
 A cookie can be deleted before or after header is sent out (see \fBout-header\fP). However a cookie must be deleted prior to outputting any actual response (such as with \fBoutput-statement\fP or \fBp-out\fP for example), or the request will error out (see \fBerror-handling\fP).
 
-<status> (in "status" clause) is the number that will be GG_ERR_EXIST if the cookie did not exist, or 0 or greater if it did.
+<status> (in "status" clause) is a number that will be GG_ERR_EXIST if the cookie did not exist, or GG_OKAY if it did.
 
 The same cookie name may be stored under different URL paths. You can use "path" clause to specify <cookie path> to ensure the desired cookie is deleted. 
 
@@ -40,7 +40,7 @@ delete-cookie "my_cookie" path "/path" secure is_secure
 .RE
 
 .SH SEE ALSO
- lrnCookieselrn
+ 
 .B - Cookies
 
 \fBdelete-cookie\fP  

@@ -32,7 +32,7 @@ File is created if it does not exist (even if "append" is used), unless "positio
 
 If "length" is not used, then a whole string <content> is written to a file, and the number of bytes written is the length of that string. If "length" is specified, then exactly <length> bytes are written.
 
-If "status" clause is used, then the number of bytes written is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be GG_ERR_POSITION (if <position> is negative or file does not support it), GG_ERR_WRITE (if there is an error writing file) or GG_ERR_OPEN if file cannot be open. Note that no partial data will be written; if all of data cannot be written to the file, then none will be written, and in that case an error of GG_ERR_WRITE will be reported in <status>.
+If "status" clause is used, then the number of bytes written is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be GG_ERR_POSITION (if <position> is negative or file does not support it), GG_ERR_WRITE (if there is an error writing file) or GG_ERR_OPEN if file cannot be open. 
 
 
 .LP
@@ -47,7 +47,7 @@ If "length" is not used, then a whole string is written to a file, and the numbe
 
 If "append" clause is used without boolean variable <append>, or if <append> evaluates to true, then file pointer is set at the end of file and data written.
 
-If "status" clause is used, then the number of bytes written is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be GG_ERR_POSITION (if <position> is negative or file does not support it), GG_ERR_WRITE (if there is an error writing file) or GG_ERR_OPEN if file is not open. Note that no partial data will be written; if all of data cannot be written to the file, then none will be written, and in that case an error of GG_ERR_WRITE will be reported in <status>.
+If "status" clause is used, then the number of bytes written is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be GG_ERR_POSITION (if <position> is negative or file does not support it), GG_ERR_WRITE (if there is an error writing file) or GG_ERR_OPEN if file is not open. 
 
 .SH EXAMPLES
 To overwrite file "/path/to/file" with "Hello World":
@@ -96,9 +96,10 @@ write-file "file" from cont position 3 status st
 
 See \fBopen-file\fP for an example with "file-id" clause.
 .SH SEE ALSO
- lrnFileselrn
+ 
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  

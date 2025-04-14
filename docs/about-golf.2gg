@@ -118,13 +118,15 @@ data (eg. database) layers, and any others.
 
 Golf programming language is memory-safe, meaning it will prevent you from accidentally overwriting memory or freeing it when it shouldn't be. Golf's \fBmemory-handling\fP is not limited to just memory safety; it also includes automatic freeing of memory at the end of a request, preventing memory leaks which can be fatal to long running processes. Similarly, files open with file-handling statements are automatically closed at the end of each request, serving the same purpose. 
 
+Golf goes a step further from memory safety. It also enforces status checking for statements that may cause serious application logic errors. This is done by checking for negative status outcome at run-time, but only if your code does not check for status, and by stopping the application if it happens. This provides for much safer application run-time because it prevents further execution of the program if such outcome happens, and it also forces the developer to add necessary status checks when needed. This feature is automatic and has an extremely low impact on performance.
+
 .LP
 .B TYPES
 .LP
 
 Golf is a strongly-typed language, with only three primitive types (numbers, strings and booleans) and a number of structured types (message, split-string, hash, tree, tree-cursor, fifo, lifo, list, file and service). Golf is a declarative language, with a few lines of code implementing large functionalities. Golf is also very simple - it's near expression-free! That's because it's designed to achieve application goals with less coding.
 
-The number type is a signed 64-bit integer. The boolean type evaluates to true (non-zero) or false (zero). The string type evaluates to any sequence of bytes (binary or text) that is always trailed with a null character regardless, which is not counted in string's length. All constants follow C rules of formatting.
+The number type is a signed 64-bit integer (as a decimal, octal or hexadecimal C notation). The boolean type evaluates to true (non-zero) or false (zero). The string type evaluates to any sequence of bytes (binary or text) that is always trailed with a null character regardless, which is not counted in string's length. All constants follow C rules of formatting.
 
 .LP
 .B STATEMENTS
@@ -202,10 +204,11 @@ In extended mode, Golf is also a \fBweb-framework-for-C-programming-language\fP.
 
 Do not use object names (such as variables and request names) that start with "_gg_" or "gg_" (including upper-case variations) as those are reserved by Golf.
 .SH SEE ALSO
- lrnGeneralelrn
+ 
 .B - General
 
 \fBabout-golf\fP  
-\fBdirectories\fP   
+\fBdirectories\fP  
+\fBpermissions\fP   
 See all 
 \fBdocumentation\fP

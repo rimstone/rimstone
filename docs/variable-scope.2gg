@@ -4,7 +4,7 @@ variable-scope \- Golf documentation (language)
 .SH DESCRIPTION
 Golf uses scope rules for variables that is similar to other programming languages.
 .SH SEE ALSO
- lrnLanguageelrn
+ 
 .B - Language
 
 \fBinline-code\fP  

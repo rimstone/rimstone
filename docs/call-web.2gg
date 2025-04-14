@@ -76,7 +76,7 @@ You can call any valid URL that uses protocol supported by the underlying librar
 .B COOKIES
 .LP
 
-If you'd like to obtain cookies (for example to maintain session or examine their values), use "cookie-jar" clause. <cookie jar> specifies the location of a file holding cookies. Cookies are read from this file (which can be empty or non-existent to begin with) before making a call-web and any changes to cookies are reflected in this file after the call. This way, multiple calls to the same server maintain cookies the same way browser would do. Make sure the same <cookie jar> file is not used across different application spaces, meaning it should be under the application home directory (see \fBdirectories\fP), which is the most likely method of implementation.
+If you'd like to obtain cookies (for example to maintain session or examine their values), use "cookie-jar" clause. <cookie jar> specifies the location of a file holding cookies. Cookies are read from this file (which can be empty or non-existent to begin with) before making a call-web and any changes to cookies are reflected in this file after the call. This way, multiple calls to the same server maintain cookies the same way browser would do. Make sure the same <cookie jar> file is not used across different application spaces, meaning it should be under the application home directory (see \fBdirectories\fP) and not used by multiple requests simultaneously (use different cookie jar file names for that), which is the most likely method of implementation.
 
 .LP
 .B BINARY RESULT
@@ -232,7 +232,7 @@ write-file "pic.jpg" from resp length wlen
 .RE
 
 .SH SEE ALSO
- lrnWebelrn
+ 
 .B - Web
 
 \fBcall-web\fP  

@@ -31,7 +31,7 @@ get-list mylist count size
 .RE
 
 .SH SEE ALSO
- lrnLinked listelrn
+ 
 .B - Linked list
 
 \fBdelete-list\fP  

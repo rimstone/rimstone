@@ -4,17 +4,17 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 373
+.B REFERENCE FOR GOLF VERSION 397
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
-Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl,   lrlBase64elrl,   lrlC languageelrl,   lrlCookieselrl,   lrlDatabaseelrl,   lrlDebuggingelrl,   lrlDistributed computingelrl,   lrlDocumentationelrl,   lrlDownload and buildelrl,   lrlEncryptionelrl,   lrlError handlingelrl,   lrlFIFOelrl,   lrlFileselrl,   lrlGeneralelrl,   lrlGolf compiler and utilityelrl,   lrlHashelrl,   lrlHex encodingelrl,   lrlJSON parsingelrl,   lrlLanguageelrl,   lrlLicenseelrl,   lrlLIFOelrl,   lrlLinked listelrl,   lrlMemoryelrl,   lrlMessageselrl,   lrlNumberselrl,   lrlOutputelrl,   lrlProgram executionelrl,   lrlProgram flowelrl,   lrlQuick startelrl,   lrlRegexelrl,   lrlRequest dataelrl,   lrlRequest informationelrl,   lrlRequestselrl,   lrlRunning applicationelrl,   lrlService managerelrl,   lrlService processingelrl,   lrlStringselrl,   lrlSystem informationelrl,   lrlTimeelrl,   lrlTreeelrl,   lrlURL encodingelrl,   lrlUTFelrl,   lrlWebelrl,   lrlWeb encodingelrl,   lrlWeb serverselrl,   lrlXML parsingelrl
+Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl,   lrlBase64elrl,   lrlC languageelrl,   lrlCookieselrl,   lrlDatabaseelrl,   lrlDebuggingelrl,   lrlDirectorieselrl,   lrlDistributed computingelrl,   lrlDocumentationelrl,   lrlDownload and buildelrl,   lrlEncryptionelrl,   lrlError handlingelrl,   lrlFIFOelrl,   lrlFileselrl,   lrlGeneralelrl,   lrlGolf compiler and utilityelrl,   lrlHashelrl,   lrlHex encodingelrl,   lrlJSON parsingelrl,   lrlLanguageelrl,   lrlLicenseelrl,   lrlLIFOelrl,   lrlLinked listelrl,   lrlMemoryelrl,   lrlMessageselrl,   lrlNumberselrl,   lrlOutputelrl,   lrlProgram executionelrl,   lrlProgram flowelrl,   lrlQuick startelrl,   lrlRegexelrl,   lrlRequest dataelrl,   lrlRequest informationelrl,   lrlRequestselrl,   lrlRunning applicationelrl,   lrlSELinuxelrl,   lrlService managerelrl,   lrlService processingelrl,   lrlStringselrl,   lrlSystem informationelrl,   lrlTimeelrl,   lrlTreeelrl,   lrlURL encodingelrl,   lrlUTFelrl,   lrlWebelrl,   lrlWeb encodingelrl,   lrlWeb serverselrl,   lrlXML parsingelrl
 
 
 
 .RS 4
 \[bu]    
-lrnAPIelrn
+
 .B - API
 
 \fBClient-API\fP  
@@ -25,7 +25,7 @@ lrnAPIelrn
 
 .RS 4
 \[bu]    
-lrnApplication informationelrn
+
 .B - Application information
 
 \fBget-app\fP   
@@ -35,7 +35,7 @@ lrnApplication informationelrn
 
 .RS 4
 \[bu]    
-lrnArrayelrn
+
 .B - Array
 
 \fBnew-array\fP  
@@ -48,7 +48,7 @@ lrnArrayelrn
 
 .RS 4
 \[bu]    
-lrnBase64elrn
+
 .B - Base64
 
 \fBdecode-base64\fP  
@@ -59,7 +59,7 @@ lrnBase64elrn
 
 .RS 4
 \[bu]    
-lrnC languageelrn
+
 .B - C language
 
 \fBcall-extended\fP  
@@ -71,7 +71,7 @@ lrnC languageelrn
 
 .RS 4
 \[bu]    
-lrnCookieselrn
+
 .B - Cookies
 
 \fBdelete-cookie\fP  
@@ -83,7 +83,7 @@ lrnCookieselrn
 
 .RS 4
 \[bu]    
-lrnDatabaseelrn
+
 .B - Database
 
 \fBbegin-transaction\fP  
@@ -102,7 +102,7 @@ lrnDatabaseelrn
 
 .RS 4
 \[bu]    
-lrnDebuggingelrn
+
 .B - Debugging
 
 \fBdebugging\fP  
@@ -113,7 +113,20 @@ lrnDebuggingelrn
 
 .RS 4
 \[bu]    
-lrnDistributed computingelrn
+
+.B - Directories
+
+\fBchange-dir\fP  
+\fBchange-mode\fP  
+\fBdelete-dir\fP  
+\fBnew-dir\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
 .B - Distributed computing
 
 \fBcall-remote\fP  
@@ -126,7 +139,7 @@ lrnDistributed computingelrn
 
 .RS 4
 \[bu]    
-lrnDocumentationelrn
+
 .B - Documentation
 
 \fBdocumentation\fP   
@@ -136,11 +149,12 @@ lrnDocumentationelrn
 
 .RS 4
 \[bu]    
-lrnDownload and buildelrn
+
 .B - Download and build
 
 \fBinstall-golf-from-source-using-apt\fP  
 \fBinstall-golf-from-source-using-dnf\fP  
+\fBinstall-golf-from-source-using-pacman\fP  
 \fBinstall-golf-from-source-using-zypper\fP  
 \fBuninstall\fP   
 .RE
@@ -149,7 +163,7 @@ lrnDownload and buildelrn
 
 .RS 4
 \[bu]    
-lrnEncryptionelrn
+
 .B - Encryption
 
 \fBdecrypt-data\fP  
@@ -165,7 +179,7 @@ lrnEncryptionelrn
 
 .RS 4
 \[bu]    
-lrnError handlingelrn
+
 .B - Error handling
 
 \fBdb-error\fP  
@@ -178,7 +192,7 @@ lrnError handlingelrn
 
 .RS 4
 \[bu]    
-lrnFIFOelrn
+
 .B - FIFO
 
 \fBdelete-fifo\fP  
@@ -193,9 +207,10 @@ lrnFIFOelrn
 
 .RS 4
 \[bu]    
-lrnFileselrn
+
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  
@@ -218,18 +233,19 @@ lrnFileselrn
 
 .RS 4
 \[bu]    
-lrnGeneralelrn
+
 .B - General
 
 \fBabout-golf\fP  
-\fBdirectories\fP   
+\fBdirectories\fP  
+\fBpermissions\fP   
 .RE
 
 
 
 .RS 4
 \[bu]    
-lrnGolf compiler and utilityelrn
+
 .B - Golf compiler and utility
 
 \fBgg\fP   
@@ -239,7 +255,7 @@ lrnGolf compiler and utilityelrn
 
 .RS 4
 \[bu]    
-lrnHashelrn
+
 .B - Hash
 
 \fBget-hash\fP  
@@ -254,7 +270,7 @@ lrnHashelrn
 
 .RS 4
 \[bu]    
-lrnHex encodingelrn
+
 .B - Hex encoding
 
 \fBdecode-hex\fP  
@@ -265,7 +281,7 @@ lrnHex encodingelrn
 
 .RS 4
 \[bu]    
-lrnJSON parsingelrn
+
 .B - JSON parsing
 
 \fBjson-doc\fP  
@@ -276,7 +292,7 @@ lrnJSON parsingelrn
 
 .RS 4
 \[bu]    
-lrnLanguageelrn
+
 .B - Language
 
 \fBinline-code\fP  
@@ -290,7 +306,7 @@ lrnLanguageelrn
 
 .RS 4
 \[bu]    
-lrnLicenseelrn
+
 .B - License
 
 \fBlicense\fP   
@@ -300,7 +316,7 @@ lrnLicenseelrn
 
 .RS 4
 \[bu]    
-lrnLIFOelrn
+
 .B - LIFO
 
 \fBdelete-lifo\fP  
@@ -315,7 +331,7 @@ lrnLIFOelrn
 
 .RS 4
 \[bu]    
-lrnLinked listelrn
+
 .B - Linked list
 
 \fBdelete-list\fP  
@@ -331,7 +347,7 @@ lrnLinked listelrn
 
 .RS 4
 \[bu]    
-lrnMemoryelrn
+
 .B - Memory
 
 \fBmemory-handling\fP   
@@ -341,7 +357,7 @@ lrnMemoryelrn
 
 .RS 4
 \[bu]    
-lrnMessageselrn
+
 .B - Messages
 
 \fBget-message\fP  
@@ -355,7 +371,7 @@ lrnMessageselrn
 
 .RS 4
 \[bu]    
-lrnNumberselrn
+
 .B - Numbers
 
 \fBnumber-expressions\fP  
@@ -368,7 +384,7 @@ lrnNumberselrn
 
 .RS 4
 \[bu]    
-lrnOutputelrn
+
 .B - Output
 
 \fBfinish-output\fP  
@@ -390,7 +406,7 @@ lrnOutputelrn
 
 .RS 4
 \[bu]    
-lrnProgram executionelrn
+
 .B - Program execution
 
 \fBexec-program\fP  
@@ -401,7 +417,7 @@ lrnProgram executionelrn
 
 .RS 4
 \[bu]    
-lrnProgram flowelrn
+
 .B - Program flow
 
 \fBbreak-loop\fP  
@@ -420,7 +436,7 @@ lrnProgram flowelrn
 
 .RS 4
 \[bu]    
-lrnQuick startelrn
+
 .B - Quick start
 
 \fB123-hello-world\fP   
@@ -430,7 +446,7 @@ lrnQuick startelrn
 
 .RS 4
 \[bu]    
-lrnRegexelrn
+
 .B - Regex
 
 \fBmatch-regex\fP   
@@ -440,7 +456,7 @@ lrnRegexelrn
 
 .RS 4
 \[bu]    
-lrnRequest dataelrn
+
 .B - Request data
 
 \fBget-param\fP  
@@ -452,7 +468,7 @@ lrnRequest dataelrn
 
 .RS 4
 \[bu]    
-lrnRequest informationelrn
+
 .B - Request information
 
 \fBget-req\fP   
@@ -462,7 +478,7 @@ lrnRequest informationelrn
 
 .RS 4
 \[bu]    
-lrnRequestselrn
+
 .B - Requests
 
 \fBrequest\fP   
@@ -472,7 +488,7 @@ lrnRequestselrn
 
 .RS 4
 \[bu]    
-lrnRunning applicationelrn
+
 .B - Running application
 
 \fBapplication-setup\fP  
@@ -485,7 +501,17 @@ lrnRunning applicationelrn
 
 .RS 4
 \[bu]    
-lrnService managerelrn
+
+.B - SELinux
+
+\fBSELinux\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+
 .B - Service manager
 
 \fBmgrg\fP   
@@ -495,7 +521,7 @@ lrnService managerelrn
 
 .RS 4
 \[bu]    
-lrnService processingelrn
+
 .B - Service processing
 
 \fBafter-handler\fP  
@@ -508,7 +534,7 @@ lrnService processingelrn
 
 .RS 4
 \[bu]    
-lrnStringselrn
+
 .B - Strings
 
 \fBcopy-string\fP  
@@ -529,7 +555,7 @@ lrnStringselrn
 
 .RS 4
 \[bu]    
-lrnSystem informationelrn
+
 .B - System information
 
 \fBget-sys\fP   
@@ -539,7 +565,7 @@ lrnSystem informationelrn
 
 .RS 4
 \[bu]    
-lrnTimeelrn
+
 .B - Time
 
 \fBget-time\fP  
@@ -550,7 +576,7 @@ lrnTimeelrn
 
 .RS 4
 \[bu]    
-lrnTreeelrn
+
 .B - Tree
 
 \fBdelete-tree\fP  
@@ -566,7 +592,7 @@ lrnTreeelrn
 
 .RS 4
 \[bu]    
-lrnURL encodingelrn
+
 .B - URL encoding
 
 \fBdecode-url\fP  
@@ -577,7 +603,7 @@ lrnURL encodingelrn
 
 .RS 4
 \[bu]    
-lrnUTFelrn
+
 .B - UTF
 
 \fBtext-utf\fP  
@@ -588,7 +614,7 @@ lrnUTFelrn
 
 .RS 4
 \[bu]    
-lrnWebelrn
+
 .B - Web
 
 \fBcall-web\fP  
@@ -601,7 +627,7 @@ lrnWebelrn
 
 .RS 4
 \[bu]    
-lrnWeb encodingelrn
+
 .B - Web encoding
 
 \fBdecode-web\fP  
@@ -612,7 +638,7 @@ lrnWeb encodingelrn
 
 .RS 4
 \[bu]    
-lrnWeb serverselrn
+
 .B - Web servers
 
 \fBconnect-apache-tcp-socket\fP  
@@ -626,7 +652,7 @@ lrnWeb serverselrn
 
 .RS 4
 \[bu]    
-lrnXML parsingelrn
+
 .B - XML parsing
 
 \fBread-xml\fP  

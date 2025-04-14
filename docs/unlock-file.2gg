@@ -20,9 +20,10 @@ unlock-file will unlock file that was locked with \fBlock-file\fP. <lock id> is 
 .SH EXAMPLES
 See \fBlock-file\fP.
 .SH SEE ALSO
- lrnFileselrn
+ 
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  

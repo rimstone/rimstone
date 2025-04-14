@@ -33,7 +33,7 @@ request-body reqb
 .RE
 
 .SH SEE ALSO
- lrnRequest dataelrn
+ 
 .B - Request data
 
 \fBget-param\fP  

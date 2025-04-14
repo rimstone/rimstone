@@ -70,7 +70,7 @@ set-cookie "my_cookie_name"=my_cookie_value no-http-only
 .RE
 
 .SH SEE ALSO
- lrnCookieselrn
+ 
 .B - Cookies
 
 \fBdelete-cookie\fP  

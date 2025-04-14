@@ -18,7 +18,7 @@ user=myuser password=mypwd dbname=mydb
 
 The above file has parameters "user" (Postgres user), "password" (the password for Postgres user), "dbname" (the Postgres database name). If you use peer-authenticated (i.e. passwordless) login, then omit "password" - this is when the Postgres user name is the same as your Operating System user name and where local unix domain socket is used for authentication.
 .SH SEE ALSO
- lrnDatabaseelrn
+ 
 .B - Database
 
 \fBbegin-transaction\fP  

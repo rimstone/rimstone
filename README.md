@@ -1,37 +1,48 @@
 Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf)\. 
 ## Install Golf on Ubuntu \(versions 20, 22, 24, 25\):
 ```
-sudo add-apt-repository ppa:golf-lang/golf -y
+sudo add-apt-repository ppa:golf-lang/golf-lang -y
 sudo apt update
-sudo apt -y install golf
+sudo apt -y install golf-lang
 ```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
 ## Install Golf on Redhat \(incl\. Rocky, Alma, Centos\), Fedora, Amazon Linux, Mageia:
 ```
 sudo dnf -y install epel-release
 sudo dnf -y copr enable golf-lang/golf-lang
-sudo dnf -y install golf
+sudo dnf -y install golf-lang
 ```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-dnf.html)\.
 ## Install Golf on OpenSUSE:
 Install OpenSUSE Tumbleweed:
 ```
 sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-tumbleweed/golf-lang-golf-lang-opensuse-tumbleweed.repo
-sudo zypper -n install  golf
+sudo zypper -n install  golf-lang
 ```
 Install OpenSUSE Leap 15\.6:
 ```
 sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-leap-15.6/golf-lang-golf-lang-opensuse-leap-15.6.repo
-sudo zypper -n install  golf
+sudo zypper -n install  golf-lang
 ```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-zypper.html)\.
+## Install Golf on Debian:
+Install Golf on Debian [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
+## Install Golf on Arch and Manjaro:
+```
+git clone https://aur.archlinux.org/golf-lang.git
+cd golf-lang
+makepkg -sirc
+```
+Install Golf on Arch and Manjaro [from source code](https://golf-lang.com//install-golf-from-source-using-pacman.html)\.
 ## Current version
-Current version is 373\. This release passed 2346 automated functional tests\.
+Current version is 397\. This release passed 2386 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 ## Articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-04\-11 [New upcoming safety features](https://golf-lang.blogspot.com/2025/04/safety-improvement-for-application-logic.html)
+* 2025\-04\-10 [How to start, stop or restart Golf application server](https://golf-lang.blogspot.com/2025/04/how-to-start-stop-or-restart-golf.html)
 * 2025\-04\-05 [How to build OpenSUSE zypper package for Golf](https://golf-lang.blogspot.com/2025/04/how-to-build-opensuse-zypper-package.html)
 * 2025\-04\-02 [Fragmentation of Linux and impact on packaging](https://golf-lang.blogspot.com/2025/04/fragmentation-of-linux-and-impact-on.html)
 * 2025\-03\-29 [FIFO in Golf](https://golf-lang.blogspot.com/2025/03/fifo-in-golf.html)
@@ -73,6 +84,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 ## Releases
+* 2025\-04\-14 [Golf 397 released](https://golf-lang.blogspot.com/2025/04/golf-397-released.html)
 * 2025\-03\-31 [Golf 373 released](https://golf-lang.blogspot.com/2025/03/golf-338-released.html)
 * 2025\-03\-16 [Golf 324 released](https://golf-lang.blogspot.com/2025/03/golf-324-released.html)
 * 2025\-03\-11 [Golf 297 released](https://golf-lang.blogspot.com/2025/03/golf-297-released.html)

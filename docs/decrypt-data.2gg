@@ -40,7 +40,7 @@ The cipher and digest algorithms (if specified as <cipher algorithm> and <digest
 .SH EXAMPLES
 See \fBencrypt-data\fP.
 .SH SEE ALSO
- lrnEncryptionelrn
+ 
 .B - Encryption
 
 \fBdecrypt-data\fP  

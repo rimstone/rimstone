@@ -52,7 +52,7 @@ position-list mylist first
 .RE
 
 .SH SEE ALSO
- lrnLinked listelrn
+ 
 .B - Linked list
 
 \fBdelete-list\fP  

@@ -14,7 +14,7 @@ A Golf application is always owned by a single Operating System user (see "-u" o
 .RS 4
 \[bu]    
 /var/lib/gg/bld/<app name>
-Build directory is where your application executables are built, with name <app name>.srvc for a \fBservice\fP and <app name> for a \fBcommand-line\fP program. This is a scratch-pad directory, so do not alter files in it, or use for anything else.
+Build directory is where your application executables are built, with name <app name>.srvc for a \fBservice\fP and <app name> for a \fBcommand-line\fP program. This is a scratch-pad directory, so do not alter files in it, or use for anything else. It is created with 755 privileges.
 
 
 .RE
@@ -22,7 +22,7 @@ Build directory is where your application executables are built, with name <app 
 .RS 4
 \[bu]    
 /var/lib/gg/<app name>
-Application directory. All application data, including internals such as sockets, are kept here. Each such directory is owned by its owner with 700 privileges, preventing other users from accessing its files.
+Application directory. All application data, including internals such as sockets, are kept here. It is created with 755 privileges, while each subdirectory within (see below) is with 700 privileges in order to prevent other users (even from the same group) from accessing its files. 
 
 
 .RE
@@ -68,10 +68,11 @@ ln -s /home/disk0/file /var/lib/gg/<app name>/app/file
 .RE
 
 .SH SEE ALSO
- lrnGeneralelrn
+ 
 .B - General
 
 \fBabout-golf\fP  
-\fBdirectories\fP   
+\fBdirectories\fP  
+\fBpermissions\fP   
 See all 
 \fBdocumentation\fP

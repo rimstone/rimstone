@@ -75,7 +75,7 @@ mgrg -p 2301 func_test
 
 Now you should be able to connect and load-balance your Golf application servers directly from HAProxy.
 .SH SEE ALSO
- lrnWeb serverselrn
+ 
 .B - Web servers
 
 \fBconnect-apache-tcp-socket\fP  

@@ -78,7 +78,7 @@ replace-string a copy-end b start-with 6 length 2
 .RE
 
 .SH SEE ALSO
- lrnStringselrn
+ 
 .B - Strings
 
 \fBcopy-string\fP  

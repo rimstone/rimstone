@@ -14,7 +14,7 @@ get-req \\
         | arg-count | arg-value <arg index> \\
         | header <header> | referring-url | method \\
         | content-type | trace-file | process-id | name \\
-        | external-call
+        | external-call | directory
     to <variable>
 
 .EE
@@ -135,6 +135,13 @@ Note that not all HTTP request headers are set by the caller. For example, SERVE
 
 .RS 4
 \[bu]    
+"directory" is the current working directory, which is by default the application home directory (see \fBdirectories\fP) and can be changed with \fBchange-dir\fP. Note that maximum length of a directory path should not exceed 1024 bytes.
+
+
+.RE
+
+.RS 4
+\[bu]    
 "trace-file" is the full path of the trace file for this request (if enabled, see \fBtrace-run\fP).
 
 
@@ -172,7 +179,7 @@ get-req trace-file to trace_file
 .RE
 
 .SH SEE ALSO
- lrnRequest informationelrn
+ 
 .B - Request information
 
 \fBget-req\fP   

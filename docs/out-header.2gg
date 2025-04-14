@@ -151,7 +151,7 @@ out-header use content-type "text/html" cache-control "max-age:3600" custom "som
 .RE
 
 .SH SEE ALSO
- lrnWebelrn
+ 
 .B - Web
 
 \fBcall-web\fP  

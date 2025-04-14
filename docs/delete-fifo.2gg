@@ -40,7 +40,7 @@ delete-fifo mylist
 .RE
 
 .SH SEE ALSO
- lrnFIFOelrn
+ 
 .B - FIFO
 
 \fBdelete-fifo\fP  

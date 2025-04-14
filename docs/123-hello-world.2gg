@@ -7,7 +7,7 @@
 .B STEP 1: INSTALL GOLF
 .LP
 
-First \fBindex\fP Golf.
+First, \fBinstall Golf\fP.
 
 .LP
 .B STEP 2: BUILD IT
@@ -106,7 +106,7 @@ Hello World!
 .RE
 
 .SH SEE ALSO
- lrnQuick startelrn
+ 
 .B - Quick start
 
 \fB123-hello-world\fP   

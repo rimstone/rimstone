@@ -20,8 +20,10 @@ end-if
 .RE
 
 Note that with some GG_ERR_... codes, the "errno" clause in get-req may return 0. This means the error was detected by Golf and not reported by the operating system.
+
+You can use standard Linux constants, as defined in C "errno.h" include file to compare the error code obtained with get-req. For instance, you can use constants like EACCES or EEXIST. To see what's the meaning of errno number or name, use standard Linux utility "errno".
 .SH SEE ALSO
- lrnError handlingelrn
+ 
 .B - Error handling
 
 \fBdb-error\fP  

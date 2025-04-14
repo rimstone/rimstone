@@ -10,20 +10,23 @@ Get information about a file.
 .EX
 
 stat-file <file> \\
-    size | type | path | name \\
-    to <variable>
+    [ size <size> ] [ type <type> ] \\
+    [ path <path> ] [ name <name> ] \\
+    [ mode <mode> ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
-stat-file obtains information about <file>, which is either the full path of a file or directory, or a name relative to the application home directory (see \fBdirectories\fP). 
+stat-file obtains information about <file>, which is a string that is an absolute or relative path.
 
-Clause "size" will store file's size in bytes to number <variable>, or it will be GG_ERR_FAILED (if operation failed, likely because file does not exist or you have no permissions to access it). 
+Clause "size" will store file's size in bytes to number <size>, or it will be GG_ERR_FAILED (if operation failed, likely because file does not exist or you have no permissions to access it). 
 
-Clause "type" will store file's type to number <variable>, and it can be either GG_FILE (if it's a file) or GG_DIR (if it's a directory) or GG_ERR_FAILED (if operation failed, likely because file does not exist or you have no permissions to access it). 
+Clause "type" will store file's type to number <type>, and it can be either GG_FILE (if it's a file) or GG_DIR (if it's a directory) or GG_ERR_FAILED (if operation failed, likely because file does not exist or you have no permissions to access it). 
 
-Clause "path" (in string <variable>) obtains the fully resolved path of the <file> (including symbolic links), and "name" is the name (a basename, without the path). If path cannot be resolved, then <variable> is an empty string.
+Clause "path" (in string <path>) obtains the fully resolved path of the <file> (including symbolic links), and "name" will provide its <name> (meaning a basename, without the path). If path cannot be resolved, then <path> is an empty string.
+
+Clause "mode" will store file's permission mode to number <mode>, see \fBpermissions\fP.
 
 .SH EXAMPLES
 To get file size in variable "sz", which is created here:
@@ -31,7 +34,7 @@ To get file size in variable "sz", which is created here:
 .RS 4
 .EX
 
-stat-file "/home/user/file" size to sz
+stat-file "/home/user/file" size sz
 
 .EE
 .RE
@@ -41,7 +44,7 @@ To determine if the object is a file or a directory:
 .RS 4
 .EX
 
-stat-file "/home/user/some_name" type to what
+stat-file "/home/user/some_name" type what
 if-true what equal GG_FILE
    @It's a file!
 else-if what equal GG_DIR
@@ -53,20 +56,21 @@ end-if
 .EE
 .RE
 
-Get the fully resolved path of a file to string variable "fp", which is created here.
+Get the fully resolved path of a file to string variable "fp" and the name of the file:
 
 .RS 4
 .EX
 
-stat-file "../file" path to fp 
+stat-file "../file" path fp name fn 
 
 .EE
 .RE
 
 .SH SEE ALSO
- lrnFileselrn
+ 
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  

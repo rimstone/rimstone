@@ -114,7 +114,7 @@ set-string my_string = "abc"
 .RE
 
 .SH SEE ALSO
- lrnStringselrn
+ 
 .B - Strings
 
 \fBcopy-string\fP  

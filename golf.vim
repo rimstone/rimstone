@@ -1,7 +1,7 @@
 " Language: Golf
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2025-March-08
+" Latest Revision: 2025-April-12
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link golfConstruct Statement
@@ -460,6 +460,7 @@ syn region gg_r_construct_read_file start="^[[:space:]]*read-file" skip="\\[[:sp
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_read_file,gg_r_inline_read_file,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_read_file,gg_r_inline_read_file,gg_r_at
     syn match gg_h_construct_read_file "^[[:space:]]*read-file" contained containedin=gg_r_construct_read_file
+    syn match gg_h_clause_output_read_file " end-of-file \@=" contained containedin=gg_r_construct_read_file
     syn match gg_h_clause_read_file " file-id \@=" contained containedin=gg_r_construct_read_file
     syn match gg_h_clause_read_file " length \@=" contained containedin=gg_r_construct_read_file
     syn match gg_h_clause_read_file " position \@=" contained containedin=gg_r_construct_read_file
@@ -1214,6 +1215,9 @@ syn region gg_r_construct_get_req start="^[[:space:]]*get-req" skip="\\[[:space:
     syn match gg_h_clause_get_req " cookie-count \@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " cookie-count,\@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " cookie-count$" contained containedin=gg_r_construct_get_req
+    syn match gg_h_clause_get_req " directory \@=" contained containedin=gg_r_construct_get_req
+    syn match gg_h_clause_get_req " directory,\@=" contained containedin=gg_r_construct_get_req
+    syn match gg_h_clause_get_req " directory$" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " errno \@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " errno,\@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " errno$" contained containedin=gg_r_construct_get_req
@@ -1473,6 +1477,47 @@ syn region gg_r_construct_delete_file start="^[[:space:]]*delete-file" skip="\\[
     hi def link gg_h_clause_output_delete_file    golfClauseOutput
     hi def link gg_h_construct_delete_file    golfConstruct
     hi def link gg_h_print_inline_delete_file    golfConstruct
+syn region gg_r_construct_change_dir start="^[[:space:]]*change-dir" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_change_dir,gg_r_inline_change_dir,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_change_dir,gg_r_inline_change_dir,gg_r_at
+    syn match gg_h_construct_change_dir "^[[:space:]]*change-dir" contained containedin=gg_r_construct_change_dir
+    syn match gg_h_clause_change_dir " home \@=" contained containedin=gg_r_construct_change_dir
+    syn match gg_h_clause_change_dir " home,\@=" contained containedin=gg_r_construct_change_dir
+    syn match gg_h_clause_change_dir " home$" contained containedin=gg_r_construct_change_dir
+    syn match gg_h_clause_output_change_dir " status \@=" contained containedin=gg_r_construct_change_dir
+    hi def link gg_h_clause_change_dir    golfClause
+    hi def link gg_h_clause_output_change_dir    golfClauseOutput
+    hi def link gg_h_construct_change_dir    golfConstruct
+    hi def link gg_h_print_inline_change_dir    golfConstruct
+syn region gg_r_construct_new_dir start="^[[:space:]]*new-dir" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_new_dir,gg_r_inline_new_dir,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_new_dir,gg_r_inline_new_dir,gg_r_at
+    syn match gg_h_construct_new_dir "^[[:space:]]*new-dir" contained containedin=gg_r_construct_new_dir
+    syn match gg_h_clause_new_dir " mode \@=" contained containedin=gg_r_construct_new_dir
+    syn match gg_h_clause_output_new_dir " status \@=" contained containedin=gg_r_construct_new_dir
+    hi def link gg_h_clause_new_dir    golfClause
+    hi def link gg_h_clause_output_new_dir    golfClauseOutput
+    hi def link gg_h_construct_new_dir    golfConstruct
+    hi def link gg_h_print_inline_new_dir    golfConstruct
+syn region gg_r_construct_change_mode start="^[[:space:]]*change-mode" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_change_mode,gg_r_inline_change_mode,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_change_mode,gg_r_inline_change_mode,gg_r_at
+    syn match gg_h_construct_change_mode "^[[:space:]]*change-mode" contained containedin=gg_r_construct_change_mode
+    syn match gg_h_clause_change_mode " mode \@=" contained containedin=gg_r_construct_change_mode
+    syn match gg_h_clause_output_change_mode " status \@=" contained containedin=gg_r_construct_change_mode
+    hi def link gg_h_clause_change_mode    golfClause
+    hi def link gg_h_clause_output_change_mode    golfClauseOutput
+    hi def link gg_h_construct_change_mode    golfConstruct
+    hi def link gg_h_print_inline_change_mode    golfConstruct
+syn region gg_r_construct_delete_dir start="^[[:space:]]*delete-dir" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_delete_dir,gg_r_inline_delete_dir,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_delete_dir,gg_r_inline_delete_dir,gg_r_at
+    syn match gg_h_construct_delete_dir "^[[:space:]]*delete-dir" contained containedin=gg_r_construct_delete_dir
+    syn match gg_h_clause_output_delete_dir " status \@=" contained containedin=gg_r_construct_delete_dir
+    hi def link gg_h_clause_delete_dir    golfClause
+    hi def link gg_h_clause_output_delete_dir    golfClauseOutput
+    hi def link gg_h_construct_delete_dir    golfConstruct
+    hi def link gg_h_print_inline_delete_dir    golfConstruct
 syn region gg_r_construct_rename_file start="^[[:space:]]*rename-file" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_rename_file,gg_r_inline_rename_file,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_rename_file,gg_r_inline_rename_file,gg_r_at
@@ -1509,19 +1554,11 @@ syn region gg_r_construct_stat_file start="^[[:space:]]*stat-file" skip="\\[[:sp
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_stat_file,gg_r_inline_stat_file,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_stat_file,gg_r_inline_stat_file,gg_r_at
     syn match gg_h_construct_stat_file "^[[:space:]]*stat-file" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " name \@=" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " name,\@=" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " name$" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " path \@=" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " path,\@=" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " path$" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " size \@=" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " size,\@=" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " size$" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_output_stat_file " to \@=" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " type \@=" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " type,\@=" contained containedin=gg_r_construct_stat_file
-    syn match gg_h_clause_stat_file " type$" contained containedin=gg_r_construct_stat_file
+    syn match gg_h_clause_output_stat_file " mode \@=" contained containedin=gg_r_construct_stat_file
+    syn match gg_h_clause_output_stat_file " name \@=" contained containedin=gg_r_construct_stat_file
+    syn match gg_h_clause_output_stat_file " path \@=" contained containedin=gg_r_construct_stat_file
+    syn match gg_h_clause_output_stat_file " size \@=" contained containedin=gg_r_construct_stat_file
+    syn match gg_h_clause_output_stat_file " type \@=" contained containedin=gg_r_construct_stat_file
     hi def link gg_h_clause_stat_file    golfClause
     hi def link gg_h_clause_output_stat_file    golfClauseOutput
     hi def link gg_h_construct_stat_file    golfConstruct

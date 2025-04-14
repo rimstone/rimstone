@@ -5,14 +5,13 @@
 
 
 Name:   golf
-Version:    373
+Version:    397
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Gliim LLC
 Group:      Development/Tools
 License:    Apache-2.0
 Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{version}.tar.gz 
-
 
 #Make sure to install EPEL (currently just for fcgi/fcgi_devel): sudo dnf install epel-release
 
@@ -69,7 +68,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-373
+%autosetup -n %{name}-397
 
 %build
 make clean

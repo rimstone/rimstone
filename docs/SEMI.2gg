@@ -18,7 +18,7 @@ Value is always preceded by a 8-byte length of value (as a binary number in big-
 
 SEMI implicitly supports binary data without the need for any kind of encoding, and the number of bytes is specified ahead of a value, making parsing efficient. 
 .SH SEE ALSO
- lrnMessageselrn
+ 
 .B - Messages
 
 \fBget-message\fP  

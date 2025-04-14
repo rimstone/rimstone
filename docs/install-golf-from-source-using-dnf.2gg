@@ -30,7 +30,7 @@ cd golf
 
 sudo dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 sudo dnf install -y rpmdevtools
-sudo dnf builddep -y golf.spec
+sudo dnf builddep -y golf-lang.spec
 
 .EE
 .RE
@@ -54,11 +54,12 @@ sudo make install
 
 Here's how to \fBuninstall\fP.
 .SH SEE ALSO
- lrnDownload and buildelrn
+ 
 .B - Download and build
 
 \fBinstall-golf-from-source-using-apt\fP  
 \fBinstall-golf-from-source-using-dnf\fP  
+\fBinstall-golf-from-source-using-pacman\fP  
 \fBinstall-golf-from-source-using-zypper\fP  
 \fBuninstall\fP   
 See all 

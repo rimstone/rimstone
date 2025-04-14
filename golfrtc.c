@@ -390,25 +390,6 @@ char *gg_trim_ptr (char *str, gg_num *len)
     return res;
 }
 
-// 
-// Returns GG_DIR if 'dir' is a directory,
-// GG_FILE if it's file, GG_ERR_FAILED if can't stat
-//
-gg_num gg_file_type (char *dir)
-{
-    GG_TRACE("");
-    struct stat sb;
-    if (stat(dir, &sb) == 0)
-    {
-        if (S_ISDIR(sb.st_mode)) return GG_DIR; else return GG_FILE;
-    }
-    else 
-    {
-        GG_ERR;
-        return GG_ERR_FAILED;
-    }
-}
-
 
 //
 // Get Position from file FILE* f 
@@ -463,21 +444,31 @@ gg_num gg_get_open_file_size(FILE *f)
     return (gg_num)size;
 }
 
+// 
+// Returns GG_DIR if 'dir' is a directory,
+// GG_FILE if it's file, GG_ERR_FAILED if can't stat
+// Returns "size" of the file, or -1 if file cannot be stat'
 //
-// Get size of file
-// fn is file name.
-// Returns size of the file, or -1 if file cannot be stat'
-//
-gg_num gg_get_file_size(char *fn)
+void gg_file_stat (char *dir, gg_num *type, gg_num *size, gg_num *mode)
 {
     GG_TRACE("");
-    struct stat st;
-    if (stat(fn, &st) != 0) 
+    struct stat sb;
+    if (stat(dir, &sb) == 0)
+    {
+        if (type)
+        {
+            if (S_ISDIR(sb.st_mode)) *type = GG_DIR; else *type = GG_FILE;
+        }
+        if (size != NULL) *size = (gg_num)(sb.st_size);
+        if (mode != NULL) *mode = (gg_num)(sb.st_mode);
+    }
+    else 
     {
         GG_ERR;
-        return GG_ERR_FAILED;
+        if (type) *type = GG_ERR_FAILED;
+        if (size) *size = GG_ERR_FAILED;
+        if (mode) *mode = GG_ERR_FAILED;
     }
-    return (gg_num)(st.st_size);
 }
 
 
@@ -874,12 +865,13 @@ char * gg_get_tz ()
 // pos/len is specified (len is <>0 or pos<>0), in which case read len (default is 0, the rest of the file) bytes 
 // from position pos (default is 0, the beginning). Returns -1 if cannot open file, -2 if cannot read, 
 // -3 cannot position, -4 if nothing to read (pos/len bad), or size of data read.
+// eof is set to true if this was end of file. eof can be NULL.
 // Note: zero byte is place after the end, so if return value is 10, it means
 // there are 11 bytes, with zero at the end, regardless of whether the data is a
 // string or not.
 // If there is not enough memory, gg_malloc will error out.
 //
-gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len)
+gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len, bool *eof)
 {
     GG_TRACE ("");
 
@@ -913,15 +905,31 @@ gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len)
     *data = gg_malloc (sz + 1);
     gg_num id = gg_mem_get_id (*data);
     gg_num rd;
-    rd = fread (*data, 1, sz, f);
-    if (ferror (f))
+    rd = fread_unlocked (*data, 1, sz, f);
+    if (rd != sz) 
     {
-        GG_ERR;
-        gg_free_int (*data);
-        fclose(f);
-        *data = GG_EMPTY_STRING;
-        return GG_ERR_READ;
-    }
+        // if not read enough bytes it could be an error or FEOF
+        if (ferror_unlocked (f))
+        {
+            if (eof) *eof = false; // no FEOF for sure
+            // if error, it could be we read nothing, in which case GG_ERR_READ is the status
+            if (rd == 0)
+            {
+                GG_ERR;
+                gg_free_int (*data);
+                fclose(f); // here no need for clearerror
+                *data = GG_EMPTY_STRING;
+                return GG_ERR_READ;
+            }
+            else
+            {
+                // if short read <>0, but some error, user can get errno, file is closed further down, don't close it twice
+                GG_ERR;
+            }
+        } 
+        else { if (eof) *eof = true; } // what else can be the reason for a short read if not EOF or error???
+                          // otherwise it's FEOF and less bytes are read
+    } else { if (eof) *eof = false; } // no feof if all bytes read
     (*data)[rd] = 0;
     gg_mem_set_len (id, rd+1);
     fclose(f);
@@ -934,13 +942,14 @@ gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len)
 // len (default is 0, the rest of the file) is the number of bytes to read
 // from position pos, if not specified then from current position . Returns -1 if cannot open file, -2 if cannot read, 
 // -3 cannot position, -4 if nothing to read (pos/len bad), or size of data read.
+// eof is set to true if this was end of file. eof can be NULL.
 // Note: zero byte is place after the end, so if return value is 10, it means
 // there are 11 bytes, with zero at the end, regardless of whether the data is a
 // string or not.
 // If there is not enough memory, gg_malloc will error out.
 // ispos is true if position is given
 //
-gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos)
+gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos, bool *eof)
 {
     GG_TRACE ("");
 
@@ -978,12 +987,35 @@ gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos
     }
     *data = gg_malloc (sz + 1);
     gg_num rd;
-    rd = fread (*data, 1, sz, f);
-    if (ferror (f))
+    rd = fread_unlocked (*data, 1, sz, f);
+    if (rd != sz)
     {
-        GG_ERR;
-        return GG_ERR_READ;
-    }
+        // if not read enough bytes it could be an error or FEOF
+        if (ferror_unlocked (f))
+        {
+            if (eof) *eof = false; // no FEOF for sure
+            // if error, it could be we read nothing, in which case GG_ERR_READ is the status
+            if (rd == 0)
+            {
+                GG_ERR;
+                clearerr_unlocked (f); // if ferror() was set
+                gg_free_int (*data);
+                // file not closed since we keep it open via file ID, and user can position somewhere where there's no error
+                *data = GG_EMPTY_STRING;
+                return GG_ERR_READ;
+            }
+            else
+            {
+                // if short read <>0, but some error, user can get errno, file is closed
+                GG_ERR;
+                clearerr_unlocked (f); // if ferror() was set
+                // file not closed since we keep it open via file ID, and user can position somewhere where there's no error
+                // some data is returned, and user can check errno
+            }
+        } 
+        else { if (eof) *eof = true; } // what else can be the reason for a short read if not EOF or error???
+                          // user can now know this was a short read due to FEOF
+    } else { if (eof) *eof = false; } // no feof if all bytes read
     (*data)[rd] = 0;
     return rd;
 }
@@ -1128,7 +1160,9 @@ gg_num gg_core_write_file(FILE *f, gg_num content_len, char *content, char ispos
             return GG_ERR_POSITION;
         }
     }
-    if (fwrite(content, (size_t)content_len, 1, f) != 1)
+    if (content_len == 0) return 0; // asked for 0 bytes, none written 
+    // Use unlocked  for performance since Golf is multi-process, and not MT
+    if (fwrite_unlocked(content, 1, (size_t)content_len, f) != (size_t) content_len)
     {
         GG_ERR;
         GG_TRACE("Cannot write file, errno [%d]", errno);
@@ -1446,7 +1480,7 @@ char gg_decorate_path (char *reqname, gg_num reqname_len, char **p, gg_num p_len
 
 
 // 
-// Convert str to resulting number (return value) in base 'base', with *st being status (VV_OKAY if okay).
+// Convert str to resulting number (return value) in base 'base', with *st being status (GG_OKAY if okay).
 // st can be NULL. If base is 0, automatic base discovery (see docs).
 //
 gg_num gg_str2num (char *str, int base, gg_num *st)

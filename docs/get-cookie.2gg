@@ -44,7 +44,7 @@ get-cookie my_cookie_value="my_cookie_name"
 .RE
 
 .SH SEE ALSO
- lrnCookieselrn
+ 
 .B - Cookies
 
 \fBdelete-cookie\fP  

@@ -32,7 +32,7 @@ pf-web "We use %s markup", "<hr/>"
 
 See \fBpf-out\fP for more examples.
 .SH SEE ALSO
- lrnOutputelrn
+ 
 .B - Output
 
 \fBfinish-output\fP  

@@ -30,7 +30,7 @@ finish-output
 .RE
 
 .SH SEE ALSO
- lrnOutputelrn
+ 
 .B - Output
 
 \fBfinish-output\fP  

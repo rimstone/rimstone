@@ -210,7 +210,7 @@ run-prepared-query @db = qry no-loop \\
 .RE
 
 .SH SEE ALSO
- lrnDatabaseelrn
+ 
 .B - Database
 
 \fBbegin-transaction\fP  

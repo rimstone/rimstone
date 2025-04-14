@@ -9,7 +9,7 @@ Locks file exclusively.
 .RS 4
 .EX
 
-lock-file <file path> id <lock id> status <status>
+lock-file <file path> id <lock id> [ status <status> ]
 
 .EE
 .RE
@@ -74,9 +74,10 @@ You can use any file name (likely choose a name that signifies the purpose of a 
 
 %%
 .SH SEE ALSO
- lrnFileselrn
+ 
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  

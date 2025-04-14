@@ -37,7 +37,7 @@ get-hash h length l hash-size s average-reads r
 .RE
 
 .SH SEE ALSO
- lrnHashelrn
+ 
 .B - Hash
 
 \fBget-hash\fP  

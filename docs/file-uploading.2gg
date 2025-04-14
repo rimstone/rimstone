@@ -69,9 +69,10 @@ You have uploaded file <<p-web myfile_filename>> to a server file at <<p-web myf
 .RE
 
 .SH SEE ALSO
- lrnFileselrn
+ 
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  

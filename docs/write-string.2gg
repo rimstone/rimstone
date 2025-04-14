@@ -282,7 +282,7 @@ Hi Again!
 .RE
 
 .SH SEE ALSO
- lrnStringselrn
+ 
 .B - Strings
 
 \fBcopy-string\fP  

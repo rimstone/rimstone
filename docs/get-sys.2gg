@@ -68,7 +68,7 @@ get-sys os-name to os_name
 .RE
 
 .SH SEE ALSO
- lrnSystem informationelrn
+ 
 .B - System information
 
 \fBget-sys\fP   

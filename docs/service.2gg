@@ -74,7 +74,7 @@ mgrg -w 1 <app name>
 
 In this case, the timeout is set to 8 seconds.
 .SH SEE ALSO
- lrnRunning applicationelrn
+ 
 .B - Running application
 
 \fBapplication-setup\fP  

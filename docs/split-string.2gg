@@ -9,7 +9,7 @@ Split a string into pieces based on a delimiter.
 .RS 4
 .EX
 
-split-string  <string> with <delimiter> to <result> 
+split-string  <string> with <delimiter> to <result> [ count <count> ]
 
 split-string delete <result> 
 
@@ -18,6 +18,8 @@ split-string delete <result>
 
 .SH DESCRIPTION
 split-string will find all instances of string <delimiter> in <string> and then split it into pieces delimited by string <delimiter>. The <result> can be used with \fBread-split\fP to obtain the pieces and with split-string to delete it (use "delete" clause with <result> to delete it).
+
+If "count" clause is used, then the number of pieces is in <count>.
 
 All pieces produced will be trimmed both on left and right. If a piece is double quoted, then double quotes are removed. For instance save this code in "ps.golf" in a separate directory:
 
@@ -106,7 +108,7 @@ Variable z has value hello_world
 .RE
 
 .SH SEE ALSO
- lrnStringselrn
+ 
 .B - Strings
 
 \fBcopy-string\fP  

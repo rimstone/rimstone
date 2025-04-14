@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "373"
+#define GG_VERSION "397"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -295,7 +295,7 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_MAX_SIZE_OF_URL 4096 /* maximum length of browser url (get) that uses fixed buffer */
 #define GG_MAX_ERR_LEN 12000 /* maximum error length in report error */
 #define GG_MAX_UPLOAD_DIR  64000 /* max directories in file directory */
-#define GG_MAX_FILENAME_LEN 512 /* max file name for make document */
+#define GG_MAX_PATH_LEN 1024 /* max path length */
 #define GG_MAX_SOCK_LEN 256 /* max file name for a local golf socket path */
 #define GG_ERROR_EXIT_CODE 99 // exit code of command line program when it hits any error
 // constants for encoding
@@ -1336,9 +1336,8 @@ gg_num gg_count_substring (char *str, char *find, gg_num len_find, gg_num case_s
 gg_num gg_replace_string (char *str, gg_num strsize, char *find, char *subst, gg_num all, char **last, gg_num case_sensitive);
 void gg_trim (char *str, gg_num *len, bool alloc);
 char *gg_trim_ptr (char *str, gg_num *len);
-gg_num gg_file_type (char *dir);
+void gg_file_stat (char *dir, gg_num *type, gg_num *size, gg_num *mode);
 gg_num gg_get_open_file_size(FILE *f);
-gg_num gg_get_file_size(char *fn);
 void gg_memory_init ();
 void *gg_malloc(size_t size);
 void *gg_calloc(size_t nmemb, size_t size);
@@ -1427,8 +1426,8 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
 gg_num gg_copy_file (char *src, char *dst);
 void gg_b64_decode (char* in, gg_num ilen, char** out);
 void gg_b64_encode(char* in, gg_num in_len, char** out);
-gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len);
-gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos);
+gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len, bool *eof);
+gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos, bool *eof);
 gg_num gg_is_number (char *s, gg_num *prec, gg_num *scale, gg_num *positive);
 void gg_clear_config();
 void gg_init_header (gg_header *header, gg_num init_type, char is_request);
@@ -1631,6 +1630,9 @@ extern char * gg_app_path;
 extern unsigned long gg_app_path_len;
 extern gg_num gg_max_upload;
 extern gg_num gg_is_trace;
+extern gg_num _gg_st;
+extern char *_gg_st_str;
+extern bool _gg_st_bool;
 extern int gg_errno;
 extern int gg_stmt_cached;
 extern bool gg_mem_os;
@@ -1642,6 +1644,7 @@ extern gg_hash gg_paramhash;
 extern gg_tree_cursor *gg_cursor;
 extern bool gg_true;
 extern bool gg_false;
+extern bool gg_path_changed;
 
 // DO not include golfapp.h for Golf itself, only for applications at source build time
 #if GG_APPMAKE==1

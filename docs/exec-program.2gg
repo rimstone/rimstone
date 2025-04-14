@@ -38,6 +38,8 @@ To get the program's error output (which is "stderr") to file <error file>, use 
 
 If <input file> cannot be opened, GG_ERR_READ is reported in <exit status>, and if either <output file> or <error file> cannot be opened, the status is GG_ERR_WRITE.
 
+Note that in general a program is considered successfully executed if it returns GG_OKAY (i.e. zero). Most programs returning non-zero value mean failure.
+
 .SH EXAMPLES
 To simply execute a program that is in the path, without any arguments, input or output:
 
@@ -94,7 +96,7 @@ p-out ovar
 .RE
 
 .SH SEE ALSO
- lrnProgram executionelrn
+ 
 .B - Program execution
 
 \fBexec-program\fP  

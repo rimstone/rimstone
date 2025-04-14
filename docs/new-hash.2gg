@@ -52,7 +52,7 @@ new-hash h hash-size 5000
 
 See \fBread-hash\fP for more examples.
 .SH SEE ALSO
- lrnHashelrn
+ 
 .B - Hash
 
 \fBget-hash\fP  

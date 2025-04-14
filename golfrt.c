@@ -1429,7 +1429,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                             FILE *f = gg_make_document (&write_dir, 0);
 
                             // write the actual uploaded file contents to local file
-                            if (fwrite(multi_ctype, multi_ctype_len, 1, f) != 1)
+                            if (fwrite_unlocked(multi_ctype, multi_ctype_len, 1, f) != 1)
                             {
                                 // this is not a bad request, but server error
                                 gg_report_error ("Cannot write file [%s], error [%s]", write_dir, strerror (errno));
@@ -2862,44 +2862,46 @@ void gg_break_down (char *value, char *delim, gg_split_str **broken_ptr)
 
     while (1)
     {
+        // pos_delim is what's after the next delim, or NULL if no delim
         pos_delim = gg_find_keyword0 (curr_value, delim, 0, 0);
-        char *piece = curr_value;
+        char *piece = curr_value; // piece is what we're currently parsing
 
         // right trim
         char *end_piece;
         char first_of_delim=0;
         char trim_char=0;
-        // end when no delimiter found
-        if (pos_delim==NULL) 
+        // end when no delimiter found or string ends right after delimiter
+        if (pos_delim==NULL)
         {
             end_piece = piece + strlen (piece); 
         }
         else
         {
+            // if delimiter found, curr_value becomes the string right after delimiter
             first_of_delim = *pos_delim;
             curr_value = pos_delim + delim_len; // next value to parse
-            *pos_delim = 0; // cap current value
-            // position end_piece to 0 after the end of string
+            *pos_delim = 0; // cap previous value
+            // position end_piece to 0 after the end of previous string
             end_piece = pos_delim;
         }
-        while (isspace(*piece)) piece++; // left trim
-        if (*piece == '"') piece++; // get passed left quote
+        while (isspace(*piece)) piece++; // left trim of previous string
+        if (*piece == '"') piece++; // get passed left quote in previous string
         gg_num len;
         if (end_piece != piece)  // check if not empty field
         {
             // if p isn't empty, i.e. if it doesn't point to 0
             end_piece--;
             // no need to check end_piece!=p because piece is either non-space or equal to end_piece
-            while (isspace(*end_piece)) end_piece--; // right trim
+            while (isspace(*end_piece)) end_piece--; // right trim previous string
             if (*end_piece == '"') end_piece--; // get passed right quote
             end_piece++; // end_piece points to last non-white-space, so zero out the next one
             if (end_piece != pos_delim) // if there was nothing to trim, then end of piece (end_piece) is the same as keyword delimiter(pos_delim)
             {
-                trim_char = *end_piece; // save char that's trimmed
+                trim_char = *end_piece; // save char that's trimmed on the right of previous string
                 *end_piece = 0;
             }
             len = end_piece - piece;
-        } else { len = 0; end_piece = NULL;}
+        } else { len = 0; end_piece = NULL;} // this is if previous string is empty (after trimming)
         // alloc mem for pieces
         (broken->pieces)[curr_break] = gg_strdupl(piece, 0, len);
         // restore break char after strdupl, because strdupl will copy at least one char, assuming there's a null afterwards
@@ -3133,7 +3135,7 @@ gg_num gg_gen_write (bool is_error, char *s, gg_num nbyte)
             if (FCGX_PutStr ((char*)s, nbyte, is_error ? gg_fcgi_err :gg_fcgi_out) != nbyte) return -1; else return nbyte;
         } else return nbyte;
 #else
-        if ((gg_num)fwrite((char*)s, 1, nbyte, is_error ? stderr : stdout) != nbyte) return -1; else return nbyte;
+        if ((gg_num)fwrite_unlocked((char*)s, 1, nbyte, is_error ? stderr : stdout) != nbyte) return -1; else return nbyte;
 #endif
     } else return nbyte;
 }
@@ -3192,7 +3194,7 @@ gg_num gg_gen_util_read (char *content, gg_num len)
 #ifndef GG_COMMAND
             bytes_read = FCGX_GetStr (content + total_read, len - total_read, gg_fcgi_in);
 #else
-            bytes_read = (gg_num)fread (content + total_read, 1, len - total_read, stdin);
+            bytes_read = (gg_num)fread_unlocked (content + total_read, 1, len - total_read, stdin);
 #endif
             if (bytes_read == 0)
             {
@@ -3600,7 +3602,7 @@ void gg_out_file (char *fname, gg_header *header)
         //
         GG_TRACE("File read and to be sent [%s]", fname);
         char *str = gg_malloc(fsize + 1);
-        if (fread(str, fsize, 1, f) != 1)
+        if (fread_unlocked(str, fsize, 1, f) != 1)
         {
             gg_free_int (str);
             GG_TRACE ("Cannot read [%ld] bytes from file [%s], error [%s]", fsize, fname, strerror(errno));

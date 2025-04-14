@@ -34,7 +34,7 @@ end-handler
 .RE
 
 .SH SEE ALSO
- lrnC languageelrn
+ 
 .B - C language
 
 \fBcall-extended\fP  

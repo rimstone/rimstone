@@ -141,7 +141,7 @@ You must specify at least one value to obtain in read-remote, or any number of t
 .SH EXAMPLES
 See examples in \fBnew-remote\fP and \fBcall-remote\fP.
 .SH SEE ALSO
- lrnDistributed computingelrn
+ 
 .B - Distributed computing
 
 \fBcall-remote\fP  

@@ -74,7 +74,7 @@ new-tree my_tree
 .RE
 
 .SH SEE ALSO
- lrnTreeelrn
+ 
 .B - Tree
 
 \fBdelete-tree\fP  

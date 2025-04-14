@@ -114,7 +114,7 @@ See \fBmgrg\fP for more details.
 
 You can run your application as \fBservice\fP, \fBCGI\fP or \fBcommand-line\fP.
 .SH SEE ALSO
- lrnRunning applicationelrn
+ 
 .B - Running application
 
 \fBapplication-setup\fP  

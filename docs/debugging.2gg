@@ -130,9 +130,9 @@ Note that by default, gdb will show Golf code and you can step through it as you
 
 However, if you wish to step through the underlying C libraries, use "--c-lines" option in \fBgg\fP when making your application. In addition, you can use "--plain-diag" option to see diagnostics for underlying C code alone. These options should be used only if you're trying to debug issues with Golf itself, or to find and report a bug in Golf.
 
-Debugging version of Golf, as well as using "--debug" option to compile, will considerably slow down run-time performance (in some tests about 50-55%); do not use Golf build with debugging symbols (see \fBinstall\fP) nor "--debug" (see \fBgg\fP) in production.
+Debugging version of Golf, as well as using "--debug" option to compile, will considerably slow down run-time performance (in some tests about 50-55%); do not use Golf build with debugging symbols (see \fBhow to install\fP) nor "--debug" (see \fBgg\fP) in production.
 .SH SEE ALSO
- lrnDebuggingelrn
+ 
 .B - Debugging
 
 \fBdebugging\fP  

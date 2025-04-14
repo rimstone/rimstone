@@ -64,6 +64,12 @@ Each <variable> can be of C type (or a pointer to C type):
 A <function> should not return a value. Rather, use a variable passed as a pointer if you wish to pass the function's output back to your Golf code.
 
 .LP
+.B CHANGING CURRENT WORKING DIRECTORY
+.LP
+
+If you change current working directory from your C code (such as with C chmod() function), you must set Golf internal boolean variable "gg_path_changed" to true.
+
+.LP
 .B WEB FRAMEWORK FOR C PROGRAMMING LANGUAGE
 .LP
 
@@ -150,7 +156,7 @@ end-handler
 
 In this example, you are using a C macro, so number "fact" is assigned a value directly, per C language rules. The result printed out is "3".
 .SH SEE ALSO
- lrnC languageelrn
+ 
 .B - C language
 
 \fBcall-extended\fP  

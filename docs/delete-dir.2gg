@@ -1,0 +1,41 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+delete-dir \-  (directories)
+.SH PURPOSE
+Delete directory.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+delete-dir <directory> [ status <status> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+delete-dir will delete <directory>, which is a string that may be an absolute or relative path. 
+
+If "status" clause is used, then number <status> is GG_OKAY if succeeded, GG_ERR_EXIST if directory is not empty, or GG_ERR_FAILED for other errors (in which case you can use "errno" clause in \fBget-req\fP to find the specific reason why).
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+delete-dir "/home/user/some_dir"
+
+.EE
+.RE
+
+.SH SEE ALSO
+ 
+.B - Directories
+
+\fBchange-dir\fP  
+\fBchange-mode\fP  
+\fBdelete-dir\fP  
+\fBnew-dir\fP   
+See all 
+\fBdocumentation\fP

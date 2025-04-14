@@ -32,12 +32,32 @@ sudo apt remove golf
 .EE
 .RE
 
-For Redhat:
+For Redhat, Fedora and similar:
 
 .RS 4
 .EX
 
 sudo dnf remove golf
+
+.EE
+.RE
+
+For OpenSUSE:
+
+.RS 4
+.EX
+
+sudo zypper remove golf
+
+.EE
+.RE
+
+For Arch and similar:
+
+.RS 4
+.EX
+
+sudo pacman -R golf
 
 .EE
 .RE
@@ -49,11 +69,12 @@ sudo dnf remove golf
 
 Note that /var/lib/gg directory is not removed, as it generally contains application files. You may move such files or delete them as you see fit.
 .SH SEE ALSO
- lrnDownload and buildelrn
+ 
 .B - Download and build
 
 \fBinstall-golf-from-source-using-apt\fP  
 \fBinstall-golf-from-source-using-dnf\fP  
+\fBinstall-golf-from-source-using-pacman\fP  
 \fBinstall-golf-from-source-using-zypper\fP  
 \fBuninstall\fP   
 See all 

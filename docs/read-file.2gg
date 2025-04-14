@@ -13,7 +13,8 @@ read-file <file> | ( file-id <file id> ) \\
     to <content> \\
     [ position <position> ] \\
     [ length <length> ] \\
-    [ status <status> ]
+    [ status <status> ] \\
+    [ end-of-file <eof> ]
 
 .EE
 .RE
@@ -36,7 +37,7 @@ If "position" clause is used, then reading starts at byte <position>, otherwise 
 
 If "length" clause is used, then <length> number of bytes is read, otherwise the rest of the file is read. If <length>  is 0, <content> is empty string and <status> is 0.
 
-If "status" clause is used, then the number of bytes read is stored to <status>, unless error occurred, in which case <status> is negative and has the error code. The error code can be GG_ERR_POSITION (if <position> is negative, outside the file, or file does not support it), GG_ERR_READ (if <length> is negative or there is an error reading file) or GG_ERR_OPEN if file is not open. 
+If "status" clause is used, then the number of bytes read is stored to <status>, unless error occurred, in which case <status> is negative and has the error code. The error code can be GG_ERR_POSITION (if <position> is negative, outside the file, or file does not support it), GG_ERR_READ (if <length> is negative or there is an error reading file) or GG_ERR_OPEN if file cannot be opened. If the number of bytes read isn't what's requested, you can use "end-of-file" clause to get boolean <eof>, which is true if the end of file happened, or false if there is an error (in which case you can use "errno" clause in \fBget-req\fP to obtain the actual reason for error).
 
 .LP
 .B WITH FILE-ID
@@ -52,7 +53,7 @@ If "length" clause is used, then <length> number of bytes is read, otherwise the
 
 Note that when you reach the end of file and no more bytes can be read, <status> is 0.
 
-If "status" clause is used, then the number of bytes read is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be GG_ERR_POSITION (if <position> is negative, outside the file, or file does not support it), GG_ERR_READ (if <length> is negative or there is an error reading file) or GG_ERR_OPEN if file is not open. 
+If "status" clause is used, then the number of bytes read is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be GG_ERR_POSITION (if <position> is negative, outside the file, or file does not support it), GG_ERR_READ (if <length> is negative or there is an error reading file) or GG_ERR_OPEN if file is not open. If the number of bytes read isn't what's requested, you can use "end-of-file" clause to get boolean <eof>, which is true if the end of file happened, or false if there is an error (in which case you can use "errno" clause in \fBget-req\fP to obtain the actual reason for error).
 
 .SH EXAMPLES
 To read the entire file and create both the variable that holds its content and the status variable:
@@ -85,9 +86,10 @@ read-file "/home/user/some_file" to file_content position 20 length 10
 
 See \fBopen-file\fP for an example with "file-id" clause.
 .SH SEE ALSO
- lrnFileselrn
+ 
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  

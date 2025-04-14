@@ -20,7 +20,7 @@ rewind-fifo will position at the very first data element put into <list> which w
 .SH EXAMPLES
 See \fBread-fifo\fP.
 .SH SEE ALSO
- lrnFIFOelrn
+ 
 .B - FIFO
 
 \fBdelete-fifo\fP  

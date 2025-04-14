@@ -64,7 +64,7 @@ hash-string "hello world" to hash digest "sha3-384" binary
 .RE
 
 .SH SEE ALSO
- lrnEncryptionelrn
+ 
 .B - Encryption
 
 \fBdecrypt-data\fP  

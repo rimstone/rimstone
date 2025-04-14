@@ -44,7 +44,7 @@ The value of "hexout" will be:
 .RE
 
 .SH SEE ALSO
- lrnHex encodingelrn
+ 
 .B - Hex encoding
 
 \fBdecode-hex\fP  

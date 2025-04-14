@@ -55,11 +55,12 @@ sudo make install
 
 Here's how to \fBuninstall\fP.
 .SH SEE ALSO
- lrnDownload and buildelrn
+ 
 .B - Download and build
 
 \fBinstall-golf-from-source-using-apt\fP  
 \fBinstall-golf-from-source-using-dnf\fP  
+\fBinstall-golf-from-source-using-pacman\fP  
 \fBinstall-golf-from-source-using-zypper\fP  
 \fBuninstall\fP   
 See all 

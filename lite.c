@@ -240,7 +240,7 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
     snprintf (db_config_name, sizeof(db_config_name), "%s/%s", gg_get_config()->app.dbconf_dir, GG_CURR_DB.db_name);
     GG_TRACE ("Using db config file [%s]", db_config_name);
     char *cinfo;
-    if (gg_read_file (db_config_name, &cinfo, 0, 0) < 0)
+    if (gg_read_file (db_config_name, &cinfo, 0, 0, NULL) < 0)
     {
         char em[300];
         snprintf (em, sizeof(em), "Cannot read database configuration file [%s]", db_config_name);

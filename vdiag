@@ -125,8 +125,17 @@ cd "$CDIR"
 
 #make sure stdout goes to stderr, since this is diagnostics
 #and also make colors for top diagnostic error
-#use sed 10 times to convert __ to / - this assumes directory structure is 10 levels deep at most, this is when flat structure is used
-cat /var/lib/gg/bld/$APP/.vdiag1_$MYPID|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/''| sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | sed 's/__\([^:]*:\)/\/\1/g' | cat - 1>&2
+#cat /var/lib/gg/bld/$APP/.vdiag1_$MYPID|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/'' | cat - 1>&2
+#
+#The below code, with replacing __ with / seem to be no longer needed, but not sure. Keeping for now
+#
+#use sed 10 times to convert __ to / (if not preceded by /) - this assumes directory structure is 10 levels deep at most, this is when flat structure is used
+#this is for presenting hierarchical request names properly, but it messes up file names for --c-lines. For instance if v1.c doesn't generate the right code,
+#this is needed to show hierarchy
+cat /var/lib/gg/bld/$APP/.vdiag1_$MYPID|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/''| sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  |  sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  |cat - 1>&2
+#
+#
+#
 
 rm -f /var/lib/gg/bld/$APP/.vdiag1_$MYPID
 rm -f var/lib/gg/bld/$APP/.vdiag3_$MYPID

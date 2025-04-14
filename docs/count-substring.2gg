@@ -38,7 +38,7 @@ pf-out "Found %ld occurrences!\en", num_occ
 .RE
 
 .SH SEE ALSO
- lrnStringselrn
+ 
 .B - Strings
 
 \fBcopy-string\fP  

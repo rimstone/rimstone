@@ -34,7 +34,7 @@ random-crypto to str length 20
 .RE
 
 .SH SEE ALSO
- lrnEncryptionelrn
+ 
 .B - Encryption
 
 \fBdecrypt-data\fP  

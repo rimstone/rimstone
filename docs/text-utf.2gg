@@ -44,7 +44,7 @@ end-if
 .RE
 
 .SH SEE ALSO
- lrnUTFelrn
+ 
 .B - UTF
 
 \fBtext-utf\fP  

@@ -110,8 +110,12 @@ GG_HEADER_FILES:=$(GG_HEADER_FILES)
 _OBJ_FILES=$(GG_SOURCE_FILES:%.golf=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG_BLD)/%.oc)
 
 #strip symbols but keep _dbg for when needed (gdb->core or addr2line)
+#we have || true (i.e. surpress error in bash, but not error message)
+#so as not to stop the build process, as this isn't critical. It really
+#happens only if you build against live running server, something that's 
+#usually only done in testing, and stripping symbols is not a priority.
 define strip_sym
-	if [ "$(GG_C_DEBUG)" != "1" ]; then objcopy --only-keep-debug $@ $@_dbg ; objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@_dbg $@ ; fi
+	if [ "$(GG_C_DEBUG)" != "1" ]; then objcopy --only-keep-debug $@ $@_dbg ; objcopy --strip-unneeded $@ || true ; objcopy --add-gnu-debuglink=$@_dbg $@ ; fi
 endef
 
 #when making source, start with compiling; then if error, check if plain diagnostic; if not, recompile with error processed by vdiag script to produce highlights (in which

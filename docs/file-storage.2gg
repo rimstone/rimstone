@@ -22,9 +22,10 @@ In general, a number of sub-directories is created within the file directory tha
 
 Do not rename file names or sub-directory names stored under file directory.
 .SH SEE ALSO
- lrnFileselrn
+ 
 .B - Files
 
+\fBchange-mode\fP  
 \fBclose-file\fP  
 \fBcopy-file\fP  
 \fBdelete-file\fP  
