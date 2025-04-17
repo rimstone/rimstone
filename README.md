@@ -29,9 +29,9 @@ You can also [install from source](https://golf-lang.com//install-golf-from-sour
 Install Golf on Debian [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
 ## Install Golf on Arch and Manjaro:
 ```
-git clone https://aur.archlinux.org/golf-lang.git
-cd golf
-makepkg -sirc
+wget "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=golf" -O PKGBUILD
+sudo pacman -Sy --noconfirm base-devel
+makepkg --noconfirm -sirc
 ```
 Install Golf on Arch and Manjaro [from source code](https://golf-lang.com//install-golf-from-source-using-pacman.html)\.
 ## Current version
@@ -41,6 +41,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 ![Golf image](https://golf-lang.com/home-example.png)
 ## Articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-04\-14 [New status\-safety feature](https://golf-lang.blogspot.com/2025/04/new-status-safety-feature.html)
 * 2025\-04\-11 [New upcoming safety features](https://golf-lang.blogspot.com/2025/04/safety-improvement-for-application-logic.html)
 * 2025\-04\-10 [How to start, stop or restart Golf application server](https://golf-lang.blogspot.com/2025/04/how-to-start-stop-or-restart-golf.html)
 * 2025\-04\-05 [How to build OpenSUSE zypper package for Golf](https://golf-lang.blogspot.com/2025/04/how-to-build-opensuse-zypper-package.html)
