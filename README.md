@@ -1,28 +1,28 @@
 Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf)\. 
 ## Install Golf on Ubuntu \(versions 20, 22, 24, 25\):
 ```
-sudo add-apt-repository ppa:golf-lang/golf-lang -y
+sudo add-apt-repository ppa:golf-lang/golf -y
 sudo apt update
-sudo apt -y install golf-lang
+sudo apt -y install golf
 ```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
 ## Install Golf on Redhat \(incl\. Rocky, Alma, Centos\), Fedora, Amazon Linux, Mageia:
 ```
 sudo dnf -y install epel-release
 sudo dnf -y copr enable golf-lang/golf-lang
-sudo dnf -y install golf-lang
+sudo dnf -y install golf
 ```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-dnf.html)\.
 ## Install Golf on OpenSUSE:
 Install OpenSUSE Tumbleweed:
 ```
-sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-tumbleweed/golf-lang-golf-lang-opensuse-tumbleweed.repo
-sudo zypper -n install  golf-lang
+sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-tumbleweed/golf-lang-golf-opensuse-tumbleweed.repo
+sudo zypper -n install --replacefiles --force-resolution  golf
 ```
 Install OpenSUSE Leap 15\.6:
 ```
-sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-leap-15.6/golf-lang-golf-lang-opensuse-leap-15.6.repo
-sudo zypper -n install  golf-lang
+sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-leap-15.6/golf-lang-golf-opensuse-leap-15.6.repo
+sudo zypper -n install --replacefiles --force-resolution golf
 ```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-zypper.html)\.
 ## Install Golf on Debian:
@@ -30,7 +30,7 @@ Install Golf on Debian [from source code](https://golf-lang.com//install-golf-fr
 ## Install Golf on Arch and Manjaro:
 ```
 git clone https://aur.archlinux.org/golf-lang.git
-cd golf-lang
+cd golf
 makepkg -sirc
 ```
 Install Golf on Arch and Manjaro [from source code](https://golf-lang.com//install-golf-from-source-using-pacman.html)\.
@@ -126,4 +126,3 @@ Contact email [team@golf\-lang\.com](mailto:team@golf-lang.com)
 Visit [official Golf home page](https://golf-lang.com).
 
 See CONTRIBUTING.md file on how to contribute.
-
