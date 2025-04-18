@@ -38,7 +38,7 @@ run-query executes a query specified with string <query text>.
 .B DATABASE
 .LP
 
-<database> is specified in "@" clause and is the name of the \fBdatabase-config-file\fP. If ommited, your program must use exactly one database (see --db option in \fBgg\fP).
+<database> is specified in "@" clause and is the name of the \fBdatabase-config-file\fP. If omitted, your program must use exactly one database (see --db option in \fBgg\fP).
 
 .LP
 .B OUTPUT

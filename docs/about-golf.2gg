@@ -113,7 +113,7 @@ data (eg. database) layers, and any others.
 
 
 .LP
-.B LANGUAGE
+.B LANGUAGE AND SAFETY
 .LP
 
 Golf programming language is memory-safe, meaning it will prevent you from accidentally overwriting memory or freeing it when it shouldn't be. Golf's \fBmemory-handling\fP is not limited to just memory safety; it also includes automatic freeing of memory at the end of a request, preventing memory leaks which can be fatal to long running processes. Similarly, files open with file-handling statements are automatically closed at the end of each request, serving the same purpose. 
@@ -140,7 +140,7 @@ Golf \fBstatements\fP are designed for safety, ease of use, and ability to write
 
 A variable is created the first time it's encountered in any given scope, and is never created again in the same or inner scopes, which avoids common bugs involving more than one variable with the same name in related scopes. You can still of course create variables with the same name in unrelated scopes. 
 
-Some structured types (hash, tree, list) as well as primitive types (numbers, strings and booleans) can be created with process-scope, meaning their value persists throughout any requests served by the same process. This is useful for making services that allow keeping and fast quering of data (such as caches).
+Some structured types (hash, tree, list) as well as primitive types (numbers, strings and booleans) can be created with process-scope, meaning their value persists throughout any requests served by the same process. This is useful for making services that allow keeping and fast querying of data (such as caches).
 
 Numbers and booleans are assigned by value, while strings are assigned by reference (for obvious reason to avoid unnecessary copying).
 

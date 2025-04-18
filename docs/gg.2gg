@@ -152,7 +152,7 @@ Use <threads> number of threads to compile application. By default, the number o
 .RS 4
 \[bu]    
 --posix-regex
-Use ERE (Extended Regular Expression) POSIX regex library built into Linux instead of default PCRE2, see \fBmatch-regex\fP. While the two are largely compatibile, you can use either one depending on your needs.
+Use ERE (Extended Regular Expression) POSIX regex library built into Linux instead of default PCRE2, see \fBmatch-regex\fP. While the two are largely compatible, you can use either one depending on your needs.
 
 
 .RE

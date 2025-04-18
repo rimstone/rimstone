@@ -63,7 +63,7 @@ Note that Golf application path is "/func_test" (and the application name may or
 
 HAProxy itself is bound to port 90, and "path_reg" specifies which URLs will be passed to your Golf application (i.e. they must have "/func_test/" in the URL). "path-info" specifies SCRIPT_NAME and PATH_INFO (as "()" regular sub-expressions), which are as such passed to your Golf application. "docroot" is set to the application home directory (see \fBdirectories\fP).
 
-A Golf aplication (named "func_test") would have been started with (using the same application name "func_test" and TCP port "2301"):
+A Golf application (named "func_test") would have been started with (using the same application name "func_test" and TCP port "2301"):
 
 .RS 4
 .EX

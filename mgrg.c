@@ -109,7 +109,7 @@ static char *usage_message =
     -x            use Unix domain sockets (local connections)\n\
     -n            do not restart dead workers\n\
     -g            do not restart workers when executable changes\n\
-    -l <backlog>  the size of listening backlog for incomming connections\n\
+    -l <backlog>  the size of listening backlog for incoming connections\n\
     -w <num_wrk>  number of workers if not adaptive (-d)\n\
     -d            adaptive load mode: number of workers determined dynamically\n\
     --max-worker\n\

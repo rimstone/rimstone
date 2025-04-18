@@ -70,7 +70,7 @@ You would install these libraries yourself (they are not distributed with Golf) 
 
 Golf uses FNV-1a hash function, which is released in the public domain (see \fBwikipedia page\fP) and is not patented (see \fBLandon Noll's\fP web page).
 
-Golf source code uses \fBSPDX\fP, an open ISO standard for communicating sofware bill of material information (such as licenses), to improve on open source licensing compliance for companies and communities.
+Golf source code uses \fBSPDX\fP, an open ISO standard for communicating software bill of material information (such as licenses), to improve on open source licensing compliance for companies and communities.
 .SH SEE ALSO
  
 .B - License

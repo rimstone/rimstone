@@ -22,7 +22,7 @@ read-lifo retrieves an element from the LIFO <list> into <key> string  (in "key"
 
 Once an element has been retrieved, the next use of read-lifo will obtain the following one, in the reverse order they were put in. read-lifo starts with the last element put in, and moves backwards from there, unless \fBrewind-lifo\fP is called, which positions back to the last one. Note that \fBwrite-lifo\fP will cause the next read-lifo to start with the element just written, i.e. it implicitly calls \fBrewind-lifo\fP.
 
-If the element is successfuly retrieved, <status> number (in "status" clause) is GG_OKAY, otherwise it is GG_ERR_EXIST, which means there are no more elements to retrieve. 
+If the element is successfully retrieved, <status> number (in "status" clause) is GG_OKAY, otherwise it is GG_ERR_EXIST, which means there are no more elements to retrieve. 
 
 .SH EXAMPLES
 In this example, a LIFO list is created, and two key/value pairs added. They are then retrieved in a loop and printed out (twice with rewind), and then the list is purged:

@@ -29,7 +29,7 @@ cd golf
 .EX
 
 sudo zypper --non-interactive in --replacefiles --force-resolution rpm-build 
-sudo zypper -n install $(rpmspec --parse golf-lang.spec | grep BuildRequires|sed 's/^.*:\e(.*\e)$/\e1/g')
+sudo zypper -n install $(rpmspec --parse golf.spec | grep BuildRequires|sed 's/^.*:\e(.*\e)$/\e1/g')
 
 .EE
 .RE

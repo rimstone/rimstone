@@ -22,7 +22,7 @@ read-fifo retrieves an element from the FIFO <list> into <key> string  (in "key"
 
 Once an element has been retrieved, the next use of read-fifo will obtain the following one, in the same order they were put in. read-fifo starts with the first element put in, and moves forward from there, unless \fBrewind-fifo\fP is called, which positions back to the first one.
 
-If the element is successfuly retrieved, <status> number (in "status" clause) is GG_OKAY, otherwise it is GG_ERR_EXIST, which means there are no more elements to retrieve.
+If the element is successfully retrieved, <status> number (in "status" clause) is GG_OKAY, otherwise it is GG_ERR_EXIST, which means there are no more elements to retrieve.
 
 .SH EXAMPLES
 In this example, a FIFO list is created, and two key/value pairs added. They are then retrieved in a loop and printed out (twice with rewind), and then the list is purged:

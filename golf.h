@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "397"
+#define GG_VERSION "417"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -185,7 +185,7 @@
 
 // Types
 typedef int64_t gg_num;
-typedef int32_t gg_num32;
+typedef int32_t gg_num32; // internal only
 typedef char* gg_str;
 // Request handler type
 typedef void (*gg_request_handler)(); // request handler in golf dispatcher

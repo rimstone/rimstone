@@ -206,6 +206,7 @@ clean:
 	rm -f *.o
 	rm -f *.so
 	rm -f *.dbg
+	rm -f mgrg v1
 	rm -f selinux.setup
 
 

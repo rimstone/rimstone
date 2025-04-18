@@ -12,9 +12,9 @@ Golf is a programming language and  application server for building web services
 .RS 4
 .EX
 
-sudo add-apt-repository ppa:golf-lang/golf-lang -y
+sudo add-apt-repository ppa:golf-lang/golf -y
 sudo apt update
-sudo apt -y install golf-lang
+sudo apt -y install golf
 
 .EE
 .RE
@@ -31,7 +31,7 @@ You can also \fBinstall from source\fP.
 
 sudo dnf -y install epel-release
 sudo dnf -y copr enable golf-lang/golf-lang
-sudo dnf -y install golf-lang
+sudo dnf -y install golf
 
 .EE
 .RE
@@ -47,8 +47,8 @@ Install OpenSUSE Tumbleweed:
 .RS 4
 .EX
 
-sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-tumbleweed/golf-lang-golf-lang-opensuse-tumbleweed.repo
-sudo zypper -n install  golf-lang
+sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-tumbleweed/golf-lang-golf-opensuse-tumbleweed.repo
+sudo zypper -n install --replacefiles --force-resolution  golf
 
 .EE
 .RE
@@ -58,8 +58,8 @@ Install OpenSUSE Leap 15.6:
 .RS 4
 .EX
 
-sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-leap-15.6/golf-lang-golf-lang-opensuse-leap-15.6.repo
-sudo zypper -n install  golf-lang
+sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-leap-15.6/golf-lang-golf-opensuse-leap-15.6.repo
+sudo zypper -n install --replacefiles --force-resolution golf
 
 .EE
 .RE
@@ -80,9 +80,9 @@ Install Golf on Debian \fBfrom source code\fP.
 .RS 4
 .EX
 
-git clone https://aur.archlinux.org/golf-lang.git
-cd golf-lang
-makepkg -sirc
+wget "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=golf" -O PKGBUILD
+sudo pacman -Sy --noconfirm base-devel
+makepkg --noconfirm -sirc
 
 .EE
 .RE
@@ -93,7 +93,7 @@ Install Golf on Arch and Manjaro \fBfrom source code\fP.
 .B CURRENT VERSION
 .LP
 
-Current version is 397. This release passed 2386 automated functional tests.
+Current version is 417. This release passed 2386 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -107,6 +107,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .LP
 
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-04-14 \fBNew status-safety feature\fP
+.RE
+
 
 .RS 4
 \[bu]    

@@ -298,7 +298,7 @@ You can obtain the error message (corresponding to the above return values) in "
 
 The service reply is split in two. One part is the actual result of processing (called "stdout" or standard output), and that is "data". The other is the error messages (called "stderr" or standard error), and that's "error". All of service output goes to "data", except from \fBreport-error\fP and \fBpf-out\fP/\fBpf-url\fP/\fBpf-web\fP (with "to-error" clause) which goes to "error". Note that "data" and "error" streams can be co-mingled when output by the service, but they will be obtained separately. This allows for clean separation of output from any error messages.
 
-You can obtain service reply when it's ready in its entirety (likely most often used), or as it comes alone bit by bit (see more about asynchronous hooks futher here).
+You can obtain service reply when it's ready in its entirety (likely most often used), or as it comes alone bit by bit (see more about asynchronous hooks further here).
 
 .LP
 .B STATUS OF REQUEST EXECUTION
@@ -330,7 +330,7 @@ if (gg_cli_request (&req) == GG_OKAY) {
 
 "data_len" member of "gg_cli" type will have the length of data response in bytes. The reply is always null-terminated as a courtesy, and "data_len" does not include the terminating null byte.
 
-"gg_cli_data()" returns the actual response (i.e. data output) from service as passed to "data" stream. Any output from service will go there, except when "to-error" clause is used in \fBpf-out\fP, \fBpf-url\fP and \fBpf-web\fP - use these constructs to output errors without stopping the service execution. Additionaly, the output of \fBreport-error\fP will also not go to data output.
+"gg_cli_data()" returns the actual response (i.e. data output) from service as passed to "data" stream. Any output from service will go there, except when "to-error" clause is used in \fBpf-out\fP, \fBpf-url\fP and \fBpf-web\fP - use these constructs to output errors without stopping the service execution. Additionally, the output of \fBreport-error\fP will also not go to data output.
 
 .LP
 .B GETTING ERROR REPLY (STDERR)
@@ -750,7 +750,7 @@ begin-handler /hello public
     // Output back a number of lines, generally as "Output line #<num of line>"
     // After line #1418, print out "Line 1419 has an error" to stderr
     // After line #4418, report an error and exit
-    // This demostrates outputting data to both stdout and stderr
+    // This demonstrates outputting data to both stdout and stderr
     start-loop repeat 8000 use i start-with 0
         @Output line #<<p-num i>>
         if-true i equal 1419

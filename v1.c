@@ -9765,7 +9765,7 @@ int main (int argc, char* argv[])
         {
             if (i + 1 >= argc)
             {
-                gg_report_error ( "Maxium upload length not specified after -max-upload option");
+                gg_report_error ( "Maximum upload length not specified after -max-upload option");
                 exit (1);
             }
             gg_max_upload = atol (argv[i+1]);
