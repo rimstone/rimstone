@@ -92,6 +92,7 @@
 #define GG_KEYUPDATEKEY "update-key "
 #define GG_KEYUPDATEVALUE "update-value "
 #define GG_KEYKEYAS "key-as "
+#define GG_KEYRUNDIR "run-dir"
 #define GG_KEYUNSORTED "unsorted"
 #define GG_KEYNOENUM "no-enum"
 #define GG_KEYMAXKEY "max-key"
@@ -261,7 +262,7 @@
 // maximum length of generated code line (in .c file, final line)
 #define GG_MAX_CODE_LINE GG_FILE_LINE_LEN
 // error messages
-#define GG_STMT_FAIL_CHECK "Statement failed without status being obtained and/or checked [%ld]"
+#define GG_STMT_FAIL_CHECK "File [%s], line [%ld], Statement failed without status being obtained and/or checked [%ld]"
 #define GG_NAME_INVALID "Name [%s] is not valid, must be a valid identifier because a variable is required in this context, or this clause has already been specified"
 #define GG_VAR_NOT_EXIST "Variable [%s] does not exist"
 #define GG_MSG_NESTED_QRY "Qry ID [%ld] is nested too deep, maximum nesting of [%d]"
@@ -1219,7 +1220,7 @@ void call_service_impl (char *st, char *finok, char *started, char *mtext)
     snprintf (totreq_s, sizeof(totreq_s), "%ld", totreq);
     oprintf ("{_gg_st=gg_call_fcgi (%s, %s, %s%s%s, %s%s%s);}\n", req_var, totreq_s, finok==NULL?"":"&(", finok==NULL?"NULL":finok, finok==NULL?"":")", started==NULL?"":"&(", started==NULL?"NULL":started, started==NULL?"":")" );
     if (st != NULL) oprintf("%s=_gg_st;\n",st);
-    else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+    else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
     total_fcgi_arr++;
 }
 
@@ -1266,7 +1267,7 @@ void read_service_impl(char *mtext, char *data, char *error, char *st, char *rms
     if (data != NULL) oprintf ("%s = gg_cli_data(%s);\n", data, mtext);
     if (error != NULL) oprintf ("%s = gg_cli_error(%s);\n", error, mtext);
     if (st != NULL) oprintf ("%s = (%s)->return_code;\n", st, mtext);
-    else oprintf("if ((%s)->return_code != GG_OKAY) gg_report_error (\"%s\", (gg_num)((%s)->return_code));\n", mtext, GG_STMT_FAIL_CHECK, mtext);
+    else oprintf("if ((%s)->return_code != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)((%s)->return_code));\n", mtext, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, mtext);
     if (rmsg != NULL) oprintf ("%s = gg_strdup((%s)->errm);\n", rmsg, mtext);
     if (rstatus != NULL) oprintf ("%s = (%s)->req_status;\n", rstatus, mtext);
 }
@@ -1447,7 +1448,7 @@ void run_service (char *mtext)
     // this is if err_too_many (which can't happen since it's only one, or out of memory, so say it
     if (rmsg != NULL) oprintf ("if (_gg_st == GG_ERR_MEMORY) %s = gg_strdup(\"Out of memory\"); else %s = gg_strdup (\"Unknown error\");\n", rmsg,rmsg);
     else oprintf(";"); // for compiler peace of mind
-    if (st==NULL) oprintf("gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK); // this really should never happen since call_service_impl() should catch this
+    if (st==NULL) oprintf("gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum); // this really should never happen since call_service_impl() should catch this
     oprintf ("}\n");
 }
 
@@ -5272,7 +5273,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         program_error==NULL ? "NULL":program_error, 
                         program_error==NULL ? "":")");
                         if (program_status!=NULL) oprintf("%s=_gg_st;\n", program_status);
-                        else oprintf ("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        else oprintf ("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         if (err_file != NULL) oprintf ("}\n");
                         if (out_file != NULL) oprintf ("}\n");
                         if (in_file != NULL) oprintf ("}\n");
@@ -5330,7 +5331,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         oprintf ("_gg_st=gg_lockfile (%s, &(%s));\n", mtext, id);
                         if (status != NULL) oprintf ("%s=_gg_st;\n", status);
-                        else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);}\n", GG_STMT_FAIL_CHECK);
+                        else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
 
                         continue;
                     }
@@ -5716,7 +5717,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (newI != 0)
                         {
                             if (status != NULL) oprintf("%s=_gg_st;\n", status);
-                            else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                            else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         }
 
 
@@ -5931,7 +5932,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         oprintf ("char *_gg_errt%ld = GG_EMPTY_STRING;\n", code_text);
                         oprintf ("_gg_st = gg_utf_to_text (%s, %s, %s%s%s, &_gg_errt%ld);\n", mtext, len == NULL ? "-1":len, to==NULL?"":"&(", to==NULL?"NULL":to, to==NULL?"":")", code_text);
-                        if (status != NULL) oprintf ("if (_gg_st == -1) {GG_ERR0;%s=GG_ERR_UTF;} else %s=_gg_st;\n", status, status); else oprintf("if (_gg_st == -1) gg_report_error (\"%s\", (gg_num)GG_ERR_UTF);\n", GG_STMT_FAIL_CHECK);
+                        if (status != NULL) oprintf ("if (_gg_st == -1) {GG_ERR0;%s=GG_ERR_UTF;} else %s=_gg_st;\n", status, status); else oprintf("if (_gg_st == -1) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_UTF);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         if (errt != NULL) oprintf ("%s = _gg_errt%ld;\n", errt, code_text); 
 
                         code_text++;
@@ -5955,7 +5956,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         oprintf ("char *_gg_errt%ld = NULL;\n", code_text);
                         oprintf ("_gg_st_str = gg_text_to_utf (%s, 0, &_gg_errt%ld, 1, true);\n", mtext, code_text);
-                        if (status != NULL) oprintf ("if (_gg_st_str != NULL) %s=GG_OKAY; else {GG_ERR0;%s=GG_ERR_UTF;}\n", status, status); else oprintf("if (_gg_st_str == NULL) gg_report_error (\"%s\", (gg_num)GG_ERR_UTF);\n", GG_STMT_FAIL_CHECK);
+                        if (status != NULL) oprintf ("if (_gg_st_str != NULL) %s=GG_OKAY; else {GG_ERR0;%s=GG_ERR_UTF;}\n", status, status); else oprintf("if (_gg_st_str == NULL) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_UTF);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         if (errt != NULL) oprintf ("%s = _gg_errt%ld;\n", errt, code_text);
 
 
@@ -5988,7 +5989,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = rename ((%s), (%s));GG_ERR;\n", mtext, to);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", (gg_num)GG_ERR_RENAME);\n", GG_STMT_FAIL_CHECK);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_RENAME);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         }
                         else
                         {
@@ -6018,7 +6019,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = rmdir (%s);GG_ERR;\n", mtext);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", (gg_num)((errno == EEXIST||errno==ENOTEMPTY)?GG_ERR_EXIST:GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)((errno == EEXIST||errno==ENOTEMPTY)?GG_ERR_EXIST:GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         }
                         else
                         {
@@ -6052,7 +6053,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = chmod (%s, %s);GG_ERR;\n", mtext, mode);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", (gg_num)(errno==ENOENT?GG_ERR_EXIST:GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)(errno==ENOENT?GG_ERR_EXIST:GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         }
                         else
                         {
@@ -6085,7 +6086,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = mkdir (%s, %s);GG_ERR;\n", mtext, mode);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", (gg_num)(errno==EEXIST?GG_ERR_EXIST?GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)(errno==EEXIST?GG_ERR_EXIST?GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         }
                         else
                         {
@@ -6100,10 +6101,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
                         char *home = find_keyword (mtext, GG_KEYHOME, 1);
+                        char *edir = find_keyword (mtext, GG_KEYRUNDIR, 1);
 
                         carve_statement (&status, "change-dir", GG_KEYSTATUS, 0, 1);
                         carve_statement (&home, "change-dir", GG_KEYHOME, 0, 0);
-                        if (home == NULL) carve_stmt_obj (&mtext, true); else carve_stmt_obj (&mtext, false);
+                        carve_statement (&edir, "change-dir", GG_KEYRUNDIR, 0, 0);
+                        if (home == NULL && edir == NULL) carve_stmt_obj (&mtext, true); else carve_stmt_obj (&mtext, false);
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
@@ -6112,17 +6115,19 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         // Look for each option and collect relevant info, namely OS errno
                         //
-                        oprintf ("_gg_st = chdir (%s);GG_ERR;\n", home == NULL ? mtext: "gg_get_config()->app.home_dir");
+                        oprintf ("_gg_st = chdir (%s);GG_ERR;\n", home == NULL ? (edir == NULL ? mtext:"gg_get_config()->app.run_dir"): "gg_get_config()->app.home_dir");
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", (gg_num)GG_ERR_FAILED);\n", GG_STMT_FAIL_CHECK);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_FAILED);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         }
                         else
                         {
-                            oprintf ("if (_gg_st != 0 ) {GG_ERR;GG_TRACE (\"Cannot change to directory [%%s], error [%%s]\",%s, strerror(errno)); %s=GG_ERR_FAILED;} else %s=GG_OKAY;\n", home == NULL ? mtext: "gg_get_config()->app.home_dir", status, status);
+                            oprintf ("if (_gg_st != 0 ) {GG_ERR;GG_TRACE (\"Cannot change to directory [%%s], error [%%s]\",%s, strerror(errno)); %s=GG_ERR_FAILED;} else %s=GG_OKAY;\n", home == NULL ? ( edir == NULL ? mtext:"gg_get_config()->app.run_dir"): "gg_get_config()->app.home_dir", status, status);
                         }
                         // we set this global boolean so we don't have to chdir at the beginning of each request
                         // note that in internal mode or in external, using directly C' chdir() will not affect this, and gg_path_changed should be manually set!!!
+                        // nothing to do for edir, since home should for the next request either way
+                        // Plus, this shouldn't be used for command-line programs
                         oprintf("gg_path_changed=%s;\n", home == NULL?"true":"false");
 
 
@@ -6149,7 +6154,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = unlink (%s);GG_ERR;\n", mtext);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY && errno != ENOENT) gg_report_error (\"%s\",  (gg_num)GG_ERR_DELETE);\n", GG_STMT_FAIL_CHECK);
+                            oprintf("if (_gg_st != GG_OKAY && errno != ENOENT) gg_report_error (\"%s\", \"%s\", (gg_num)%ld,  (gg_num)GG_ERR_DELETE);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         }
                         else
                         {
@@ -6288,7 +6293,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         total_body++;
 
                         oprintf ("_gg_st=gg_post_url_with_response(%s, &(%s), %s%s%s, %s%s%s, %s, %s, %s%s%s, %s, %s, %s, %s, %s, %s, %s, %s);\n", mtext, resp, head==NULL ? "":"&(",head==NULL ? "NULL":head, head==NULL ? "":")", err==NULL ? "":"&(",err==NULL ? "NULL":err, err==NULL ? "":")", nocert != NULL ? "NULL" : (cert != NULL ? cert : "\"\""), cookiejar == NULL ? "NULL":cookiejar, resp_code==NULL ? "":"&(",resp_code==NULL ? "NULL":resp_code, resp_code==NULL ? "":")", timeout==NULL ? "120":timeout, body == NULL ? "0":"1", fields == NULL ? "NULL":fields_var, files == NULL ? "NULL":files_var, req_header == NULL ? "NULL":req_header_ptr, method == NULL ? "NULL" :method, content==NULL?"NULL":content, clen==NULL?"-1":clen);
-                        if (len != NULL) oprintf("%s=_gg_st;\n",len); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        if (len != NULL) oprintf("%s=_gg_st;\n",len); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
 
                         continue;
                     }
@@ -6582,7 +6587,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (replace_with == NULL) oprintf ("%s=gg_regex(%s, %s, %s, %s, %s, %s, %s, %s%s);\n", status==NULL?"_gg_st":status, in, pattern, "NULL", "NULL", utfc, case_insensitivec, single_matchc, cache==NULL?"":"&",cache==NULL?"NULL":regname);
                         else oprintf ("%s=gg_regex(%s, %s, %s, &(%s), %s, %s, %s, %s%s);\n", status==NULL?"_gg_st":status, in, pattern, replace_with, result, utfc, case_insensitivec, single_matchc, cache==NULL?"":"&",cache==NULL?"NULL":regname);
                         //We don't check here, because not replacing anything doesn't mean it's an error
-                        //if (status == NULL) oprintf("if (_gg_st == 0) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        //if (status == NULL) oprintf("if (_gg_st == 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         gg_free(case_insensitivec);
                         gg_free(single_matchc);
                         gg_free(utfc);
@@ -6812,7 +6817,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         check_var (&mtext, GG_DEFSTRING, NULL);
 
                         oprintf ("%s=gg_str2num (%s, %s, &_gg_st);\n", to, mtext, base!=NULL?base:"0");
-                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
 
 
                         continue;
@@ -6843,7 +6848,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         do_numstr (to, num0, base); // _gg_st is produced inside do_numstr(), it's 0 if failed
                         if (st!=NULL) oprintf("if (_gg_st==0) (%s)=GG_ERR_FAILED; else (%s)=GG_OKAY;\n", st, st);
-                        else oprintf("if (_gg_st == 0) gg_report_error (\"%s\", (gg_num)GG_ERR_FAILED);\n", GG_STMT_FAIL_CHECK);
+                        else oprintf("if (_gg_st == 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_FAILED);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
 
                         continue;
                     }
@@ -7064,7 +7069,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
 
                         oprintf("_gg_st=(gg_delete_cookie (gg_get_config()->ctx.req, %s, %s, %s)<0?GG_ERR_EXIST:GG_OKAY);\n", mtext, path==NULL?"NULL":path, secc ); 
-                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         gg_free(secc);
 
                         continue;
@@ -7732,7 +7737,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         check_var (&mtext, GG_DEFMSG, NULL);
 
                         oprintf ("_gg_st=gg_read_msg(%s, %s%s%s, %s%s%s);\n", mtext, key!=NULL?"&(":"",key!=NULL?key:"NULL",key!=NULL?")":"",value!=NULL?"&(":"",value!=NULL?value:"NULL",value!=NULL?")":"");
-                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         continue;
 
                     }
@@ -7800,7 +7805,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("%s = (%s)->pieces[(%s)-1];gg_mem_add_ref(%s);\n", to, from, mtext, to);
                         oprintf("} else {\n");
                         if (st != NULL) oprintf("%s=GG_ERR_OVERFLOW;\n", st);
-                        else oprintf("gg_report_error (\"%s\", (gg_num)GG_ERR_OVERFLOW);\n", GG_STMT_FAIL_CHECK);
+                        else oprintf("gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_OVERFLOW);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         oprintf ("%s=GG_EMPTY_STRING;}\n",to); 
 
                         continue;
@@ -7966,7 +7971,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         if (upd || updkey || st)
                         {
-                            if (st) oprintf ("else { (%s) = GG_ERR_EXIST; }\n", st); else oprintf("else { gg_report_error (\"%s\", (gg_num)GG_ERR_EXIST);}\n", GG_STMT_FAIL_CHECK);
+                            if (st) oprintf ("else { (%s) = GG_ERR_EXIST; }\n", st); else oprintf("else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_EXIST);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         }
                         oprintf("}\n");
                         oprintf("gg_mem_process=false;\n");
@@ -8032,7 +8037,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         oprintf ("}\n");
                         if (st) oprintf ("(%s) = _gg_list_pos_st%ld;\n", st, pos_st);
-                        else oprintf("if (_gg_list_pos_st%ld != GG_OKAY) gg_report_error (\"%s\", _gg_list_pos_st%ld);\n", pos_st, GG_STMT_FAIL_CHECK, pos_st);
+                        else oprintf("if (_gg_list_pos_st%ld != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_list_pos_st%ld);\n", pos_st, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, pos_st);
                         
                         pos_st++;
                         oprintf("gg_mem_process=false;\n");
@@ -8068,7 +8073,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         check_var (&mtext, GG_DEFLIST, NULL);
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
                         oprintf ("_gg_st=gg_list_delete (%s);\n", mtext);
-                        if (st != NULL) oprintf("%s=_gg_st;\n", st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        if (st != NULL) oprintf("%s=_gg_st;\n", st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         oprintf("gg_mem_process=false;\n");
 
                         continue;
@@ -8182,7 +8187,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
 
                         oprintf ("_gg_st=gg_retrieve (%s, &(%s), (void**)&(%s));\n", mtext, key, value);
-                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         continue;
 
                     }
@@ -8226,7 +8231,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (fileid != NULL) oprintf("_gg_st=gg_write_file_id (*((%s)->f), %s, %s, %s, %s, %s);\n", fileid, from, length, appendc, pos == NULL ? "0":pos, pos==NULL?"0":"1");
                         else oprintf("_gg_st=gg_write_file (%s, %s, %s, %s, %s, %s);\n",mtext, from, length, appendc, pos == NULL ? "0":pos, pos==NULL?"0":"1");
                         // _gg_st here is the number of bytes written, so 0 or more is okay, less than 0 is error
-                        if (status != NULL) oprintf("%s=_gg_st;\n",status); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        if (status != NULL) oprintf("%s=_gg_st;\n",status); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         gg_free(appendc);
                         continue;
                     }
@@ -8265,7 +8270,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         else oprintf("_gg_st=gg_read_file (%s, &(%s), %s, %s, &_gg_st_bool);\n", read_from, read_to, pos==NULL?"0":pos, length);
                         if (eof != NULL) oprintf ("%s=_gg_st_bool;\n", eof);
                         // _gg_st is negative if error, otherwise size of data read which can be zero
-                        if (status != NULL) oprintf("%s=_gg_st;\n",status); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        if (status != NULL) oprintf("%s=_gg_st;\n",status); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         continue;
 
                     }
@@ -8442,7 +8447,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("{ ");
                         oprintf("char *_gg_afind = gg_read_array (%s, %s, %s, &_gg_st);\n", mtext, key, delc);
                         oprintf ("if (_gg_st == GG_OKAY) { %s = _gg_afind; gg_mem_add_ref(%s);}\n", val, val);
-                        if (st==NULL) oprintf("else gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        if (st==NULL) oprintf("else gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         else oprintf ("%s=_gg_st;\n", st);
                         oprintf("}\n");
 
@@ -8547,7 +8552,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf("{ ");
                             oprintf("char *_gg_hfind = gg_find_hash (%s, %s, NULL, %s, &_gg_st);\n", mtext, key, delc);
                             oprintf ("if (_gg_st == GG_OKAY) { %s = _gg_hfind; gg_mem_add_ref(%s);}\n", val, val);
-                            if (st==NULL) oprintf("else gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                            if (st==NULL) oprintf("else gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                             else oprintf ("%s=_gg_st;\n", st);
                             oprintf("}\n");
 
@@ -8569,7 +8574,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                 // then report error
                                 //
                                 oprintf ("}\n");
-                                if (st == NULL) oprintf(" else { gg_report_error (\"%s\", _gg_st);}\n", GG_STMT_FAIL_CHECK); else oprintf ("%s=_gg_st;\n", st);
+                                if (st == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum); else oprintf ("%s=_gg_st;\n", st);
                                 //
                                 //
                                 //
@@ -8662,7 +8667,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (key != NULL) oprintf ("(%s) = GG_EMPTY_STRING;\n", key);
                         if (val != NULL) oprintf ("(%s) = GG_EMPTY_STRING;\n", val);
                         if (st) oprintf ("%s=GG_ERR_EXIST;\n", st);
-                        else oprintf("gg_report_error (\"%s\", (gg_num)GG_ERR_EXIST);\n", GG_STMT_FAIL_CHECK);
+                        else oprintf("gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_EXIST);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         oprintf ("}\n");
 
                         continue;
@@ -8732,7 +8737,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             }
                             else
                             {
-                                oprintf("if (gg_json_status_%ld != -1) gg_report_error (\"%s\", (gg_num)GG_ERR_JSON);\n", json_id, GG_STMT_FAIL_CHECK);
+                                oprintf("if (gg_json_status_%ld != -1) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_JSON);\n", json_id, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                             }
                             if (errt != NULL)
                             {
@@ -8801,7 +8806,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             }
                             else
                             {
-                                oprintf("if (gg_xml_status_%ld != -1) gg_report_error (\"%s\", (gg_num)GG_ERR_XML);\n", xml_id, GG_STMT_FAIL_CHECK);
+                                oprintf("if (gg_xml_status_%ld != -1) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_XML);\n", xml_id, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                             }
                             if (errt != NULL)
                             {
@@ -8942,7 +8947,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("gg_tree_insert_f (%s, %s, %s, -1, %s);\n", ccursor, mtext, key, value);
                         oprintf("gg_mem_process=false;\n");
                         if (status != NULL) oprintf ("%s = (%s)->status;\n", status, ccursor);
-                        else oprintf("if ((%s)->status != GG_OKAY) gg_report_error (\"%s\", (%s)->status);\n", ccursor, GG_STMT_FAIL_CHECK, ccursor);
+                        else oprintf("if ((%s)->status != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (%s)->status);\n", ccursor, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, ccursor);
 
                         wcurs++;
                         continue;
@@ -9076,7 +9081,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // then report error
                         //
                         oprintf ("}\n");
-                        if (status == NULL) oprintf(" else { gg_report_error (\"%s\", (%s)->status);}\n", GG_STMT_FAIL_CHECK, ccursor);
+                        if (status == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (%s)->status);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, ccursor);
                         //
                         //
                         //
@@ -9126,7 +9131,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         oprintf ("}\n");
                         //If delete-tree doesn't delete, that's not considered application error!
-                        //if (status == NULL) oprintf(" else { gg_report_error (\"%s\", _gg_tree_curs%ld->status);}\n", GG_STMT_FAIL_CHECK, wcurs);
+                        //if (status == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_tree_curs%ld->status);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, wcurs);
                         //
                         //
                         //
@@ -9212,7 +9217,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // then report error
                         //
                         oprintf ("}\n");
-                        if (status == NULL) oprintf(" else { gg_report_error (\"%s\", (%s)->status);}\n", GG_STMT_FAIL_CHECK, ucursor);
+                        if (status == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (%s)->status);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, ucursor);
                         //
                         //
                         // End read-tree 
@@ -9275,7 +9280,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *copy_from = mtext;
                         oprintf("_gg_st=gg_copy_file (%s, %s);\n", copy_from, copy_to);
                         if (status != NULL) oprintf ("%s=_gg_st;\n", status);
-                        else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         continue;
 
                     }
@@ -9340,7 +9345,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (get != NULL) oprintf("_gg_st=gg_get_file_pos (*((%s)->f), &(%s));\n", fileid, get);
                         else if (set != NULL) oprintf("_gg_st=gg_set_file_pos (*((%s)->f), %s);\n", fileid, set);
                         if (status != NULL) oprintf ("%s=_gg_st;\n", status);
-                        else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", _gg_st);\n", GG_STMT_FAIL_CHECK);
+                        else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "close-file", &mtext, &msize, 0, &gg_is_inline)) != 0)
@@ -9391,7 +9396,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // where any open file descriptors are at least checked, if not closed
                         oprintf("static FILE *_gg_fileid_%ld;\n", file_count); 
                         oprintf("_gg_fileid_%ld = gg_fopen (%s, \"%s\");\n", file_count, mtext, newt!=NULL?"w+":"r+");
-                        if (st == NULL) oprintf("if (_gg_fileid_%ld == NULL) gg_report_error (\"%s\", (gg_num)GG_ERR_OPEN);\n", file_count,GG_STMT_FAIL_CHECK);
+                        if (st == NULL) oprintf("if (_gg_fileid_%ld == NULL) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_OPEN);\n", file_count,GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
                         else oprintf("if (_gg_fileid_%ld == NULL) %s=GG_ERR_OPEN; else %s=GG_OKAY;\n", file_count, st, st);
                         // set FILE*, and also the index into gg[] (the memind member), so that when closing, it can 
                         // clear the gg[]->ptr and make gg_done() faster

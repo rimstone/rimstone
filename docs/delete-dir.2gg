@@ -36,6 +36,7 @@ delete-dir "/home/user/some_dir"
 \fBchange-dir\fP  
 \fBchange-mode\fP  
 \fBdelete-dir\fP  
+\fBdirectories\fP  
 \fBnew-dir\fP   
 See all 
 \fBdocumentation\fP

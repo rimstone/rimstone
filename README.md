@@ -1,4 +1,4 @@
-Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf)\. 
+Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf)\. Installation packages and source installs below are for both x86\_64 and aarch64\.
 ## Install Golf on Ubuntu \(versions 20, 22, 24, 25\):
 ```
 sudo add-apt-repository ppa:golf-lang/golf -y
@@ -25,7 +25,15 @@ sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs
 sudo zypper -n install --replacefiles --force-resolution golf
 ```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-zypper.html)\.
-## Install Golf on Debian:
+## Install Golf on Debian \(10, 11, 12, Unstable\):
+Replace 'Debian\_12' with 'Debian\_10', 'Debian\_11' or 'Debian\_Unstable' to install on Debian 10, 11 or Unstable \(the latest upcoming\):
+```
+sudo apt install -y curl
+echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Debian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
+curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Debian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
+sudo apt update
+sudo apt install -y golf
+```
 Install Golf on Debian [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
 ## Install Golf on Arch and Manjaro:
 ```
@@ -35,7 +43,7 @@ makepkg --noconfirm -sirc
 ```
 Install Golf on Arch and Manjaro [from source code](https://golf-lang.com//install-golf-from-source-using-pacman.html)\.
 ## Current version
-Current version is 419\. This release passed 2386 automated functional tests\.
+Current version is 423\. This release passed 2389 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
@@ -85,6 +93,8 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 ## Releases
+* 2025\-04\-18 [Golf 423 released](https://golf-lang.blogspot.com/2025/04/golf-423-released.html)
+* 2025\-04\-17 [Golf 419 released](https://golf-lang.blogspot.com/2025/04/golf-419-released.html)
 * 2025\-04\-14 [Golf 397 released](https://golf-lang.blogspot.com/2025/04/golf-397-released.html)
 * 2025\-03\-31 [Golf 373 released](https://golf-lang.blogspot.com/2025/03/golf-338-released.html)
 * 2025\-03\-16 [Golf 324 released](https://golf-lang.blogspot.com/2025/03/golf-324-released.html)

@@ -1,7 +1,7 @@
 " Language: Golf
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2025-April-12
+" Latest Revision: 2025-April-18
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link golfConstruct Statement
@@ -1484,6 +1484,9 @@ syn region gg_r_construct_change_dir start="^[[:space:]]*change-dir" skip="\\[[:
     syn match gg_h_clause_change_dir " home \@=" contained containedin=gg_r_construct_change_dir
     syn match gg_h_clause_change_dir " home,\@=" contained containedin=gg_r_construct_change_dir
     syn match gg_h_clause_change_dir " home$" contained containedin=gg_r_construct_change_dir
+    syn match gg_h_clause_change_dir " run-dir \@=" contained containedin=gg_r_construct_change_dir
+    syn match gg_h_clause_change_dir " run-dir,\@=" contained containedin=gg_r_construct_change_dir
+    syn match gg_h_clause_change_dir " run-dir$" contained containedin=gg_r_construct_change_dir
     syn match gg_h_clause_output_change_dir " status \@=" contained containedin=gg_r_construct_change_dir
     hi def link gg_h_clause_change_dir    golfClause
     hi def link gg_h_clause_output_change_dir    golfClauseOutput

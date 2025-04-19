@@ -1,6 +1,7 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-directories \- Golf documentation (general)
+directories \- Golf documentation (general
+directories)
 .SH DESCRIPTION
 
 .LP
@@ -68,6 +69,14 @@ ln -s /home/disk0/file /var/lib/gg/<app name>/app/file
 .RE
 
 .SH SEE ALSO
+ 
+.B - Directories
+
+\fBchange-dir\fP  
+\fBchange-mode\fP  
+\fBdelete-dir\fP  
+\fBdirectories\fP  
+\fBnew-dir\fP   
  
 .B - General
 

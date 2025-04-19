@@ -4,7 +4,7 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 419
+.B REFERENCE FOR GOLF VERSION 423
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. 
@@ -119,6 +119,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 \fBchange-dir\fP  
 \fBchange-mode\fP  
 \fBdelete-dir\fP  
+\fBdirectories\fP  
 \fBnew-dir\fP   
 .RE
 
