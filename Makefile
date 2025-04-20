@@ -202,6 +202,10 @@ clean:
 	touch *.c
 	touch *.h
 	rm -rf debian/golf
+	rm -rf debian/golf.substvars
+	rm -rf debian/.debhelper
+	rm -rf debian/debhelper*
+	rm -rf debian/files
 	rm -rf *.tar.gz
 	rm -f *.o
 	rm -f *.so
