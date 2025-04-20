@@ -154,7 +154,7 @@ Golf includes request-processing and all the necessary infrastructure, such as f
 .B PERFORMANCE
 .LP
 
-Golf is a compiled languaged. Golf applications are high-performance native executables by design, hence absolutely no byte-code, interpreters and similar. Since Golf is declarative, just a few \fBstatements\fP are needed to implement lots of functionality. These statements are implemented in pure C, and are not slowed down by memory checks as they are safe internally by implementation. Only developer-facing Golf code needs additional logic to enforce memory safety, and that's a very small part of overall run-time cost. This means Golf can truly be memory-safe and high-performance at the same time.
+Golf is a compiled language. Golf applications are high-performance native executables by design, hence absolutely no byte-code, interpreters and similar. Since Golf is declarative, just a few \fBstatements\fP are needed to implement lots of functionality. These statements are implemented in pure C, and are not slowed down by memory checks as they are safe internally by implementation. Only developer-facing Golf code needs additional logic to enforce memory safety, and that's a very small part of overall run-time cost. This means Golf can truly be memory-safe and high-performance at the same time.
 
 .LP
 .B DATABASE ACCESS
