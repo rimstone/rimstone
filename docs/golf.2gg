@@ -2,7 +2,7 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
-Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBBlog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP. Installation packages and source installs below are for both x86_64 and aarch64.
+Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBGolf Blog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP. Installation packages and source installs below are for both x86_64 and aarch64.
 
 .LP
 .B INSTALL GOLF ON UBUNTU (VERSIONS 20, 22, 24, 25):
@@ -107,7 +107,7 @@ Install Golf on Arch and Manjaro \fBfrom source code\fP.
 .B CURRENT VERSION
 .LP
 
-Current version is 423. This release passed 2389 automated functional tests.
+Current version is 426. This release passed 2389 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -121,6 +121,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .LP
 
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-04-19 \fBExample of auto status checking with Golf\fP
+.RE
+
 
 .RS 4
 \[bu]    
@@ -383,6 +389,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .LP
 .B RELEASES
 .LP
+
+
+.RS 4
+\[bu]    
+2025-04-20 \fBGolf 426 released\fP
+.RE
 
 
 .RS 4

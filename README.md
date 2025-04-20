@@ -1,4 +1,4 @@
-Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf)\. Installation packages and source installs below are for both x86\_64 and aarch64\.
+Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Golf Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf)\. Installation packages and source installs below are for both x86\_64 and aarch64\.
 ## Install Golf on Ubuntu \(versions 20, 22, 24, 25\):
 ```
 sudo add-apt-repository ppa:golf-lang/golf -y
@@ -43,12 +43,13 @@ makepkg --noconfirm -sirc
 ```
 Install Golf on Arch and Manjaro [from source code](https://golf-lang.com//install-golf-from-source-using-pacman.html)\.
 ## Current version
-Current version is 423\. This release passed 2389 automated functional tests\.
+Current version is 426\. This release passed 2389 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 ## Articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-04\-19 [Example of auto status checking with Golf](https://golf-lang.blogspot.com/2025/04/example-of-auto-status-checking-with.html)
 * 2025\-04\-14 [New status\-safety feature](https://golf-lang.blogspot.com/2025/04/new-status-safety-feature.html)
 * 2025\-04\-11 [New upcoming safety features](https://golf-lang.blogspot.com/2025/04/safety-improvement-for-application-logic.html)
 * 2025\-04\-10 [How to start, stop or restart Golf application server](https://golf-lang.blogspot.com/2025/04/how-to-start-stop-or-restart-golf.html)
@@ -93,6 +94,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 ## Releases
+* 2025\-04\-20 [Golf 426 released](https://golf-lang.blogspot.com/2025/04/golf-426-released.html)
 * 2025\-04\-18 [Golf 423 released](https://golf-lang.blogspot.com/2025/04/golf-423-released.html)
 * 2025\-04\-17 [Golf 419 released](https://golf-lang.blogspot.com/2025/04/golf-419-released.html)
 * 2025\-04\-14 [Golf 397 released](https://golf-lang.blogspot.com/2025/04/golf-397-released.html)
