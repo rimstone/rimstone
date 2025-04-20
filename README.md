@@ -43,7 +43,7 @@ makepkg --noconfirm -sirc
 ```
 Install Golf on Arch and Manjaro [from source code](https://golf-lang.com//install-golf-from-source-using-pacman.html)\.
 ## Current version
-Current version is 434\. This release passed 2389 automated functional tests\.
+Current version is 435\. This release passed 2389 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
