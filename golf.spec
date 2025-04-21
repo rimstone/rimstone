@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    445
+Version:    447
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Golf Team
@@ -57,7 +57,6 @@ Requires: %rh_requires %{?rhel_sel}
 
 
 BuildRoot: %{_tmppath}/%{name}-%{version}
-%global debug_package %{nil}
 
 %description
 Golf is a memory-safe and high-performance programming language and
@@ -68,7 +67,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-445
+%autosetup -n %{name}-447
 
 %build
 make clean
@@ -92,28 +91,10 @@ make DESTDIR="%{buildroot}" GG_FAKEROOT=1 GG_FEDORA_BUILD=1 install
 %dir /var/lib/gg
 %dir /var/lib/gg/bld/
 %dir /usr/lib/golf/
-%dir /usr/lib/debug/
-%dir /usr/lib/debug/golf/
 %dir /usr/include/golf/
 %dir /usr/lib/golf/selinux
 /usr/include/golf/golf.h
 /usr/include/golf/gcli.h
-/usr/lib/debug/golf/libgolfarr.so.dbg 
-/usr/lib/debug/golf/libgolfpg.so.dbg 
-/usr/lib/debug/golf/libgolfdb.so.dbg 
-/usr/lib/debug/golf/libgolflite.so.dbg 
-/usr/lib/debug/golf/libgolfmys.so.dbg 
-/usr/lib/debug/golf/libgolfsec.so.dbg 
-/usr/lib/debug/golf/libgolftree.so.dbg
-/usr/lib/debug/golf/libgolfcurl.so.dbg 
-/usr/lib/debug/golf/libgolfxml.so.dbg 
-/usr/lib/debug/golf/libgolfpcre2.so.dbg
-/usr/lib/debug/golf/libsrvcgolf.so.dbg 
-/usr/lib/debug/golf/libgolf.so.dbg 
-/usr/lib/debug/golf/libgolfcli.so.dbg 
-/usr/lib/debug/golf/libgolfscli.so.dbg 
-/usr/lib/debug/golf/v1.dbg
-/usr/lib/debug/golf/mgrg.dbg
 /usr/lib/golf/libgolfarr.so
 /usr/lib/golf/libgolfpg.so 
 /usr/lib/golf/libgolfdb.so 
