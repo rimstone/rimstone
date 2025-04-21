@@ -7,7 +7,7 @@
 Source: golf
 Section: devel
 Priority: optional
-Maintainer: Gliim LLC <team@golf-lang.com>
+Maintainer: Golf Team <team@golf-lang.com>
 #To install build dependencies:
 #sudo apt update
 #sudo apt -y install devscripts equivs build-essential lintian

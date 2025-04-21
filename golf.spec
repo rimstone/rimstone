@@ -5,10 +5,10 @@
 
 
 Name:   golf
-Version:    436
+Version:    439
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
-Vendor:     Gliim LLC
+Vendor:     Golf Team
 Group:      Development/Tools
 License:    Apache-2.0
 Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{version}.tar.gz 
@@ -68,7 +68,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-436
+%autosetup -n %{name}-439
 
 %build
 make clean
