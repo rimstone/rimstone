@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    439
+Version:    445
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions.
 Vendor:     Golf Team
@@ -68,18 +68,18 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-439
+%autosetup -n %{name}-445
 
 %build
 make clean
-make 
+make GG_FEDORA_BUILD=1
 
 %install
 rm -rf %{buildroot}/*
 #GG_FAKEROOT=1 means do not install selinux script to generate policy. This should be done only when sudo make install (from source)
 #or when actually installing the rpm (in which case install doesn't run at all)
 #GG_FAKEROOT=1 basically means this is fake root.
-make DESTDIR="%{buildroot}" GG_FAKEROOT=1 install
+make DESTDIR="%{buildroot}" GG_FAKEROOT=1 GG_FEDORA_BUILD=1 install
 
 %post
 #since %post runs during installation, execute selinux.setup

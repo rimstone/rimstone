@@ -67,7 +67,7 @@ GG_LIBXML2_INCLUDE=$(shell pkg-config --cflags libxml-2.0)
 #Note: we always use -g in order to get line number of where the problem is
 #(optimization is still valid though)
 OPTIM_COMP_DEBUG=-g3 -DDEBUG -rdynamic
-OPTIM_COMP_PROD=-g -O3 
+OPTIM_COMP_PROD=-g -O2 
 OPTIM_LINK_PROD=
 OPTIM_LINK_DEBUG=-rdynamic
 #if DEBUGINFO is 1, then no dbg files will be created, so delete any old ones as they wouldn't be accurate now
@@ -98,7 +98,7 @@ LDFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN)
 #not, then separate debugging info, and strip the executable and then link it to debugging info. The only
 #exception is if this is debian build which does that (and lintian complains if we strip it ourselves).
 define strip_sym
-if [[ "$(DEBUGINFO)" != "1" ]]; then objcopy --only-keep-debug $@ $@.dbg ; if [ "$(GG_DEBIAN_BUILD)" != "1" ]; then objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@.dbg $@ ; else rm -f $@.dbg ; fi ; fi
+if [[ "$(DEBUGINFO)" != "1" ]]; then objcopy --only-keep-debug $@ $@.dbg ; if [ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" ]; then objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@.dbg $@ ; else rm -f $@.dbg ; fi ; fi
 endef
 
 
@@ -152,7 +152,7 @@ install:
 	install -D -m 0755 vdiag -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 gg  -t $(DESTDIR)$(V_BIN)/
 	install -D -m 0755 mgrg  -t $(DESTDIR)$(V_BIN)/
-	if [[ "$(GG_DEBIAN_BUILD)" != "1" && -f v1.dbg ]]; then install -m 0755 -d $(DESTDIR)$(V_LIBD) ; install -D -m 0644 v1.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 mgrg.dbg  -t $(DESTDIR)$(V_LIBD)/ ;  install -D -m 0644 libgolfpg.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfdb.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolflite.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfmys.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfsec.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolftree.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcurl.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfxml.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfarr.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfpcre2.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libsrvcgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfscli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; fi
+	if [[ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" && -f v1.dbg ]]; then install -m 0755 -d $(DESTDIR)$(V_LIBD) ; install -D -m 0644 v1.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 mgrg.dbg  -t $(DESTDIR)$(V_LIBD)/ ;  install -D -m 0644 libgolfpg.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfdb.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolflite.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfmys.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfsec.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolftree.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcurl.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfxml.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfarr.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfpcre2.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libsrvcgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfscli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; fi
 	install -m 0755 -d $(DESTDIR)$(V_MAN)
 	install -D -m 0644 docs/*.2gg -t $(DESTDIR)$(V_MAN)/
 	install -D -m 0755 sys -t $(DESTDIR)$(V_LIB)/
