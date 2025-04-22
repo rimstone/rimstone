@@ -1110,7 +1110,7 @@ void check_format(char *mtext, char *comma, char **list)
     if (comma != NULL) c = gg_strdup(comma); else c=NULL;
     char *par = c;
     gg_num pos = 0;
-    char *nc;
+    char *nc = NULL;
     bool perc = false;
     gg_num fmt_len;
     while (1)

@@ -67,7 +67,7 @@ GG_LIBXML2_INCLUDE=$(shell pkg-config --cflags libxml-2.0)
 #Note: we always use -g in order to get line number of where the problem is
 #(optimization is still valid though)
 OPTIM_COMP_DEBUG=-g3 -DDEBUG -rdynamic
-OPTIM_COMP_PROD=-g -O2 
+OPTIM_COMP_PROD=-g -O3 
 OPTIM_LINK_PROD=
 OPTIM_LINK_DEBUG=-rdynamic
 #if DEBUGINFO is 1, then no dbg files will be created, so delete any old ones as they wouldn't be accurate now
@@ -86,11 +86,11 @@ ASAN=
 endif
 
 #C flags are as strict as we can do, in order to discover as many bugs as early on
-CFLAGS=-std=gnu99 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5
+CFLAGS=-std=gnu99 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
-LDFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN)
+LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN) -fpie -Wl,-z,now
 
 #note that for make DI=1, DEBUGINFO can be checked. But we don't specify DEBUGINFO for sudo make install.
 #then we wanted to have them all. Otherwise, none will be there, because we explicitly delete them here.
@@ -98,7 +98,7 @@ LDFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN)
 #not, then separate debugging info, and strip the executable and then link it to debugging info. The only
 #exception is if this is debian build which does that (and lintian complains if we strip it ourselves).
 define strip_sym
-if [[ "$(DEBUGINFO)" != "1" ]]; then objcopy --only-keep-debug $@ $@.dbg ; if [ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" ]; then objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@.dbg $@ ; else rm -f $@.dbg ; fi ; fi
+if [ "$(DEBUGINFO)" != "1" ]; then objcopy --only-keep-debug $@ $@.dbg ; if [[ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" ]]; then objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@.dbg $@ ; else rm -f $@.dbg ; fi ; fi
 endef
 
 
@@ -224,7 +224,7 @@ v1.o: v1.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
 v1: v1.o golfmems.o chandle.o golfrtc.o hash.o  
-	$(CC) -o v1 $^ $(LDFLAGS) 
+	$(CC) -o v1 $^ $(LFLAGS) 
 	$(call strip_sym)
 
 selinux.setup:
@@ -233,7 +233,7 @@ selinux.setup:
 	chmod 0755 selinux.setup
 
 mgrg: mgrg.o 
-	$(CC) -o mgrg mgrg.o $(LDFLAGS)
+	$(CC) -o mgrg mgrg.o $(LFLAGS)
 	$(call strip_sym)
 
 libsrvcgolf.so: chandle.o hash.o json.o msg.o utf.o srvc_golfrt.o golfrtc.o golfmems.o 

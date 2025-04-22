@@ -203,12 +203,6 @@ In extended mode, Golf is also a \fBweb-framework-for-C-programming-language\fP.
 .LP
 
 Do not use object names (such as variables and request names) that start with "_gg_" or "gg_" (including upper-case variations) as those are reserved by Golf.
-
-.LP
-.B HISTORY
-.LP
-
-Golf programming language (or golf-lang) was created by Sergio Mijatovic, formerly Senior Software Engineer with Oracle server engineering group and a Principal Investigator with DARPA for agent-based software systems. Golf was originally known as Vely (since 2018), before being redesigned into Golf in late 2024.
 .SH SEE ALSO
  
 .B - General

@@ -24,6 +24,12 @@ Install OpenSUSE Leap 15\.6:
 sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-leap-15.6/golf-lang-golf-opensuse-leap-15.6.repo
 sudo zypper -n install --replacefiles --force-resolution golf
 ```
+Install OpenSUSE Slowroll:
+```
+sudo zypper --non-interactive addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Slowroll/home:golf_lang.repo
+sudo zypper refresh
+sudo zypper -n install golf
+```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-zypper.html)\.
 ## Install Golf on Debian \(10, 11, 12, Unstable\):
 Replace 'Debian\_12' with 'Debian\_10', 'Debian\_11' or 'Debian\_Unstable' to install on Debian 10, 11 or Unstable \(the latest upcoming\):
@@ -37,13 +43,28 @@ sudo apt install -y golf
 Install Golf on Debian [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
 ## Install Golf on Arch and Manjaro:
 ```
-wget "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=golf" -O PKGBUILD
-sudo pacman -Sy --noconfirm base-devel
-makepkg --noconfirm -sirc
+#Run this one time (to add Golf key):
+echo -e "[home_golf_lang_Arch]\nServer = https://download.opensuse.org/repositories/home:/golf_lang/Arch/x86_64" | sudo  tee -a /etc/pacman.conf 
+key=$(curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Arch/$(uname -m)/home_golf_lang_Arch.key)
+fingerprint=$(gpg --quiet --with-colons --import-options show-only --import --fingerprint <<< "${key}" | awk -F: '$1 == "fpr" { print $10 }')
+sudo pacman-key --init
+echo "${key}" | sudo pacman-key --add - 
+sudo pacman-key --lsign-key "${fingerprint}"
+#Install golf going forward
+sudo pacman --noconfirm -Sy home_golf_lang_Arch/golf
 ```
 Install Golf on Arch and Manjaro [from source code](https://golf-lang.com//install-golf-from-source-using-pacman.html)\.
+## Install Golf on Raspbian \(Raspberry OS\), aarch64 only:
+```
+sudo apt install -y curl
+echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Raspbian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
+curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Raspbian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
+sudo apt update
+sudo apt -y install golf
+```
+Install Golf on Raspberry [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
 ## Current version
-Current version is 447\. This release passed 2389 automated functional tests\.
+Current version is 452\. This release passed 2389 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)

@@ -674,7 +674,9 @@ void gg_tree_purge_f (gg_tree *orig_tree)
 {
     GG_TRACE("");
     // first delete all nodes
-    gg_tree_cursor tcurs;
+    // static here is to avoid dangling pointer error - this is a local cursor, and then we find the miniminum in
+    // the tree, and delete all, so in reality there is cursor beyond this function. But gcc doesn't know that.
+    static gg_tree_cursor tcurs;
     while (1)
     {
         gg_tree_min_f (&tcurs, orig_tree);

@@ -34,7 +34,7 @@ ifeq ($(strip $(GG_C_DEBUG)),1)
     _OPTIM_COMP=-g3 -DDEBUG -rdynamic
     _OPTIM_LINK=-rdynamic
 else
-    _OPTIM_COMP=-O2
+    _OPTIM_COMP=-O3
     _OPTIM_LINK=
 endif
 
@@ -82,7 +82,7 @@ endif
 
 #even though GG_DIAG_OUT is set to "", at run time it will have value from make_source macro. This is because of how makefile assignments work with = (and not :=)
 #ignoring char-subscripts (such as str[str[0]] is fine because golf checks for boundaries
-_CFLAGS=-fpic -std=gnu99 -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) -Werror -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_ARRAY_USED) $(GG_XML_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_XML_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_POSIXREGEX_FLAG) -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) $(_ASAN)
+_CFLAGS=-fpic -std=gnu99 -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) -Werror -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_ARRAY_USED) $(GG_XML_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_XML_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_POSIXREGEX_FLAG) -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) $(_ASAN)
 
 
 
@@ -146,18 +146,18 @@ $(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
 	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_SINGLE_FILE) -plain-diag "$(GG_C_PLAINDIAG)" -main -name "$(GG_C_NAME)" -max-upload "$(GG_C_MAXUPLOAD)" -app-path "$(GG_C_RESTPATH)" -trace "$(GG_C_TRACE)" -out $(GG_BLD)/golfsrvcapp.c
 	$(_CC) -c $(GG_BLD)/golfsrvcapp.c  $(_CFLAGS) -DCMOD -o $@ -I`pwd` 
 
-_LDFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) $(_ASAN)
+_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) $(_ASAN) -fpie -Wl,-z,now
 
 
 
 #libs are always specified *after* the object where they're needed. Link flags (including -L) go first.
 
 $(GG_BLD)/$(GG_C_NAME).srvc: $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) $(GG_BLD)/gg_dispatch_request.o
-	$(_CC) -o $@ $^ $(_LDFLAGS) $(GG_EVENT_STUBS) -lsrvcgolf -lfcgi $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
+	$(_CC) -o $@ $^ $(_LFLAGS) $(GG_EVENT_STUBS) -lsrvcgolf -lfcgi $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
 	$(call strip_sym)
 
 $(GG_BLD)/$(GG_C_NAME): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) $(GG_BLD)/gg_dispatch_request.o
-	$(_CC) -o $@ $^ $(_LDFLAGS) $(GG_EVENT_STUBS) -lgolf $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
+	$(_CC) -o $@ $^ $(_LFLAGS) $(GG_EVENT_STUBS) -lgolf $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
 	$(call strip_sym)
 
 

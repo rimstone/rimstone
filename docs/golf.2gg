@@ -64,6 +64,18 @@ sudo zypper -n install --replacefiles --force-resolution golf
 .EE
 .RE
 
+Install OpenSUSE Slowroll:
+
+.RS 4
+.EX
+
+sudo zypper --non-interactive addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Slowroll/home:golf_lang.repo
+sudo zypper refresh
+sudo zypper -n install golf
+
+.EE
+.RE
+
 You can also \fBinstall from source\fP.
 
 .LP
@@ -94,9 +106,15 @@ Install Golf on Debian \fBfrom source code\fP.
 .RS 4
 .EX
 
-wget "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=golf" -O PKGBUILD
-sudo pacman -Sy --noconfirm base-devel
-makepkg --noconfirm -sirc
+\[char35]Run this one time (to add Golf key):
+echo -e "[home_golf_lang_Arch]\enServer = https://download.opensuse.org/repositories/home:/golf_lang/Arch/x86_64" | sudo  tee -a /etc/pacman.conf 
+key=$(curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Arch/$(uname -m)/home_golf_lang_Arch.key)
+fingerprint=$(gpg --quiet --with-colons --import-options show-only --import --fingerprint <<< "${key}" | awk -F: '$1 == "fpr" { print $10 }')
+sudo pacman-key --init
+echo "${key}" | sudo pacman-key --add - 
+sudo pacman-key --lsign-key "${fingerprint}"
+\[char35]Install golf going forward
+sudo pacman --noconfirm -Sy home_golf_lang_Arch/golf
 
 .EE
 .RE
@@ -104,10 +122,29 @@ makepkg --noconfirm -sirc
 Install Golf on Arch and Manjaro \fBfrom source code\fP.
 
 .LP
+.B INSTALL GOLF ON RASPBIAN (RASPBERRY OS), AARCH64 ONLY:
+.LP
+
+
+.RS 4
+.EX
+
+sudo apt install -y curl
+echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Raspbian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
+curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Raspbian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
+sudo apt update
+sudo apt -y install golf
+
+.EE
+.RE
+
+Install Golf on Raspberry \fBfrom source code\fP.
+
+.LP
 .B CURRENT VERSION
 .LP
 
-Current version is 447. This release passed 2389 automated functional tests.
+Current version is 452. This release passed 2389 automated functional tests.
 
 .LP
 .B EXAMPLE
