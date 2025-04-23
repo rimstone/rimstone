@@ -27,7 +27,7 @@ For tracing to have effect, debugging and tracing must be enabled (see "--debug"
 .B FORMAT
 .LP
 
-<format> string must be a literal. Variables must follow <format> separated by commas in the same order as placeholders. If you use any placeholders other than specified below, or the type of variables you use do not match the type of a correspoding placeholder in <format>, your program will \fBerror out\fP. You can use the following placeholders in <format> (see \fBtrace-run\fP for an example of usage):
+<format> string must be a literal. Variables must follow <format> separated by commas in the same order as placeholders. If you use any placeholders other than specified below, or the type of variables you use do not match the type of a corresponding placeholder in <format>, your program will \fBerror out\fP. You can use the following placeholders in <format> (see \fBtrace-run\fP for an example of usage):
 
 .RS 4
 \[bu]    

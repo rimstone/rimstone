@@ -47,8 +47,9 @@ Install OpenSUSE Tumbleweed:
 .RS 4
 .EX
 
-sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-tumbleweed/golf-lang-golf-opensuse-tumbleweed.repo
-sudo zypper -n install --replacefiles --force-resolution  golf
+sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Tumbleweed/home:golf_lang.repo 
+sudo zypper --gpg-auto-import-keys refresh
+sudo zypper -n install --replacefiles --force-resolution golf
 
 .EE
 .RE
@@ -58,7 +59,8 @@ Install OpenSUSE Leap 15.6:
 .RS 4
 .EX
 
-sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-leap-15.6/golf-lang-golf-opensuse-leap-15.6.repo
+sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/15.6/home:golf_lang.repo 
+sudo zypper --gpg-auto-import-keys refresh
 sudo zypper -n install --replacefiles --force-resolution golf
 
 .EE
@@ -69,9 +71,9 @@ Install OpenSUSE Slowroll:
 .RS 4
 .EX
 
-sudo zypper --non-interactive addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Slowroll/home:golf_lang.repo
-sudo zypper refresh
-sudo zypper -n install golf
+sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Slowroll/home:golf_lang.repo 
+sudo zypper --gpg-auto-import-keys refresh
+sudo zypper -n install --replacefiles --force-resolution golf
 
 .EE
 .RE
@@ -87,7 +89,7 @@ Replace 'Debian_12' with 'Debian_10', 'Debian_11' or 'Debian_Unstable' to instal
 .RS 4
 .EX
 
-sudo apt install -y curl
+sudo apt install -y curl gpg
 echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Debian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
 curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Debian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
 sudo apt update
@@ -109,7 +111,7 @@ Install Golf on Debian \fBfrom source code\fP.
 \[char35]Run this one time (to add Golf key):
 echo -e "[home_golf_lang_Arch]\enServer = https://download.opensuse.org/repositories/home:/golf_lang/Arch/x86_64" | sudo  tee -a /etc/pacman.conf 
 key=$(curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Arch/$(uname -m)/home_golf_lang_Arch.key)
-fingerprint=$(gpg --quiet --with-colons --import-options show-only --import --fingerprint <<< "${key}" | awk -F: '$1 == "fpr" { print $10 }')
+fingerprint=$(echo "${key}"|gpg --quiet --with-colons --import-options show-only --import --fingerprint  - | awk -F: '$1 == "fpr" { print $10 }')
 sudo pacman-key --init
 echo "${key}" | sudo pacman-key --add - 
 sudo pacman-key --lsign-key "${fingerprint}"
@@ -144,7 +146,7 @@ Install Golf on Raspberry \fBfrom source code\fP.
 .B CURRENT VERSION
 .LP
 
-Current version is 452. This release passed 2389 automated functional tests.
+Current version is 462. This release passed 2389 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -430,7 +432,13 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2025-04-20 \fBGolf 447 released\fP
+2025-04-23 \fBGolf 462 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-04-20 \fBGolf 452 released\fP
 .RE
 
 

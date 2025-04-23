@@ -16,6 +16,7 @@ sudo apt update
 sudo apt -y install git
 git clone --depth 1 https://github.com/golf-lang/golf.git
 cd golf
+mv debian-upstream debian
 
 .EE
 .RE

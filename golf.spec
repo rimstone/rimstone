@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    452
+Version:    462
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions
 Vendor:     Golf Team
@@ -71,7 +71,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-452
+%autosetup -n %{name}-462
 
 %build
 make clean
@@ -97,6 +97,7 @@ make DESTDIR="%{buildroot}" GG_FAKEROOT=1 GG_FEDORA_BUILD=1 install
 %dir /usr/lib/golf/
 %dir /usr/include/golf/
 %dir /usr/lib/golf/selinux
+%dir /usr/share/doc/golf
 /usr/include/golf/golf.h
 /usr/include/golf/gcli.h
 /usr/lib/golf/libgolfarr.so
@@ -131,10 +132,10 @@ make DESTDIR="%{buildroot}" GG_FAKEROOT=1 GG_FEDORA_BUILD=1 install
 /usr/lib/golf/golf.vim
 /usr/lib/golf/sys
 /usr/lib/golf/v1
-/usr/lib/golf/LICENSE
-/usr/lib/golf/NOTICE
-/usr/lib/golf/README.md
-/usr/lib/golf/CONTRIBUTING.md
+/usr/share/doc/golf/LICENSE
+/usr/share/doc/golf/NOTICE
+/usr/share/doc/golf/README.md
+/usr/share/doc/golf/CONTRIBUTING.md
 /usr/bin/mgrg
 /usr/bin/gg
 /usr/share/man/man2/*.2gg*

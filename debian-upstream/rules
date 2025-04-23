@@ -3,6 +3,4 @@
 #Copyright 2018 Gliim LLC.
 
 %:
-	GG_DEBIAN_BUILD=1 dh $@ 
-
-
+	GG_DEBIAN_BUILD=1 dh $@

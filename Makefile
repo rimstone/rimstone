@@ -48,6 +48,7 @@ MANEXIST=$(shell if [ -d "$(V_MAN)" ]; then echo "1"; else echo "0"; fi)
 
 
 V_GG_DATADIR=/usr/share
+V_GG_DATADIR_GOLF=/usr/share/doc/golf
 
 GG_SERVICE_INCLUDE=-I /usr/include/fastcgi
 
@@ -66,7 +67,7 @@ GG_LIBXML2_INCLUDE=$(shell pkg-config --cflags libxml-2.0)
 #based on DEBUGINFO from debug file, we use appropriate tags
 #Note: we always use -g in order to get line number of where the problem is
 #(optimization is still valid though)
-OPTIM_COMP_DEBUG=-g3 -DDEBUG -rdynamic
+OPTIM_COMP_DEBUG=-g3 -DDEBUG -rdynamic 
 OPTIM_COMP_PROD=-g -O3 
 OPTIM_LINK_PROD=
 OPTIM_LINK_DEBUG=-rdynamic
@@ -86,11 +87,11 @@ ASAN=
 endif
 
 #C flags are as strict as we can do, in order to discover as many bugs as early on
-CFLAGS=-std=gnu99 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5
+CFLAGS=-std=gnu99 -Werror -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wl,-z,relro,-z,now
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
-LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN) -fpie -Wl,-z,now
+LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -Wl,--enable-new-dtags -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN)
 
 #note that for make DI=1, DEBUGINFO can be checked. But we don't specify DEBUGINFO for sudo make install.
 #then we wanted to have them all. Otherwise, none will be there, because we explicitly delete them here.
@@ -98,7 +99,7 @@ LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN) 
 #not, then separate debugging info, and strip the executable and then link it to debugging info. The only
 #exception is if this is debian build which does that (and lintian complains if we strip it ourselves).
 define strip_sym
-if [ "$(DEBUGINFO)" != "1" ]; then objcopy --only-keep-debug $@ $@.dbg ; if [[ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" ]]; then objcopy --strip-unneeded $@ ; objcopy --add-gnu-debuglink=$@.dbg $@ ; else rm -f $@.dbg ; fi ; fi
+if [ "$(DEBUGINFO)" != "1" ]; then objcopy --only-keep-debug $@ $@.dbg || true ; if [[ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" ]]; then objcopy --strip-unneeded $@ || true ; objcopy --add-gnu-debuglink=$@.dbg $@ || true ; else rm -f $@.dbg || true ; fi ; fi
 endef
 
 
@@ -106,10 +107,12 @@ endef
 #SELinux directory is created and files put there just so if it ever gets selinux installed
 #We only actually enable selinux polices if 1) not a fakeroot and 2) selinux actually installed (doesn't have to be enabled)
 #SELinux can be enabled only if DESTDIR is empty, i.e. not a fake root. Otherwise, we're setting policies for fake root files, which of course doesn't work
+#Per Debian guidelines, LICENSE file is not installed, as it's already in debian/copyright
 .PHONY: install
 install:
 	install -m 0755 -d $(DESTDIR)/var/lib/gg/bld
 	install -m 0755 -d $(DESTDIR)$(V_INC)
+	install -m 0755 -d $(DESTDIR)$(V_GG_DATADIR_GOLF)
 	install -D -m 0644 golf.h -t $(DESTDIR)$(V_INC)/
 	install -D -m 0644 gcli.h -t $(DESTDIR)$(V_INC)/
 	install -m 0755 -d $(DESTDIR)$(V_LIB)
@@ -143,10 +146,10 @@ install:
 	install -D -m 0644 stub_xml.o -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 golf.vim -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0644 vmakefile -t $(DESTDIR)$(V_LIB)/
-	install -D -m 0644 LICENSE -t $(DESTDIR)$(V_LIB)/
-	install -D -m 0644 NOTICE -t $(DESTDIR)$(V_LIB)/
-	install -D -m 0644 README.md -t $(DESTDIR)$(V_LIB)/
-	install -D -m 0644 CONTRIBUTING.md -t $(DESTDIR)$(V_LIB)/
+	if [ "$(GG_DEBIAN_BUILD)" != "1" ]; then install -D -m 0644 LICENSE -t $(DESTDIR)$(V_GG_DATADIR_GOLF)/ ; fi
+	install -D -m 0644 NOTICE -t $(DESTDIR)$(V_GG_DATADIR_GOLF)/
+	install -D -m 0644 README.md -t $(DESTDIR)$(V_GG_DATADIR_GOLF)/
+	install -D -m 0644 CONTRIBUTING.md -t $(DESTDIR)$(V_GG_DATADIR_GOLF)/
 	install -m 0755 -d $(DESTDIR)$(V_BIN)
 	install -D -m 0755 v1 -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 vdiag -t $(DESTDIR)$(V_LIB)/
@@ -163,6 +166,7 @@ install:
 	if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi
 	if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$DATE/$(DATE)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi
 	for i in $$(ls $(DESTDIR)$(V_MAN)/*.2gg); do gzip -f $$i; done
+	chmod -x *.so; chmod -x *.o
 #This must be last, in this order, as it saves and then applies SELinux policy where applicable. 
 #This runs during rpm creation or during sudo make install
 #it does NOT run during rpm installation, there is post scriptlet that calls golf.sel to do that (GG_NO_SEL)

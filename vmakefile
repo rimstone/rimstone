@@ -31,7 +31,7 @@ else
 endif
 
 ifeq ($(strip $(GG_C_DEBUG)),1)
-    _OPTIM_COMP=-g3 -DDEBUG -rdynamic
+    _OPTIM_COMP=-g3 -DDEBUG -rdynamic 
     _OPTIM_LINK=-rdynamic
 else
     _OPTIM_COMP=-O3
@@ -115,7 +115,7 @@ _OBJ_FILES=$(GG_SOURCE_FILES:%.golf=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG_
 #happens only if you build against live running server, something that's 
 #usually only done in testing, and stripping symbols is not a priority.
 define strip_sym
-	if [ "$(GG_C_DEBUG)" != "1" ]; then objcopy --only-keep-debug $@ $@_dbg ; objcopy --strip-unneeded $@ || true ; objcopy --add-gnu-debuglink=$@_dbg $@ ; fi
+	if [ "$(GG_C_DEBUG)" != "1" ]; then objcopy --only-keep-debug $@ $@_dbg || true ; objcopy --strip-unneeded $@ || true ; objcopy --add-gnu-debuglink=$@_dbg $@ || true ; fi
 endef
 
 #when making source, start with compiling; then if error, check if plain diagnostic; if not, recompile with error processed by vdiag script to produce highlights (in which
@@ -146,7 +146,7 @@ $(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
 	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_SINGLE_FILE) -plain-diag "$(GG_C_PLAINDIAG)" -main -name "$(GG_C_NAME)" -max-upload "$(GG_C_MAXUPLOAD)" -app-path "$(GG_C_RESTPATH)" -trace "$(GG_C_TRACE)" -out $(GG_BLD)/golfsrvcapp.c
 	$(_CC) -c $(GG_BLD)/golfsrvcapp.c  $(_CFLAGS) -DCMOD -o $@ -I`pwd` 
 
-_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) $(_ASAN) -fpie -Wl,-z,now
+_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) -Wl,--enable-new-dtags $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) $(_ASAN) -Wl,-z,relro,-z,now
 
 
 

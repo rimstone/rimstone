@@ -16,25 +16,27 @@ You can also [install from source](https://golf-lang.com//install-golf-from-sour
 ## Install Golf on OpenSUSE:
 Install OpenSUSE Tumbleweed:
 ```
-sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-tumbleweed/golf-lang-golf-opensuse-tumbleweed.repo
-sudo zypper -n install --replacefiles --force-resolution  golf
+sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Tumbleweed/home:golf_lang.repo 
+sudo zypper --gpg-auto-import-keys refresh
+sudo zypper -n install --replacefiles --force-resolution golf
 ```
 Install OpenSUSE Leap 15\.6:
 ```
-sudo zypper --non-interactive addrepo -G https://copr.fedorainfracloud.org/coprs/golf-lang/golf-lang/repo/opensuse-leap-15.6/golf-lang-golf-opensuse-leap-15.6.repo
+sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/15.6/home:golf_lang.repo 
+sudo zypper --gpg-auto-import-keys refresh
 sudo zypper -n install --replacefiles --force-resolution golf
 ```
 Install OpenSUSE Slowroll:
 ```
-sudo zypper --non-interactive addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Slowroll/home:golf_lang.repo
-sudo zypper refresh
-sudo zypper -n install golf
+sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Slowroll/home:golf_lang.repo 
+sudo zypper --gpg-auto-import-keys refresh
+sudo zypper -n install --replacefiles --force-resolution golf
 ```
 You can also [install from source](https://golf-lang.com//install-golf-from-source-using-zypper.html)\.
 ## Install Golf on Debian \(10, 11, 12, Unstable\):
 Replace 'Debian\_12' with 'Debian\_10', 'Debian\_11' or 'Debian\_Unstable' to install on Debian 10, 11 or Unstable \(the latest upcoming\):
 ```
-sudo apt install -y curl
+sudo apt install -y curl gpg
 echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Debian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
 curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Debian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
 sudo apt update
@@ -46,7 +48,7 @@ Install Golf on Debian [from source code](https://golf-lang.com//install-golf-fr
 #Run this one time (to add Golf key):
 echo -e "[home_golf_lang_Arch]\nServer = https://download.opensuse.org/repositories/home:/golf_lang/Arch/x86_64" | sudo  tee -a /etc/pacman.conf 
 key=$(curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Arch/$(uname -m)/home_golf_lang_Arch.key)
-fingerprint=$(gpg --quiet --with-colons --import-options show-only --import --fingerprint <<< "${key}" | awk -F: '$1 == "fpr" { print $10 }')
+fingerprint=$(echo "${key}"|gpg --quiet --with-colons --import-options show-only --import --fingerprint  - | awk -F: '$1 == "fpr" { print $10 }')
 sudo pacman-key --init
 echo "${key}" | sudo pacman-key --add - 
 sudo pacman-key --lsign-key "${fingerprint}"
@@ -64,7 +66,7 @@ sudo apt -y install golf
 ```
 Install Golf on Raspberry [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
 ## Current version
-Current version is 452\. This release passed 2389 automated functional tests\.
+Current version is 462\. This release passed 2389 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
@@ -115,7 +117,8 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 ## Releases
-* 2025\-04\-20 [Golf 447 released](https://golf-lang.blogspot.com/2025/04/golf-426-released.html)
+* 2025\-04\-23 [Golf 462 released](https://golf-lang.blogspot.com/2025/04/golf-462-released.html)
+* 2025\-04\-20 [Golf 452 released](https://golf-lang.blogspot.com/2025/04/golf-426-released.html)
 * 2025\-04\-18 [Golf 423 released](https://golf-lang.blogspot.com/2025/04/golf-423-released.html)
 * 2025\-04\-17 [Golf 419 released](https://golf-lang.blogspot.com/2025/04/golf-419-released.html)
 * 2025\-04\-14 [Golf 397 released](https://golf-lang.blogspot.com/2025/04/golf-397-released.html)

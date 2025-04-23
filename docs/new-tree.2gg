@@ -42,7 +42,7 @@ In order for any data tree structure to function, a key comparison must be perfo
 .B NUMBER KEYS
 .LP
 
-"key-as" clause allows to treat a key as something other than a string when it comes to ordering. When "positive integer" value is used, it will treat a key as a string representation of a positive integer number. Such numbers must be zero or positive integers in the 64 bit range, and they must not contain leading zeros, spaces or other prefix (or suffix) characters. For example, key strings may be "0", "123" or "891347". With this clause, sorting these strings according to their converted numerical values is much faster than using schemes such as prefixing numbers with zeros or spaces.
+"key-as" clause allows one to treat a key as something other than a string when it comes to ordering. When "positive integer" value is used, it will treat a key as a string representation of a positive integer number. Such numbers must be zero or positive integers in the 64 bit range, and they must not contain leading zeros, spaces or other prefix (or suffix) characters. For example, key strings may be "0", "123" or "891347". With this clause, sorting these strings according to their converted numerical values is much faster than using schemes such as prefixing numbers with zeros or spaces.
 
 Note that when using "positive integer", you can use numbers in any base (from 2 to 36). In fact, numbers expressed in a higher base are generally faster to search for, because they are shorter in length.
 
