@@ -4,11 +4,11 @@ Upstream-Contact: team@golf-lang.com
 Source: https://github.com/golf-lang/golf
 
 Files: *
-Copyright: 2018 Gliim LLC
+Copyright: 2018-2025 Gliim LLC
 License: Apache-2.0
 
 Files: debian/*
-Copyright: 2018 Gliim LLC
+Copyright: 2025 Gliim LLC
 License: Apache-2.0
 
 License: Apache-2.0

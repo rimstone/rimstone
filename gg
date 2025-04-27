@@ -1428,7 +1428,7 @@ function gg_version() {
 #in that case, change this manually to the year from the official distribution!!!! That is required under most copyright laws, in which the second year should
 #be the year of the last change by the author.
     echo "Golf $GG_VERSION$_BETA on $GG_PLATFORM_ID ($GG_PLATFORM_VERSION)"
-    echo "Copyright (c) 2019-$(date '+%Y') Gliim LLC"
+    echo "Copyright (c) 2018-$(date '+%Y') Gliim LLC"
 
 }
 
