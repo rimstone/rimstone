@@ -4,3 +4,6 @@
 
 %:
 	GG_DEBIAN_BUILD=1 dh $@
+
+override_dh_dwz:
+	: Skipping dwz, compression not beneficial on golf files
