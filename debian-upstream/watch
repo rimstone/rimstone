@@ -1,7 +1,2 @@
 version=4
-opts="\
-dversionmangle=s/\+dfsg.*$//,\
-filenamemangle=s/.+\/[vV]?(\d\S+)\.tar\.gz/golf-$1\.0\.0\.orig\.\.tar\.gz/,\
-repack,repacksuffix=+dfsg,\
-" \
-https://github.com/golf-lang/golf/tags .*/[vV]?(\d[^\s+]+)\.tar\.gz
+https://github.com/golf-lang/golf/tags .*/v?(\d.*)@ARCHIVE_EXT@

@@ -146,7 +146,7 @@ Install Golf on Raspberry \fBfrom source code\fP.
 .B CURRENT VERSION
 .LP
 
-Current version is 471. This release passed 2389 automated functional tests.
+Current version is 473. This release passed 2389 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -160,6 +160,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .LP
 
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-04-25 \fBCookies in Golf applications, plus HAProxy!\fP
+.RE
+
 
 .RS 4
 \[bu]    
@@ -432,7 +438,7 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2025-04-24 \fBGolf 470 released\fP
+2025-04-24 \fBGolf 473 released\fP
 .RE
 
 
