@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    492
+Version:    494
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions
 Vendor:     Golf Team
@@ -19,7 +19,7 @@ Source0: https://github.com/golf-lang/%{name}/archive/%{version}/%{name}-%{versi
 #NOTE: the package includes devel packages and .h files since this is a development tool 
 #Meaning there is no package and "development" package. It is *both* in one by nature.
 
-%define all_requires make gcc openssl-devel libcurl-devel pcre2-devel libxml2-devel
+%define all_requires make gcc openssl-devel libcurl-devel pcre2-devel libxml2-devel man-db
 
 #python utils for selinux, only for rhel
 %if 0%{?rhel} 
@@ -71,7 +71,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-492
+%autosetup -n %{name}-494
 
 %build
 make clean
@@ -87,7 +87,11 @@ make DESTDIR="%{buildroot}" GG_FAKEROOT=1 GG_FEDORA_BUILD=1 install
 %post
 #since post runs during installation, execute selinux.setup
 #sudo /usr/lib/golf/selinux/selinux.setup
+echo "Setting up SELinux..."
 /usr/lib/golf/selinux/selinux.setup
+#install manual page for distros that need it (namely OpenSUSE for now)
+echo "Setting up man pages..."
+mandb >/dev/null 2>&1 || true
 
 
 %files
