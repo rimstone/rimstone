@@ -62,8 +62,7 @@ end-write-string
 .RE
 
 .SH SEE ALSO
- 
-.B - Output
+ Output
 
 \fBfinish-output\fP  
 \fBflush-output\fP  

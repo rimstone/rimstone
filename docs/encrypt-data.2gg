@@ -180,8 +180,7 @@ decrypt-data encd1 password "mypwd" salt rs1 to decd1 cipher "camellia-256-cfb1"
 .RE
 
 .SH SEE ALSO
- 
-.B - Encryption
+ Encryption
 
 \fBdecrypt-data\fP  
 \fBderive-key\fP  

@@ -74,8 +74,7 @@ You can use any file name (likely choose a name that signifies the purpose of a 
 
 %%
 .SH SEE ALSO
- 
-.B - Files
+ Files
 
 \fBchange-mode\fP  
 \fBclose-file\fP  

@@ -186,8 +186,7 @@ match-regex "SOME ([^ ]+) IS ([^ ]+)" in "WOW SOME THING IS GOOD HERE AND SOME S
 
 In this case there would be two matches by default ("SOME THING IS GOOD" and "SOME STUFF IS GOOD") but only the first would be found. This clause works the same for replacing as well - only the first occurrence would be replaced.
 .SH SEE ALSO
- 
-.B - Regex
+ Regex
 
 \fBmatch-regex\fP   
 See all 

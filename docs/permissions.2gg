@@ -10,8 +10,7 @@ Files created by Golf (including \fBopen-file\fP and \fBwrite-file\fP) are creat
 
 You can use \fBstat-file\fP to obtain permission mode for a file or directory, and \fBchange-mode\fP to set it. Note that, most of the time, you won't need to do this at all. If you do, however, you should change permission modes carefully and keep in mind the implications for both your application's security and functionality.
 .SH SEE ALSO
- 
-.B - General
+ General
 
 \fBabout-golf\fP  
 \fBdirectories\fP  

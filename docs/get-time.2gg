@@ -83,8 +83,7 @@ get-time to time_var timezone "MST" year 1 month 3 day 4 hour 7 minute 15 second
 .RE
 
 .SH SEE ALSO
- 
-.B - Time
+ Time
 
 \fBget-time\fP  
 \fBpause-program\fP   

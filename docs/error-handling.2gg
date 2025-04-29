@@ -47,8 +47,7 @@ gg -e 3
 .RE
 
 .SH SEE ALSO
- 
-.B - Error handling
+ Error handling
 
 \fBdb-error\fP  
 \fBerror-code\fP  

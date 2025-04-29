@@ -82,8 +82,7 @@ Defined
 .RE
 
 .SH SEE ALSO
- 
-.B - Program flow
+ Program flow
 
 \fBbreak-loop\fP  
 \fBcode-blocks\fP  

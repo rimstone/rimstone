@@ -33,8 +33,7 @@ write-lifo nf key "mykey" value "myvalue"
 .RE
 
 .SH SEE ALSO
- 
-.B - LIFO
+ LIFO
 
 \fBdelete-lifo\fP  
 \fBnew-lifo\fP  

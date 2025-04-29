@@ -37,8 +37,7 @@ set-number num = str[0] + 2
 
 Other than decimals and character constants, you can also use hexadecimal numbers (such as 0xffaa), and octal numbers (such as 0710).
 .SH SEE ALSO
- 
-.B - Numbers
+ Numbers
 
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  

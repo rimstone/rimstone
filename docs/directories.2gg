@@ -69,16 +69,14 @@ ln -s /home/disk0/file /var/lib/gg/<app name>/app/file
 .RE
 
 .SH SEE ALSO
- 
-.B - Directories
+ Directories
 
 \fBchange-dir\fP  
 \fBchange-mode\fP  
 \fBdelete-dir\fP  
 \fBdirectories\fP  
 \fBnew-dir\fP   
- 
-.B - General
+ General
 
 \fBabout-golf\fP  
 \fBdirectories\fP  

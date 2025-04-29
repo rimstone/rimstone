@@ -25,8 +25,7 @@ If you do not close a file opened with open-file, Golf will automatically close 
 .SH EXAMPLES
 See \fBopen-file\fP.
 .SH SEE ALSO
- 
-.B - Files
+ Files
 
 \fBchange-mode\fP  
 \fBclose-file\fP  

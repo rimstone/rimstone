@@ -32,8 +32,7 @@ Create a URL based on arbitrary strings used as URL parameters - for instance sp
 
 See \fBpf-out\fP for more examples.
 .SH SEE ALSO
- 
-.B - Output
+ Output
 
 \fBfinish-output\fP  
 \fBflush-output\fP  

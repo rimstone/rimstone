@@ -22,8 +22,7 @@ String results of any Golf \fBstatements\fP will always create new memory, unles
 
 Any files opened by \fBopen-file\fP statement are automatically closed by Golf at the end of the request. This enhances stability of long-running server processes because Linux system by default offers only about 1000 open files to a process. A bug can quickly exhaust this pool and cause a malfunction or a crash - Golf prevents this by closing any such open files when the request ends. 
 .SH SEE ALSO
- 
-.B - Memory
+ Memory
 
 \fBmemory-handling\fP   
 See all 

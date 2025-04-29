@@ -32,8 +32,7 @@ delete-list mylist status st
 .RE
 
 .SH SEE ALSO
- 
-.B - Linked list
+ Linked list
 
 \fBdelete-list\fP  
 \fBget-list\fP  

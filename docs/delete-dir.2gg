@@ -30,8 +30,7 @@ delete-dir "/home/user/some_dir"
 .RE
 
 .SH SEE ALSO
- 
-.B - Directories
+ Directories
 
 \fBchange-dir\fP  
 \fBchange-mode\fP  

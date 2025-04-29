@@ -49,8 +49,7 @@ menu/popup/menuitem/onclick/@
 .SH EXAMPLES
 See \fBxml-doc\fP.
 .SH SEE ALSO
- 
-.B - XML parsing
+ XML parsing
 
 \fBread-xml\fP  
 \fBxml-doc\fP   

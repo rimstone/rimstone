@@ -63,8 +63,7 @@ report-error "Too many input parameters for %s, encountered total of [%ld]", "cu
 .RE
 
 .SH SEE ALSO
- 
-.B - Error handling
+ Error handling
 
 \fBdb-error\fP  
 \fBerror-code\fP  

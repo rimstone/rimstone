@@ -41,8 +41,7 @@ exit-handler
 .RE
 
 .SH SEE ALSO
- 
-.B - Program execution
+ Program execution
 
 \fBexec-program\fP  
 \fBhandler-status\fP   

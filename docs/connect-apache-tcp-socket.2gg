@@ -144,8 +144,7 @@ sudo systemctl restart httpd
 
 Note: you must not have any other URL resource that starts with "/<app path>/" (such as for example "/<app path>/something") as the web server will attempt to pass them as a reverse proxy request, and they will likely not work. If you need to, you can change the application path to be different from "/<app path>", see \fBrequest\fP.
 .SH SEE ALSO
- 
-.B - Web servers
+ Web servers
 
 \fBconnect-apache-tcp-socket\fP  
 \fBconnect-apache-unix-socket\fP  

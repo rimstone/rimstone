@@ -34,8 +34,7 @@ purge-array arr
 
 See \fBread-array\fP for more examples.
 .SH SEE ALSO
- 
-.B - Array
+ Array
 
 \fBnew-array\fP  
 \fBpurge-array\fP  

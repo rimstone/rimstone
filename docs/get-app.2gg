@@ -94,8 +94,7 @@ end-if
 .RE
 
 .SH SEE ALSO
- 
-.B - Application information
+ Application information
 
 \fBget-app\fP   
 See all 

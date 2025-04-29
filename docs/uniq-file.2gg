@@ -50,8 +50,7 @@ delete-file temp_file
 .RE
 
 .SH SEE ALSO
- 
-.B - Files
+ Files
 
 \fBchange-mode\fP  
 \fBclose-file\fP  

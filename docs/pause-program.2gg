@@ -39,8 +39,7 @@ pause-program 250
 .RE
 
 .SH SEE ALSO
- 
-.B - Time
+ Time
 
 \fBget-time\fP  
 \fBpause-program\fP   

@@ -43,8 +43,7 @@ new-array arr
 .RE
 
 .SH SEE ALSO
- 
-.B - Array
+ Array
 
 \fBnew-array\fP  
 \fBpurge-array\fP  

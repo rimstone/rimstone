@@ -55,8 +55,7 @@ end-if
 .RE
 
 .SH SEE ALSO
- 
-.B - UTF
+ UTF
 
 \fBtext-utf\fP  
 \fButf-text\fP   

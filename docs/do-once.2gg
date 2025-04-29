@@ -43,8 +43,7 @@ In this example, a process-scoped hash (that is available to multiple requests o
 .RE
 
 .SH SEE ALSO
- 
-.B - Program flow
+ Program flow
 
 \fBbreak-loop\fP  
 \fBcode-blocks\fP  

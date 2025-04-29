@@ -66,8 +66,7 @@ purge-fifo mylist
 .RE
 
 .SH SEE ALSO
- 
-.B - FIFO
+ FIFO
 
 \fBdelete-fifo\fP  
 \fBnew-fifo\fP  

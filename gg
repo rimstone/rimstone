@@ -111,6 +111,7 @@ OPTIONS:
                  displays C compile flags
              --link
                  displays C linking flags
+--man    display all Golf man pages available
 -h       this help
 Type 'man gg' for more information.
 "
@@ -124,7 +125,7 @@ function main() {
 #list of Golf options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o k:e:t:,q,o,l,m,i,h,c,v,s,u,r --long exclude-dir:,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o k:e:t:,q,o,l,m,i,h,c,v,s,u,r --long exclude-dir:,man,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit -1
@@ -162,6 +163,11 @@ _DO_QUICK=0
             export GG_C_SINGLE_FILE="1"
             _DEVOPT=1
             shift 
+            ;;
+        --man  )
+            apropos -s 2gg '.*' | sed 's/(2gg)//g'
+            shift 
+            exit 0
             ;;
         --debug  )
             export GG_C_DEBUG="1"

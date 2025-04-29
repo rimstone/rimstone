@@ -30,8 +30,7 @@ trim-string str
 .RE
 
 .SH SEE ALSO
- 
-.B - Strings
+ Strings
 
 \fBcopy-string\fP  
 \fBcount-substring\fP  

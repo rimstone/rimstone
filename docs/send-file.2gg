@@ -132,8 +132,7 @@ send-file "/home/user/file.pdf" headers download content-type "application/pdf"
 .RE
 
 .SH SEE ALSO
- 
-.B - Web
+ Web
 
 \fBcall-web\fP  
 \fBout-header\fP  

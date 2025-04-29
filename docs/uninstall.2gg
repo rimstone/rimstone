@@ -69,8 +69,7 @@ sudo pacman -R golf
 
 Note that /var/lib/gg directory is not removed, as it generally contains application files. You may move such files or delete them as you see fit.
 .SH SEE ALSO
- 
-.B - Download and build
+ Download and build
 
 \fBinstall-golf-from-source-using-apt\fP  
 \fBinstall-golf-from-source-using-dnf\fP  

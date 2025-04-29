@@ -148,8 +148,7 @@ if-true can be nested, which can be up to 30 levels deep.
 .RE
 
 .SH SEE ALSO
- 
-.B - Program flow
+ Program flow
 
 \fBbreak-loop\fP  
 \fBcode-blocks\fP  

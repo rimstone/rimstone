@@ -37,8 +37,7 @@ string-number "49" to n base 10 status st
 .RE
 
 .SH SEE ALSO
- 
-.B - Numbers
+ Numbers
 
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  

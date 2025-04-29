@@ -32,16 +32,14 @@ change-mode "myfile" mode 0760
 .RE
 
 .SH SEE ALSO
- 
-.B - Directories
+ Directories
 
 \fBchange-dir\fP  
 \fBchange-mode\fP  
 \fBdelete-dir\fP  
 \fBdirectories\fP  
 \fBnew-dir\fP   
- 
-.B - Files
+ Files
 
 \fBchange-mode\fP  
 \fBclose-file\fP  

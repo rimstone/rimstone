@@ -229,8 +229,7 @@ Added [key3]
 .RE
 
 .SH SEE ALSO
- 
-.B - Distributed computing
+ Distributed computing
 
 \fBcall-remote\fP  
 \fBnew-remote\fP  

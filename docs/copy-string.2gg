@@ -67,8 +67,7 @@ copy-string other_string to my_str length 3 start-with 1
 .RE
 
 .SH SEE ALSO
- 
-.B - Strings
+ Strings
 
 \fBcopy-string\fP  
 \fBcount-substring\fP  

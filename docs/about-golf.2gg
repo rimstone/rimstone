@@ -210,8 +210,7 @@ Do not use object names (such as variables and request names) that start with "_
 
 Golf programming language (or golf-lang) was created by Sergio Mijatovic, formerly Senior Software Engineer with Oracle server engineering group. Golf was originally known as Vely (since 2018), before being redesigned into Golf in late 2024.
 .SH SEE ALSO
- 
-.B - General
+ General
 
 \fBabout-golf\fP  
 \fBdirectories\fP  

@@ -27,8 +27,7 @@ Note that the string to decode can have whitespaces before it (such as spaces or
 .SH EXAMPLES
 See \fBencode-base64\fP.
 .SH SEE ALSO
- 
-.B - Base64
+ Base64
 
 \fBdecode-base64\fP  
 \fBencode-base64\fP   

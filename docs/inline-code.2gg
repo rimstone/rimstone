@@ -75,8 +75,7 @@ set-string mins="42"
 .RE
 
 .SH SEE ALSO
- 
-.B - Language
+ Language
 
 \fBinline-code\fP  
 \fBstatements\fP  

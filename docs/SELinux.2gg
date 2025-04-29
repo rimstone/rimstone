@@ -122,8 +122,7 @@ sudo restorecon -R /your/new/dir
 .RE
 
 .SH SEE ALSO
- 
-.B - SELinux
+ SELinux
 
 \fBSELinux\fP   
 See all 

@@ -110,8 +110,7 @@ Output: This is sub! with output [got input: new string]
 .RE
 
 .SH SEE ALSO
- 
-.B - Service processing
+ Service processing
 
 \fBafter-handler\fP  
 \fBbefore-handler\fP  

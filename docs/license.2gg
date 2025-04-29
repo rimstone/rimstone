@@ -72,8 +72,7 @@ Golf uses FNV-1a hash function, which is released in the public domain (see \fBw
 
 Golf source code uses \fBSPDX\fP, an open ISO standard for communicating software bill of material information (such as licenses), to improve on open source licensing compliance for companies and communities.
 .SH SEE ALSO
- 
-.B - License
+ License
 
 \fBlicense\fP   
 See all 

@@ -144,8 +144,7 @@ Not found, queried [2]
 
 See \fBread-tree\fP for more examples.
 .SH SEE ALSO
- 
-.B - Tree
+ Tree
 
 \fBdelete-tree\fP  
 \fBget-tree\fP  

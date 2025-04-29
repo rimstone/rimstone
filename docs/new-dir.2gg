@@ -30,8 +30,7 @@ new-dir "new_dir"
 .RE
 
 .SH SEE ALSO
- 
-.B - Directories
+ Directories
 
 \fBchange-dir\fP  
 \fBchange-mode\fP  

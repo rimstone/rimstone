@@ -156,8 +156,7 @@ end-handler
 
 In this example, you are using a C macro, so number "fact" is assigned a value directly, per C language rules. The result printed out is "3".
 .SH SEE ALSO
- 
-.B - C language
+ C language
 
 \fBcall-extended\fP  
 \fBextended-mode\fP  

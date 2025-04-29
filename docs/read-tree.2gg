@@ -108,8 +108,7 @@ In this example, a million key/value pairs are inserted into a tree, and then ea
 .RE
 
 .SH SEE ALSO
- 
-.B - Tree
+ Tree
 
 \fBdelete-tree\fP  
 \fBget-tree\fP  

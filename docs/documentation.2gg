@@ -4,18 +4,18 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 488
+.B REFERENCE FOR GOLF VERSION 492
 .LP
 
-Note: All the topics below are available as a \fBsingle-page documentation\fP. 
-Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl,   lrlBase64elrl,   lrlC languageelrl,   lrlCookieselrl,   lrlDatabaseelrl,   lrlDebuggingelrl,   lrlDirectorieselrl,   lrlDistributed computingelrl,   lrlDocumentationelrl,   lrlDownload and buildelrl,   lrlEncryptionelrl,   lrlError handlingelrl,   lrlFIFOelrl,   lrlFileselrl,   lrlGeneralelrl,   lrlGolf compiler and utilityelrl,   lrlHashelrl,   lrlHex encodingelrl,   lrlJSON parsingelrl,   lrlLanguageelrl,   lrlLicenseelrl,   lrlLIFOelrl,   lrlLinked listelrl,   lrlMemoryelrl,   lrlMessageselrl,   lrlNumberselrl,   lrlOutputelrl,   lrlProgram executionelrl,   lrlProgram flowelrl,   lrlQuick startelrl,   lrlRegexelrl,   lrlRequest dataelrl,   lrlRequest informationelrl,   lrlRequestselrl,   lrlRunning applicationelrl,   lrlSELinuxelrl,   lrlService managerelrl,   lrlService processingelrl,   lrlStringselrl,   lrlSystem informationelrl,   lrlTimeelrl,   lrlTreeelrl,   lrlURL encodingelrl,   lrlUTFelrl,   lrlWebelrl,   lrlWeb encodingelrl,   lrlWeb serverselrl,   lrlXML parsingelrl
+Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
+
+Browse by topic:    API,   Application information,   Array,   Base64,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Download and build,   Encryption,   Error handling,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
 
 
 
 .RS 4
 \[bu]    
-
-.B - API
+API
 
 \fBClient-API\fP  
 \fBServer-API\fP   
@@ -25,8 +25,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Application information
+Application information
 
 \fBget-app\fP   
 .RE
@@ -35,8 +34,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Array
+Array
 
 \fBnew-array\fP  
 \fBpurge-array\fP  
@@ -48,8 +46,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Base64
+Base64
 
 \fBdecode-base64\fP  
 \fBencode-base64\fP   
@@ -59,8 +56,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - C language
+C language
 
 \fBcall-extended\fP  
 \fBextended-mode\fP  
@@ -71,8 +67,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Cookies
+Cookies
 
 \fBdelete-cookie\fP  
 \fBget-cookie\fP  
@@ -83,8 +78,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Database
+Database
 
 \fBbegin-transaction\fP  
 \fBcommit-transaction\fP  
@@ -102,8 +96,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Debugging
+Debugging
 
 \fBdebugging\fP  
 \fBtrace-run\fP   
@@ -113,8 +106,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Directories
+Directories
 
 \fBchange-dir\fP  
 \fBchange-mode\fP  
@@ -127,8 +119,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Distributed computing
+Distributed computing
 
 \fBcall-remote\fP  
 \fBnew-remote\fP  
@@ -140,8 +131,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Documentation
+Documentation
 
 \fBdocumentation\fP   
 .RE
@@ -150,8 +140,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Download and build
+Download and build
 
 \fBinstall-golf-from-source-using-apt\fP  
 \fBinstall-golf-from-source-using-dnf\fP  
@@ -164,8 +153,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Encryption
+Encryption
 
 \fBdecrypt-data\fP  
 \fBderive-key\fP  
@@ -180,8 +168,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Error handling
+Error handling
 
 \fBdb-error\fP  
 \fBerror-code\fP  
@@ -193,8 +180,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - FIFO
+FIFO
 
 \fBdelete-fifo\fP  
 \fBnew-fifo\fP  
@@ -208,8 +194,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Files
+Files
 
 \fBchange-mode\fP  
 \fBclose-file\fP  
@@ -234,8 +219,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - General
+General
 
 \fBabout-golf\fP  
 \fBdirectories\fP  
@@ -246,8 +230,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Golf compiler and utility
+Golf compiler and utility
 
 \fBgg\fP   
 .RE
@@ -256,8 +239,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Hash
+Hash
 
 \fBget-hash\fP  
 \fBnew-hash\fP  
@@ -271,8 +253,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Hex encoding
+Hex encoding
 
 \fBdecode-hex\fP  
 \fBencode-hex\fP   
@@ -282,8 +263,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - JSON parsing
+JSON parsing
 
 \fBjson-doc\fP  
 \fBread-json\fP   
@@ -293,8 +273,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Language
+Language
 
 \fBinline-code\fP  
 \fBstatements\fP  
@@ -307,8 +286,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - License
+License
 
 \fBlicense\fP   
 .RE
@@ -317,8 +295,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - LIFO
+LIFO
 
 \fBdelete-lifo\fP  
 \fBnew-lifo\fP  
@@ -332,8 +309,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Linked list
+Linked list
 
 \fBdelete-list\fP  
 \fBget-list\fP  
@@ -348,8 +324,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Memory
+Memory
 
 \fBmemory-handling\fP   
 .RE
@@ -358,8 +333,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Messages
+Messages
 
 \fBget-message\fP  
 \fBnew-message\fP  
@@ -372,8 +346,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Numbers
+Numbers
 
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  
@@ -385,8 +358,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Output
+Output
 
 \fBfinish-output\fP  
 \fBflush-output\fP  
@@ -407,8 +379,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Program execution
+Program execution
 
 \fBexec-program\fP  
 \fBhandler-status\fP   
@@ -418,8 +389,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Program flow
+Program flow
 
 \fBbreak-loop\fP  
 \fBcode-blocks\fP  
@@ -437,8 +407,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Quick start
+Quick start
 
 \fB123-hello-world\fP   
 .RE
@@ -447,8 +416,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Regex
+Regex
 
 \fBmatch-regex\fP   
 .RE
@@ -457,8 +425,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Request data
+Request data
 
 \fBget-param\fP  
 \fBrequest-body\fP  
@@ -469,8 +436,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Request information
+Request information
 
 \fBget-req\fP   
 .RE
@@ -479,8 +445,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Requests
+Requests
 
 \fBrequest\fP   
 .RE
@@ -489,8 +454,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Running application
+Running application
 
 \fBapplication-setup\fP  
 \fBCGI\fP  
@@ -502,8 +466,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - SELinux
+SELinux
 
 \fBSELinux\fP   
 .RE
@@ -512,8 +475,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Service manager
+Service manager
 
 \fBmgrg\fP   
 .RE
@@ -522,8 +484,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Service processing
+Service processing
 
 \fBafter-handler\fP  
 \fBbefore-handler\fP  
@@ -535,8 +496,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Strings
+Strings
 
 \fBcopy-string\fP  
 \fBcount-substring\fP  
@@ -556,8 +516,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - System information
+System information
 
 \fBget-sys\fP   
 .RE
@@ -566,8 +525,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Time
+Time
 
 \fBget-time\fP  
 \fBpause-program\fP   
@@ -577,8 +535,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Tree
+Tree
 
 \fBdelete-tree\fP  
 \fBget-tree\fP  
@@ -593,8 +550,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - URL encoding
+URL encoding
 
 \fBdecode-url\fP  
 \fBencode-url\fP   
@@ -604,8 +560,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - UTF
+UTF
 
 \fBtext-utf\fP  
 \fButf-text\fP   
@@ -615,8 +570,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Web
+Web
 
 \fBcall-web\fP  
 \fBout-header\fP  
@@ -628,8 +582,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Web encoding
+Web encoding
 
 \fBdecode-web\fP  
 \fBencode-web\fP   
@@ -639,8 +592,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - Web servers
+Web servers
 
 \fBconnect-apache-tcp-socket\fP  
 \fBconnect-apache-unix-socket\fP  
@@ -653,8 +605,7 @@ Browse by topic:    lrlAPIelrl,   lrlApplication informationelrl,   lrlArrayelrl
 
 .RS 4
 \[bu]    
-
-.B - XML parsing
+XML parsing
 
 \fBread-xml\fP  
 \fBxml-doc\fP   
@@ -683,6 +634,16 @@ The Golf section is '2gg', so in case of other software having conflicting topic
 .EX
 
 man 2gg run-query
+
+.EE
+.RE
+
+You can see all available man pages (along with the sections they belong to) with:
+
+.RS 4
+.EX
+
+gg --man
 
 .EE
 .RE

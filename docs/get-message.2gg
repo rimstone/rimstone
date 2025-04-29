@@ -52,8 +52,7 @@ The result is:
 .RE
 
 .SH SEE ALSO
- 
-.B - Messages
+ Messages
 
 \fBget-message\fP  
 \fBnew-message\fP  

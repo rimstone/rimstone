@@ -132,8 +132,7 @@ trace-run
 .RE
 
 .SH SEE ALSO
- 
-.B - Debugging
+ Debugging
 
 \fBdebugging\fP  
 \fBtrace-run\fP   

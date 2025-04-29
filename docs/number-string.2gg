@@ -60,8 +60,7 @@ number-string x
 .RE
 
 .SH SEE ALSO
- 
-.B - Numbers
+ Numbers
 
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  

@@ -22,8 +22,7 @@ All keys or values stored in the list are also deleted.
 .SH EXAMPLES
 See \fBread-fifo\fP.
 .SH SEE ALSO
- 
-.B - FIFO
+ FIFO
 
 \fBdelete-fifo\fP  
 \fBnew-fifo\fP  

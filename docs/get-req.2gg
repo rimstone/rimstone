@@ -179,8 +179,7 @@ get-req trace-file to trace_file
 .RE
 
 .SH SEE ALSO
- 
-.B - Request information
+ Request information
 
 \fBget-req\fP   
 See all 

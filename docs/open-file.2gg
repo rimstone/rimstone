@@ -59,8 +59,7 @@ Create a file (or truncate an existing one), write 25,000 rows and the read back
 .RE
 
 .SH SEE ALSO
- 
-.B - Files
+ Files
 
 \fBchange-mode\fP  
 \fBclose-file\fP  

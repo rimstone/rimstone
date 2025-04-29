@@ -96,8 +96,7 @@ write-file "file" from cont position 3 status st
 
 See \fBopen-file\fP for an example with "file-id" clause.
 .SH SEE ALSO
- 
-.B - Files
+ Files
 
 \fBchange-mode\fP  
 \fBclose-file\fP  

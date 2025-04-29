@@ -20,8 +20,7 @@ rewind-lifo will position at the very last data element put into <list> which wa
 .SH EXAMPLES
 See \fBread-lifo\fP.
 .SH SEE ALSO
- 
-.B - LIFO
+ LIFO
 
 \fBdelete-lifo\fP  
 \fBnew-lifo\fP  

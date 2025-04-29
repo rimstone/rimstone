@@ -68,8 +68,7 @@ p-out quantity
 .RE
 
 .SH SEE ALSO
- 
-.B - Request data
+ Request data
 
 \fBget-param\fP  
 \fBrequest-body\fP  

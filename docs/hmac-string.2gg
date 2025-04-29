@@ -66,8 +66,7 @@ encode-base64 result to bresult
 .RE
 
 .SH SEE ALSO
- 
-.B - Encryption
+ Encryption
 
 \fBdecrypt-data\fP  
 \fBderive-key\fP  

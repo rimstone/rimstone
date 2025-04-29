@@ -31,8 +31,7 @@ write-message msg key "key1" value "value1"
 .RE
 
 .SH SEE ALSO
- 
-.B - Messages
+ Messages
 
 \fBget-message\fP  
 \fBnew-message\fP  

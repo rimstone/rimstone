@@ -34,8 +34,7 @@ random-crypto to str length 20
 .RE
 
 .SH SEE ALSO
- 
-.B - Encryption
+ Encryption
 
 \fBdecrypt-data\fP  
 \fBderive-key\fP  

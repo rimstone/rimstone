@@ -79,8 +79,7 @@ end-if
 .RE
 
 .SH SEE ALSO
- 
-.B - Base64
+ Base64
 
 \fBdecode-base64\fP  
 \fBencode-base64\fP   

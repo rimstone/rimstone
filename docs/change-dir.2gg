@@ -60,8 +60,7 @@ change-dir home
 .RE
 
 .SH SEE ALSO
- 
-.B - Directories
+ Directories
 
 \fBchange-dir\fP  
 \fBchange-mode\fP  

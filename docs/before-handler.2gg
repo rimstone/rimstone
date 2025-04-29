@@ -35,8 +35,7 @@ end-before-handler
 .RE
 
 .SH SEE ALSO
- 
-.B - Service processing
+ Service processing
 
 \fBafter-handler\fP  
 \fBbefore-handler\fP  

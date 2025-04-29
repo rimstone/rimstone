@@ -35,8 +35,7 @@ end-query
 .RE
 
 .SH SEE ALSO
- 
-.B - Database
+ Database
 
 \fBbegin-transaction\fP  
 \fBcommit-transaction\fP  

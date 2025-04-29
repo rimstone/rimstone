@@ -154,8 +154,7 @@ If your parameters do not contain characters that need URL encoding, then you ca
 
 You can also use a command-line program with \fBCGI\fP (Common Gateway Interface). 
 .SH SEE ALSO
- 
-.B - Running application
+ Running application
 
 \fBapplication-setup\fP  
 \fBCGI\fP  

@@ -64,8 +64,7 @@ read-line "/home/user/dir/file" to one_line status len delimiter '|'
 .RE
 
 .SH SEE ALSO
- 
-.B - Files
+ Files
 
 \fBchange-mode\fP  
 \fBclose-file\fP  

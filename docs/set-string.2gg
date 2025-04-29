@@ -114,8 +114,7 @@ set-string my_string = "abc"
 .RE
 
 .SH SEE ALSO
- 
-.B - Strings
+ Strings
 
 \fBcopy-string\fP  
 \fBcount-substring\fP  

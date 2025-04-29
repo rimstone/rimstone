@@ -132,8 +132,7 @@ gg -r --req="/arrsrv/op=delete/key=15" --service --app="/arr" --exec
 
 See \fBread-array\fP for more examples.
 .SH SEE ALSO
- 
-.B - Array
+ Array
 
 \fBnew-array\fP  
 \fBpurge-array\fP  

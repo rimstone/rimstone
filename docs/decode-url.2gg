@@ -33,8 +33,7 @@ decode-url str
 .RE
 
 .SH SEE ALSO
- 
-.B - URL encoding
+ URL encoding
 
 \fBdecode-url\fP  
 \fBencode-url\fP   

@@ -184,8 +184,7 @@ database=my${DOLLAR_SIGN}database
 
 In this case the database name is "my$database".
 .SH SEE ALSO
- 
-.B - Database
+ Database
 
 \fBbegin-transaction\fP  
 \fBcommit-transaction\fP  

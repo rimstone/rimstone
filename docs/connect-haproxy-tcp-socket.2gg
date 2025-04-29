@@ -75,8 +75,7 @@ mgrg -p 3000 <your golf app name>
 
 Now you should be able to connect and load-balance your Golf application servers directly from HAProxy (which in this example listens on port 90, so you'd refer to it with https://your-web-server:90/<your golf app name>/...).
 .SH SEE ALSO
- 
-.B - Web servers
+ Web servers
 
 \fBconnect-apache-tcp-socket\fP  
 \fBconnect-apache-unix-socket\fP  

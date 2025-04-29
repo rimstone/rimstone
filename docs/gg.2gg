@@ -379,6 +379,14 @@ Add Golf syntax and keyword highlighting rules for files with .golf extension to
 
 .RS 4
 \[bu]    
+--man
+Display list of all man pages for Golf, along with the section that each belongs to (i.e. "string", "web", "program-flow" etc).
+
+
+.RE
+
+.RS 4
+\[bu]    
 -h
 Display help. 
 .RE
@@ -434,8 +442,7 @@ gg -q
 .RE
 
 .SH SEE ALSO
- 
-.B - Golf compiler and utility
+ Golf compiler and utility
 
 \fBgg\fP   
 See all 

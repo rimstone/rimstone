@@ -61,8 +61,7 @@ random-string to str length 8 binary
 .RE
 
 .SH SEE ALSO
- 
-.B - Encryption
+ Encryption
 
 \fBdecrypt-data\fP  
 \fBderive-key\fP  

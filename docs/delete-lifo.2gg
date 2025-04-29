@@ -42,8 +42,7 @@ delete-lifo mylist
 .RE
 
 .SH SEE ALSO
- 
-.B - LIFO
+ LIFO
 
 \fBdelete-lifo\fP  
 \fBnew-lifo\fP  

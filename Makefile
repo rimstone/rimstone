@@ -157,7 +157,7 @@ install:
 	install -D -m 0755 gg  -t $(DESTDIR)$(V_BIN)/
 	install -D -m 0755 mgrg  -t $(DESTDIR)$(V_BIN)/
 	if [[ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" && -f v1.dbg ]]; then install -m 0755 -d $(DESTDIR)$(V_LIBD) ; install -D -m 0644 v1.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 mgrg.dbg  -t $(DESTDIR)$(V_LIBD)/ ;  install -D -m 0644 libgolfpg.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfdb.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolflite.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfmys.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfsec.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolftree.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcurl.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfxml.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfarr.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfpcre2.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libsrvcgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfscli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; fi
-	if [ "$(GG_DEBIAN_BUILD)" != "1" ]; then install -m 0755 -d $(DESTDIR)$(V_MAN) ; install -D -m 0644 docs/*.2gg -t $(DESTDIR)$(V_MAN)/ ; if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi ; if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$DATE/$(DATE)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi ; for i in $$(ls $(DESTDIR)$(V_MAN)/*.2gg); do gzip -f $$i; done ; fi
+	if [ "$(GG_DEBIAN_BUILD)" != "1" ]; then install -m 0755 -d $(DESTDIR)$(V_MAN) ; install -D -m 0644 docs/*.2gg -t $(DESTDIR)$(V_MAN)/ ; if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi ; if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$DATE/$(DATE)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi ; for i in $$(ls $(DESTDIR)$(V_MAN)/*.2gg); do gzip -f $$i; done ; sudo mandb >/dev/null 2>&1 || true ; fi
 	install -D -m 0755 sys -t $(DESTDIR)$(V_LIB)/
 	sed -i "s|^[ ]*export[ ]*GG_LIBRARY_PATH[ ]*=.*|export GG_LIBRARY_PATH=$(V_LIB)|g" $(DESTDIR)$(V_LIB)/sys
 	sed -i "s|^[ ]*export[ ]*GG_LIBRARY_PATH[ ]*=.*|export GG_LIBRARY_PATH=$(V_LIB)|g" $(DESTDIR)$(V_BIN)/gg
@@ -186,7 +186,7 @@ uninstall:
 	rm -rf $(DESTDIR)$(V_INC)
 	rm -f $(DESTDIR)$(V_BIN)/gg
 	rm -f $(DESTDIR)$(V_BIN)/mgrg
-	rm -f $(DESTDIR)$(V_MAN)/*.2gg
+	rm -f $(DESTDIR)$(V_MAN)/*.2gg ; rm -f $(DESTDIR)$(V_MAN)/*.2gg.gz ; sudo mandb >/dev/null 2>&1 || true
 	rm -rf $(DESTDIR)$(V_LIB)
 	rm -rf $(DESTDIR)$(V_LIBD)
 

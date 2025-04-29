@@ -34,8 +34,7 @@ new-fifo nf
 .RE
 
 .SH SEE ALSO
- 
-.B - FIFO
+ FIFO
 
 \fBdelete-fifo\fP  
 \fBnew-fifo\fP  

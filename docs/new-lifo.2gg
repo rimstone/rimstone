@@ -32,8 +32,7 @@ new-lifo mylifo
 .RE
 
 .SH SEE ALSO
- 
-.B - LIFO
+ LIFO
 
 \fBdelete-lifo\fP  
 \fBnew-lifo\fP  

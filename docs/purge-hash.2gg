@@ -34,8 +34,7 @@ purge-hash h
 
 See \fBread-hash\fP for more examples.
 .SH SEE ALSO
- 
-.B - Hash
+ Hash
 
 \fBget-hash\fP  
 \fBnew-hash\fP  

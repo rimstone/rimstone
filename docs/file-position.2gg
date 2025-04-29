@@ -43,8 +43,7 @@ file-position file-id nf get pos
 
 See also \fBopen-file\fP.
 .SH SEE ALSO
- 
-.B - Files
+ Files
 
 \fBchange-mode\fP  
 \fBclose-file\fP  

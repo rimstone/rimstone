@@ -13,8 +13,7 @@ SQLite database configuration file should contain a single line of text, and it 
 .RE
 
 .SH SEE ALSO
- 
-.B - Database
+ Database
 
 \fBbegin-transaction\fP  
 \fBcommit-transaction\fP  

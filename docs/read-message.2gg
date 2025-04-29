@@ -29,8 +29,7 @@ Once a message is read from, it cannot be written to (see \fBwrite-message\fP).
 .SH EXAMPLES
 See \fBnew-message\fP.
 .SH SEE ALSO
- 
-.B - Messages
+ Messages
 
 \fBget-message\fP  
 \fBnew-message\fP  

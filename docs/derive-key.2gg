@@ -54,8 +54,7 @@ derive-key mk from "clave secreta" digest "sha-256" salt rs9 salt-length 10 iter
 .RE
 
 .SH SEE ALSO
- 
-.B - Encryption
+ Encryption
 
 \fBdecrypt-data\fP  
 \fBderive-key\fP  
