@@ -27,8 +27,8 @@ Build-Depends: libssl-dev,
  debhelper-compat(= 13)
 Standards-Version: 4.7.2
 Homepage: https://golf-lang.com
-Vcs-Browser: https://github.com/golf-lang/golf
-Vcs-Git: https://github.com/golf-lang/golf.git
+Vcs-Browser: https://salsa.debian.org/golf/golf
+Vcs-Git: https://salsa.debian.org/golf/golf.git
 
 Package: golf
 Architecture: any
