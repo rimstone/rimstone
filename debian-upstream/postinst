@@ -1,2 +1,6 @@
+#!/bin/bash
+set -e
 echo "Setting up man pages..."
+#This mandb command may fail, but it's not critical, so it's guarded
 mandb >/dev/null 2>&1 || true
+#DEBHELPER#
