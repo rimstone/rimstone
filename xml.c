@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2018 Gliim LLC. 
+// Copyright 2018-2025 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
 //
@@ -54,13 +54,6 @@ static void gg_add_xml (); // add more memory for XML nodes
 
 // add name/value pair to the list of nodes (names are normalized)
 #define GG_ADD_XML(x_name, x_str) { gg_add_xml(); nodes[node_c].name = x_name; nodes[node_c].str = x_str; node_c++; }; 
-
-// Include libxml2 includes
-#include <libxml/parser.h>
-#include <libxml/SAX.h>
-#include <string.h>
-#include <ctype.h>
-#include <libxml/parserInternals.h>
 
 
 //

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2018 Gliim LLC. 
+// Copyright 2018-2025 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
 
@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "501"
+#define GG_VERSION "511"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -112,7 +112,7 @@
 #endif
 #ifdef GG_INC_XML
 #   include <libxml/parser.h>
-#   include <libxml/SAX.h>
+#   include <libxml/SAX2.h>
 #   include <string.h>
 #   include <ctype.h>
 #   include <libxml/parserInternals.h>

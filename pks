@@ -1,6 +1,6 @@
 #!/bin/bash
 # SPDX-License-Identifier: Apache-2.0
-# Copyright 2018 Gliim LLC. 
+# Copyright 2018-2025 Gliim LLC. 
 # Licensed under Apache License v2. See LICENSE file.
 # On the web http://golf-lang.github.io/ - this file is part of Gliim framework.
 

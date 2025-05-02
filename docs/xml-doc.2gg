@@ -90,6 +90,7 @@ Parse the following XML document and display all element names and values from i
         </state>\\
     </country>\\
 </countries>
+
     xml-doc xmld to x
     start-loop
         read-xml x key k value v status s next

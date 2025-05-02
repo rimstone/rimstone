@@ -1,6 +1,6 @@
 #!/bin/bash
 #SPDX-License-Identifier: Apache-2.0
-#Copyright 2018 Gliim LLC.  
+#Copyright 2018-2025 Gliim LLC.  
 #Licensed under Apache License v2. See LICENSE file.
 #On the web http://golf-lang.com/ - this file is part of Golf framework.
 
@@ -1136,7 +1136,7 @@ $OF"
     done
 
     echo "#SPDX-License-Identifier: Apache-2.0" >> $GG_BLD/$_T.new
-    echo "#Copyright 2018 Gliim LLC. " >> $GG_BLD/$_T.new
+    echo "#Copyright 2018-2025 Gliim LLC. " >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     echo "#" >> $GG_BLD/$_T.new
     echo "#Lists source files in your application. This is an auto-generated file." >> $GG_BLD/$_T.new
@@ -1165,7 +1165,7 @@ $OF"
     _T="golfapp.h"
 
     echo "// SPDX-License-Identifier: Apache-2.0"  >> $GG_BLD/$_T.new
-    echo "// Copyright 2018 Gliim LLC. ">> $GG_BLD/$_T.new
+    echo "// Copyright 2018-2025 Gliim LLC. ">> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
     echo "// This is an auto-generated file for a GOLF application" >> $GG_BLD/$_T.new
     echo >> $GG_BLD/$_T.new
@@ -1211,7 +1211,7 @@ $OF"
     fi
 
     echo "// SPDX-License-Identifier: Apache-2.0" >>$GG_BLD/$_T.new
-    echo "// Copyright 2018 Gliim LLC. " >>$GG_BLD/$_T.new
+    echo "// Copyright 2018-2025 Gliim LLC. " >>$GG_BLD/$_T.new
     echo >>$GG_BLD/$_T.new
     echo "// GOLF auto-generated request dispatcher" >>$GG_BLD/$_T.new
     echo >>$GG_BLD/$_T.new
