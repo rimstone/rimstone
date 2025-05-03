@@ -47,7 +47,7 @@ This is \fBfile-storage\fP used for uploads and new document creation. Do not wr
 .RS 4
 \[bu]    
 /var/lib/gg/<app name>/app/trace
-Process tracing is written in per-process files if "--trace" option is used (see \fBgg\fP). Note that a special file "backtrace" is appended to when program crashes (or \fBreport-error\fP statement is used), and this file shows a full source backtrace, allowing for easier debugging. In order to see Golf source code lines, you must use "--debug" option, and to see a backtrace, Golf must be built with debugging information included. You can use "--c-lines" in order to show the source code lines of the generated C code, instead of Golf code.
+Process tracing is written in per-process files if "--trace" option is used (see \fBgg\fP). Note that a special file "backtrace" is appended to when program crashes (or \fBreport-error\fP statement is used), and this file shows a full source backtrace, allowing for easier debugging. You can use "--c-lines" in order to show the source code lines of the generated C code, instead of Golf code.
 
 
 .RE

@@ -21,7 +21,7 @@ trace-run can be used without any clauses, in which case a location (file name a
 
 If trace-run has any other clauses, then <format> string must be present and there must be at least one <variable> (it means if you want to trace a simple string literal you still have to use "%s" as format).
 
-For tracing to have effect, debugging and tracing must be enabled (see "--debug" and "--trace" options in \fBgg\fP). For location of trace files, see \fBdirectories\fP.
+For tracing to have effect, tracing must be enabled (see "--debug" and "--trace" options in \fBgg\fP). For location of trace files, see \fBdirectories\fP.
 
 .LP
 .B FORMAT

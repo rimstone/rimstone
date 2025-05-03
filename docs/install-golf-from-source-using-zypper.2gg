@@ -39,13 +39,12 @@ sudo zypper -n install $(rpmspec --parse golf.spec | grep BuildRequires|sed 's/^
 .B BUILD GOLF
 .LP
 
-Use DI=1 to build debug version, leave it as-is for production:
 
 .RS 4
 .EX
 
 make clean
-make DI=0
+make 
 sudo make install
 
 .EE

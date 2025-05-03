@@ -67,20 +67,16 @@ GG_LIBXML2_INCLUDE=$(shell pkg-config --cflags libxml-2.0)
 #based on DEBUGINFO from debug file, we use appropriate tags
 #Note: we always use -g in order to get line number of where the problem is
 #(optimization is still valid though)
-OPTIM_COMP_DEBUG=-g3 -DDEBUG -rdynamic 
-OPTIM_COMP_PROD=-g -O3 
-OPTIM_LINK_PROD=
-OPTIM_LINK_DEBUG=-rdynamic
 #if DEBUGINFO is 1, then no dbg files will be created, so delete any old ones as they wouldn't be accurate now
 ifeq ($(DEBUGINFO),1)
-NONE=$(shell rm -f *.dbg)
-CFLAGS_WARN_ERROR=-Werror 
-OPTIM_COMP=$(OPTIM_COMP_DEBUG)
-OPTIM_LINK=$(OPTIM_LINK_DEBUG)
+    NONE=$(shell rm -f *.dbg)
+    CFLAGS_WARN_ERROR=-Werror 
+    OPTIM_COMP=-g3 -DDEBUG -rdynamic
+    OPTIM_LINK=-rdynamic
 else
-CFLAGS_WARN_ERROR=
-OPTIM_COMP=$(OPTIM_COMP_PROD)
-OPTIM_LINK=$(OPTIM_LINK_PROD)
+    CFLAGS_WARN_ERROR=
+    OPTIM_COMP=-g3 -O3
+    OPTIM_LINK=
 endif
 ifeq ($(ASAN),1)
 ASAN=-fsanitize=address -fsanitize-recover=address

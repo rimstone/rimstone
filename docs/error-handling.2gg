@@ -34,7 +34,7 @@ If there is a fatal internal error (i.e. error in Golf code itself that cannot b
 .B LOGGING THE ERROR
 .LP
 
-Regardless of the type of error and regardless of whether the process exits or not, the error is logged and the program stack with full source code lines (see \fBgg\fP for including debug information) will be written to backtrace file (use -e option of \fBgg\fP to obtain its location). Note that the program stack is logged only if Golf is built in debugging mode (see "DI=1" option when building Golf); otherwise, production code may be slowed down by stack dumping.
+Regardless of the type of error and regardless of whether the process exits or not, the error is logged and the program stack with full source code lines (see \fBgg\fP for including debug information) will be written to backtrace file (use -e option of \fBgg\fP to obtain its location). Note that the program stack is logged only if debugging info is present (i.e. if installed from package you must install debugging package as well).
 
 You can see the list of last N errors (and the location of file containing backtrace for them) by using \fBgg\fP, for instance to see the last 3 errors:
 
