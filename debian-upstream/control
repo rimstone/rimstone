@@ -14,9 +14,8 @@ Maintainer: Golf Team <team@golf-lang.com>
 #mk-build-deps -i -s sudo debian/control
 #Build apt with debuild -us -uc -b (.deb in parent dir afterwards)
 Build-Depends: libssl-dev,
- curl,pkgconf,
+ pkgconf,
  libxml2-dev,
- libcurl4,
  libcurl4-openssl-dev,
  libmariadb-dev,
  zlib1g-dev,
@@ -36,8 +35,6 @@ Architecture: any
 Depends: make,
  gcc,
  libssl-dev,
- curl,
- man-db,
  pkgconf,
  libxml2-dev,
  libcurl4,
@@ -51,6 +48,7 @@ Depends: make,
  libpcre2-dev,
  ${shlibs:Depends},
  ${misc:Depends}
+Recommends: curl
 Description: Programming language for web services
  Programming language, tools, framework and application server for
  web services, web applications and command-line programs. Golf is

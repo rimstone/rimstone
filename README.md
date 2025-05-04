@@ -66,12 +66,15 @@ sudo apt -y install golf
 ```
 Install Golf on Raspberry [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
 ## Current version
-Current version is 513\. This release passed 2392 automated functional tests\.
+Current version is 517\. This release passed 2392 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 ## Articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-05\-03 [Working with debug symbols on Fedora etc\.](https://golf-lang.blogspot.com/2025/05/working-with-debug-symbols-on-fedora-etc.html)
+* 2025\-05\-03 [How to install debug symbols for Golf package on Debian/Ubuntu](https://golf-lang.blogspot.com/2025/05/how-to-install-debug-symbols-for-golf.html)
+* 2025\-05\-03 [Use case for dnf distro\-sync](https://golf-lang.blogspot.com/2025/05/use-case-for-dnf-distro-sync.html)
 * 2025\-04\-25 [Cookies in Golf applications, plus HAProxy\!](https://golf-lang.blogspot.com/2025/04/cookies-in-golf-applications-plus.html)
 * 2025\-04\-19 [Example of auto status checking with Golf](https://golf-lang.blogspot.com/2025/04/example-of-auto-status-checking-with.html)
 * 2025\-04\-14 [New status\-safety feature](https://golf-lang.blogspot.com/2025/04/new-status-safety-feature.html)
@@ -118,7 +121,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 ## Releases
-* 2025\-05\-02 [Golf 511 released](https://golf-lang.blogspot.com/2025/05/golf-511-released.html)
+* 2025\-05\-02 [Golf 513 released](https://golf-lang.blogspot.com/2025/05/golf-511-released.html)
 * 2025\-04\-29 [Golf 501 released](https://golf-lang.blogspot.com/2025/04/golf-492-released.html)
 * 2025\-04\-24 [Golf 488 released](https://golf-lang.blogspot.com/2025/04/golf-467-released.html)
 * 2025\-04\-23 [Golf 465 released](https://golf-lang.blogspot.com/2025/04/golf-462-released.html)

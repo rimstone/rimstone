@@ -28,8 +28,8 @@ GG_OS_CLOSE_2=$(shell grep OS_Close /usr/include/fcgios.h|grep shutdown|wc -l)
 
 CC=gcc
 
-#get build version and release
-PACKAGE_VERSION=$(shell . .version; echo $${PACKAGE_VERSION})
+#get build version and release, if .verstion not present, then empty
+PACKAGE_VERSION=$(shell . .version || true; echo $${PACKAGE_VERSION})
 
 
 

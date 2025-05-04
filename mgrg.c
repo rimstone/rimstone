@@ -645,7 +645,19 @@ static void start_child (char *command, gg_num pcount) {
     struct stat sbuff;
     // check if command exists and save its modification time - used to restart if changed
     if (stat(command, &sbuff) != 0) { msg_notfound(GG_FERR); return;}
-    if (access(command, X_OK) != 0) { log_msg ("File not accessible to start [%s]", GG_FERR); return;}
+    // wait for access, if executable is being objcopied or otherwise locked
+    // wait for 5 secs
+    gg_num retries = 50;
+    while (1) { // access may be temporarily denied, wait 5 seconds
+                // in 0.1 sec increments until done or fails
+        retries --;
+        if (access(command, X_OK) != 0) {
+            if (retries <= 0) { log_msg ("File not accessible to start [%s]", GG_FERR); return;}
+            sleepabit (100);
+            continue;
+        } else break;
+    }
+    //
     if (commtime == NULL) GG_ANN (commtime = (struct timespec*)malloc (sizeof(struct timespec)));
     commtime->tv_sec =  sbuff.st_mtim.tv_sec;
     commtime->tv_nsec =  sbuff.st_mtim.tv_nsec;
