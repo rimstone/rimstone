@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "517"
+#define GG_VERSION "520"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -199,7 +199,7 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #ifdef DEBUG
 #define  GG_TRACE(...) (gg_get_config()->debug.trace_level !=0 ? _gg_trace(1, __FILE__, __LINE__, __FUNCTION__,  __VA_ARGS__) : 0)
 #else
-#define  GG_TRACE(...) true
+#define  GG_TRACE(...) (void)0
 #endif
 #define  gg_report_error(...) {_gg_report_error(__VA_ARGS__);exit(0);}
 void _gg_report_error (char *format, ...) __attribute__ ((format (printf, 1, 2)));

@@ -777,7 +777,7 @@ void gg_select_table (char *s,
         {
             if (GG_CURR_DB.db_type == GG_DB_MARIADB)
             {
-                (*col_names)[field_index] = gg_strdup(gg_maria_fieldname(is_prep));
+                (*col_names)[field_index] = gg_strdup(gg_maria_fieldname());
             }
             else if (GG_CURR_DB.db_type == GG_DB_POSTGRES)
             {
@@ -785,7 +785,7 @@ void gg_select_table (char *s,
             }
             else if (GG_CURR_DB.db_type == GG_DB_SQLITE)
             {
-                (*col_names)[field_index] = gg_strdup(gg_lite_fieldname(field_index));
+                (*col_names)[field_index] = gg_strdup(gg_lite_fieldname());
             }
             else
             {
