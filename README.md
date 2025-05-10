@@ -1,4 +1,4 @@
-Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Golf Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf)\. Installation packages and source installs below are for both x86\_64 and aarch64\.
+Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Golf Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf) \(with mirrors on [Gitlab](https://gitlab.com/golf-lang/golf/) and [Debian Salsa](https://salsa.debian.org/golf/golf)\)\. Installation packages and source installs below are for both x86\_64 and aarch64\.
 ## Install Golf on Ubuntu \(versions 20, 22, 24, 25\):
 ```
 sudo add-apt-repository ppa:golf-lang/golf -y
@@ -66,12 +66,13 @@ sudo apt -y install golf
 ```
 Install Golf on Raspberry [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
 ## Current version
-Current version is 520\. This release passed 2392 automated functional tests\.
+Current version is 522\. This release passed 2392 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 ## Articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-05\-08 [Random numbers in Golf](https://golf-lang.blogspot.com/2025/05/random-numbers-in-golf.html)
 * 2025\-05\-03 [Working with debug symbols on Fedora etc\.](https://golf-lang.blogspot.com/2025/05/working-with-debug-symbols-on-fedora-etc.html)
 * 2025\-05\-03 [How to install debug symbols for Golf package on Debian/Ubuntu](https://golf-lang.blogspot.com/2025/05/how-to-install-debug-symbols-for-golf.html)
 * 2025\-05\-03 [Use case for dnf distro\-sync](https://golf-lang.blogspot.com/2025/05/use-case-for-dnf-distro-sync.html)
