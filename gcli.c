@@ -1071,7 +1071,7 @@ void gg_set_fcgi (gg_cli **callin, char *server, char *req_method, char *app_pat
     if (simple_server)
     {
         char *sockloc = gg_malloc (GG_MAX_SOCK_LEN+1);
-        gg_num bw = snprintf (sockloc, GG_MAX_SOCK_LEN, "/var/lib/gg/%s/sock/sock", server);
+        gg_num bw = snprintf (sockloc, GG_MAX_SOCK_LEN, GG_ROOT "/var/lib/gg/%s/sock/sock", server);
         gg_mem_set_len (gg_mem_get_id(sockloc), bw+1);
         call->server = sockloc;
         call->internal.server_alloc = true;

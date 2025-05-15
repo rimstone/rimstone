@@ -1,73 +1,25 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-uninstall \- Golf documentation (install-golf)
+install-raspbian \- Golf documentation (install-golf)
 .SH DESCRIPTION
 
 .LP
-.B UNINSTALL GOLF IF INSTALLED FROM SOURCE
+.B INSTALL GOLF ON RASPBIAN (RASPBERRY OS), AARCH64 ONLY:
 .LP
 
-Run from command line (if you installed to a folder, add "DESTDIR=<folder>" where <folder> is the directory where it was installed):
 
 .RS 4
 .EX
 
-sudo make uninstall
+sudo apt install -y curl
+echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Raspbian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
+curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Raspbian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
+sudo apt update
+sudo apt -y install golf
 
 .EE
 .RE
 
-
-.LP
-.B UNINSTALL GOLF IF INSTALLED FROM PACKAGE
-.LP
-
-For Ubuntu:
-
-.RS 4
-.EX
-
-sudo apt remove golf
-
-.EE
-.RE
-
-For Redhat, Fedora and similar:
-
-.RS 4
-.EX
-
-sudo dnf remove golf
-
-.EE
-.RE
-
-For OpenSUSE:
-
-.RS 4
-.EX
-
-sudo zypper remove golf
-
-.EE
-.RE
-
-For Arch and similar:
-
-.RS 4
-.EX
-
-sudo pacman -R golf
-
-.EE
-.RE
-
-
-.LP
-.B APPLICATION FILES
-.LP
-
-Note that /var/lib/gg directory is not removed, as it generally contains application files. You may move such files or delete them as you see fit.
 .SH SEE ALSO
  Install golf
 

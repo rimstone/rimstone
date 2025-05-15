@@ -10,7 +10,7 @@ Obtain data that describes the application.
 .EX
 
 get-app \\
-    name | directory | trace-directory | file-directory \\
+    name | directory | trace-directory | file-directory | root-directory \\
         | db-vendor <database configuration> | upload-size \\
         | path | is-service \\
     to <variable>
@@ -36,6 +36,12 @@ Application-related variables can be obtained with get-app statement. The follow
 .RS 4
 \[bu]    
 "trace-directory" is the directory where your application trace files are written, if enabled (see \fBdirectories\fP).
+
+.RE
+
+.RS 4
+\[bu]    
+"root-directory" is the Golf's root directory (i.e. where Golf is installed, see \fBdirectories\fP).
 
 .RE
 

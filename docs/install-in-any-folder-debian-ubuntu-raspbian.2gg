@@ -1,0 +1,135 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+install-in-any-folder-debian-ubuntu-raspbian \- Golf documentation (install-golf)
+.SH DESCRIPTION
+Installing Golf without root access (for instance in a home directory of a user) can be helpful if you have no root permissions, or if you just want to test locally before installing Golf on your system. 
+
+To install Golf locally without root access, first decide which directory you'd like to install it. It can be any directory you can read/write access to. In this case, we'll use $HOME/.app/golf directory as an example.
+
+Set the Golf root directory:
+
+.RS 4
+.EX
+
+GG_ROOT="$HOME/.app/golf"
+
+.EE
+.RE
+
+Download Golf source code and extract it:
+
+.RS 4
+.EX
+
+wget "https://github.com/golf-lang/golf/archive/refs/heads/main.tar.gz" -O main.tar.gz
+tar xvfz main.tar.gz 
+cd golf-main
+
+.EE
+.RE
+
+Install dependencies (you do need root access for this, or if not, ask your System Administrator to perform these tasks):
+
+.RS 4
+.EX
+
+sudo apt update
+sudo apt -y install devscripts equivs build-essential
+yes|mk-build-deps -i -s sudo debian/control
+
+.EE
+.RE
+
+Then compile the source:
+
+.RS 4
+.EX
+
+make -j$(nproc) GG_LOCAL=1 DESTDIR="$GG_ROOT"
+
+.EE
+.RE
+
+And install the source:
+
+.RS 4
+.EX
+
+make GG_LOCAL=1 DESTDIR="$GG_ROOT" install
+
+.EE
+.RE
+
+In order for the installation to take effect, be sure to add these exports to the end of your $HOME/.bashrc file, so that they will be there when you log on again:
+
+.RS 4
+.EX
+
+echo 'GG_ROOT="$HOME/.app/golf"
+export PATH="$GG_ROOT/usr/bin":$PATH
+export C_INCLUDE_PATH="$GG_ROOT/usr/include":$C_INCLUDE_PATH
+export MANPATH=$GG_ROOT/share/man/:$MANPATH' >> $HOME/.bashrc
+
+.EE
+.RE
+
+You've installed Golf! 
+
+Now, just log off, and log on again. To test, just type in command line:
+
+.RS 4
+.EX
+
+gg -g
+
+.EE
+.RE
+
+If you see the path you choose for GG_ROOT above, it's working!
+
+A few notes due to the fact that root access isn't used for this Golf installation:
+
+.RS 4
+\[bu]    
+SELinux script for Golf requires root to install (this is true for any software, not just Golf); if you use SELinux, either set it to permissive, or use a Linux distro that does not use (or set) it.
+
+.RE
+
+.RS 4
+\[bu]    
+if you're using Unix sockets (for instance for web servers to talk to your Golf server), your $HOME directory as well as Golf root directory must be searchable to access those sockets:
+
+.RS 4
+.EX
+
+chmod o+x $HOME
+find $HOME/.app/golf -type d -name '*' -exec chmod o+x {} \e;
+
+.EE
+.RE
+
+If you're using TCP ports, then this setup isn't necessary.
+.RE
+
+
+Here's how to \fBuninstall\fP.
+.SH SEE ALSO
+ Install golf
+
+\fBinstall-arch-manjaro\fP  
+\fBinstall-debian\fP  
+\fBinstall-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
+\fBinstall-from-source-arch-manjaro\fP  
+\fBinstall-from-source-debian-ubuntu-raspbian\fP  
+\fBinstall-from-source-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
+\fBinstall-from-source-opensuse\fP  
+\fBinstall-in-any-folder-arch-manjaro\fP  
+\fBinstall-in-any-folder-debian-ubuntu-raspbian\fP  
+\fBinstall-in-any-folder-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
+\fBinstall-in-any-folder-opensuse\fP  
+\fBinstall-opensuse\fP  
+\fBinstall-raspbian\fP  
+\fBinstall-ubuntu\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP

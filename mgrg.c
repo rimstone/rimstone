@@ -52,7 +52,7 @@ typedef long gg_num;
 #define GG_MAX_ARGS 64 // max args to mgrg in -a
 #define GG_MAX_FILELEN 200 // max path+file length
 // directories used by initialization -i
-#define GG_RUNDIR "/var/lib/gg"
+#define GG_RUNDIR GG_ROOT "/var/lib/gg"
 #define GG_RUNNAME GG_RUNDIR "/%s"
 #define GG_APPDIR GG_RUNDIR "/%s/app"
 #define GG_FILEDIR GG_APPDIR "/file"
@@ -991,8 +991,12 @@ int main(int argc, char **argv)
         //
         // BEGIN ROOT - this section is the only time mgrg is allowed as root
         // This is mgrg -i setup, the only time we need root privs.
+        // NOTE: if GG_ROOT is not "", this is a local install, and there's no root involved!
         //
-        if (seteuid (0) != 0) exit_error ("To perform this operation, you must run as root");
+        if (GG_ROOT[0] == 0)
+        {
+            if (seteuid (0) != 0) exit_error ("To perform this operation, you must run as root");
+        }
 
         // create ID file for application that states application name. Used by gg to work
         // without having to specify application name

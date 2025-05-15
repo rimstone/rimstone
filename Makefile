@@ -34,7 +34,13 @@ PACKAGE_VERSION=$(shell . .version || true; echo $${PACKAGE_VERSION})
 
 
 ifeq ($(strip $(PACKAGE_VERSION)),)
-PACKAGE_VERSION=2
+    PACKAGE_VERSION=2
+endif
+
+ifeq ($(strip $(GG_LOCAL)),1)
+    GG_ROOT=$(DESTDIR)
+else
+    GG_ROOT=
 endif
 
 V_LIB=/usr/lib/golf
@@ -85,7 +91,7 @@ ASAN=
 endif
 
 #C flags are as strict as we can do, in order to discover as many bugs as early on
-CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wl,-z,relro,-z,now
+CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wl,-z,relro,-z,now
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
@@ -158,10 +164,18 @@ install:
 	if [[ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" && -f v1.dbg ]]; then install -m 0755 -d $(DESTDIR)$(V_LIBD) ; install -D -m 0644 v1.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 mgrg.dbg  -t $(DESTDIR)$(V_LIBD)/ ;  install -D -m 0644 libgolfpg.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfdb.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolflite.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfmys.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfsec.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolftree.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcurl.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfxml.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfarr.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfpcre2.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libsrvcgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfscli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; fi
 	if [ "$(GG_DEBIAN_BUILD)" != "1" ]; then install -m 0755 -d $(DESTDIR)$(V_MAN) ; install -D -m 0644 docs/*.2gg -t $(DESTDIR)$(V_MAN)/ ; if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi ; if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$DATE/$(DATE)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi ; for i in $$(ls $(DESTDIR)$(V_MAN)/*.2gg); do gzip -f $$i; done ; mandb >/dev/null 2>&1 || true ; fi
 	install -D -m 0755 sys -t $(DESTDIR)$(V_LIB)/
-	sed -i "s|^[ ]*export[ ]*GG_LIBRARY_PATH[ ]*=.*|export GG_LIBRARY_PATH=$(V_LIB)|g" $(DESTDIR)$(V_LIB)/sys
-	sed -i "s|^[ ]*export[ ]*GG_LIBRARY_PATH[ ]*=.*|export GG_LIBRARY_PATH=$(V_LIB)|g" $(DESTDIR)$(V_BIN)/gg
-	sed -i "s|^[ ]*export[ ]*GG_INCLUDE_PATH[ ]*=.*|export GG_INCLUDE_PATH=$(V_INC)|g" $(DESTDIR)$(V_LIB)/sys
+#
+#
+#these settings must have GG_ROOT for installed files to work properly (i.e. to reference the correct path). GG_ROOT is not the same as DESTDIR. GG_ROOT is the root directory of a local install, while DESTDIR is a 'fake root' for building.
+	sed -i "s|^[ ]*export[ ]*GG_LIBRARY_PATH[ ]*=.*|export GG_LIBRARY_PATH=$(GG_ROOT)$(V_LIB)|g" $(DESTDIR)$(V_LIB)/sys
+	sed -i "s|^[ ]*export[ ]*GG_LIBRARY_PATH[ ]*=.*|export GG_LIBRARY_PATH=$(GG_ROOT)$(V_LIB)|g" $(DESTDIR)$(V_BIN)/gg
+	sed -i "s|^[ ]*export[ ]*GG_INCLUDE_PATH[ ]*=.*|export GG_INCLUDE_PATH=$(GG_ROOT)$(V_INC)|g" $(DESTDIR)$(V_LIB)/sys
 	sed -i "s|^[ ]*export[ ]*GG_VERSION[ ]*=.*|export GG_VERSION=$(PACKAGE_VERSION)|g" $(DESTDIR)$(V_LIB)/sys
+#For local installation, make sure golf.h and gcli.h have proper GG_ROOT set, so that even plain gcc building for a C client works (i.e. GG_ROOT is defined properly)
+	if [ "$(GG_LOCAL)" == "1" ]; then sed -i 's|^export GG_ROOT=.*$$|export GG_ROOT="'$(GG_ROOT)'"|g' $(DESTDIR)/usr/bin/gg ; sed -i 's|^#define GG_ROOT .*$$|#define GG_ROOT "'$(GG_ROOT)'"|g' $(DESTDIR)/usr/include/golf/golf.h ; sed -i 's|^#\s*define GG_ROOT .*$$|#define GG_ROOT "'$(GG_ROOT)'"|g' $(DESTDIR)/usr/include/golf/gcli.h ; fi
+#end of setting variables with GG_ROOT
+#
+#
 	chmod -x *.so; chmod -x *.o
 #This must be last, in this order, as it saves and then applies SELinux policy where applicable. 
 #This runs during rpm creation or during sudo make install
@@ -176,7 +190,9 @@ install:
 #This way we also have a script to re-run policy setup if something isn't right
 	install -D -m 0755 selinux.setup -t $(DESTDIR)$(V_LIB)/selinux
 #this has to be double negation because it's purpose is to prevent selinux setup in fake root, which is only from golf.spec rpmbuild where GG_NOSEL is set to 1
-	if [[ "$(GG_FAKEROOT)" != "1" && -f /etc/selinux/config ]]; then $(DESTDIR)$(V_LIB)/selinux/selinux.setup; fi
+#also SELinux cannot be installed with local install since it requires root access to change policies. So for Fedora-like distros, local setup is for permissive only
+#(or run the script below as root!)
+	if [[ "$(GG_LOCAL)" != "1" && "$(GG_FAKEROOT)" != "1" && -f /etc/selinux/config ]]; then $(DESTDIR)$(V_LIB)/selinux/selinux.setup; fi
 
 .PHONY: uninstall
 uninstall:

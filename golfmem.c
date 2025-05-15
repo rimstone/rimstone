@@ -40,7 +40,7 @@ char *gg_mem_msg_outmem = "Out of memory for [%ld] bytes";
 // When a variable has this value, it means it is freshly initialized and it
 // will be either re-assigned, or allocated. (value assigned later)
 // so in the program it's never actually NULL, always ""
-char *GG_EMPTY_STRING="";
+char GG_EMPTY_STRING[]=""; // this allows [0] to be assigned 0
 
 
 // free block

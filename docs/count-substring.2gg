@@ -40,6 +40,7 @@ pf-out "Found %ld occurrences!\en", num_occ
 .SH SEE ALSO
  Strings
 
+\fBconcatenate-strings\fP  
 \fBcopy-string\fP  
 \fBcount-substring\fP  
 \fBdelete-string\fP  

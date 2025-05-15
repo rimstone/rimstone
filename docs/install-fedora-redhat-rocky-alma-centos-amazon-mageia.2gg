@@ -1,73 +1,23 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-uninstall \- Golf documentation (install-golf)
+install-fedora-redhat-rocky-alma-centos-amazon-mageia \- Golf documentation (install-golf)
 .SH DESCRIPTION
 
 .LP
-.B UNINSTALL GOLF IF INSTALLED FROM SOURCE
+.B INSTALL GOLF ON REDHAT (INCL. ROCKY, ALMA, CENTOS), FEDORA, AMAZON LINUX, MAGEIA
 .LP
 
-Run from command line (if you installed to a folder, add "DESTDIR=<folder>" where <folder> is the directory where it was installed):
 
 .RS 4
 .EX
 
-sudo make uninstall
+sudo dnf -y install epel-release
+sudo dnf -y copr enable golf-lang/golf-lang
+sudo dnf -y install golf
 
 .EE
 .RE
 
-
-.LP
-.B UNINSTALL GOLF IF INSTALLED FROM PACKAGE
-.LP
-
-For Ubuntu:
-
-.RS 4
-.EX
-
-sudo apt remove golf
-
-.EE
-.RE
-
-For Redhat, Fedora and similar:
-
-.RS 4
-.EX
-
-sudo dnf remove golf
-
-.EE
-.RE
-
-For OpenSUSE:
-
-.RS 4
-.EX
-
-sudo zypper remove golf
-
-.EE
-.RE
-
-For Arch and similar:
-
-.RS 4
-.EX
-
-sudo pacman -R golf
-
-.EE
-.RE
-
-
-.LP
-.B APPLICATION FILES
-.LP
-
-Note that /var/lib/gg directory is not removed, as it generally contains application files. You may move such files or delete them as you see fit.
 .SH SEE ALSO
  Install golf
 

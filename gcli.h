@@ -24,7 +24,10 @@
 
 
 // Version+Release. We use major plus minor plus release, as in 1.3.34,2.1.11,3.7.41... 
-#define GG_VERSION "522"
+#define GG_VERSION "532"
+#ifndef GG_ROOT
+#   define GG_ROOT ""
+#endif
 
 // Client error codes
 #define GG_OKAY 0 // success

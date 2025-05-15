@@ -3817,13 +3817,13 @@ void gg_get_runtime_options()
 
     char dir_name[300];
 
-    snprintf (dir_name, sizeof(dir_name), "/var/lib/gg/%s/app/db", gg_app_name);
+    snprintf (dir_name, sizeof(dir_name), GG_ROOT "/var/lib/gg/%s/app/db", gg_app_name);
     pc->app.dbconf_dir = strdup(dir_name);
-    snprintf (dir_name, sizeof(dir_name), "/var/lib/gg/%s/app", gg_app_name);
+    snprintf (dir_name, sizeof(dir_name), GG_ROOT "/var/lib/gg/%s/app", gg_app_name);
     pc->app.home_dir = strdup(dir_name);
-    snprintf (dir_name, sizeof(dir_name), "/var/lib/gg/%s/app/file", gg_app_name);
+    snprintf (dir_name, sizeof(dir_name), GG_ROOT "/var/lib/gg/%s/app/file", gg_app_name);
     pc->app.file_dir = strdup(dir_name);
-    snprintf (dir_name, sizeof(dir_name), "/var/lib/gg/%s/app/trace", gg_app_name);
+    snprintf (dir_name, sizeof(dir_name), GG_ROOT "/var/lib/gg/%s/app/trace", gg_app_name);
     pc->app.trace_dir = strdup(dir_name);
 
     if (pc->app.dbconf_dir == NULL || pc->app.home_dir == NULL || pc->app.file_dir == NULL || pc->app.trace_dir == NULL)
@@ -4169,5 +4169,31 @@ void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bool begi
     if (!begin) swith = t_len - swith;
     if (swith+len > t_len) gg_report_error ("Copying string from byte [%ld] of length [%ld] would overrun buffer of [%ld] bytes", swith, len, t_len);
     memcpy (tgt+swith, copy, len);
+}
+
+
+//
+// Add 'add' to 'to' string and return new 'to', which can be realloc'd
+// More memory is allocated than needed to avoid fragmentation, and after gg_add_string(s) are
+// done (b/c this is meant for use in a+b+c... string expressions), final gg_realloc needs to be done.
+//
+void *gg_add_string (void *to, void *add)
+{
+    gg_num to_id = gg_mem_get_id (to);
+    gg_num add_id = gg_mem_get_id(add);
+    gg_num l_to = gg_mem_get_len (to_id);
+    gg_num l_add = gg_mem_get_len (add_id);
+
+    gg_num l_res = l_to+l_add+1;
+    if (l_res < 256) l_res = 256;
+    else l_res += 256;
+
+    to = gg_realloc (to_id, l_res); // resize memory to just what's needed
+
+    memcpy ((char*)to + l_to, (char*)add, l_add);
+    ((char*)to)[l_to+l_add] = 0;
+    gg_mem_set_len (gg_mem_get_id(to), l_to+l_add+1);  // MUST use gg_mem_get_id() again
+                                                          // because it changed with gg_realloc!
+    return to;
 }
 

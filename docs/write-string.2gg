@@ -284,6 +284,7 @@ Hi Again!
 .SH SEE ALSO
  Strings
 
+\fBconcatenate-strings\fP  
 \fBcopy-string\fP  
 \fBcount-substring\fP  
 \fBdelete-string\fP  

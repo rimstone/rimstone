@@ -227,6 +227,14 @@ Show documentation directory - web page documentation is located here in the for
 
 .RS 4
 \[bu]    
+-g
+Show Golf root directory (i.e. where Golf is installed, see \fBdirectories\fP). 
+
+
+.RE
+
+.RS 4
+\[bu]    
 -l
 Show library directory - Golf's libraries and v1 code processor are located there.
 

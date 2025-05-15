@@ -32,9 +32,9 @@ if [ "$PLAIN" == "1" ]; then
 fi
 
 #clear temp files used further down
-rm -f /var/lib/gg/bld/$APP/.vdiag1_$MYPID || true
-rm -f /var/lib/gg/bld/$APP/.vdiag2_$MYPID || true
-rm -f /var/lib/gg/bld/$APP/.GG_TMP_DIAG${MYPID}_* || true
+rm -f $GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID || true
+rm -f $GG_ROOT/var/lib/gg/bld/$APP/.vdiag2_$MYPID || true
+rm -f $GG_ROOT/var/lib/gg/bld/$APP/.GG_TMP_DIAG${MYPID}_* || true
 
 
 #
@@ -59,7 +59,7 @@ function displ() {
 #golf request or file name  without .golf
     F=$(basename $3)
 #analyze generated C code and get the exact line where gcc said the error was, remove leading and trailing whitespaces
-    CL=$(sed -n '/#line '$LN'/{ n; p }' /var/lib/gg/bld/$APP/__$F.o.c|sed 's/^[ \t]*//;s/[ \t]*$//')
+    CL=$(sed -n '/#line '$LN'/{ n; p }' $GG_ROOT/var/lib/gg/bld/$APP/__$F.o.c|sed 's/^[ \t]*//;s/[ \t]*$//')
 #analyze .golf file name and get source golf line text, remove leading and trailing whitespaces
     VL=$(sed $VLN'q;d' ./$F.golf|sed 's/^[ \t]*//;s/[ \t]*$//')
 #determine if the issue is a golf line or just a C line in .golf code. It's C code if the source code line is the same (i.e.
@@ -96,50 +96,50 @@ function displ() {
 #all goes to temp file .vdiag1_$MYPID in build scratch pad
 #since we print a/b/c as source file in v1.c, make sure / is included in a-z etc
 #$(cat -) doesn't quite work
-sed 's|^\([_a-zA-Z0-9/]\+\)\.golf:\([0-9]\+\)\([0-9]\{4\}\):[[:space:]]*\([^:]\+\)[[:space:]]*:\(.*\)$|__GG_COLOR*** \1.golf:\2:\4:\5__GG_END_COLOR\n.GG_TMP_DIAG'${MYPID}'_\2_\3_\4_\1|g' >  /var/lib/gg/bld/$APP/.vdiag1_$MYPID <&0
+sed 's|^\([_a-zA-Z0-9/]\+\)\.golf:\([0-9]\+\)\([0-9]\{4\}\):[[:space:]]*\([^:]\+\)[[:space:]]*:\(.*\)$|__GG_COLOR*** \1.golf:\2:\4:\5__GG_END_COLOR\n.GG_TMP_DIAG'${MYPID}'_\2_\3_\4_\1|g' >  $GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID <&0
 
 #if there is no error somehow, then exit with success
-if [ -f "/var/lib/gg/bld/$APP/.vdiag1_$MYPID" ]; then
-    if [ "$(</var/lib/gg/bld/$APP/.vdiag1_$MYPID)" == "" ]; then exit 0; fi
+if [ -f "$GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID" ]; then
+    if [ "$(<$GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID)" == "" ]; then exit 0; fi
 fi
 
 #now get data added to constant _GG_TMP_DIAG${MYPID}_ and process it in displ function, which will output color coded golf source line, gen C line, and caret to point out the error
 #the output goes to .vdiag2_$MYPID, which is a short bash script that will echo the error message to .GG_TMP_DIAG${MYPID}_line_column_file
-sed -n 's/.GG_TMP_DIAG'${MYPID}'_\([0-9]\+\)_\([0-9]\+\)_\([^_]\+\)_\(.*\)/echo "$(displ \1\2 \3 \4)">\/var\/lib\/gg\/bld\/$APP\/.GG_TMP_DIAG'${MYPID}'_\1_\2_\3_\4/gp' /var/lib/gg/bld/$APP/.vdiag1_$MYPID >/var/lib/gg/bld/$APP/.vdiag2_$MYPID
+sed -n 's/.GG_TMP_DIAG'${MYPID}'_\([0-9]\+\)_\([0-9]\+\)_\([^_]\+\)_\(.*\)/echo "$(displ \1\2 \3 \4)">$GG_ROOT\/var\/lib\/gg\/bld\/$APP\/.GG_TMP_DIAG'${MYPID}'_\1_\2_\3_\4/gp' $GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID >$GG_ROOT/var/lib/gg/bld/$APP/.vdiag2_$MYPID
 
 #execute .vdiag2_$MYPID to produce output to .GG_TMP_DIAG${MYPID}_line_column_file
-if [ -f "/var/lib/gg/bld/$APP/.vdiag2_$MYPID" ]; then 
-    chmod +x /var/lib/gg/bld/$APP/.vdiag2_$MYPID
-    . /var/lib/gg/bld/$APP/.vdiag2_$MYPID 
+if [ -f "$GG_ROOT/var/lib/gg/bld/$APP/.vdiag2_$MYPID" ]; then 
+    chmod +x $GG_ROOT/var/lib/gg/bld/$APP/.vdiag2_$MYPID
+    . $GG_ROOT/var/lib/gg/bld/$APP/.vdiag2_$MYPID 
 fi
 
 #now substitute the .GG_TMP_DIAG${MYPID}_line_column_file  constant with the contents of the file with the same name generated above, for each error
 CDIR=$(pwd)
-cd /var/lib/gg/bld/$APP/
+cd $GG_ROOT/var/lib/gg/bld/$APP/
 #prevent error message if no .GG_TMP_DIAG${MYPID} found
 for i in $(ls .GG_TMP_DIAG${MYPID}_* 2>/dev/null); do
-    sed -e $"/$i/{r $i" -e 'd}' /var/lib/gg/bld/$APP/.vdiag1_$MYPID > /var/lib/gg/bld/$APP/.vdiag3_$MYPID
-    mv /var/lib/gg/bld/$APP/.vdiag3_$MYPID /var/lib/gg/bld/$APP/.vdiag1_$MYPID
+    sed -e $"/$i/{r $i" -e 'd}' $GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID > $GG_ROOT/var/lib/gg/bld/$APP/.vdiag3_$MYPID
+    mv $GG_ROOT/var/lib/gg/bld/$APP/.vdiag3_$MYPID $GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID
 done
 cd "$CDIR"
 
 #make sure stdout goes to stderr, since this is diagnostics
 #and also make colors for top diagnostic error
-#cat /var/lib/gg/bld/$APP/.vdiag1_$MYPID|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/'' | cat - 1>&2
+#cat $GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/'' | cat - 1>&2
 #
 #The below code, with replacing __ with / seem to be no longer needed, but not sure. Keeping for now
 #
 #use sed 10 times to convert __ to / (if not preceded by /) - this assumes directory structure is 10 levels deep at most, this is when flat structure is used
 #this is for presenting hierarchical request names properly, but it messes up file names for --c-lines. For instance if v1.c doesn't generate the right code,
 #this is needed to show hierarchy
-cat /var/lib/gg/bld/$APP/.vdiag1_$MYPID|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/''| sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  |  sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  |cat - 1>&2
+cat $GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID|sed ''/__GG_COLOR/s//$(printf "$BOLD$BLUE")/'' | sed ''/__GG_END_COLOR/s//$(printf "$NORMAL")/''| sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  |  sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  | sed 's/\([^\/]\)__\([^:]*:\)/\1\/\2/g'  |cat - 1>&2
 #
 #
 #
 
-rm -f /var/lib/gg/bld/$APP/.vdiag1_$MYPID
-rm -f var/lib/gg/bld/$APP/.vdiag3_$MYPID
-rm -f /var/lib/gg/bld/$APP/.vdiag2_$MYPID
+rm -f $GG_ROOT/var/lib/gg/bld/$APP/.vdiag1_$MYPID
+rm -f $GG_ROOT/var/lib/gg/bld/$APP/.vdiag3_$MYPID
+rm -f $GG_ROOT/var/lib/gg/bld/$APP/.vdiag2_$MYPID
 rm -f .GG_TMP_DIAG'${MYPID}'
 
 #make sure exit code is failure for these errors

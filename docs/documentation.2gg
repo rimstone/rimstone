@@ -4,12 +4,12 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 522
+.B REFERENCE FOR GOLF VERSION 532
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
 
-Browse by topic:    API,   Application information,   Array,   Base64,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Download and build,   Encryption,   Error handling,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
+Browse by topic:    API,   Application information,   Array,   Base64,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Encryption,   Error handling,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   Install golf,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
 
 
 
@@ -140,19 +140,6 @@ Documentation
 
 .RS 4
 \[bu]    
-Download and build
-
-\fBinstall-golf-from-source-using-apt\fP  
-\fBinstall-golf-from-source-using-dnf\fP  
-\fBinstall-golf-from-source-using-pacman\fP  
-\fBinstall-golf-from-source-using-zypper\fP  
-\fBuninstall\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
 Encryption
 
 \fBdecrypt-data\fP  
@@ -257,6 +244,29 @@ Hex encoding
 
 \fBdecode-hex\fP  
 \fBencode-hex\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Install golf
+
+\fBinstall-arch-manjaro\fP  
+\fBinstall-debian\fP  
+\fBinstall-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
+\fBinstall-from-source-arch-manjaro\fP  
+\fBinstall-from-source-debian-ubuntu-raspbian\fP  
+\fBinstall-from-source-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
+\fBinstall-from-source-opensuse\fP  
+\fBinstall-in-any-folder-arch-manjaro\fP  
+\fBinstall-in-any-folder-debian-ubuntu-raspbian\fP  
+\fBinstall-in-any-folder-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
+\fBinstall-in-any-folder-opensuse\fP  
+\fBinstall-opensuse\fP  
+\fBinstall-raspbian\fP  
+\fBinstall-ubuntu\fP  
+\fBuninstall\fP   
 .RE
 
 
@@ -498,6 +508,7 @@ Service processing
 \[bu]    
 Strings
 
+\fBconcatenate-strings\fP  
 \fBcopy-string\fP  
 \fBcount-substring\fP  
 \fBdelete-string\fP  

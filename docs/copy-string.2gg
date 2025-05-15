@@ -69,6 +69,7 @@ copy-string other_string to my_str length 3 start-with 1
 .SH SEE ALSO
  Strings
 
+\fBconcatenate-strings\fP  
 \fBcopy-string\fP  
 \fBcount-substring\fP  
 \fBdelete-string\fP  

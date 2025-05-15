@@ -1,73 +1,57 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-uninstall \- Golf documentation (install-golf)
+install-from-source-arch-manjaro \- Golf documentation (install-golf)
 .SH DESCRIPTION
 
 .LP
-.B UNINSTALL GOLF IF INSTALLED FROM SOURCE
+.B GET LATEST GOLF SOURCE CODE
 .LP
 
-Run from command line (if you installed to a folder, add "DESTDIR=<folder>" where <folder> is the directory where it was installed):
+You must have git installed. Get Golf source code for the latest version:
 
 .RS 4
 .EX
 
-sudo make uninstall
+sudo pacman -Sy --noconfirm wget
+wget "https://github.com/golf-lang/golf/archive/refs/heads/main.tar.gz" -O main.tar.gz
+tar xvfz main.tar.gz
+cd golf-main
 
 .EE
 .RE
 
 
 .LP
-.B UNINSTALL GOLF IF INSTALLED FROM PACKAGE
+.B INSTALL DEPENDENCIES
 .LP
 
-For Ubuntu:
 
 .RS 4
 .EX
 
-sudo apt remove golf
-
-.EE
-.RE
-
-For Redhat, Fedora and similar:
-
-.RS 4
-.EX
-
-sudo dnf remove golf
-
-.EE
-.RE
-
-For OpenSUSE:
-
-.RS 4
-.EX
-
-sudo zypper remove golf
-
-.EE
-.RE
-
-For Arch and similar:
-
-.RS 4
-.EX
-
-sudo pacman -R golf
+sudo pacman -Sy --noconfirm debugedit
+makepkg -s --noconfirm -o
 
 .EE
 .RE
 
 
 .LP
-.B APPLICATION FILES
+.B BUILD GOLF
 .LP
 
-Note that /var/lib/gg directory is not removed, as it generally contains application files. You may move such files or delete them as you see fit.
+
+.RS 4
+.EX
+
+make clean
+make
+sudo make install
+
+.EE
+.RE
+
+Here's how to \fBuninstall\fP.
 .SH SEE ALSO
  Install golf
 

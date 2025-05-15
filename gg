@@ -23,26 +23,32 @@ if [ "$HOME" == "" ]; then
     HOME=$(eval echo ~$GG_USER)
 fi
 
-#cannot run as run as it might mess up permissions. 
-if [[ $EUID -eq 0 ]]; then echo "You cannot run golf as root or sudo"; exit -1; fi
-
 #enable "extended globs" (such as "parameter expansion" or ${!X}
 shopt -s extglob
-
 #display error context if golf has a shell error, source file bash only
 set -eE -o functrace
 trap 'echo "Error: status $?, $(caller), line ${BASH_SOURCE[0]}/${LINENO}"' ERR
 
-#do not change these values, they are changed here by Makefile per platform when make install is done
-export GG_LIBRARY_PATH=/usr/lib/golf
+#cannot run as run as it might mess up permissions. 
+if [[ $EUID -eq 0 ]]; then echo "You cannot run golf as root or sudo"; exit -1; fi
+
+#
+#
+#DO NOT change these values, they are changed here by Makefile per platform when make install is done
+#They will have $GG_ROOT in them
+export GG_LIBRARY_PATH="/usr/lib/golf"
 . "$GG_LIBRARY_PATH"/sys
-#end of do-not-change
+#find out where this script runs from (i.e. where 'gg' actually is, minus /usr/bin)
+export GG_ROOT=""
+#end of DO-NOT-change
+#
+#
 
 #by default, make is silent (except for messages we emit). For debugging, use -e to see everything that's going on (this shows golf execution too!)
 GG_SHOW_MAKE="-s"
 
 #location of Golf data
-export GG_DATA="/var/lib/gg"
+export GG_DATA="$GG_ROOT/var/lib/gg"
 
 export GG_C_RESTPATH=""
 export GG_C_MAXUPLOAD="25000000"
@@ -125,7 +131,7 @@ function main() {
 #list of Golf options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o k:e:t:,q,o,l,m,i,h,c,v,s,u,r --long exclude-dir:,man,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o k:e:t:,q,g,o,l,m,i,h,c,v,s,u,r --long exclude-dir:,man,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit -1
@@ -220,7 +226,13 @@ _DO_QUICK=0
             ;;
         -u )
 #subst env vars from stdin to stdout
-            "$GG_LIBRARY_PATH"/v1 -envsub 
+            "$GG_LIBRARY_PATH"/v1 -envsub
+            exit 0
+            ;;
+        -g )
+#display Golf root
+            echo "$GG_ROOT"
+            shift 1
             exit 0
             ;;
         -e )
@@ -399,7 +411,12 @@ _DO_QUICK=0
         fi
         check_name "$_NAME" "application name"
         ECODE=0
-        sudo mgrg -i -u $(whoami) $_NAME || ECODE=$?
+        #for local install, we can't use sudo, nor should we
+        if [ "$GG_ROOT" == "" ]; then
+            sudo mgrg -i -u $(whoami) $_NAME || ECODE=$?
+        else
+            mgrg -i -u $(whoami) $_NAME || ECODE=$?
+        fi
         #exit immediately if not successful
         if [ "$ECODE" != "0" ]; then
             exit $ECODE
@@ -632,6 +649,9 @@ function show_run_program() {
     _REQ_PATH="/<request name><url payload>"
     _REQ_QUERY="<request query>"
     if [ "$_REQ_URL" != "" ]; then
+        if [[ ! "$_REQ_URL" =~ ^/.*$ ]]; then
+            error "Request path (--req) must be a path (it must start with a forward slash)"
+        fi
         if [[ "$_REQ_URL" =~ ^.*\?.*$ ]]; then
             #fast parsing of path without using subshells
             IFS='?' read -ra PQ <<< "$_REQ_URL"
@@ -693,7 +713,7 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
                 fi
                 echo "${_CONT}cgi-fcgi -connect $_REQ_SOCK $_APATH" >> $_TOEXEC 
             else
-                echo "${_CONT}cgi-fcgi -connect /var/lib/gg/$_ANAME/sock/sock  $_APATH" >> $_TOEXEC 
+                echo "${_CONT}cgi-fcgi -connect $GG_ROOT/var/lib/gg/$_ANAME/sock/sock  $_APATH" >> $_TOEXEC 
             fi
         fi
     else
@@ -705,7 +725,7 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
         if [ "$_REQ_ARG" != "" ]; then
             ADD_ARG=" $_REQ_ARG"
         fi
-        echo "${_CONT}/var/lib/gg/bld/$_ANAME/$_ANAME$ADD_ARG" >> $_TOEXEC 
+        echo "${_CONT}$GG_ROOT/var/lib/gg/bld/$_ANAME/$_ANAME$ADD_ARG" >> $_TOEXEC 
     fi
     if [[ "$_REQ_EXEC" == "1" && "$_REQ_URL" == "" ]]; then
         error "Cannot use --exec without --req"
@@ -731,8 +751,8 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
 #
 #
 function showtrace() {
-    ls -aslrt /var/lib/gg/$GG_C_NAME/app/trace/trace* |tail -n $1
-    echo "Backtrace: /var/lib/gg/$GG_C_NAME/app/trace/backtrace"
+    ls -aslrt $GG_ROOT/var/lib/gg/$GG_C_NAME/app/trace/trace* |tail -n $1
+    echo "Backtrace: $GG_ROOT/var/lib/gg/$GG_C_NAME/app/trace/backtrace"
 }
 
 #
@@ -743,8 +763,8 @@ function showtrace() {
 #
 #
 function showerr() {
-    grep -a "ERROR:" /var/lib/gg/$GG_C_NAME/app/trace/backtrace |tail -n $1
-    echo "Backtrace: /var/lib/gg/$GG_C_NAME/app/trace/backtrace"
+    grep -a "ERROR:" $GG_ROOT/var/lib/gg/$GG_C_NAME/app/trace/backtrace |tail -n $1
+    echo "Backtrace: $GG_ROOT/var/lib/gg/$GG_C_NAME/app/trace/backtrace"
 }
 
 #
@@ -825,7 +845,7 @@ GG_DBS='$_ALLDB'
 #
 #
 function docdir() {
-    echo "/usr/share/golf"
+    echo "$GG_ROOT/usr/share/golf"
 }
 
 #
@@ -1305,7 +1325,7 @@ $OF"
 #that has only the minimal set of code - and this program uses Golf's shared library. Hence, all is shared 
 #(the program between different instance and all the shared libs).
 #GG_EVENT_STUBS is all the stubs used.
-#So, GG_EVENT_STUBS could be "/usr/lib/golf/stub_after.o" but then available after vmakefile will be "$GG_BLD/before_handler.o $GG_BLD/startup.o"
+#So, GG_EVENT_STUBS could be "$GG_ROOT/usr/lib/golf/stub_after.o" but then available after vmakefile will be "$GG_BLD/before_handler.o $GG_BLD/startup.o"
 #and all three will be present (one empty and two implemented)
 #
 #

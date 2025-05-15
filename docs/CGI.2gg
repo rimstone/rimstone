@@ -29,7 +29,7 @@ The following script sets up an application named "func_test" (any kind of appli
     sudo sed -i '1c\e/usr/lib/cgi-bin/gg' /etc/apache2/suexec/www-data
 
 \[char35]copy your program to "gg" directory
-    sudo mv /var/lib/gg/bld/func-test/func-test /usr/lib/cgi-bin/gg
+    sudo mv $GG_ROOT/var/lib/gg/bld/func-test/func-test /usr/lib/cgi-bin/gg
     sudo chown $(whoami):$(whoami)  /usr/lib/cgi-bin/gg/func-test
     sudo chmod 700  /usr/lib/cgi-bin/gg/func-test
 

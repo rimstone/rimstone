@@ -1,0 +1,66 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+concatenate-strings \-  (strings)
+.SH PURPOSE
+Add strings using a plus ("+") sign.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+<string> + <string> [ + ... ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+String variables and literals can produce a new string by concatenation, using plus ("+") clause.
+
+Concatenation in this manner can be used in any statement where a string is expected.
+
+Note that you can concatenate binary strings too, i.e. strings that do not end with a null character, with each binary string used in its true length. The result will in general be a binary string.
+
+.SH EXAMPLES
+For instance, here we'll concatenate two string constants and a variable "var":
+
+.RS 4
+.EX
+
+set-string var = "day"
+set-string newstr = "nice " + var + " it is!"
+p-out newstr new-line
+
+.EE
+.RE
+
+The result will be "nice day it is!". 
+
+In the following case, directory (variable "dir") is concatenated with a forward slash ("/") and then file name (variable "file") to produce full path of a file to read:
+
+.RS 4
+.EX
+
+read-file dir+"/"+file to content
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Strings
+
+\fBconcatenate-strings\fP  
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBlower-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-length\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

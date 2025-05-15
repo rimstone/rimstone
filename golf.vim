@@ -1,7 +1,7 @@
 " Language: Golf
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2025-April-18
+" Latest Revision: 2025-May-12
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link golfConstruct Statement
@@ -1262,6 +1262,9 @@ syn region gg_r_construct_get_app start="^[[:space:]]*get-app" skip="\\[[:space:
     syn match gg_h_clause_get_app " name,\@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " name$" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " path \@=" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " root-directory \@=" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " root-directory,\@=" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " root-directory$" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_output_get_app " to \@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " trace-directory \@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " trace-directory,\@=" contained containedin=gg_r_construct_get_app

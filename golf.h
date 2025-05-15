@@ -18,7 +18,10 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "522"
+#define GG_VERSION "532"
+#ifndef GG_ROOT
+#   define GG_ROOT ""
+#endif
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -246,7 +249,7 @@ typedef struct s_vml {
 //
 extern vml *vm;
 extern gg_num vm_curr;
-extern char *GG_EMPTY_STRING;
+extern char GG_EMPTY_STRING[];
 //
 // Get length of memory block. GG_ALIGN is 2*sizeof(gg_num)
 // r == -1, this is just empty string
@@ -1360,6 +1363,7 @@ void gg_mem_set_status (gg_num id, unsigned char s);
 gg_num gg_add_mem (void *p);
 void *gg_vmset (void *p, gg_num r);
 gg_num gg_mem_size ();
+void *gg_add_string (void *to, void *add);
 void gg_done ();
 void gg_get_stack(char *fname);
 #if defined(GG_INC_MARIADB) || defined(GG_INC_POSTGRES)
@@ -1617,7 +1621,6 @@ int gg_maria_escape(char *from, char *to, gg_num *len);
 // A string that points to 'GG_EMPTY_STRING' is not allocated, and cannot be
 // realloc-ed, otherwise it can.
 //
-extern char *GG_EMPTY_STRING;
 extern gg_config *gg_pc;
 extern jmp_buf gg_jmp_buffer;
 extern volatile gg_num gg_done_setjmp;
@@ -1627,6 +1630,7 @@ extern volatile gg_num gg_in_fatal_exit;
 extern char * gg_app_name;
 extern char * gg_url_path;
 extern char * gg_app_path;
+extern char * gg_root;
 extern unsigned long gg_app_path_len;
 extern gg_num gg_max_upload;
 extern gg_num gg_is_trace;

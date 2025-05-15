@@ -80,6 +80,7 @@ replace-string a copy-end b start-with 6 length 2
 .SH SEE ALSO
  Strings
 
+\fBconcatenate-strings\fP  
 \fBcopy-string\fP  
 \fBcount-substring\fP  
 \fBdelete-string\fP  

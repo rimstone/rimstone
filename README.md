@@ -1,77 +1,29 @@
 Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Golf Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf) \(with mirrors on [Gitlab](https://gitlab.com/golf-lang/golf/) and [Debian Salsa](https://salsa.debian.org/golf/golf)\)\. Installation packages and source installs below are for both x86\_64 and aarch64\.
-## Install Golf on Ubuntu \(versions 20, 22, 24, 25\):
-```
-sudo add-apt-repository ppa:golf-lang/golf -y
-sudo apt update
-sudo apt -y install golf
-```
-You can also [install from source](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
-## Install Golf on Redhat \(incl\. Rocky, Alma, Centos\), Fedora, Amazon Linux, Mageia:
-```
-sudo dnf -y install epel-release
-sudo dnf -y copr enable golf-lang/golf-lang
-sudo dnf -y install golf
-```
-You can also [install from source](https://golf-lang.com//install-golf-from-source-using-dnf.html)\.
-## Install Golf on OpenSUSE:
-Install OpenSUSE Tumbleweed:
-```
-sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Tumbleweed/home:golf_lang.repo 
-sudo zypper --gpg-auto-import-keys refresh
-sudo zypper -n install --replacefiles --force-resolution golf
-```
-Install OpenSUSE Leap 15\.6:
-```
-sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/15.6/home:golf_lang.repo 
-sudo zypper --gpg-auto-import-keys refresh
-sudo zypper -n install --replacefiles --force-resolution golf
-```
-Install OpenSUSE Slowroll:
-```
-sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Slowroll/home:golf_lang.repo 
-sudo zypper --gpg-auto-import-keys refresh
-sudo zypper -n install --replacefiles --force-resolution golf
-```
-You can also [install from source](https://golf-lang.com//install-golf-from-source-using-zypper.html)\.
-## Install Golf on Debian \(10, 11, 12, Unstable\):
-Replace 'Debian\_12' with 'Debian\_10', 'Debian\_11' or 'Debian\_Unstable' to install on Debian 10, 11 or Unstable \(the latest upcoming\):
-```
-sudo apt install -y curl gpg
-echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Debian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
-curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Debian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
-sudo apt update
-sudo apt install -y golf
-```
-Install Golf on Debian [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
-## Install Golf on Arch and Manjaro:
-```
-#Run this one time (to add Golf key):
-echo -e "[home_golf_lang_Arch]\nServer = https://download.opensuse.org/repositories/home:/golf_lang/Arch/x86_64" | sudo  tee -a /etc/pacman.conf 
-key=$(curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Arch/$(uname -m)/home_golf_lang_Arch.key)
-fingerprint=$(echo "${key}"|gpg --quiet --with-colons --import-options show-only --import --fingerprint  - | awk -F: '$1 == "fpr" { print $10 }')
-sudo pacman-key --init
-echo "${key}" | sudo pacman-key --add - 
-sudo pacman-key --lsign-key "${fingerprint}"
-#Install golf going forward
-sudo pacman --noconfirm -Sy home_golf_lang_Arch/golf
-```
-Install Golf on Arch and Manjaro [from source code](https://golf-lang.com//install-golf-from-source-using-pacman.html)\.
-## Install Golf on Raspbian \(Raspberry OS\), aarch64 only:
-```
-sudo apt install -y curl
-echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Raspbian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
-curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Raspbian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
-sudo apt update
-sudo apt -y install golf
-```
-Install Golf on Raspberry [from source code](https://golf-lang.com//install-golf-from-source-using-apt.html)\.
+## Install Golf package \(x86\_64 and aarch64\)
+[Ubuntu](https://golf-lang.com//install-ubuntu.html)
+[Debian](https://golf-lang.com//install-debian.html)
+[Fedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia](https://golf-lang.com//install-fedora-redhat-rocky-alma-centos-amazon-mageia.html)
+[OpenSUSE](https://golf-lang.com//install-opensuse.html)
+[Arch, Manjaro](https://golf-lang.com//install-arch-manjaro.html)
+[Raspbian](https://golf-lang.com//install-raspbian.html)
+## Install Golf from source code
+[Debian, Ubuntu, Raspbian](https://golf-lang.com//install-from-source-debian-ubuntu-raspbian.html)
+[Fedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia](https://golf-lang.com//install-from-source-fedora-redhat-rocky-alma-centos-amazon-mageia.html)
+[OpenSUSE](https://golf-lang.com//install-from-source-opensuse.html)
+[Arch, Manjaro](https://golf-lang.com//install-from-source-arch-manjaro.html)
+## Install Golf from source code without root access
+[Debian, Ubuntu, Raspbian](https://golf-lang.com//install-in-any-folder-debian-ubuntu-raspbian.html)
+[Fedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia](https://golf-lang.com//install-in-any-folder-fedora-redhat-rocky-alma-centos-amazon-mageia.html)
+[OpenSUSE](https://golf-lang.com//install-in-any-folder-opensuse.html)
+[Arch, Manjaro](https://golf-lang.com//install-in-any-folder-arch-manjaro.html)
 ## Current version
-Current version is 522\. This release passed 2392 automated functional tests\.
+Current version is 532\. This release passed 2418 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 ## Articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-05\-13 [How to write Web Service API with Golf](https://golf-lang.blogspot.com/2025/05/how-to-write-web-service-api-with-golf.html)
 * 2025\-05\-08 [Random numbers in Golf](https://golf-lang.blogspot.com/2025/05/random-numbers-in-golf.html)
 * 2025\-05\-03 [Working with debug symbols on Fedora etc\.](https://golf-lang.blogspot.com/2025/05/working-with-debug-symbols-on-fedora-etc.html)
 * 2025\-05\-03 [How to install debug symbols for Golf package on Debian/Ubuntu](https://golf-lang.blogspot.com/2025/05/how-to-install-debug-symbols-for-golf.html)
@@ -122,6 +74,7 @@ Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/1
 * 2024\-09\-13 [Introduction to Golf](https://golf-lang.blogspot.com/2024/09/introduction-to-golf_13.html)
 * 2024\-09\-12 [Initial Golf release](https://golf-lang.blogspot.com/2024/09/initial-golf-release_12.html)
 ## Releases
+* 2025\-05\-14 [Golf 532 released](https://golf-lang.blogspot.com/2025/05/golf-532-released.html)
 * 2025\-05\-06 [Golf 520 released](https://golf-lang.blogspot.com/2025/05/golf-520-released.html)
 * 2025\-05\-02 [Golf 517 released](https://golf-lang.blogspot.com/2025/05/golf-511-released.html)
 * 2025\-04\-29 [Golf 501 released](https://golf-lang.blogspot.com/2025/04/golf-492-released.html)

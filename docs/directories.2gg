@@ -5,6 +5,26 @@ directories)
 .SH DESCRIPTION
 
 .LP
+.B ROOT DIRECTORY
+.LP
+
+Root directory is a directory where Golf is installed. All directory paths described below are appended to the root directory.
+
+When Golf is installed with a system installer (such as apt, dnf, zypper, pacman etc.), then root directory is an empty string (""). When Golf is installed locally, into a specific directory, this this directory is the root (for example, if you installed Golf into your user's home directory, it might be "$HOME/.app/golf"). 
+
+If you are using any of the paths below in the absolute form (which in most cases you don't need to since your applications current working directory is the application home directory below), you should first get your root directory (even if empty):
+
+.RS 4
+.EX
+
+get-app root-directory to root
+read-file root + "/var/lib/gg/<app name>/app/my-file" to contents
+
+.EE
+.RE
+
+
+.LP
 .B APPLICATION DIRECTORY STRUCTURE
 .LP
 

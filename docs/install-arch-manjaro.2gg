@@ -1,73 +1,37 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-uninstall \- Golf documentation (install-golf)
+install-arch-manjaro \- Golf documentation (install-golf)
 .SH DESCRIPTION
 
 .LP
-.B UNINSTALL GOLF IF INSTALLED FROM SOURCE
+.B INSTALL GOLF ON ARCH AND MANJARO:
 .LP
 
-Run from command line (if you installed to a folder, add "DESTDIR=<folder>" where <folder> is the directory where it was installed):
+Run this one time to add Golf key:
 
 .RS 4
 .EX
 
-sudo make uninstall
+echo -e "[home_golf_lang_Arch]\enServer = https://download.opensuse.org/repositories/home:/golf_lang/Arch/x86_64" | sudo  tee -a /etc/pacman.conf 
+key=$(curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Arch/$(uname -m)/home_golf_lang_Arch.key)
+fingerprint=$(echo "${key}"|gpg --quiet --with-colons --import-options show-only --import --fingerprint  - | awk -F: '$1 == "fpr" { print $10 }')
+sudo pacman-key --init
+echo "${key}" | sudo pacman-key --add - 
+sudo pacman-key --lsign-key "${fingerprint}"
 
 .EE
 .RE
 
-
-.LP
-.B UNINSTALL GOLF IF INSTALLED FROM PACKAGE
-.LP
-
-For Ubuntu:
+Install Golf:
 
 .RS 4
 .EX
 
-sudo apt remove golf
+sudo pacman --noconfirm -Sy home_golf_lang_Arch/golf
 
 .EE
 .RE
 
-For Redhat, Fedora and similar:
-
-.RS 4
-.EX
-
-sudo dnf remove golf
-
-.EE
-.RE
-
-For OpenSUSE:
-
-.RS 4
-.EX
-
-sudo zypper remove golf
-
-.EE
-.RE
-
-For Arch and similar:
-
-.RS 4
-.EX
-
-sudo pacman -R golf
-
-.EE
-.RE
-
-
-.LP
-.B APPLICATION FILES
-.LP
-
-Note that /var/lib/gg directory is not removed, as it generally contains application files. You may move such files or delete them as you see fit.
 .SH SEE ALSO
  Install golf
 

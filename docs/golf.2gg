@@ -5,148 +5,39 @@ index \- Golf documentation ()
 Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBGolf Blog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP (with mirrors on \fBGitlab\fP and \fBDebian Salsa\fP). Installation packages and source installs below are for both x86_64 and aarch64.
 
 .LP
-.B INSTALL GOLF ON UBUNTU (VERSIONS 20, 22, 24, 25):
+.B INSTALL GOLF PACKAGE (X86_64 AND AARCH64)
 .LP
 
-
-.RS 4
-.EX
-
-sudo add-apt-repository ppa:golf-lang/golf -y
-sudo apt update
-sudo apt -y install golf
-
-.EE
-.RE
-
-You can also \fBinstall from source\fP.
+\fBUbuntu\fP
+\fBDebian\fP
+\fBFedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia\fP
+\fBOpenSUSE\fP
+\fBArch, Manjaro\fP
+\fBRaspbian\fP
 
 .LP
-.B INSTALL GOLF ON REDHAT (INCL. ROCKY, ALMA, CENTOS), FEDORA, AMAZON LINUX, MAGEIA:
+.B INSTALL GOLF FROM SOURCE CODE
 .LP
 
-
-.RS 4
-.EX
-
-sudo dnf -y install epel-release
-sudo dnf -y copr enable golf-lang/golf-lang
-sudo dnf -y install golf
-
-.EE
-.RE
-
-You can also \fBinstall from source\fP.
+\fBDebian, Ubuntu, Raspbian\fP
+\fBFedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia\fP
+\fBOpenSUSE\fP
+\fBArch, Manjaro\fP
 
 .LP
-.B INSTALL GOLF ON OPENSUSE:
+.B INSTALL GOLF FROM SOURCE CODE WITHOUT ROOT ACCESS
 .LP
 
-Install OpenSUSE Tumbleweed:
-
-.RS 4
-.EX
-
-sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Tumbleweed/home:golf_lang.repo 
-sudo zypper --gpg-auto-import-keys refresh
-sudo zypper -n install --replacefiles --force-resolution golf
-
-.EE
-.RE
-
-Install OpenSUSE Leap 15.6:
-
-.RS 4
-.EX
-
-sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/15.6/home:golf_lang.repo 
-sudo zypper --gpg-auto-import-keys refresh
-sudo zypper -n install --replacefiles --force-resolution golf
-
-.EE
-.RE
-
-Install OpenSUSE Slowroll:
-
-.RS 4
-.EX
-
-sudo zypper addrepo https://download.opensuse.org/repositories/home:golf_lang/openSUSE_Slowroll/home:golf_lang.repo 
-sudo zypper --gpg-auto-import-keys refresh
-sudo zypper -n install --replacefiles --force-resolution golf
-
-.EE
-.RE
-
-You can also \fBinstall from source\fP.
-
-.LP
-.B INSTALL GOLF ON DEBIAN (10, 11, 12, UNSTABLE):
-.LP
-
-Replace 'Debian_12' with 'Debian_10', 'Debian_11' or 'Debian_Unstable' to install on Debian 10, 11 or Unstable (the latest upcoming):
-
-.RS 4
-.EX
-
-sudo apt install -y curl gpg
-echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Debian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
-curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Debian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
-sudo apt update
-sudo apt install -y golf
-
-.EE
-.RE
-
-Install Golf on Debian \fBfrom source code\fP.
-
-.LP
-.B INSTALL GOLF ON ARCH AND MANJARO:
-.LP
-
-
-.RS 4
-.EX
-
-\[char35]Run this one time (to add Golf key):
-echo -e "[home_golf_lang_Arch]\enServer = https://download.opensuse.org/repositories/home:/golf_lang/Arch/x86_64" | sudo  tee -a /etc/pacman.conf 
-key=$(curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Arch/$(uname -m)/home_golf_lang_Arch.key)
-fingerprint=$(echo "${key}"|gpg --quiet --with-colons --import-options show-only --import --fingerprint  - | awk -F: '$1 == "fpr" { print $10 }')
-sudo pacman-key --init
-echo "${key}" | sudo pacman-key --add - 
-sudo pacman-key --lsign-key "${fingerprint}"
-\[char35]Install golf going forward
-sudo pacman --noconfirm -Sy home_golf_lang_Arch/golf
-
-.EE
-.RE
-
-Install Golf on Arch and Manjaro \fBfrom source code\fP.
-
-.LP
-.B INSTALL GOLF ON RASPBIAN (RASPBERRY OS), AARCH64 ONLY:
-.LP
-
-
-.RS 4
-.EX
-
-sudo apt install -y curl
-echo 'deb http://download.opensuse.org/repositories/home:/golf_lang/Raspbian_12/ /' | sudo tee /etc/apt/sources.list.d/home:golf_lang.list
-curl -fsSL https://download.opensuse.org/repositories/home:golf_lang/Raspbian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_golf_lang.gpg > /dev/null
-sudo apt update
-sudo apt -y install golf
-
-.EE
-.RE
-
-Install Golf on Raspberry \fBfrom source code\fP.
+\fBDebian, Ubuntu, Raspbian\fP
+\fBFedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia\fP
+\fBOpenSUSE\fP
+\fBArch, Manjaro\fP
 
 .LP
 .B CURRENT VERSION
 .LP
 
-Current version is 522. This release passed 2392 automated functional tests.
+Current version is 532. This release passed 2418 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -160,6 +51,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .LP
 
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-05-13 \fBHow to write Web Service API with Golf\fP
+.RE
+
 
 .RS 4
 \[bu]    
@@ -458,6 +355,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .LP
 .B RELEASES
 .LP
+
+
+.RS 4
+\[bu]    
+2025-05-14 \fBGolf 532 released\fP
+.RE
 
 
 .RS 4

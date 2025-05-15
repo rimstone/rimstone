@@ -168,6 +168,7 @@
 #define GG_KEYSAMESITE "same-site "
 #define GG_KEYDIRECTORY "directory"
 #define GG_KEYTRACEDIRECTORY "trace-directory"
+#define GG_KEYROOTDIRECTORY "root-directory"
 #define GG_KEYFILEDIRECTORY "file-directory"
 #define GG_KEYUPLOADSIZE "upload-size"
 #define GG_KEYDBVENDOR "db-vendor "
@@ -214,6 +215,7 @@
 #define GG_KEYCURLYRIGHT "}"
 #define GG_KEYPARRIGHT ")"
 #define GG_KEYPARLEFT "("
+#define GG_KEYPLUS "+"
 #define GG_KEYAT "@"
 #define GG_KEYCOLON ":"
 #define GG_KEYNOTEQUAL "not-equal "
@@ -552,7 +554,7 @@ void do_numstr (char *to, char *num0, char *base);
 void setup_internal_hash(char *fname, char *hash, bool is_req);
 void deprecated (char **old, char **new, char *oldkey, char *newkey);
 void gg_report_warning (char *format, ...)  __attribute__ ((format (printf, 1, 2)));
-gg_num carve_stmt_obj (char **mtext, bool has_value);
+gg_num carve_stmt_obj (char **mtext, bool has_value, bool is_constant);
 void match_file (char *file_name, char *reqname);
 void parse_cond(char *cm, char *bifs, char *ifs, char *ife);
 void make_mem (char **clause);
@@ -583,6 +585,7 @@ bool find_var (char *name, gg_num *type, gg_num *line, char **realname, bool *is
 void make_var (char **v, gg_num type);
 void check_c (char *mtext);
 char *check_exp (char *e, bool *found, bool *err);
+char *check_str (char *e, bool *err);
 void save_param (char *pname);
 void check_sub (char *sub);
 char *undecorate (char *src);
@@ -701,7 +704,7 @@ void save_param (char *pname)
 //
 // Recursively parse number expression for validity, and check if number variables in it are proper
 // Emits messages if errors. 
-// cur is the expression, found is used internally (to make sure expressions are not empy), and err is true
+// cur is the expression, found is used internally (to make sure expressions are not empty), and err is true
 // if there's a syntax error or false if not.
 // Returns current point in parsing, not useful to caller, only err is useful.
 //
@@ -842,6 +845,101 @@ char *check_exp (char *cur, bool *found, bool *err)
     return cur;
     
 }
+
+
+//
+// Parse string expression for validity, and check if string variables in it are proper. This does solely concatenation of strings with plus sign.
+// Emits messages if errors. 
+// cur is the expression, and err is true
+// if there's a syntax error or false if not.
+// Returns actual code that computes the string expression, or NULL if this is just a string or constant that can be processed normally
+// String expressions are a+b+c... i.e. concatenation only
+//
+char *check_str (char *cur, bool *err)
+{
+    static char sres[300];
+    char *c_elem;
+    static gg_num sres_id = 0;
+    *err = false;
+    bool first = true;
+    gg_fifo *vars;
+    gg_store_init(&vars);
+    while (1)
+    {
+        char *lp = gg_find_keyword0 (cur, GG_KEYPLUS, 0, 0);
+        if (first) 
+        { 
+            if (lp == NULL) return NULL; // no plus, just a single var or constant, which will be verified later in check_var()
+            // if there's a plus, create a variable that will hold the result
+            snprintf (sres, sizeof(sres), "_gg_sres_%ld", sres_id++);
+        }
+
+        // produce curr trimmed, ready for variable check
+        if (lp != NULL) *lp = 0;
+        gg_num lcur = strlen (cur);
+        cur = gg_trim_ptr(cur,  &lcur); // must use this form of trim, because trimit() would alter cur, and thus stored
+                                        // pointers below in gg_store, causing memory failure
+
+        if (lp == NULL) 
+        {
+            if (cur[0] == 0) gg_report_error ("String expression missing");
+        }
+
+        // check if expression is a variable or string constant
+        if (is_constant_string(cur) != GG_CONST_OK)
+        {
+            gg_num vtype;
+            gg_num l;
+            char *rname;
+            bool found = find_var (cur, &vtype, &l, &rname, NULL);
+            if (found)
+            {
+                if (!cmp_type (GG_DEFSTRING, vtype))
+                {
+                    if (gg_mode != GG_MODE_INTERNAL) 
+                    {
+                        gg_report_error ("Variable [%s] is defined on line [%ld] as [%s], but is used as type [%s]", rname, l, typename(vtype), typename(GG_DEFSTRING));
+                    }
+                    else 
+                        return NULL;
+                }
+            }
+            else
+            {
+                if (gg_mode != GG_MODE_INTERNAL) 
+                {
+                    gg_report_error ("Variable [%s] not found", cur); 
+                }
+                else 
+                    return NULL;
+            }
+        }
+        c_elem=cur;
+        gg_store(vars, gg_strdup(sres), gg_strdup(c_elem));
+        //
+        first = false;
+        if (lp == NULL) break;
+        cur = lp + 1; // skip the plus
+    }
+    oprintf ("char *%s = GG_EMPTY_STRING;\n", sres);
+    //
+    // we get here is the expression parsed is in indeed in the form of a+b+... were each is a string
+    //
+    gg_rewind(vars);
+    while (1) 
+    {
+        char *res = GG_EMPTY_STRING;
+        c_elem = GG_EMPTY_STRING;
+        gg_num st = gg_retrieve (vars, &res, (void**)&c_elem);
+        if (st != GG_OKAY) break;
+        make_mem (&c_elem);
+        oprintf ("%s = gg_add_string (%s, %s);\n", res, res, c_elem);
+    }
+    // make memory occupied to be as much as needed. 
+    oprintf ("{gg_num tmp_id = gg_mem_get_id(%s); %s=gg_realloc(tmp_id, gg_mem_get_len(tmp_id)+1);}\n", sres, sres);
+    return sres;
+}
+
 
 
 //
@@ -1062,6 +1160,7 @@ gg_num is_len_format (char *s, char *f, gg_num flen)
 
 //
 // Returns GG_CONST_OK if 's' is "something" valid string, with backslash (\) escaping whatever accounted for
+// It also accounts if there's a + sign in there, which would be an expression of concatenating strings
 // Otherwise return GG_CONST_BAD if it starts with " but isn't a valid string, or GG_CONST_NOT if it doesn't start with "
 // or GG_CONST_EMPTY if it's just whitespace
 // A string can also be a concatenation of "xxx" strings, such as "xxx""yyy"...
@@ -1071,6 +1170,9 @@ gg_num is_constant_string (char *s)
     while (*s && isspace(*s)) s++;
     if (*s != '"') return GG_CONST_NOT; // not string
     if (*s == 0) return GG_CONST_EMPTY; // empty
+    if (gg_find_keyword0 (s, GG_KEYPLUS, 0, 0) != NULL) return  GG_CONST_NOT; // this will be checked out later
+                                                                                // to see if it's a correct expression
+                                                                                // in check_str() from check_var()
     s++;
     bool found = false;
     while (*s != 0)  
@@ -1194,7 +1296,7 @@ void call_service (char *mtext)
     call_service_carve (&finok, &started);
     carve_statement (&st, "call-remote", GG_KEYSTATUS, 0, 1);
 
-    carve_stmt_obj (&mtext, true);
+    carve_stmt_obj (&mtext, true, false);
     call_service_define (&finok, &started);
     define_statement (&st, GG_DEFNUMBER, false);
 
@@ -1283,7 +1385,7 @@ void read_service (char *mtext)
     read_service_carve(&data, &error, &rmsg, &rstatus);
     carve_statement (&st, "read-remote", GG_KEYSTATUS, 0, 1);
 
-    carve_stmt_obj (&mtext, true);
+    carve_stmt_obj (&mtext, true, false);
     read_service_define(&data, &error, &rmsg, &rstatus);
     define_statement (&st, GG_DEFNUMBER, false);
     
@@ -1329,7 +1431,7 @@ void new_service (char *mtext)
     new_service_find(mtext, &server, &method, &apath, &req, &body, &upay, &timeout, &env, &loc, &url);
     new_service_carve(&server, &method, &apath, &req, &body, &upay, &timeout, &env, &loc, &url);
 
-    carve_stmt_obj (&mtext, true);
+    carve_stmt_obj (&mtext, true, false);
     make_mem(&server);    
     make_mem(&method);    
     make_mem(&apath);    
@@ -1417,7 +1519,7 @@ void run_service (char *mtext)
     call_service_carve (&finok, &started);
     read_service_carve(&data, &error, &rmsg, &rstatus);
     carve_statement (&st, "run-remote", GG_KEYSTATUS, 0, 1); // carve common to read/call service
-    carve_stmt_obj (&mtext, true);
+    carve_stmt_obj (&mtext, true, false);
 
     //define statements
     read_service_define(&data, &error, &rmsg, &rstatus);
@@ -1496,7 +1598,7 @@ void make_mem (char **clause)
     while (isspace(*s)) s++;
     gg_num cs = is_constant_string(s);
     if (cs != GG_CONST_OK && cs != GG_CONST_NOT) gg_report_error ("String [%s] is not correctly formed", s);
-    if (cs != GG_CONST_OK && strcmp(s,"gg_source_file")) return; // this captures literals and anything with _ in front
+    if (cs != GG_CONST_OK) return; // this captures variables and anything with _ in front
                                             // which we assume is a define-d literal (like __FILE__)
 
     static gg_num gmem = 0;
@@ -1847,17 +1949,18 @@ void match_file (char *file_name, char *reqname)
 //
 // Check the result of parsing (after last carve_statement()), so that mtext is trimmed,
 // and if has_value is true, check that it's not empty
+// is_constant is true if this can be a string constant, false otherwise
 // Returns length of mtext
 // This MUST ALWAYS be after ALL other carve_statement calls!!!!! Or otherwise junk may just pass parsing as okay (even if it doesn't do anything)!
 //
-gg_num carve_stmt_obj (char **mtext, bool has_value)
+gg_num carve_stmt_obj (char **mtext, bool has_value, bool is_constant)
 {
     // Make sure mtext is not empty, there has to be something
     gg_num ml = strlen (*mtext);
     *mtext = gg_trim_ptr(*mtext,  &ml);
     if (has_value && (*mtext)[0] == 0) gg_report_error("Object argument following the statement name is missing");
     if (!has_value && (*mtext)[0] != 0) gg_report_error("This statement should have no object argument");
-    make_mem (mtext);
+    if (is_constant) make_mem (mtext);
     return ml;
 }
 
@@ -1937,6 +2040,22 @@ gg_num check_var (char **var, gg_num type, bool *is_unkn)
     if (v[0] == '_' && v[1] == 'g' && v[2] == 'g')  return type; // internal vars are always of the right type (aka _gg...)
                                                                  // but not "gg_..." vars, those are synonyms for user vars
 
+    if (cmp_type (type, GG_DEFSTRING)) // we check this for internal too. We however, detect if the expression is in the 
+                                       // form a+b+... where each is a string var, and if not we just pass on it - IF it's
+                                       // internal (because it can be char+num for instance, which is a typical C expression)
+                                       // and IF it's not internal, we error out
+    {
+        // check if string expression
+        bool err;
+        char *res = check_str (*var, &err);
+        // This is for concatenation (plus) string expressions only, if res is NULL, it's just a string var or a constant, move on
+        if (res != NULL) 
+        { 
+            *var = res; 
+            return GG_DEFSTRING; 
+        }
+    }
+
     if (cmp_type (type, GG_DEFNUMBER) && gg_mode != GG_MODE_INTERNAL)
     {
         // check if number expression
@@ -1996,7 +2115,7 @@ gg_num check_var (char **var, gg_num type, bool *is_unkn)
         }
     }
 
-    if (cmp_type(type,GG_DEFSTRING) || type == GG_DEFUNKN) // if number, check if constant
+    if (cmp_type(type,GG_DEFSTRING) || type == GG_DEFUNKN) // if string, check if constant
     {
         if (is_constant_string(v) == GG_CONST_OK) return GG_DEFSTRING;
         if (gg_mode == GG_MODE_INTERNAL) 
@@ -3001,7 +3120,7 @@ void generate_query_result (gg_gen_ctx *gen_ctx, gg_db_parse *vp)
     carve_statement (&webenc, "query-result", GG_KEYWEBENCODE, 0, 0);
     carve_statement (&urlenc, "query-result", GG_KEYURLENCODE, 0, 0);
 
-    gg_num len_name = carve_stmt_obj (&col_out, true);
+    gg_num len_name = carve_stmt_obj (&col_out, true, false);
     if (len_name > GG_MAX_COLNAME_LEN) gg_report_error ("Query name in [%s] is too long", col_out);
 
     define_statement (&col_out, GG_DEFSTRING, false); 
@@ -4556,7 +4675,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         end_query (gen_ctx,  1);
 
@@ -4582,7 +4701,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             carve_statement (&use, "start-loop", GG_KEYUSE, 0, 1);
                             carve_statement (&swith, "start-loop", GG_KEYSTARTWITH, 0, 1);
                             carve_statement (&add, "start-loop", GG_KEYADD, 0, 1);
-                            carve_stmt_obj (&mtext, false);
+                            carve_stmt_obj (&mtext, false, false);
                             define_statement (&use, GG_DEFNUMBER, false); 
                             //
                             check_var (&repeat, GG_DEFNUMBER, NULL);
@@ -4626,7 +4745,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //GG_GUARD
                         i = newI+newI1;
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         if (gg_is_valid_param_name(mtext, false, false) != 1) gg_report_error(GG_NAME_INVALID, mtext);
 
                         if (newI != 0) oprintf ("#ifdef %s\n",mtext);
@@ -4640,7 +4759,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         oprintf ("{\n");
 
                         continue; // skip the statement and continue analyzing 
@@ -4651,7 +4770,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         oprintf ("}\n");
 
                         continue; // skip the statement and continue analyzing 
@@ -4661,7 +4780,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         check_var (&mtext, GG_DEFNUMBER, NULL);
                         oprintf ("gg_sleepabit (%s);\n", mtext);
 
@@ -4672,7 +4791,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         if (open_loops <= 0 && query_id == -1 && open_readline <= 0) gg_report_error ("continue-loop must be between start-loop and end-loop statements, or within a run-query/end-query statements, or within read-line and end-read-line");
                         oprintf ("continue;\n");
 
@@ -4683,7 +4802,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         if (open_loops <= 0 && query_id == -1 && open_readline <= 0) gg_report_error ("break-loop must be between start-loop and end-loop statements, or within a run-query/end-query statements, or within read-line and end-read-line");
                         oprintf ("break;\n");
 
@@ -4694,7 +4813,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         oprintf ("}\n");
                         open_loops--;
 
@@ -4718,7 +4837,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&onexit, "rollback-transaction", GG_KEYONERROREXIT, 0, 0);
                         carve_statement (&errt, "rollback-transaction", GG_KEYERRORTEXT, 0, 1);
                         carve_statement (&err, "rollback-transaction", GG_KEYERROR, 0, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         make_mem(&opt);
                         // database is not a string constant or variable, though it's stringified internally, so no make_mem
                         define_statement (&errt, GG_DEFSTRING, false); // allocated with strdup in db.c, exact length
@@ -4773,7 +4892,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&onexit, "commit-transaction", GG_KEYONERROREXIT, 0, 0);
                         carve_statement (&errt, "commit-transaction", GG_KEYERRORTEXT, 0, 1);
                         carve_statement (&err, "commit-transaction", GG_KEYERROR, 0, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         make_mem (&opt);
                         // database is not a string constant or variable, though it's stringified internally, so no make_mem
                         define_statement (&errt, GG_DEFSTRING, false); // allocated with strdup in db.c, exact length
@@ -4807,7 +4926,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&onexit, "begin-transaction", GG_KEYONERROREXIT, 0, 0);
                         carve_statement (&errt, "begin-transaction", GG_KEYERRORTEXT, 0, 1);
                         carve_statement (&err, "begin-transaction", GG_KEYERROR, 0, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         make_mem (&opt);
                         // database is not a string constant or variable, though it's stringified internally, so no make_mem
                         define_statement (&errt, GG_DEFSTRING, false); // allocated with strdup in db.c, exact length
@@ -4924,7 +5043,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&errtext, "run-query", GG_KEYERRORTEXT, 0, 1);
                         carve_statement (&arows, "run-query", GG_KEYAFFECTEDROWS, 0, 1);
                         carve_statement (&rcount, "run-query", GG_KEYROWCOUNT, 0, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         make_mem (&(vp.eq));
                         //vp.at is not a string (we stringify it, but never subject to string processing), so no make_mem
@@ -4994,7 +5113,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&length, "p-out", GG_KEYLENGTH, 0, 1);
                         carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         //
                         check_var (&length, GG_DEFNUMBER, NULL);
                         check_var (&mtext, GG_DEFSTRING, NULL);
@@ -5015,7 +5134,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&nl, "p-path", GG_KEYNEWLINE, 0, 0);
                         check_sub (mtext); // this must be BEFORE carve_stmt_obj as it may create temp variable which is just some generated var name
                                            // it trims mtext, but we're about to do that anyway
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         // mtext is mandatory request path
                         make_mem(&mtext);
@@ -5038,7 +5157,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
                             carve_statement (&nl, "p-source-line", GG_KEYNEWLINE, 0, 0);
                         }
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         do_numstr (NULL, "__LINE__",  NULL);
                         if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
@@ -5056,7 +5175,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
                             carve_statement (&nl, "p-source-file", GG_KEYNEWLINE, 0, 0);
                         }
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         char *osrc = undecorate (src_file_name);
                         oprintf("gg_puts (GG_NOENC, \"%s\", %ld, false);\n", osrc, strlen(osrc)); // optimized to compute strlen at compile time
@@ -5073,7 +5192,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
 
                         carve_statement (&nl, "p-num", GG_KEYNEWLINE, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         check_var (&mtext, GG_DEFNUMBER, NULL);
 
                         do_numstr (NULL, mtext, NULL);
@@ -5090,7 +5209,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&length, "p-url", GG_KEYLENGTH, 0, 1);
                         carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
                         check_var (&length, GG_DEFNUMBER, NULL);
@@ -5111,7 +5230,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&length, "p-web", GG_KEYLENGTH, 0, 1);
                         carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
                         check_var (&length, GG_DEFNUMBER, NULL);
@@ -5189,7 +5308,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&out_file, "exec-program", GG_KEYOUTPUTFILE, 0, 1);
                         carve_statement (&err_file, "exec-program", GG_KEYERRORFILE, 0, 1);
                         carve_statement (&in_file, "exec-program", GG_KEYINPUTFILE, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
 
 
@@ -5291,7 +5410,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         char *header = find_keyword (mtext, GG_KEYHEADERS, 1);
                         carve_statement (&header, "send-file", GG_KEYHEADERS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
 
@@ -5322,7 +5441,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&id, "lock-file", GG_KEYID, 1, 1);
                         carve_statement (&status, "lock-file", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&id, GG_DEFNUMBER, false);
                         define_statement (&status, GG_DEFNUMBER, false);
@@ -5363,7 +5482,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&length, "random-string", GG_KEYLENGTH, 0, 1);
                         carve_statement (&number, "random-string", GG_KEYNUMBER, 0, 0);
                         carve_statement (&binary, "random-string", GG_KEYBINARY, 0, 0);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         char type;
                         if (number != NULL) type = GG_RANDOM_NUM;
@@ -5395,7 +5514,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&to, "random-string", GG_KEYTO, 1, 1);
                         carve_statement (&length, "random-string", GG_KEYLENGTH, 0, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_make_random
                         //
@@ -5443,7 +5562,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *to = find_keyword (mtext, GG_KEYTO, 1);
 
                         carve_statement (&to, "string-length", GG_KEYTO, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&to, GG_DEFNUMBER, false);
                         //
@@ -5471,7 +5590,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&to, "count-substring", GG_KEYTO, 1, 1);
                         carve_statement (&in, "count-substring", GG_KEYIN, 1, 1);
                         carve_statement (&case_insensitive, "count-substring", GG_KEYCASEINSENSITIVE, 0, 2);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         make_mem (&in);
 
                         char *case_insensitivec = opt_clause(case_insensitive, "0", "1", GG_DEFNUMBER);
@@ -5510,7 +5629,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&salt_len, "derive-key" , GG_KEYSALTLENGTH, 0, 1);
                         carve_statement (&iterations, "derive-key", GG_KEYITERATIONS, 0, 1);
                         carve_statement (&binary, "derive-key", GG_KEYBINARY, 0, 2);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         make_mem(&from);
                         make_mem(&digest);
@@ -5548,7 +5667,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&to, "hmac-string", GG_KEYTO, 1, 1);
                         carve_statement (&digest, "hmac-string", GG_KEYDIGEST, 0, 1);
                         carve_statement (&binary, "hmac-string", GG_KEYBINARY, 0, 2);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         make_mem (&digest);
                         make_mem (&key);
 
@@ -5579,7 +5698,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&to, "hash-string", GG_KEYTO, 1, 1);
                         carve_statement (&digest, "hash-string", GG_KEYDIGEST, 0, 1);
                         carve_statement (&binary, "hash-string", GG_KEYBINARY, 0, 2);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         make_mem (&digest);
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_hash_data
@@ -5606,7 +5725,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&ilen, "decode-base64", GG_KEYINPUTLENGTH, 0, 1);
                         carve_statement (&to, "decode-base64", GG_KEYTO, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_b64_decode
                         //
@@ -5629,7 +5748,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&ilen, "encode-base64", GG_KEYINPUTLENGTH, 0, 1);
                         carve_statement (&to, "encode-base64", GG_KEYTO, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_b64_encode
                         //
@@ -5655,7 +5774,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&ilen, "encode-hex", GG_KEYINPUTLENGTH, 0, 1);
                         carve_statement (&pref, "encode-hex", GG_KEYPREFIX, 0, 1);
                         carve_statement (&to, "encode-hex", GG_KEYTO, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         make_mem(&pref);
 
@@ -5679,7 +5798,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&ilen, "decode-hex", GG_KEYINPUTLENGTH, 0, 1);
                         carve_statement (&to, "decode-hex", GG_KEYTO, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_hex2bin
                         //
@@ -5704,7 +5823,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&inlength, is_web==1?"decode-web":"decode-url", GG_KEYINPUTLENGTH, 0, 1);
                         if (newI != 0) carve_statement (&status, "decode-url", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         if (newI != 0) define_statement (&status, GG_DEFNUMBER, false);
 
                         //
@@ -5735,7 +5854,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&inlength, is_web==1?"encode-web":"encode-url", GG_KEYINPUTLENGTH, 0, 1);
                         carve_statement (&to, is_web==1?"encode-web":"encode-url", GG_KEYTO, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in golf encode
                         //
@@ -5757,7 +5876,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // Example:
                         // trim-string str 
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
@@ -5804,7 +5923,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&digest, enc?"encrypt-data":"decrypt-data", GG_KEYDIGEST, 0, 1);
                         carve_statement (&cache, enc?"encrypt-data":"decrypt-data", GG_KEYCACHE, 0, 0);
                         carve_statement (&ccache, enc?"encrypt-data":"decrypt-data", GG_KEYCLEARCACHE, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         make_mem(&password);
                         make_mem(&salt);
@@ -5876,7 +5995,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&type, "stat-file", GG_KEYTYPE, 0, 1);
                         carve_statement (&size, "stat-file", GG_KEYSIZE, 0, 1);
                         carve_statement (&mode, "stat-file", GG_KEYMODE, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
 
                         gg_num tot_opt = (path!=NULL?1:0)+(basename!=NULL?1:0)+(type!=NULL?1:0)+(size!=NULL?1:0)+(mode!=NULL?1:0);
@@ -5923,7 +6042,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&status, "utf-text", GG_KEYSTATUS, 0, 1);
                         carve_statement (&errt, "utf-text", GG_KEYERRORTEXT, 0, 1);
                         carve_statement (&to, "utf-text", GG_KEYTO, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         define_statement (&status, GG_DEFNUMBER, false);
                         define_statement (&errt, GG_DEFSTRING, false); // exact length set in glim_utf_to_text
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in glim_utf_to_text
@@ -5948,7 +6067,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *errt = find_keyword (mtext, GG_KEYERRORTEXT, 1);
                         carve_statement (&status, "text-utf", GG_KEYSTATUS, 0, 1);
                         carve_statement (&errt, "text-utf", GG_KEYERRORTEXT, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         define_statement (&status, GG_DEFNUMBER, false);
                         define_statement (&errt, GG_DEFSTRING, false); // exact length set in glim_text_to_utf
                         //
@@ -5975,7 +6094,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&status, "rename-file", GG_KEYSTATUS, 0, 1);
                         carve_statement (&to, "rename-file", GG_KEYTO, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         make_mem(&to);    
 
                         define_statement (&status, GG_DEFNUMBER, false);
@@ -6007,7 +6126,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&status, "delete-dir", GG_KEYSTATUS, 0, 1);
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
@@ -6040,7 +6159,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&status, "change-mode", GG_KEYSTATUS, 0, 1);
                         carve_statement (&mode, "change-mode", GG_KEYMODE, 1, 1);
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         check_var (&mode, GG_DEFNUMBER, NULL);
@@ -6072,7 +6191,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&status, "new-dir", GG_KEYSTATUS, 0, 1);
                         carve_statement (&mode, "new-dir", GG_KEYMODE, 0, 1);
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         check_var (&mode, GG_DEFNUMBER, NULL);
@@ -6106,7 +6225,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&status, "change-dir", GG_KEYSTATUS, 0, 1);
                         carve_statement (&home, "change-dir", GG_KEYHOME, 0, 0);
                         carve_statement (&edir, "change-dir", GG_KEYRUNDIR, 0, 0);
-                        if (home == NULL && edir == NULL) carve_stmt_obj (&mtext, true); else carve_stmt_obj (&mtext, false);
+                        if (home == NULL && edir == NULL) carve_stmt_obj (&mtext, true, true); else carve_stmt_obj (&mtext, false, false);
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
@@ -6142,7 +6261,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
 
                         carve_statement (&status, "delete-file", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
@@ -6197,7 +6316,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&cert, "call-web", GG_KEYCERT, 0, 1);
                         carve_statement (&nocert, "call-web", GG_KEYNOCERT, 0, 0);
                         carve_statement (&cookiejar, "call-web", GG_KEYCOOKIEJAR, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         make_mem(&cert);    
                         make_mem(&method);    
                         make_mem(&cookiejar);    
@@ -6366,7 +6485,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
                         if (gg_mode != GG_MODE_EXTENDED && gg_mode != GG_MODE_INTERNAL) gg_report_error ("call-extended statement cannot be used in safe mode, see *-mode statements");
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         // list of keywords for vim, picked up automatically
                         check_c (mtext);
                         oprintf("%s;\n", mtext);
@@ -6406,7 +6525,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //if sub name is a constant, check there's actually a source file to run it
                         check_sub (mtext); // this must be BEFORE carve_stmt_obj as it may create temp variable which is just some generated var name
                                            // it trims mtext, but we're about to do that anyway
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         check_var (&mtext, GG_DEFSTRING, NULL);
                         static gg_num call_handler_c = 0;
                         if (is_constant)
@@ -6430,7 +6549,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // for ALL of them
                         //
                         carve_statement (&temp, "uniq-file", GG_KEYTEMPORARY, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
 
                         //defines
                         define_statement (&mtext, GG_DEFSTRING, false); // exact length set in gg_make_document
@@ -6475,7 +6594,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&min, "get-time", GG_KEYMIN, 0, 1);
                         carve_statement (&sec, "get-time", GG_KEYSEC, 0, 1);
                         carve_statement (&format, "get-time", GG_KEYFORMAT, 0, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         make_mem(&timezone);    
                         make_mem(&format);    
@@ -6534,7 +6653,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&case_insensitive, "match-regex", GG_KEYCASEINSENSITIVE, 0, 2);
                         carve_statement (&utf, "match-regex", GG_KEYUTF, 0, 2);
                         carve_statement (&single_match, "match-regex", GG_KEYSINGLEMATCH, 0, 2);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         char *pattern = mtext;
 
                         make_mem(&in);
@@ -6619,7 +6738,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&osver, "get-sys", GG_KEYOSVERSION, 0, 0);
                         carve_statement (&to, "get-sys", GG_KEYTO, 1, 1);
                         carve_statement (&dir, "get-sys", GG_KEYDIRECTORY, 0, 0);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         make_mem(&env);
 
                         // result can be defined
@@ -6654,6 +6773,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *appdir = find_keyword (mtext, GG_KEYDIRECTORY, 1);
                         char *name = find_keyword (mtext, GG_KEYNAME0, 1);
                         char *tracedir = find_keyword (mtext, GG_KEYTRACEDIRECTORY, 1);
+                        char *rootdir = find_keyword (mtext, GG_KEYROOTDIRECTORY, 1);
                         char *filedir = find_keyword (mtext, GG_KEYFILEDIRECTORY, 1);
                         char *uploadsize = find_keyword (mtext, GG_KEYUPLOADSIZE, 1);
                         char *dbconfname = find_keyword (mtext, GG_KEYDBVENDOR, 1);
@@ -6669,20 +6789,21 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&name, "get-app", GG_KEYNAME0, 0, 0);
                         carve_statement (&appdir, "get-app", GG_KEYDIRECTORY, 0, 0);
                         carve_statement (&tracedir, "get-app", GG_KEYTRACEDIRECTORY, 0, 0);
+                        carve_statement (&rootdir, "get-app", GG_KEYROOTDIRECTORY, 0, 0);
                         carve_statement (&filedir, "get-app", GG_KEYFILEDIRECTORY, 0, 0);
                         carve_statement (&uploadsize, "get-app", GG_KEYUPLOADSIZE, 0, 0);
                         carve_statement (&dbconfname, "get-app", GG_KEYDBVENDOR, 0, 1);
                         carve_statement (&serv, "get-app", GG_KEYISSERVICE, 0, 0);
                         carve_statement (&apath, "get-app", GG_KEYPATH, 0, 0);
                         carve_statement (&to, "get-app", GG_KEYTO, 1, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         // result can be defined
                         if (uploadsize !=NULL) define_statement (&to, GG_DEFNUMBER, false);
                         else if (serv !=NULL) define_statement (&to, GG_DEFBOOL, false);
                         else define_statement (&to, GG_DEFSTRING, false); // exact length set with strdup below
 
-                        gg_num tot_opt = (serv!=NULL?1:0)+(appdir!=NULL?1:0)+(tracedir!=NULL?1:0)+(filedir!=NULL?1:0)+(apath!=NULL?1:0)+(uploadsize!=NULL?1:0)+(name!=NULL?1:0)+(dbconfname!=NULL?1:0);
+                        gg_num tot_opt = (serv!=NULL?1:0)+(appdir!=NULL?1:0)+(rootdir!=NULL?1:0)+(tracedir!=NULL?1:0)+(filedir!=NULL?1:0)+(apath!=NULL?1:0)+(uploadsize!=NULL?1:0)+(name!=NULL?1:0)+(dbconfname!=NULL?1:0);
                         if (tot_opt != 1)
                         {
                             gg_report_error( "Exactly one option must be in get-app statement");
@@ -6690,6 +6811,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         if (appdir !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->app.home_dir);\n", to); 
                         if (tracedir !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->app.trace_dir);\n", to); 
+                        if (rootdir !=NULL) oprintf ("%s=gg_strdup(gg_root);\n", to); 
                         if (filedir !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->app.file_dir);\n", to); 
                         if (uploadsize !=NULL) oprintf ("%s=gg_get_config()->app.max_upload_size;\n", to); 
                         if (name !=NULL) oprintf ("%s=gg_strdup(gg_app_name);\n", to); 
@@ -6748,7 +6870,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&eno, "get-req", GG_KEYERRNO, 0, 0);
                         carve_statement (&err, "get-req", GG_KEYERROR, 0, 0);
                         carve_statement (&to, "get-req", GG_KEYTO, 1, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         make_mem(&header);
 
@@ -6810,7 +6932,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&base, "string-number", GG_KEYBASE, 0, 1); 
                         carve_statement (&st, "string-number", GG_KEYSTATUS, 0, 1);
                         
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         define_statement (&to, GG_DEFNUMBER, false);
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
@@ -6834,7 +6956,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&to, "number-string", GG_KEYTO, 0, 1);  
                         carve_statement (&base, "number-string", GG_KEYBASE, 0, 1); 
                         carve_statement (&st, "number-string", GG_KEYSTATUS, 0, 1); 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_num2str
                         define_statement (&st, GG_DEFNUMBER, false);
                         check_var (&mtext, GG_DEFNUMBER, NULL);
@@ -6859,7 +6981,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //GG_GUARD
                         i = newI1+newI2;
 
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         //
                         // 
                         // Note that FREEFORM is ***ONLY*** for internal use and testing and IS NOT SUPPORTED officially.
@@ -6877,7 +6999,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         oprintf ("gg_flush_out();\n");
 
                         continue;
@@ -6930,7 +7052,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         if (comma == NULL && !trace_none) {comma = mtext; mtext=gg_strdup("\"%s\"");} // make up format for gcc, format must be dynamic as it will be carved
                         char *format = mtext; // since mtext will become a generated variable below in carve_stmt_obj
-                        carve_stmt_obj (&mtext, trace_none?false:true); // mtext is format
+                        carve_stmt_obj (&mtext, trace_none?false:true, true); // mtext is format
                         if (trace) oprintf("GG_UNUSED(%s);\n", mtext); // if trace with some string, this string will be unused if not DEBUG
 
 
@@ -7007,7 +7129,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&copyend, "replace-string", GG_KEYCOPYEND, 0, 1);
                         carve_statement (&swith, "replace-string", GG_KEYSTARTWITH, 0, 1);
                         carve_statement (&len, "replace-string", GG_KEYLENGTH, 0, 1);
-                        carve_stmt_obj (&mtext, true); // this has make_mem built in
+                        carve_stmt_obj (&mtext, true, true); // this has make_mem built in
                         //
                         make_mem(&copy);
                         make_mem(&copyend);
@@ -7035,7 +7157,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&to, "copy-string", GG_KEYTO, 1, 1);
                         carve_statement (&swith, "copy-string", GG_KEYSTARTWITH, 0, 1);
                         carve_statement (&len, "copy-string", GG_KEYLENGTH, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_copy_string
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
@@ -7059,7 +7181,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&secure, "delete-cookie", GG_KEYSECURE, 0, 2);
                         carve_statement (&path, "delete-cookie", GG_KEYPATH, 0, 1);
                         carve_statement (&st, "delete-cookie", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         make_mem(&path);
                         define_statement (&st, GG_DEFNUMBER, false);
                         char *secc = opt_clause(secure, "\"Secure; \"", "\"\"", GG_DEFSTRING);
@@ -7078,7 +7200,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         if (gg_is_valid_param_name(mtext, false, false) != 1) gg_report_error(GG_NAME_INVALID, mtext);
                         define_statement (&mtext, GG_DEFSTRING, true);
 
@@ -7111,7 +7233,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             carve_statement (&nohttponly, "set-cookie", GG_KEYNOHTTPONLY, 0, 2);
                             carve_statement (&secure, "set-cookie", GG_KEYSECURE, 0, 2); // may have data
                             carve_statement (&eq, "set-cookie", GG_KEYEQUALSHORT, 1, 1);
-                            carve_stmt_obj (&mtext, true);
+                            carve_stmt_obj (&mtext, true, true);
                             make_mem(&exp);
                             make_mem(&path);
                             make_mem(&eq);
@@ -7153,7 +7275,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                                                                       //
                             char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
                             if (eq != NULL) carve_statement (&eq, "get-cookie", GG_KEYEQUALSHORT, 1, 1);
-                            carve_stmt_obj (&mtext, true);
+                            carve_stmt_obj (&mtext, true, false);
                             make_mem(&eq);
 
                             define_statement (&mtext, GG_DEFSTRING, false); // exact length set via strdup in gg_find_cookie
@@ -7181,7 +7303,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             char *type = find_keyword (mtext, GG_KEYTYPE, 1);
                             carve_statement (&type, "get-param", GG_KEYTYPE, 0, 1);
                             if (type != NULL) trimit (type); // type has to match
-                            carve_stmt_obj (&mtext, true);
+                            carve_stmt_obj (&mtext, true, false);
                             save_param (mtext);
 
                             gg_num t;
@@ -7229,7 +7351,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
 
                             carve_statement (&eq, "set-param", GG_KEYEQUALSHORT, 0, 1);
-                            carve_stmt_obj (&mtext, true);
+                            carve_stmt_obj (&mtext, true, false);
                             if (gg_is_valid_param_name(mtext, false, false) != 1) gg_report_error( "parameter name [%s] is not valid, it can have only alphanumeric characters and underscores, and must start with an alphabet character", mtext);
                             save_param (mtext);
 
@@ -7258,7 +7380,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //No checking if this is within a block, since this is function ending
                         //GG_GUARD
                         i = newI + newI1;
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         if (!done_handler)
                         {
@@ -7276,7 +7398,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                         //GG_GUARD
                         i = newI;
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         match_file (file_name, "after_handler");
                         if (after_ended || after_started) gg_report_error ("after-handler already found");
                         after_started = true;
@@ -7288,7 +7410,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                         //GG_GUARD
                         i = newI;
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         match_file (file_name, "before_handler");
                         if (before_ended || before_started) gg_report_error ("before-handler already found");
                         before_started = true;
@@ -7300,7 +7422,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                         //GG_GUARD
                         i = newI;
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         if (!after_started || after_ended) gg_report_error ("found end-after-handler without after-handler to begin with, or already found prior to here");
                         after_ended = true;
                         oprintf ("}\n");
@@ -7310,7 +7432,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                         //GG_GUARD
                         i = newI;
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         if (!before_started || before_ended) gg_report_error ("found end-before-handler without before-handler to begin with, or already found prior to here");
                         before_ended = true;
                         oprintf ("}\n");
@@ -7338,7 +7460,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
 
                         done_handler = true;
-                        gg_num mlen = carve_stmt_obj (&mtext, true);
+                        gg_num mlen = carve_stmt_obj (&mtext, true, false);
                         static char reqname[GG_MAX_REQ_NAME_LEN];
 
                         if (mtext[0] != '/') gg_report_error ("request path must start with forward slash ('/')");
@@ -7366,7 +7488,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("void %s () {\n", reqname);
                         if (priv != NULL)
                         {
-                            oprintf ("if (!gg_get_config()->ctx.req->sub) gg_report_error(\"This service [%s] can only be called as call-handler\");\n", mtext);
+                            oprintf ("if (!gg_get_config()->ctx.req->sub) gg_report_error(\"This service [%s] can only be called as call-handler. If you wish to call this handler from an outside caller, either use 'public' in begin-handler, or to make all handlers public, use '--public' with '-q' when making the application.\");\n", mtext);
                             gg_is_sub = true;
                         }
 
@@ -7380,7 +7502,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *ps = find_keyword (mtext, GG_KEYPROCESSSCOPE, 0);
                         carve_statement (&eq, "set-bool", GG_KEYEQUALSHORT, 0, 1);
                         carve_statement (&ps, "set-bool", GG_KEYPROCESSSCOPE, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         gg_num is_def;
                         // if defined, it's always false
                         if (ps != NULL) is_def = define_statement (&mtext, GG_DEFBOOLSTATIC, false);
@@ -7424,7 +7546,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *ps = find_keyword (mtext, GG_KEYPROCESSSCOPE, 0);
                         carve_statement (&eq, "set-number", GG_KEYEQUALSHORT, 0, 1); // not mandatory because when add/multiply-by used, there's no =
                         carve_statement (&ps, "set-number", GG_KEYPROCESSSCOPE, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         gg_num is_def;
                         // by default always 0
                         if (ps != NULL) is_def = define_statement (&mtext, GG_DEFNUMBERSTATIC, false);
@@ -7486,7 +7608,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&eq, "set-string", GG_KEYEQUALSHORT, 0, 1);
                         carve_statement (&ps, "set-string", GG_KEYPROCESSSCOPE, 0, 0);
                         carve_statement (&unq, "set-string", GG_KEYUNQUOTED, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         gg_num is_def;
 
                         // check for str[]
@@ -7546,7 +7668,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (unq && eq != empty) make_unq (&eq); 
                         else 
                         {
-                            oprintf("GG_IS_STRING(%s);\n", eq);
                             make_mem (&eq);
                         }
                         check_var (&eq, GG_DEFSTRING, NULL);
@@ -7630,7 +7751,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             }
                             else
                             {
-                                carve_stmt_obj (&mtext, true); // for || && ( or ) there is no mtext (cm), only for not-equal or equal 
+                                carve_stmt_obj (&mtext, true, true); // for || && ( or ) there is no mtext (cm), only for not-equal or equal 
                                                              // we check for this kind of correctness down here
                                 // if else-string, then open_ifs is +1 from when if-string was done, so open_ifs-1 is correct
                                 if (open_ifs <= 0) gg_report_error( "else-if found without an open if-true");
@@ -7647,7 +7768,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         else
                         {
-                            carve_stmt_obj (&mtext, false); // do not expect anything for else-if without condition
+                            carve_stmt_obj (&mtext, false, false); // do not expect anything for else-if without condition
                             // if else-string, then open_ifs is +1 from when if-string was done, so open_ifs-1 is correct
                             if (open_ifs <= 0) gg_report_error( "else-if found without an open if-true");
                             // open_ifs gets decreased by 1 (closing prior to else) and then increases by one (in opening after else) so stays the same
@@ -7682,7 +7803,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         //
                         check_var (&mtext, GG_DEFSTRING, NULL);
                         //
@@ -7704,7 +7825,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *value = find_keyword (mtext, GG_KEYVALUE, 1);
                         carve_statement (&key, "write-message", GG_KEYKEY, 1, 1);
                         carve_statement (&value, "write-message", GG_KEYVALUE, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         make_mem(&key);
                         make_mem(&value);
                         //
@@ -7729,7 +7850,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&key, "read-message", GG_KEYKEY, 0, 1);
                         carve_statement (&value, "read-message", GG_KEYVALUE, 0, 1);
                         carve_statement (&st, "read-message", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         define_statement (&key, GG_DEFSTRING, false);
                         define_statement (&value, GG_DEFSTRING, false);
                         define_statement (&st, GG_DEFNUMBER, false);
@@ -7748,7 +7869,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         char *to = find_keyword (mtext, GG_KEYTO, 1);
                         carve_statement (&to, "get-message", GG_KEYTO, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         define_statement (&to, GG_DEFSTRING, false); // exact length set below with gg_get_msg
                         //
                         check_var (&mtext, GG_DEFMSG, NULL);
@@ -7769,7 +7890,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         char *from = find_keyword (mtext, GG_KEYFROM, 1);
                         carve_statement (&from, "new-message", GG_KEYFROM, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         make_mem(&from);
                         define_statement (&mtext, GG_DEFMSG, true);
                         //
@@ -7791,7 +7912,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&to, "read-split", GG_KEYTO, 1, 1);
                         carve_statement (&from, "read-split", GG_KEYFROM, 1, 1);
                         carve_statement (&st, "read-split", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set below with strdup/GG_EMPTY_STRING
                         define_statement (&st, GG_DEFNUMBER, false);
@@ -7834,9 +7955,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (del != NULL) 
                         {
                             carve_statement (&del, "split-string", GG_KEYDELETE, 0, 1);
-                            carve_stmt_obj (&mtext, false);
+                            carve_stmt_obj (&mtext, false, false);
                         }
-                        else carve_stmt_obj (&mtext, true);
+                        else carve_stmt_obj (&mtext, true, true);
 
                         if (to != NULL) define_statement (&to, GG_DEFBROKEN, true);
                         if (count != NULL) define_statement (&count, GG_DEFNUMBER, false);
@@ -7858,7 +7979,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
 
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         check_var (&mtext, GG_DEFUNKN, NULL); // just check variable is known, we don't care about type
                         oprintf("GG_UNUSED (%s);\n", mtext);
                         continue;
@@ -7873,7 +7994,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&process, "new-list", GG_KEYPROCESSSCOPE, 0, 0);
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         if (process) define_statement (&mtext, GG_DEFLISTSTATIC, true); else define_statement (&mtext, GG_DEFLIST, true);
                         oprintf("gg_mem_process=%s;\n", process?"true":"false");
                         oprintf ("gg_list_init (&(%s), %s);\n", mtext, process?"true":"false");
@@ -7895,7 +8016,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&key, "write-list", GG_KEYKEY, 1, 1);
                         carve_statement (&value, "write-list", GG_KEYVALUE, 1, 1);
                         carve_statement (&append, "write-list", GG_KEYAPPEND, 0, 2);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         make_mem (&key);
                         make_mem (&value);
 
@@ -7929,7 +8050,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&updkey, "read-list", GG_KEYUPDATEKEY, 0, 1);
                         carve_statement (&st, "read-list", GG_KEYSTATUS, 0, 1);
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         make_mem(&upd);
                         make_mem(&updkey);
 
@@ -7996,7 +8117,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&prev, "position-list", GG_KEYPREVIOUS, 0, 0);
                         carve_statement (&next, "position-list", GG_KEYNEXT, 0, 0);
                         carve_statement (&st, "position-list", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
@@ -8051,7 +8172,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         //
                         check_var (&mtext, GG_DEFLIST, NULL);
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
@@ -8067,7 +8188,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
                         char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
                         carve_statement (&st, "delete-list", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
                         check_var (&mtext, GG_DEFLIST, NULL);
@@ -8086,7 +8207,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI+newI1;
                         bool lifo = (newI1 != 0);
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         define_statement (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, true);
                         oprintf ("gg_store_init (&(%s));\n", mtext);
 
@@ -8105,7 +8226,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&key, "write-fifo", GG_KEYKEY, 1, 1);
                         carve_statement (&value, "write-fifo", GG_KEYVALUE, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         make_mem(&key);
                         make_mem(&value);
                         //
@@ -8126,7 +8247,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI+newI1;
                         bool lifo = (newI1 != 0);
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         //
                         check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
                         oprintf ("gg_rewind (%s);\n", mtext);
@@ -8141,7 +8262,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI+newI1;
                         bool lifo = (newI1 != 0);
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         //
                         check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
                         oprintf ("gg_fifo_delete (%s);\n", mtext);
@@ -8156,7 +8277,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI+newI1;
                         bool lifo = (newI1 != 0);
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         //
                         check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
                         oprintf ("gg_purge (&(%s));\n", mtext);
@@ -8178,7 +8299,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&key, "read-fifo", GG_KEYKEY, 1, 1);
                         carve_statement (&value, "read-fifo", GG_KEYVALUE, 1, 1);
                         carve_statement (&st, "read-fifo", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         define_statement (&key, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_retrieve
                         define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_retrieve
@@ -8208,7 +8329,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&status, "write-file", GG_KEYSTATUS, 0, 1);
                         carve_statement (&pos, "write-file", GG_KEYPOSITION, 0, 1);
                         carve_statement (&fileid, "write-file", GG_KEYFILEID, 0, 1);
-                        if (fileid == NULL) carve_stmt_obj (&mtext, true); else carve_stmt_obj (&mtext, false); 
+                        if (fileid == NULL) carve_stmt_obj (&mtext, true, true); else carve_stmt_obj (&mtext, false, false); 
                         make_mem(&from);
 
                         define_statement (&status, GG_DEFNUMBER, false);
@@ -8253,7 +8374,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&pos, "read-file", GG_KEYPOSITION, 0, 1);
                         carve_statement (&length, "read-file", GG_KEYLENGTH, 0, 1);
                         carve_statement (&fileid, "read-file", GG_KEYFILEID, 0, 1);
-                        if (fileid == NULL) carve_stmt_obj (&read_from, true); else carve_stmt_obj (&read_from, false);
+                        if (fileid == NULL) carve_stmt_obj (&read_from, true, true); else carve_stmt_obj (&read_from, false, false);
 
                         define_statement (&eof, GG_DEFBOOL, false);
                         define_statement (&status, GG_DEFNUMBER, false);
@@ -8287,7 +8408,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&size, "get-hash", GG_KEYHASHSIZE, 0, 1);
                         carve_statement (&len, "get-hash", GG_KEYLENGTH, 0, 1);
                         carve_statement (&reads, "get-hash", GG_KEYAVERAGEREADS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         define_statement (&len, GG_DEFNUMBER, false);
                         define_statement (&size, GG_DEFNUMBER, false);
                         define_statement (&reads, GG_DEFNUMBER, false);
@@ -8308,7 +8429,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         //
                         check_var (&mtext, GG_DEFHASH, NULL);
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
@@ -8323,7 +8444,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *size = find_keyword (mtext, GG_KEYHASHSIZE, 1);
 
                         carve_statement (&size, "resize-hash", GG_KEYHASHSIZE, 1, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         //
                         check_var (&mtext, GG_DEFHASH, NULL);
                         check_var (&size, GG_DEFNUMBER, NULL);
@@ -8342,7 +8463,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&maxsize, "new-array", GG_KEYMAXSIZE, 0, 1);
                         carve_statement (&process, "new-array", GG_KEYPROCESSSCOPE, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         if (process) define_statement (&mtext, GG_DEFARRAYSTATIC, true); else define_statement (&mtext, GG_DEFARRAY, true);
                         //
                         check_var (&maxsize, GG_DEFNUMBER, NULL);
@@ -8361,7 +8482,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&size, "new-hash", GG_KEYHASHSIZE, 0, 1);
                         carve_statement (&process, "new-hash", GG_KEYPROCESSSCOPE, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         if (process) define_statement (&mtext, GG_DEFHASHSTATIC, true); else define_statement (&mtext, GG_DEFHASH, true);
                         //
                         check_var (&size, GG_DEFNUMBER, NULL);
@@ -8384,7 +8505,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&val, "write-array", GG_KEYVALUE, 1, 1);
                         carve_statement (&oldd, "write-array", GG_KEYOLDVALUE, 0, 1);
                         carve_statement (&st, "write-array", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         define_statement (&oldd, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_add_hash with GG_EMPTY_STRING
                         define_statement (&st, GG_DEFNUMBER, false);
                         make_mem (&val);
@@ -8405,7 +8526,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         //
                         check_var (&mtext, GG_DEFARRAY, NULL);
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
@@ -8427,7 +8548,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&val, "read-array", GG_KEYVALUE, 1, 1);
                         carve_statement (&st, "read-array", GG_KEYSTATUS, 0, 1);
                         carve_statement (&del, "read-array", GG_KEYDELETE0, 0, 2);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         char *delc = opt_clause(del, "true", "false", GG_DEFBOOL);
 
@@ -8467,7 +8588,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&val, "write-hash", GG_KEYVALUE, 1, 1);
                         carve_statement (&oldd, "write-hash", GG_KEYOLDVALUE, 0, 1);
                         carve_statement (&st, "write-hash", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         define_statement (&oldd, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_add_hash with GG_EMPTY_STRING
                         define_statement (&st, GG_DEFNUMBER, false);
                         make_mem (&key);
@@ -8518,7 +8639,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         carve_statement (&st, "read-hash", GG_KEYSTATUS, 0, 1);
                         carve_statement (&del, "read-hash", GG_KEYDELETE0, 0, 2);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         if (trav == NULL)
                         {
                             make_mem(&key);
@@ -8597,7 +8718,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&val, "read-json", GG_KEYVALUE, 0, 1);
                         carve_statement (&type, "read-json", GG_KEYTYPE, 0, 1);
                         carve_statement (&next, "read-json", GG_KEYNEXT, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         define_statement (&key, GG_DEFSTRING, false); 
                         define_statement (&val, GG_DEFSTRING, false); 
@@ -8643,7 +8764,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&val, "read-xml", GG_KEYVALUE, 0, 1);
                         carve_statement (&next, "read-xml", GG_KEYNEXT, 0, 0);
                         carve_statement (&st, "read-xml", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         define_statement (&key, GG_DEFSTRING, false); 
                         define_statement (&val, GG_DEFSTRING, false); 
@@ -8703,7 +8824,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             carve_statement (&noenum, "json-doc", GG_KEYNOENUM, 0, 0);
                             carve_statement (&len, "json-doc", GG_KEYLENGTH, 0, 1);
                             carve_statement (&to, "json-doc", GG_KEYTO, 0, 1);
-                            carve_stmt_obj (&mtext, true);
+                            carve_stmt_obj (&mtext, true, true);
                             define_statement (&errt, GG_DEFSTRING, false);
                             define_statement (&status, GG_DEFNUMBER, false);
                             define_statement (&errp, GG_DEFNUMBER, false);
@@ -8716,7 +8837,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (del != NULL) 
                         {
                             carve_statement (&del, "json-doc", GG_KEYDELETE, 0, 1);
-                            carve_stmt_obj (&mtext, false);
+                            carve_stmt_obj (&mtext, false, false);
                             check_var (&del, GG_DEFJSON, NULL);
                         }
 
@@ -8773,7 +8894,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             carve_statement (&errl, "xml-doc", GG_KEYERRORLINE, 0, 1);
                             carve_statement (&len, "xml-doc", GG_KEYLENGTH, 0, 1);
                             carve_statement (&to, "xml-doc", GG_KEYTO, 0, 1);
-                            carve_stmt_obj (&mtext, true);
+                            carve_stmt_obj (&mtext, true, true);
                             define_statement (&errt, GG_DEFSTRING, false);
                             define_statement (&status, GG_DEFNUMBER, false);
                             define_statement (&errl, GG_DEFNUMBER, false);
@@ -8785,7 +8906,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (del != NULL) 
                         {
                             carve_statement (&del, "xml-doc", GG_KEYDELETE, 0, 1);
-                            carve_stmt_obj (&mtext, false);
+                            carve_stmt_obj (&mtext, false, false);
                             check_var (&del, GG_DEFXML, NULL);
                         }
 
@@ -8834,7 +8955,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&keyas, "new-tree", GG_KEYKEYAS, 0, 1);
                         carve_statement (&unsorted, "new-tree", GG_KEYUNSORTED, 0, 0);
                         carve_statement (&process, "new-tree", GG_KEYPROCESSSCOPE, 0, 0);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         if (process) define_statement (&mtext, GG_DEFTREESTATIC, true); else define_statement (&mtext, GG_DEFTREE, true);
                         //
@@ -8863,7 +8984,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *count = find_keyword (mtext, GG_KEYCOUNT, 1);
 
                         carve_statement (&count, "get-list", GG_KEYCOUNT, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         if (count != NULL) define_statement (&count, GG_DEFNUMBER, false);
                         //
@@ -8884,7 +9005,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&count, "get-tree", GG_KEYCOUNT, 0, 1);
                         carve_statement (&hops, "get-tree", GG_KEYHOPS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         if (count != NULL) define_statement (&count, GG_DEFNUMBER, false);
                         if (hops != NULL) define_statement (&hops, GG_DEFNUMBER, false);
@@ -8922,7 +9043,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&value, "write-tree", GG_KEYVALUE, 1, 1);
                         carve_statement (&status, "write-tree", GG_KEYSTATUS, 0, 1);
                         carve_statement (&ccursor, "write-tree", GG_KEYNEWCURSOR, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         define_statement (&ccursor, GG_DEFTREECURSOR, true);
@@ -8987,7 +9108,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&upd, "read-tree", GG_KEYUPDATEVALUE, 0, 1);
                         carve_statement (&getkey, "read-tree", GG_KEYKEY, 0, 1);
                         // End read-tree
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         define_statement (&ccursor, GG_DEFTREECURSOR, true);
                         define_statement (&status, GG_DEFNUMBER, false);
@@ -9102,7 +9223,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&key, "delete-tree", GG_KEYKEY, 1, 1);
                         carve_statement (&status, "delete-tree", GG_KEYSTATUS, 0, 1);
                         carve_statement (&value, "delete-tree", GG_KEYVALUE, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
                         make_mem(&key);
 
                         define_statement (&status, GG_DEFNUMBER, false);
@@ -9163,7 +9284,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&upd, "use-cursor", GG_KEYUPDATEVALUE, 0, 1);
                         carve_statement (&getkey, "use-cursor", GG_KEYKEY, 0, 1);
                         // End read-tree
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, false);
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         // Begin read-tree
@@ -9229,7 +9350,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         if (do_once_open) gg_report_error ("Cannot use do-once inside another do-once statement");
                         do_once_open = true;
                         do_once_line = lnum;
@@ -9251,7 +9372,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         do_once_open = false;
 
                         check_level ("}"); // end new scope for do-once
@@ -9271,7 +9392,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *status = find_keyword (mtext, GG_KEYSTATUS, 1);
                         carve_statement (&copy_to, "copy-file", GG_KEYTO, 1, 1);
                         carve_statement (&status, "copy-file", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true);
+                        carve_stmt_obj (&mtext, true, true);
                         make_mem(&copy_to);
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
@@ -9289,7 +9410,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
 
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         oprintf("gg_SERVICE_Finish();\n");
                         oprintf("gg_disable_output();\n");
                         continue;
@@ -9311,7 +9432,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         if (newI1 != 0) 
                         {
-                            carve_stmt_obj (&mtext, true);
+                            carve_stmt_obj (&mtext, true, false);
                             oprintf("gg_get_config ()->ctx.req->ec=(%s);\n", mtext);
                         }
 
@@ -9332,7 +9453,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&get, "file-position", GG_KEYGET, 0, 1);
                         carve_statement (&set, "file-position", GG_KEYSET, 0, 1);
                         carve_statement (&status, "file-position", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
 
                         define_statement (&get, GG_DEFNUMBER, false);
                         define_statement (&status, GG_DEFNUMBER, false);
@@ -9357,7 +9478,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_statement (&fileid, "close-file", GG_KEYFILEID, 1, 1);
                         carve_statement (&st, "close-file", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, false);
+                        carve_stmt_obj (&mtext, false, false);
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
                         check_var (&fileid, GG_DEFFILE, NULL);
@@ -9383,7 +9504,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&newt, "open-file", GG_KEYNEWTRUNCATE, 0, 0);
                         carve_statement (&fileid, "open-file", GG_KEYFILEID, 1, 1);
                         carve_statement (&st, "open-file", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true); 
+                        carve_stmt_obj (&mtext, true, true); 
 
                         define_statement (&fileid, GG_DEFFILE, true);
                         define_statement (&st, GG_DEFNUMBER, false);
@@ -9430,7 +9551,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             notrim = find_keyword (mtext, GG_KEYNOTRIM, 1);
                             carve_statement (&notrim, "end-write-string", GG_KEYNOTRIM, 0, 0);
                         }
-                        carve_stmt_obj (&mtext, false); 
+                        carve_stmt_obj (&mtext, false, false); 
                         if (notrim != NULL)
                         {
                             oprintf("gg_write_to_string_notrim();\n");
@@ -9453,7 +9574,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                             gg_report_error( "Cannot use write-string as inline code");
                         }
-                        carve_stmt_obj (&mtext, true); 
+                        carve_stmt_obj (&mtext, true, false); 
 
                         define_statement (&mtext, GG_DEFSTRING, false); // exact length set in gg_write_to_string
 
@@ -9475,7 +9596,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&to, "read-line", GG_KEYTO, 1, 1);
                         carve_statement (&del, "read-line", GG_KEYDELIMITER, 0, 1);
                         carve_statement (&len, "read-line", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true); 
+                        carve_stmt_obj (&mtext, true, true); 
 
                         define_statement (&to, GG_DEFSTRING, false);
                         define_statement (&len, GG_DEFNUMBER, false);
@@ -9519,7 +9640,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
-                        carve_stmt_obj (&mtext, false); 
+                        carve_stmt_obj (&mtext, false, false); 
                         // must assign "" in the loop, checking after loop for this pointer in case there was a break from the loop, but by setting to ""
                         // here, we won't free again
                         oprintf ("if (gg_rl_local_memptr_%ld!=GG_EMPTY_STRING) {gg_free_int (gg_rl_local_memptr_%ld); gg_rl_local_memptr_%ld = GG_EMPTY_STRING;}\n", open_readline-1, open_readline-1, open_readline-1);
@@ -9868,9 +9989,9 @@ int main (int argc, char* argv[])
     gg_is_valid_app_path(app_path);
 
     gg_bld_dir = (char*)gg_malloc (GG_FILE_NAME_LEN);
-    int bld_path_len = snprintf (gg_bld_dir, GG_FILE_NAME_LEN, "/var/lib/gg/bld/%s", gg_app_name) + 1;
+    int bld_path_len = snprintf (gg_bld_dir, GG_FILE_NAME_LEN, GG_ROOT "/var/lib/gg/bld/%s", gg_app_name) + 1;
     gg_dbconf_dir = (char*)gg_malloc (GG_FILE_NAME_LEN);
-    snprintf (gg_dbconf_dir, GG_FILE_NAME_LEN, "/var/lib/gg/%s/app/db", gg_app_name);
+    snprintf (gg_dbconf_dir, GG_FILE_NAME_LEN, GG_ROOT "/var/lib/gg/%s/app/db", gg_app_name);
 
     // turn off safe mode for generated code, which is safe by design
     if (gg_mode!=GG_MODE_INTERNAL && (_main == 1 || !strcmp (src_file_name + bld_path_len, "gg_dispatch_request.golf"))) gg_mode=GG_MODE_INTERNAL;
@@ -9953,8 +10074,6 @@ int main (int argc, char* argv[])
     sz = sz/10;
     if (sz < 100) sz = 100;
     gg_create_hash (&gg_varh, sz, NULL, false);
-    add_var ("gg_source_line", GG_DEFNUMBER, NULL);
-    add_var ("gg_source_file", GG_DEFSTRING, NULL);
     add_var ("true", GG_DEFBOOL, NULL);
     add_var ("false", GG_DEFBOOL, NULL);
     //
@@ -10208,6 +10327,7 @@ int main (int argc, char* argv[])
         oprintf ("bool gg_false = false;\n");
         oprintf ("bool gg_path_changed = false;\n");
         oprintf("gg_num gg_max_upload=%ld;\n", gg_max_upload);
+        oprintf("char *gg_root;\n");
         // The following are static variables, i.e. those that need not be seen outside this module
         oprintf ("static gg_db_connections gg_dbs;\n");
         oprintf("static gg_num gg_done_init=0;\n");
@@ -10231,6 +10351,12 @@ int main (int argc, char* argv[])
         setup_internal_hash(".gg_sparam","gg_paramhash", false); // setup hash for list of set-params
 
         oprintf("gg_memory_init();\n");
+        //
+        // Set gg_root, this is a constant that will only be available as a copy, just like all other system/app/request information
+        // This way such information is stable and cannot be changed by the user (part of memory safety)
+        //
+        oprintf ("gg_root = GG_ROOT;\n");
+
         oprintf("umask (077);\n");
         // user-only permissions is used for new dir/files (i.e. mask of 077 which is 700)
         oprintf("gg_get_tz ();\n");
