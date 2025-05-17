@@ -12,7 +12,7 @@ You must have git installed. Get Golf source code for the latest version:
 .RS 4
 .EX
 
-sudo pacman -Sy --noconfirm wget
+sudo pacman -Sy --noconfirm wget tar
 wget "https://github.com/golf-lang/golf/archive/refs/heads/main.tar.gz" -O main.tar.gz
 tar xvfz main.tar.gz
 cd golf-main

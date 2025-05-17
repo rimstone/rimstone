@@ -13,7 +13,7 @@ Get Golf source code for the latest version:
 .EX
 
 sudo apt update
-sudo apt -y install wget
+sudo apt -y install wget tar
 wget "https://github.com/golf-lang/golf/archive/refs/heads/main.tar.gz" -O main.tar.gz
 tar xvfz main.tar.gz
 cd golf-main
@@ -33,7 +33,7 @@ mv debian-upstream debian
 
 sudo apt update
 sudo apt -y install devscripts equivs build-essential 
-yes|mk-build-deps -i -s sudo debian/control
+yes|mk-build-deps -i -s sudo debian-upstream/control
 
 .EE
 .RE

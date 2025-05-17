@@ -37,7 +37,7 @@ Golf is a programming language and  application server for building web services
 .B CURRENT VERSION
 .LP
 
-Current version is 534. This release passed 2418 automated functional tests.
+Current version is 5.3.11. This release passed 2418 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -51,6 +51,12 @@ Example of Golf code (from \fBSaaS example\fP):
 .LP
 
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-05-17 \fBGolf 5.3.11 released\fP
+.RE
+
 
 .RS 4
 \[bu]    

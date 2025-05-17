@@ -17,12 +17,13 @@ Golf is a programming language and  application server for building web services
 [OpenSUSE](https://golf-lang.com//install-in-any-folder-opensuse.html)
 [Arch, Manjaro](https://golf-lang.com//install-in-any-folder-arch-manjaro.html)
 ## Current version
-Current version is 534\. This release passed 2418 automated functional tests\.
+Current version is 5\.3\.11\. This release passed 2418 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 ## Articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
+* 2025\-05\-17 [Golf 5\.3\.11 released](https://golf-lang.blogspot.com/2025/05/golf-5311-released.html)
 * 2025\-05\-13 [How to write Web Service API with Golf](https://golf-lang.blogspot.com/2025/05/how-to-write-web-service-api-with-golf.html)
 * 2025\-05\-08 [Random numbers in Golf](https://golf-lang.blogspot.com/2025/05/random-numbers-in-golf.html)
 * 2025\-05\-03 [Working with debug symbols on Fedora etc\.](https://golf-lang.blogspot.com/2025/05/working-with-debug-symbols-on-fedora-etc.html)

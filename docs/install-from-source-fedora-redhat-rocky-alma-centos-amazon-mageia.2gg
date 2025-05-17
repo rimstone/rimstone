@@ -12,7 +12,7 @@ Get Golf source code for the latest version:
 .RS 4
 .EX
 
-sudo dnf -y install wget
+sudo dnf -y install wget tar
 wget "https://github.com/golf-lang/golf/archive/refs/heads/main.tar.gz" -O main.tar.gz
 tar xvfz main.tar.gz
 cd golf-main

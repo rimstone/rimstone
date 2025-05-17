@@ -153,13 +153,19 @@ _LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) -Wl,--enable-new-dtags
 
 
 #libs are always specified *after* the object where they're needed. Link flags (including -L) go first.
-
+#$@ is a file generated to hold all input files, and passed to gcc as "in file" via @. Since $@ is already in GG_BLD, can't prefix with $GG_BLD
+#as it would be inaccurate (double path). gcc requires file with each item on a single line, hence foreach. This avoids 2-4000 files limit for
+#a Golf application, and makes it effectively unlimited.
 $(GG_BLD)/$(GG_C_NAME).srvc: $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) $(GG_BLD)/gg_dispatch_request.o
-	$(_CC) -o $@ $^ $(_LFLAGS) $(GG_EVENT_STUBS) -lsrvcgolf -lfcgi $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
+	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
+	$(_CC) -o $@ @$@.inarg $(_LFLAGS) $(GG_EVENT_STUBS) -lsrvcgolf -lfcgi $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
 	$(call strip_sym)
+	rm -f $@.inarg
 
 $(GG_BLD)/$(GG_C_NAME): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) $(GG_BLD)/gg_dispatch_request.o
-	$(_CC) -o $@ $^ $(_LFLAGS) $(GG_EVENT_STUBS) -lgolf $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
+	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
+	$(_CC) -o $@ @$@.inarg $(_LFLAGS) $(GG_EVENT_STUBS) -lgolf $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
 	$(call strip_sym)
+	rm -f $@.inarg
 
 

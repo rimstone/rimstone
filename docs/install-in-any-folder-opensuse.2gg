@@ -49,7 +49,7 @@ make -j$(nproc) GG_LOCAL=1 DESTDIR="$GG_ROOT"
 .EE
 .RE
 
-And install the source:
+And install Golf:
 
 .RS 4
 .EX
@@ -59,22 +59,25 @@ make GG_LOCAL=1 DESTDIR="$GG_ROOT" install
 .EE
 .RE
 
-In order for the installation to take effect, be sure to add these exports to the end of your $HOME/.bashrc file, so that they will be there when you log on again:
+In order for the installation to take effect, you must update paths (so executables and other files, such as man pages, are found):
 
 .RS 4
 .EX
 
-echo 'GG_ROOT="$HOME/.app/golf"
+export GG_ROOT="$HOME/.app/golf"
 export PATH="$GG_ROOT/usr/bin":$PATH
 export C_INCLUDE_PATH="$GG_ROOT/usr/include":$C_INCLUDE_PATH
-export MANPATH=$GG_ROOT/share/man/:$MANPATH' >> $HOME/.bashrc
+export MANPATH=$GG_ROOT/usr/share/man/:$MANPATH
+mandb
 
 .EE
 .RE
 
-You've installed Golf! 
+To make these path settings permanent, add the above exports to the end of your $HOME/.bashrc file so it runs when you start a new session (or in any other file you execute before working with Golf).
 
-Now, just log off, and log on again. To test, just type in command line:
+You've installed Golf!
+
+To test, type in command line:
 
 .RS 4
 .EX
