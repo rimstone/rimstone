@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "5.3.11"
+#define GG_VERSION "600.3.13"
 #ifndef GG_ROOT
 #   define GG_ROOT ""
 #endif
