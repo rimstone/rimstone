@@ -68,7 +68,7 @@ export GG_ROOT="$HOME/.app/golf"
 export PATH="$GG_ROOT/usr/bin":$PATH
 export C_INCLUDE_PATH="$GG_ROOT/usr/include":$C_INCLUDE_PATH
 export MANPATH=$GG_ROOT/usr/share/man/:$MANPATH
-mandb
+mandb -u -c
 
 .EE
 .RE

@@ -24,7 +24,7 @@
 
 
 // Version+Release. We use major plus minor plus release, as in 1.3.34,2.1.11,3.7.41... 
-#define GG_VERSION "600.3.13"
+#define GG_VERSION "600.3.21"
 #ifndef GG_ROOT
 #   define GG_ROOT ""
 #endif

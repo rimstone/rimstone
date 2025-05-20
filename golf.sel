@@ -8,34 +8,37 @@
 
 #$1 is lib dir, $2 is data dir, $3 is bindir
 
-LDIR="$1"
-DDIR="$2"
-BDIR="$3"
+LIBDIR="$1"
+SELINUXDIR="$2"
+ROOTDIR="$3"
 
-cd $LDIR
-mkdir -p $LDIR/tmp
-cp -f gg.te gg.fc golf.te $LDIR/tmp/
-cd $LDIR/tmp
+cd $LIBDIR
+mkdir -p $LIBDIR/tmp
+cp -f gg.te golf.te $LIBDIR/tmp/
+cd $LIBDIR/tmp
 make -f /usr/share/selinux/devel/Makefile gg.pp 
-install -D -m 0600 gg.pp -t $DDIR/selinux/packages/ 
+install -D -m 0600 gg.pp -t $SELINUXDIR/selinux/packages/ 
 checkmodule -M -m -o golf.mod golf.te 
 semodule_package -o golf.pp -m golf.mod 
-install -D -m 0600 golf.pp -t $DDIR/selinux/packages/ ;
+install -D -m 0600 golf.pp -t $SELINUXDIR/selinux/packages/ ;
 
 if (( $EUID == 0 )); then
-    semodule -n -i "$DDIR/selinux/packages/gg.pp"
-    semodule -n -i "$DDIR/selinux/packages/golf.pp"
+    semodule -n -i "$SELINUXDIR/selinux/packages/gg.pp"
+    semodule -n -i "$SELINUXDIR/selinux/packages/golf.pp"
 fi
 
-if [ -d "/var/lib/gg" ]; then 
+if [ -d "$ROOTDIR/var/lib/gg" ]; then 
     if /usr/sbin/selinuxenabled ; then 
         if (( $EUID == 0 )); then
             load_policy
-            restorecon -R /var/lib/gg
-            restorecon -R $BDIR/mgrg
+            #set file types here, .fc setting won't work
+            sudo semanage fcontext -a -t ggfile_t "$ROOTDIR/var/lib/gg(/.*)?"
+            restorecon -R $ROOTDIR/var/lib/gg
+            sudo semanage fcontext -a -t ggfile_t "$ROOTDIR/usr/bin/mgrg"
+            restorecon  $ROOTDIR/usr/bin/mgrg
         fi
     fi
 fi
 
-cd $LDIR
-rm -rf $LDIR/tmp
+cd $LIBDIR
+rm -rf $LIBDIR/tmp

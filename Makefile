@@ -182,7 +182,6 @@ install:
 #it does NOT run during rpm installation, there is post scriptlet that calls golf.sel to do that (GG_NO_SEL)
 	install -D -m 0644 gg.te -t $(DESTDIR)$(V_LIB)/selinux 
 	install -D -m 0644 golf.te -t $(DESTDIR)$(V_LIB)/selinux 
-	install -D -m 0644 gg.fc -t $(DESTDIR)$(V_LIB)/selinux 
 	install -D -m 0755 golf.sel -t $(DESTDIR)$(V_LIB)/selinux 
 #this selinux.setup will be executed in rpm post section, and here (below) if this is a system with SELinux
 #the text saved to selinux.setup does NOT use DESTDIR, since this script never runs in fake root, meaning if it does run, then DESTDIR is empty (which is
@@ -245,7 +244,7 @@ v1: v1.o golfmems.o chandle.o golfrtc.o hash.o
 
 selinux.setup:
 	echo '#!/bin/bash'>selinux.setup
-	echo 'if [ -f /etc/selinux/config ]; then $(V_LIB)/selinux/golf.sel "$(V_LIB)/selinux" "$(V_GG_DATADIR)" "$(V_BIN)" ; fi'>>selinux.setup
+	if [ "$(GG_LOCAL)" == "1" ]; then SEDIR="$(DESTDIR)"; else SEDIR=""; fi ; echo "if [ -f /etc/selinux/config ]; then $$SEDIR$(V_LIB)/selinux/golf.sel '$$SEDIR$(V_LIB)/selinux' '$(V_GG_DATADIR)' '$$SEDIR' ; fi">>selinux.setup
 	chmod 0755 selinux.setup
 
 mgrg: mgrg.o 

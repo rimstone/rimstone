@@ -17,7 +17,6 @@ sudo apt -y install wget tar
 wget "https://github.com/golf-lang/golf/archive/refs/heads/main.tar.gz" -O main.tar.gz
 tar xvfz main.tar.gz
 cd golf-main
-mv debian-upstream debian
 
 .EE
 .RE

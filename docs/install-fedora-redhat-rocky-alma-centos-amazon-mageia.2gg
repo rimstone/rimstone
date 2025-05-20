@@ -11,7 +11,7 @@ install-fedora-redhat-rocky-alma-centos-amazon-mageia \- Golf documentation (ins
 .RS 4
 .EX
 
-sudo dnf -y install epel-release
+sudo dnf -y install epel-release || true
 sudo dnf -y copr enable golf-lang/golf-lang
 sudo dnf -y install golf
 

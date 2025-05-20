@@ -79,12 +79,22 @@ export GG_ROOT="$HOME/.app/golf"
 export PATH="$GG_ROOT/usr/bin":$PATH
 export C_INCLUDE_PATH="$GG_ROOT/usr/include":$C_INCLUDE_PATH
 export MANPATH=$GG_ROOT/usr/share/man/:$MANPATH
-mandb
+mandb -u -c
 
 .EE
 .RE
 
 To make these path settings permanent, add the above exports to the end of your $HOME/.bashrc file so it runs when you start a new session (or in any other file you execute before working with Golf).
+
+If you want to have SELinux enabled, you must have root access to setup Golf for SELinux, or if not, ask your System Administrator to perform this (otherwise you must disable SELinux):
+
+.RS 4
+.EX
+
+sudo $GG_ROOT/usr/lib/golf/selinux/selinux.setup
+
+.EE
+.RE
 
 You've installed Golf!
 
@@ -100,17 +110,7 @@ gg -g
 
 If you see the path you choose for GG_ROOT above, it's working!
 
-A few notes due to the fact that root access isn't used for this Golf installation:
-
-.RS 4
-\[bu]    
-SELinux script for Golf requires root to install (this is true for any software, not just Golf); if you use SELinux, either set it to permissive, or use a Linux distro that does not use (or set) it.
-
-.RE
-
-.RS 4
-\[bu]    
-if you're using Unix sockets (for instance for web servers to talk to your Golf server), your $HOME directory as well as Golf root directory must be searchable to access those sockets:
+Note that if you're using Unix sockets (for instance for web servers to talk to your Golf server), your $HOME directory as well as Golf root directory must be searchable to access those sockets (if you're using TCP ports instead of sockets, then this isn't necessary):
 
 .RS 4
 .EX
@@ -119,9 +119,6 @@ chmod o+x $HOME
 find $HOME/.app/golf -type d -name '*' -exec chmod o+x {} \e;
 
 .EE
-.RE
-
-If you're using TCP ports, then this setup isn't necessary.
 .RE
 
 

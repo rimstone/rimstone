@@ -29,7 +29,7 @@ cd golf-main
 .RS 4
 .EX
 
-sudo dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+sudo dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm || true
 sudo dnf install -y rpmdevtools
 sudo dnf builddep -y golf.spec
 

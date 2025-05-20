@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    600.3.13
+Version:    600.3.21
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions
 Vendor:     Golf Team
@@ -71,7 +71,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-600.3.13
+%autosetup -n %{name}-600.3.21
 
 %build
 make clean
@@ -85,13 +85,18 @@ rm -rf %{buildroot}/*
 make DESTDIR="%{buildroot}" GG_FAKEROOT=1 GG_FEDORA_BUILD=1 install
 
 %post
-#since post runs during installation, execute selinux.setup
-#sudo /usr/lib/golf/selinux/selinux.setup
-echo "Setting up SELinux..."
-/usr/lib/golf/selinux/selinux.setup
 #install manual page for distros that need it (namely OpenSUSE for now)
 echo "Setting up man pages..."
 mandb >/dev/null 2>&1 || true
+#since post runs during installation, execute selinux.setup
+#sudo /usr/lib/golf/selinux/selinux.setup
+#Always the last to run
+echo "Setting up SELinux..."
+/usr/lib/golf/selinux/selinux.setup || true
+
+%postun
+#Always the last to run
+semodule -r golf || true
 
 
 %files
