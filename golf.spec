@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    600.3.23
+Version:    600.3.25
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions
 Vendor:     Golf Team
@@ -71,7 +71,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-600.3.23
+%autosetup -n %{name}-600.3.25
 
 %build
 make clean
@@ -151,7 +151,6 @@ semodule -r golf || true
 #SELINUX
 #Always distribute source selinux policy files; support for pp distribution is shaky, so none given (we generate pp files)
 /usr/lib/golf/selinux/gg.te
-/usr/lib/golf/selinux/gg.fc
 /usr/lib/golf/selinux/golf.te
 /usr/lib/golf/selinux/golf.sel
 /usr/lib/golf/selinux/selinux.setup
