@@ -85,17 +85,29 @@ else
     OPTIM_LINK=
 endif
 ifeq ($(ASAN),1)
-ASAN=-fsanitize=address -fsanitize-recover=address
+    ASAN=-fsanitize=address -fsanitize-recover=address
 else
-ASAN=
+    ASAN=
 endif
 
+#Add debian build flags required for debian packages
+ifeq ($(GG_DEBIAN_BUILD),1)
+    DEBIAN_CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
+    DEBIAN_CFLAGS:=$(shell dpkg-buildflags --get CFLAGS)
+    DEBIAN_LFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
+else
+    DEBIAN_LFLAGS=
+    DEBIAN_CFLAGS=
+    DEBIAN_CPPFLAGS=
+endif
+
+
 #C flags are as strict as we can do, in order to discover as many bugs as early on
-CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wl,-z,relro,-z,now
+CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wl,-z,relro,-z,now $(DEBIAN_CFLAGS) $(DEBIAN_CPPFLAGS)
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
-LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -Wl,--enable-new-dtags -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN)
+LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -Wl,--enable-new-dtags -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN) $(DEBIAN_LFLAGS)
 
 #note that for make DI=1, DEBUGINFO can be checked. But we don't specify DEBUGINFO for sudo make install.
 #then we wanted to have them all. Otherwise, none will be there, because we explicitly delete them here.
