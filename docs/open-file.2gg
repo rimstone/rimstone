@@ -38,7 +38,7 @@ Create a file (or truncate an existing one), write 25,000 rows and the read back
     // Write 25000 rows
     start-loop repeat 25000 use i
        (( line
-       @some text in line <<p-num i>>
+       @some text in line <<print-out i>>
        )) notrim
        string-length line to line_len
        write-file file-id nf from line length line_len
@@ -49,7 +49,7 @@ Create a file (or truncate an existing one), write 25,000 rows and the read back
 
     // Read all 25000 rows back, and print them out
     read-file file-id nf  to whole_file
-    p-out whole_file
+    print-out whole_file
 
     // Close the file
     close-file file-id nf

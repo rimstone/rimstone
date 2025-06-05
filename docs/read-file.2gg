@@ -68,7 +68,7 @@ if-true st greater-than 0
     p-web file_content
     @<hr/>
 else-if
-    @Could not read (<<pf-out "%ld", st>>)
+    @Could not read (<<print-format "%ld", st>>)
 end-if
 
 .EE

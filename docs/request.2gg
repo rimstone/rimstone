@@ -112,7 +112,7 @@ The request path must match (fully or partially) the path of the file name that 
 
 begin-handler /buy-item public 
     get-param some_param
-    @Bought item: <<p-out some_param>>
+    @Bought item: <<print-out some_param>>
 end-handler
 
 .EE

@@ -34,7 +34,7 @@ Get a 100-digit long random value (as an alphanumeric string):
 .EX
 
 random-string to str length 100
-pf-out "%s\en", str
+print-format "%s\en", str
 
 .EE
 .RE
@@ -45,7 +45,7 @@ Get a random number of length 10 in string representation:
 .EX
 
 random-string to str length 10 number
-pf-out "%s\en", str
+print-format "%s\en", str
 
 .EE
 .RE

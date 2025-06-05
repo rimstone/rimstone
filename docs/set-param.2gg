@@ -62,7 +62,7 @@ Set the value of parameter "quantity" to "10", which is also the output:
 set-param quantity = "10"
 \[char46]..
 get-param quantity
-p-out quantity
+print-out quantity
 
 .EE
 .RE

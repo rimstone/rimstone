@@ -39,15 +39,8 @@ sleep(20);
 \fBfinish-output\fP  
 \fBflush-output\fP  
 \fBoutput-statement\fP  
-\fBpf-out\fP  
-\fBpf-url\fP  
-\fBpf-web\fP  
-\fBp-num\fP  
-\fBp-out\fP  
-\fBp-path\fP  
-\fBp-source-file\fP  
-\fBp-source-line\fP  
-\fBp-url\fP  
-\fBp-web\fP   
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
 See all 
 \fBdocumentation\fP

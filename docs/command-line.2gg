@@ -25,7 +25,7 @@ A command-line program works the same way as a service executable, and the outpu
 .B EXIT CODE
 .LP
 
-To specify the exit code of a command-line program, use \fBhandler-status\fP. To exit the program, use \fBexit-handler\fP, or otherwise the program will exit when it reaches the end of a \fBrequest\fP.
+To specify the exit code of a command-line program, use \fBexit-status\fP. To exit the program, use \fBexit-handler\fP, or otherwise the program will exit when it reaches the end of a \fBrequest\fP.
 
 .LP
 .B EXECUTING A REQUEST

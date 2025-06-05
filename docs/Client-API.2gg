@@ -185,7 +185,7 @@ Even if timeout is set to 0, a service call may eventually timeout due to underl
 
 .B - Completion indicator and return code
 
-When your program is multithreaded, it may be useful to know when (and if) a request has completed. "done" is set to to "true" when a request completes, and "return_code" is the return value from gg_cli_request() (see below for a list). In a single-threaded program, this information is self-evident, but if you are running more than one request at the same time (in different threads), you can use these to check on each request executing in parallel (for instance in a loop in the main thread).
+When your program is multithreaded, it may be useful to know when (and if) a request has completed. "done" is set to "true" when a request completes, and "return_code" is the return value from gg_cli_request() (see below for a list). In a single-threaded program, this information is self-evident, but if you are running more than one request at the same time (in different threads), you can use these to check on each request executing in parallel (for instance in a loop in the main thread).
 
 Note that "done" is "true" specifically when all the results of a request are available and the request is about to be completed. In a multithreaded program, it means the thread is very soon to terminate or has already terminated; it does not mean that thread has positively terminated. Use standard "pthread_join()" function to make sure the thread has terminated if that is important to you. 
 
@@ -296,7 +296,7 @@ You can obtain the error message (corresponding to the above return values) in "
 .B SERVER REPLY
 .LP
 
-The service reply is split in two. One part is the actual result of processing (called "stdout" or standard output), and that is "data". The other is the error messages (called "stderr" or standard error), and that's "error". All of service output goes to "data", except from \fBreport-error\fP and \fBpf-out\fP/\fBpf-url\fP/\fBpf-web\fP (with "to-error" clause) which goes to "error". Note that "data" and "error" streams can be co-mingled when output by the service, but they will be obtained separately. This allows for clean separation of output from any error messages.
+The service reply is split in two. One part is the actual result of processing (called "stdout" or standard output), and that is "data". The other is the error messages (called "stderr" or standard error), and that's "error". All of service output goes to "data", except from \fBreport-error\fP and \fBprint-format\fP (with "to-error" clause) which goes to "error". Note that "data" and "error" streams can be co-mingled when output by the service, but they will be obtained separately. This allows for clean separation of output from any error messages.
 
 You can obtain service reply when it's ready in its entirety (likely most often used), or as it comes alone bit by bit (see more about asynchronous hooks further here).
 
@@ -304,7 +304,7 @@ You can obtain service reply when it's ready in its entirety (likely most often 
 .B STATUS OF REQUEST EXECUTION
 .LP
 
-"req_status" member of "gg_cli" type is the request status when a request had executed; it is somewhat similar to an exit status of a program. A Golf service request returns status by means of \fBhandler-status\fP statement. Note that "req_status" is valid only if "gg_cli_request()" returned GG_OKAY (or if "return_code" is GG_OKAY for multi-threaded programs).
+"req_status" member of "gg_cli" type is the request status when a request had executed; it is somewhat similar to an exit status of a program. A Golf service request returns status by means of \fBexit-status\fP statement. Note that "req_status" is valid only if "gg_cli_request()" returned GG_OKAY (or if "return_code" is GG_OKAY for multi-threaded programs).
 
 .LP
 .B GETTING DATA REPLY (STDOUT)
@@ -330,7 +330,7 @@ if (gg_cli_request (&req) == GG_OKAY) {
 
 "data_len" member of "gg_cli" type will have the length of data response in bytes. The reply is always null-terminated as a courtesy, and "data_len" does not include the terminating null byte.
 
-"gg_cli_data()" returns the actual response (i.e. data output) from service as passed to "data" stream. Any output from service will go there, except when "to-error" clause is used in \fBpf-out\fP, \fBpf-url\fP and \fBpf-web\fP - use these constructs to output errors without stopping the service execution. Additionally, the output of \fBreport-error\fP will also not go to data output.
+"gg_cli_data()" returns the actual response (i.e. data output) from service as passed to "data" stream. Any output from service will go there, except when "to-error" clause is used in \fBprint-format\fP - use these constructs to output errors without stopping the service execution. Additionally, the output of \fBreport-error\fP will also not go to data output.
 
 .LP
 .B GETTING ERROR REPLY (STDERR)
@@ -354,7 +354,7 @@ if (gg_cli_request (&req) == GG_OKAY) {
 .EE
 .RE
 
-"gg_cli_error()" returns any error messages from a service response, i.e. data passed to "error" stream. It is comprised of any service output when "to-error" clause is used in \fBpf-out\fP, \fBpf-url\fP and \fBpf-web\fP, as well as any output from \fBreport-error\fP. 
+"gg_cli_error()" returns any error messages from a service response, i.e. data passed to "error" stream. It is comprised of any service output when "to-error" clause is used in \fBprint-format\fP, as well as any output from \fBreport-error\fP. 
 
 "error_len" member (of "gg_cli" type above) will have the length of error response in bytes. The response is always null-terminated as a courtesy, and "error_len" does not include the terminating null byte.
 
@@ -745,20 +745,20 @@ begin-handler /hello public
 
     // Output, print the environment variables, the PID of server process and the request body received from the client
     get-req process-id to pid
-    @Hello World! [<<p-out ruser>>] [<<p-out somev>>] [<<p-out newv>>] [<<p-out par1>>] [<<p-out par2>>] <<p-num pid>> <<p-out rb>>
+    @Hello World! [<<print-out ruser>>] [<<print-out somev>>] [<<print-out newv>>] [<<print-out par1>>] [<<print-out par2>>] <<print-out pid>> <<print-out rb>>
 
     // Output back a number of lines, generally as "Output line #<num of line>"
     // After line #1418, print out "Line 1419 has an error" to stderr
     // After line #4418, report an error and exit
     // This demonstrates outputting data to both stdout and stderr
     start-loop repeat 8000 use i start-with 0
-        @Output line #<<p-num i>>
+        @Output line #<<print-out i>>
         if-true i equal 1419
-            pf-out "Line %ld has an error\en", i to-error
+            print-format "Line %ld has an error\en", i to-error
         end-if
         if-true i equal 4419
             // Exit code of the service execution
-            handler-status 82
+            exit-status 82
             report-error "%s", "Some error!"
         end-if
     end-loop
@@ -825,7 +825,7 @@ Some error!
 .EE
 .RE
 
-The output shows service exit code (82, see \fBhandler-status\fP in the Golf code above), length of data output, and other information which includes environment variables passed to the service from the client, the PID of server process, the request body from the client, and then the error output. Note that the data output (stdout) and the error output (stderr) are separated, since the protocol does use separate streams over the same connection. This makes working with the output easy, while the data transfer is fast at the same time.
+The output shows service exit code (82, see \fBexit-status\fP in the Golf code above), length of data output, and other information which includes environment variables passed to the service from the client, the PID of server process, the request body from the client, and then the error output. Note that the data output (stdout) and the error output (stderr) are separated, since the protocol does use separate streams over the same connection. This makes working with the output easy, while the data transfer is fast at the same time.
 .SH SEE ALSO
  API
 

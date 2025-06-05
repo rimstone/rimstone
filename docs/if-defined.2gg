@@ -13,6 +13,10 @@ if-defined <symbol>
     <any code>
 end-defined
 
+if-defined <symbol> [ equal | not-equal | lesser-than | lesser-equal | greater-than | greater-equal ] <number>
+    <any code>
+end-defined
+
 if-not-defined <symbol>
     <any code>
 end-defined
@@ -21,12 +25,16 @@ end-defined
 .RE
 
 .SH DESCRIPTION
-if-defined will cause <any code> to be compiled if <symbol> is defined (see "--cflag" option in gg). If <symbol> is not defined, then <any code> is not compiled at all.
+Without a comparison clause, if-defined will cause <any code> to be compiled if <symbol> is defined (see "--cflag" option in gg); if <symbol> is not defined, then <any code> is not compiled.
 
-if-not-defined will cause <any code> to be compiled if <symbol> is not defined (see "--cflag" option in gg). If <symbol> is defined, then <any code> is compiled.
+With a comparison clause, if-defined will cause <any code> to be compiled if <symbol> is equal/not equal/lesser than/lesser or equal/greater than/greater or equal than <number> constant, depending on the clause used (see "--cflag" option in gg). If <symbol> is not defined, then its value is assumed to be 0, and <any code> may still be compiled if the comparison clause and the <number> are such that the condition is true for <symbol> being 0.
+
+if-not-defined will cause <any code> to be compiled if <symbol> is not defined (see "--cflag" option in gg); if <symbol> is defined, then <any code> is not compiled.
+
+Note that <symbol> can start with an underscore, unlike Golf variable names; this is because defined symbols aren't variables and generally are set by the outside environment or during compilation (see "--cflag" option in \fBgg\fP).
 
 .SH EXAMPLES
-The following code will have a different output depending on how is application compiled:
+The following code will have a different output depending on how is the application compiled:
 
 .RS 4
 .EX
@@ -36,6 +44,12 @@ if-defined DEF1
 end-defined
 if-not-defined DEF1
     @Not defined
+end-defined
+if-defined DEF2 equal 10
+    @DEF2 is 10
+end-defined
+if-defined DEF2 equal 0
+    @DEF2 is 0
 end-defined
 
 .EE
@@ -57,6 +71,7 @@ then the output is:
 .EX
 
 Not defined
+DEF2 is 0
 
 .EE
 .RE
@@ -66,7 +81,7 @@ If compiled with:
 .RS 4
 .EX
 
-gg -q --cflag="-DDEF1"
+gg -q --cflag="-DDEF1 -DDEF2=10"
 
 .EE
 .RE
@@ -77,6 +92,7 @@ then the output is:
 .EX
 
 Defined
+DEF2 is 10
 
 .EE
 .RE
@@ -85,14 +101,15 @@ Defined
  Program flow
 
 \fBbreak-loop\fP  
+\fBcall-handler\fP  
 \fBcode-blocks\fP  
 \fBcontinue-loop\fP  
 \fBdo-once\fP  
 \fBexit-handler\fP  
 \fBif-defined\fP  
 \fBif-true\fP  
+\fBquit-process\fP  
 \fBreturn-handler\fP  
-\fBset-bool\fP  
 \fBstart-loop\fP   
 See all 
 \fBdocumentation\fP

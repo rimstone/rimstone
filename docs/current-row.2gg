@@ -25,9 +25,9 @@ Display row number before a line with first and last name for each employee:
 
 run-query @mydb="select firstName, lastName from employee" output firstName, lastName
     @Row #<<current-row>><br/>
-    p-out firstName 
+    print-out firstName 
     @,
-    p-out lastName
+    print-out lastName
     @<br/>
 end-query
 

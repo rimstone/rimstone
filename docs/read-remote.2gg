@@ -14,7 +14,7 @@ read-remote <service> \\
     [ error <error> ] \\
     [ status <status> ] \\
     [ status-text <status text> ] \\
-    [ handler-status <service status> ]
+    [ exit-status <service status> ]
 
 .EE
 .RE
@@ -25,7 +25,7 @@ Use read-remote to get the results of \fBcall-remote\fP created in \fBnew-remote
 
 .B - Getting the reply from server
 
-The service reply is split in two. One part is the actual result of processing (called "stdout" or standard output), and that is "data". The other is the error messages (called "stderr" or standard error), and that's "error". The standard output goes to "data", except from \fBreport-error\fP and \fBpf-out\fP/\fBpf-url\fP/\fBpf-web\fP (with "to-error" clause) which goes to "error". Note that "data" and "error" streams can be co-mingled when output by the service, but they will be obtained separately. This allows for clean separation of output from any error messages.
+The service reply is split in two. One part is the actual result of processing (called "stdout" or standard output), and that is "data". The other is the error messages (called "stderr" or standard error), and that's "error". The standard output goes to "data", except from \fBreport-error\fP and \fBprint-format\fP (with "to-error" clause) which goes to "error". Note that "data" and "error" streams can be co-mingled when output by the service, but they will be obtained separately. This allows for clean separation of output from any error messages.
 
 <data> is the "data" reply of a service call (in "data" clause). <error> is the "error" reply (in "error" clause). 
 
@@ -134,7 +134,7 @@ You can also obtain the status text in <status text> (in "status-text" clause); 
 
 .B - Getting service status
 
-<service status> (in "handler-status" clause) is the return status (as a number) of the code executing a remote service handler; it is conceptually similar to a return value from a function (as a number). The particular service handler you are calling may or may not return the status; it it does, its return status can be sent back via \fBhandler-status\fP and/or \fBexit-handler\fP statement.
+<service status> (in "exit-status" clause) is the return status (as a number) of the code executing a remote service handler; it is conceptually similar to a return value from a function (as a number). The particular service handler you are calling may or may not return the status; if it does, its return status can be sent back via \fBexit-status\fP and/or \fBexit-handler\fP statement.
 
 You must specify at least one value to obtain in read-remote, or any number of them.
 

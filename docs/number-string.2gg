@@ -23,7 +23,7 @@ Note that any letters in <string> (depending on the <base>) are always lower-cas
 
 If there is an error, such as if <base> is incorrect, then <status> number (in "status" clause) is GG_ERR_FAILED, otherwise it's GG_OKAY.
 
-Use of number-string (and \fBp-num\fP which is based on it) for converting and outputting numbers is high-performance and recommended if your application needs to do that often. If number-string prints out a number (i.e. "to" clause is omitted), and this is within \fBwrite-string\fP, then <number> is output into the buffer that builds a new string.
+Use of number-string (and \fBprint-out\fP which is based on it) for converting and outputting numbers is high-performance and recommended if your application needs to do that often. If number-string prints out a number (i.e. "to" clause is omitted), and this is within \fBwrite-string\fP, then <number> is output into the buffer that builds a new string.
 
 .SH EXAMPLES
 The following will allocate memory for string "x" to be "801":
@@ -62,6 +62,7 @@ number-string x
 .SH SEE ALSO
  Numbers
 
+\fBabs-number\fP  
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  
 \fBset-number\fP  

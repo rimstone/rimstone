@@ -32,7 +32,7 @@ Note that instead of write-string you can also use a shortcut "(("  (and instead
 
 get-app directory to home_dir
 (( fname
-@<<p-out home_dir>>/config-install.golf
+@<<print-out home_dir>>/config-install.golf
 ))
 
 .EE
@@ -98,10 +98,10 @@ set-string my_str="world"
 set-string my_str1="and have a nice day too!"
 
 write-string result_str
-@Hello <<p-out my_str>> (<<p-out my_str1>>)
+@Hello <<print-out my_str>> (<<print-out my_str1>>)
 end-write-string
 
-p-out result_str
+print-out result_str
 
 .EE
 .RE
@@ -131,10 +131,10 @@ set-string my_str="world"
 
 write-string result_str
     if-true selector equal "simple"
-        @Hello <<p-out my_string>> (and have a nice day too!)
+        @Hello <<print-out my_string>> (and have a nice day too!)
     else-if selector equal "database"
         run-query @db="select name from employee" output name
-            @Hello <<p-out name>>
+            @Hello <<print-out name>>
             @<br/>
         end-query
     else-if
@@ -142,7 +142,7 @@ write-string result_str
     end-if
 end-write-string
 
-p-out result_str
+print-out result_str
 
 .EE
 .RE
@@ -220,9 +220,9 @@ The following uses a call-handler inside write-string:
 
 set-string result_str=""
 write-string result_str
-    @<<p-out "Result from other-service">> is <<call-handler "/other-service">>
+    @<<print-out "Result from other-service">> is <<call-handler "/other-service">>
 end-write-string
-p-out result_str
+print-out result_str
 
 .EE
 .RE
@@ -263,9 +263,9 @@ write-string str1
     write-string str2
         @Hi Again!
    end-write-string
-   p-out str2
+   print-out str2
 end-write-string
-p-out str1
+print-out str1
 
 .EE
 .RE
@@ -289,6 +289,7 @@ Hi Again!
 \fBcount-substring\fP  
 \fBdelete-string\fP  
 \fBlower-string\fP  
+\fBnew-string\fP  
 \fBread-split\fP  
 \fBreplace-string\fP  
 \fBset-string\fP  

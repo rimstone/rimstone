@@ -29,8 +29,8 @@ cd golf-main
 .RS 4
 .EX
 
-sudo pacman -Sy --noconfirm debugedit
-makepkg -s --noconfirm -o
+\[char46] ./PKGBUILD
+sudo pacman -Sy --noconfirm debugedit ${depends[@]} 
 
 .EE
 .RE

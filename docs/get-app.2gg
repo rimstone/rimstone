@@ -65,7 +65,7 @@ Application-related variables can be obtained with get-app statement. The follow
 
 .RS 4
 \[bu]    
-"path" is the leading path of the URL request that can be used to build web forms and links leading back to your application. It returns the same value as \fBp-path\fP.
+"path" is the leading path of the URL request that can be used to build web forms and links leading back to your application. It returns the same value as used in \fBprint-path\fP before <request path> is appended.
 
 .RE
 

@@ -67,7 +67,7 @@ json-doc jd status st error-text et error-position ep to nj
 
 // Check parsing okay, if not display error details
 if-true st not-equal GG_OKAY
-    @Error [<<p-out et>>] at [<<p-num ep>>]
+    @Error [<<print-out et>>] at [<<print-out ep>>]
     exit-handler -1
 end-if
 
@@ -77,9 +77,9 @@ start-loop
     if-true t equal GG_JSON_TYPE_NONE
         break-loop
     end-if
-    @Key [<<p-out k>>]
-    @Value [<<p-out v>>]
-    @Type [<<p-num t>>]
+    @Key [<<print-out k>>]
+    @Value [<<print-out v>>]
+    @Type [<<print-out t>>]
     @--------
 end-loop
 @

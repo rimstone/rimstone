@@ -123,7 +123,7 @@ Keywords (other than statement names such as encrypt-data above) are generally s
 set-string password = "some password"
 set-string salt = "0123456789012345"
 encrypt-data "some data" password (password) salt (salt) to enc_data
-p-out enc_data
+print-out enc_data
 
 .EE
 .RE

@@ -85,6 +85,7 @@ replace-string a copy-end b start-with 6 length 2
 \fBcount-substring\fP  
 \fBdelete-string\fP  
 \fBlower-string\fP  
+\fBnew-string\fP  
 \fBread-split\fP  
 \fBreplace-string\fP  
 \fBset-string\fP  

@@ -39,12 +39,12 @@ Note that GG_OKAY does not mean that the reply is considered a success in any lo
 
 .B - Request(s) status
 
-Note that the actual application status for each <service>, as well as data returned and any application errors can be obtained via "handler-status", "data" and "error" clauses of \fBread-remote\fP statement, respectively.
+Note that the actual application status for each <service>, as well as data returned and any application errors can be obtained via "exit-status", "data" and "error" clauses of \fBread-remote\fP statement, respectively.
 
 
 .B - Request(s) duration
 
-call-remote will wait for all <service> requests to finish. For that reason, it is a good idea to specify "timeout" clause in \fBnew-remote\fP for each <service> used, in order to limit the time you would wait. Use \fBread-remote\fP to detect a timeout, in which case "handler-status" clause would produce GG_CLI_ERR_TIMEOUT.
+call-remote will wait for all <service> requests to finish. For that reason, it is a good idea to specify "timeout" clause in \fBnew-remote\fP for each <service> used, in order to limit the time you would wait. Use \fBread-remote\fP to detect a timeout, in which case "exit-status" clause would produce GG_CLI_ERR_TIMEOUT.
 
 
 .B - How many calls started and finished
@@ -71,7 +71,7 @@ call-remote srv finished-okay sfok
 // Get results of a remote service call
 read-remote srv data rdata 
 // Display results
-@Data from service is <<p-out rdata>>
+@Data from service is <<print-out rdata>>
 
 .EE
 .RE

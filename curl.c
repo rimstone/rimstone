@@ -211,14 +211,14 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
 
         if (cert == NULL)
         {
-            curl_easy_setopt(cc.curl, CURLOPT_SSL_VERIFYHOST, 0);
-            curl_easy_setopt(cc.curl, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_easy_setopt(cc.curl, CURLOPT_SSL_VERIFYHOST, 0L);
+            curl_easy_setopt(cc.curl, CURLOPT_SSL_VERIFYPEER, 0L);
             // this is with-no-cert
         }
         else
         {
-            curl_easy_setopt(cc.curl, CURLOPT_SSL_VERIFYHOST, 1);
-            curl_easy_setopt(cc.curl, CURLOPT_SSL_VERIFYPEER, 1);
+            curl_easy_setopt(cc.curl, CURLOPT_SSL_VERIFYHOST, 1L);
+            curl_easy_setopt(cc.curl, CURLOPT_SSL_VERIFYPEER, 1L);
             if (cert[0] == 0)
             {
                 // this is default CA authority, installed on system

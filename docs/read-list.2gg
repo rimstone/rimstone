@@ -46,7 +46,7 @@ position-list mylist last
 start-loop
    // Get data from the list starting with the last one, producing value1, value2, value3
    read-list mylist key k value v
-   @Obtained key <<p-out k>> with value <<p-out v>>
+   @Obtained key <<print-out k>> with value <<print-out v>>
    position-list mylist previous status s
    // Check if no more data
    if-true s equal GG_ERR_EXIST
@@ -60,7 +60,7 @@ start-loop
    if-true s equal GG_ERR_EXIST
        break-loop
    end-if
-   @Again obtained key <<p-out k>> with value <<p-out v>>
+   @Again obtained key <<print-out k>> with value <<print-out v>>
    position-list mylist next
 end-loop
 

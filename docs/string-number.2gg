@@ -39,6 +39,7 @@ string-number "49" to n base 10 status st
 .SH SEE ALSO
  Numbers
 
+\fBabs-number\fP  
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  
 \fBset-number\fP  

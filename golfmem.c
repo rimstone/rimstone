@@ -320,6 +320,7 @@ inline static void *gg_mem_get_data (gg_num r)
 
 //
 // When process-scoped memory in an object is replaced, and old value returned
+// ptr is old value, new_var is new value
 //
 inline void gg_mem_replace_and_return (void *ptr, void *new_var)
 {

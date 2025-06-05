@@ -36,7 +36,7 @@ new-message new from str
 // Read data
 read-message new key k value v
 // Display  data
-pf-out "[%s] [%s]\en", k,v
+print-format "[%s] [%s]\en", k,v
 
 .EE
 .RE

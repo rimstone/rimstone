@@ -2,7 +2,7 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
-Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBGolf Blog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP (with mirrors on \fBGitlab\fP and \fBDebian Salsa\fP). Installation packages and source installs below are for both x86_64 and aarch64.
+Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBGolf Blog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP (with mirrors on \fBGitlab\fP, \fBSourceForge\fP and \fBDebian Salsa\fP). Installation packages and source installs below are for both x86_64 and aarch64.
 
 .LP
 .B INSTALL GOLF PACKAGE (X86_64 AND AARCH64)
@@ -25,19 +25,10 @@ Golf is a programming language and  application server for building web services
 \fBArch, Manjaro\fP
 
 .LP
-.B INSTALL GOLF FROM SOURCE CODE WITHOUT ROOT ACCESS
-.LP
-
-\fBDebian, Ubuntu, Raspbian\fP
-\fBFedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia\fP
-\fBOpenSUSE\fP
-\fBArch, Manjaro\fP
-
-.LP
 .B CURRENT VERSION
 .LP
 
-Current version is 600.3.25. This release passed 2418 automated functional tests.
+Current version is 601.4.0. This release passed 2551 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -54,7 +45,19 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2025-05-19 \fBGolf 600.3.23 released\fP
+2025-06-05 \fBGolf 601.4.0 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-06-04 \fBMajor new release of Golf coming soon\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-05-19 \fBGolf 600.3.25 released\fP
 .RE
 
 

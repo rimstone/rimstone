@@ -1,6 +1,6 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-set-bool \-  (program-flow)
+set-bool \-  (booleans)
 .SH PURPOSE
 Set value of a boolean variable.
 
@@ -11,13 +11,26 @@ Set value of a boolean variable.
 
 set-bool <var> [ = <boolean> ] [ process-scope ]
 
+set-bool <var> from-condition <condition>
+
 .EE
 .RE
 
 .SH DESCRIPTION
-Boolean variable <var> is either assigned value <boolean> with "=" clause, or it is assigned "false" if equal clause ("=") is omitted.
+
+.LP
+.B WITHOUT "FROM-CONDITION" CLAUSE
+.LP
+
+If "from-condition" clause is not used, boolean variable <var> is either assigned value <boolean> with "=" clause, or it is assigned "false" if equal clause ("=") is omitted.
 
 If "process-scope" clause is used, then boolean is of process scope, meaning its value will persist from one request to another for the life of the process. 
+
+.LP
+.B WITH "FROM-CONDITION" CLAUSE
+.LP
+
+If "from-condition" clause is not used, then <condition> is evaluated, and if true, then "true" value is assigned to <var>, otherwise "false" is assigned. See \fBif-true\fP for more on <condition>.
 
 .SH EXAMPLES
 Assign "true" value to boolean variable "my_bool":
@@ -30,18 +43,21 @@ set-bool my_bool = true
 .EE
 .RE
 
-.SH SEE ALSO
- Program flow
+Assign boolean value based on condition:
 
-\fBbreak-loop\fP  
-\fBcode-blocks\fP  
-\fBcontinue-loop\fP  
-\fBdo-once\fP  
-\fBexit-handler\fP  
-\fBif-defined\fP  
-\fBif-true\fP  
-\fBreturn-handler\fP  
-\fBset-bool\fP  
-\fBstart-loop\fP   
+.RS 4
+.EX
+
+\[char46]..
+set-bool my_bool from-condition num1 equal num2 or str1 not-equal str2
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Booleans
+
+\fBboolean-expressions\fP  
+\fBset-bool\fP   
 See all 
 \fBdocumentation\fP

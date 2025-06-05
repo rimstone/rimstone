@@ -54,25 +54,25 @@ In a new directory, create file treesrv.golf and copy to it:
     if-true op equal "add" // Add data to tree
         write-tree t key (key) value data status st
         if-true st equal GG_OKAY
-            @Added [<<p-out key>>]
+            @Added [<<print-out key>>]
         else-if
             @Key exists
         end-if
     else-if op equal "delete" // Delete data and obtain the value deleted
         delete-tree t key (key) value val status st
         if-true st equal GG_ERR_EXIST
-            @Not found [<<p-out key>>]
+            @Not found [<<print-out key>>]
         else-if
             // If found, then delete key and value
-            @Deleted [<<p-out val>>]
+            @Deleted [<<print-out val>>]
             delete-string val
         end-if
     else-if op equal "query" // Query tree based on key value
         read-tree t equal (key) value val status st
         if-true st equal GG_ERR_EXIST
-            @Not found, queried [<<p-out key>>]
+            @Not found, queried [<<print-out key>>]
         else-if
-            @Value [<<p-out val>>]
+            @Value [<<print-out val>>]
         end-if
     end-if
 %%

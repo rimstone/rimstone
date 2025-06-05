@@ -1,7 +1,7 @@
 " Language: Golf
 " Vim syntax file
 " Maintainer: Gliim LLC
-" Latest Revision: 2025-May-12
+" Latest Revision: 2025-June-05
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link golfConstruct Statement
@@ -129,6 +129,14 @@ syn region gg_r_construct_return_handler start="^[[:space:]]*return-handler" ski
     hi def link gg_h_clause_output_return_handler    golfClauseOutput
     hi def link gg_h_construct_return_handler    golfConstruct
     hi def link gg_h_print_inline_return_handler    golfConstruct
+syn region gg_r_construct_quit_process start="^[[:space:]]*quit-process" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_quit_process,gg_r_inline_quit_process,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_quit_process,gg_r_inline_quit_process,gg_r_at
+    syn match gg_h_construct_quit_process "^[[:space:]]*quit-process" contained containedin=gg_r_construct_quit_process
+    hi def link gg_h_clause_quit_process    golfClause
+    hi def link gg_h_clause_output_quit_process    golfClauseOutput
+    hi def link gg_h_construct_quit_process    golfConstruct
+    hi def link gg_h_print_inline_quit_process    golfConstruct
 syn region gg_r_construct_finish_output start="^[[:space:]]*finish-output" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_finish_output,gg_r_inline_finish_output,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_finish_output,gg_r_inline_finish_output,gg_r_at
@@ -258,6 +266,15 @@ syn region gg_r_construct_get_list start="^[[:space:]]*get-list" skip="\\[[:spac
     hi def link gg_h_clause_output_get_list    golfClauseOutput
     hi def link gg_h_construct_get_list    golfConstruct
     hi def link gg_h_print_inline_get_list    golfConstruct
+syn region gg_r_construct_get_lifo start="^[[:space:]]*get-lifo" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_lifo,gg_r_inline_get_lifo,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_lifo,gg_r_inline_get_lifo,gg_r_at
+    syn match gg_h_construct_get_lifo "^[[:space:]]*get-lifo" contained containedin=gg_r_construct_get_lifo
+    syn match gg_h_clause_output_get_lifo " count \@=" contained containedin=gg_r_construct_get_lifo
+    hi def link gg_h_clause_get_lifo    golfClause
+    hi def link gg_h_clause_output_get_lifo    golfClauseOutput
+    hi def link gg_h_construct_get_lifo    golfConstruct
+    hi def link gg_h_print_inline_get_lifo    golfConstruct
 syn region gg_r_construct_new_tree start="^[[:space:]]*new-tree" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_new_tree,gg_r_inline_new_tree,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_new_tree,gg_r_inline_new_tree,gg_r_at
@@ -378,7 +395,6 @@ syn region gg_r_construct_read_array start="^[[:space:]]*read-array" skip="\\[[:
     syn match gg_h_clause_read_array " delete,\@=" contained containedin=gg_r_construct_read_array
     syn match gg_h_clause_read_array " delete$" contained containedin=gg_r_construct_read_array
     syn match gg_h_clause_read_array " key \@=" contained containedin=gg_r_construct_read_array
-    syn match gg_h_clause_output_read_array " status \@=" contained containedin=gg_r_construct_read_array
     syn match gg_h_clause_output_read_array " value \@=" contained containedin=gg_r_construct_read_array
     hi def link gg_h_clause_read_array    golfClause
     hi def link gg_h_clause_output_read_array    golfClauseOutput
@@ -398,7 +414,6 @@ syn region gg_r_construct_write_array start="^[[:space:]]*write-array" skip="\\[
     syn match gg_h_construct_write_array "^[[:space:]]*write-array" contained containedin=gg_r_construct_write_array
     syn match gg_h_clause_write_array " key \@=" contained containedin=gg_r_construct_write_array
     syn match gg_h_clause_output_write_array " old-value \@=" contained containedin=gg_r_construct_write_array
-    syn match gg_h_clause_output_write_array " status \@=" contained containedin=gg_r_construct_write_array
     syn match gg_h_clause_write_array " value \@=" contained containedin=gg_r_construct_write_array
     hi def link gg_h_clause_write_array    golfClause
     hi def link gg_h_clause_output_write_array    golfClauseOutput
@@ -424,6 +439,16 @@ syn region gg_r_construct_new_array start="^[[:space:]]*new-array" skip="\\[[:sp
     syn match gg_h_clause_new_array " process-scope \@=" contained containedin=gg_r_construct_new_array
     syn match gg_h_clause_new_array " process-scope,\@=" contained containedin=gg_r_construct_new_array
     syn match gg_h_clause_new_array " process-scope$" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " bool \@=" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " bool,\@=" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " bool$" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " number \@=" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " number,\@=" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " number$" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " string \@=" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " string,\@=" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " string$" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " type \@=" contained containedin=gg_r_construct_new_array
     hi def link gg_h_clause_new_array    golfClause
     hi def link gg_h_clause_output_new_array    golfClauseOutput
     hi def link gg_h_construct_new_array    golfConstruct
@@ -674,6 +699,9 @@ syn region gg_r_construct_unused_var start="^[[:space:]]*unused-var" skip="\\[[:
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_unused_var,gg_r_inline_unused_var,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_unused_var,gg_r_inline_unused_var,gg_r_at
     syn match gg_h_construct_unused_var "^[[:space:]]*unused-var" contained containedin=gg_r_construct_unused_var
+    syn match gg_h_clause_unused_var " , \@=" contained containedin=gg_r_construct_unused_var
+    syn match gg_h_clause_unused_var " ,,\@=" contained containedin=gg_r_construct_unused_var
+    syn match gg_h_clause_unused_var " ,$" contained containedin=gg_r_construct_unused_var
     hi def link gg_h_clause_unused_var    golfClause
     hi def link gg_h_clause_output_unused_var    golfClauseOutput
     hi def link gg_h_construct_unused_var    golfConstruct
@@ -808,6 +836,7 @@ syn region gg_r_construct_set_string start="^[[:space:]]*set-string" skip="\\[[:
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_set_string,gg_r_inline_set_string,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_set_string,gg_r_inline_set_string,gg_r_at
     syn match gg_h_construct_set_string "^[[:space:]]*set-string" contained containedin=gg_r_construct_set_string
+    syn match gg_h_clause_set_string " length \@=" contained containedin=gg_r_construct_set_string
     syn match gg_h_clause_set_string " process-scope \@=" contained containedin=gg_r_construct_set_string
     syn match gg_h_clause_set_string " process-scope,\@=" contained containedin=gg_r_construct_set_string
     syn match gg_h_clause_set_string " process-scope$" contained containedin=gg_r_construct_set_string
@@ -818,6 +847,15 @@ syn region gg_r_construct_set_string start="^[[:space:]]*set-string" skip="\\[[:
     hi def link gg_h_clause_output_set_string    golfClauseOutput
     hi def link gg_h_construct_set_string    golfConstruct
     hi def link gg_h_print_inline_set_string    golfConstruct
+syn region gg_r_construct_new_string start="^[[:space:]]*new-string" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_new_string,gg_r_inline_new_string,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_new_string,gg_r_inline_new_string,gg_r_at
+    syn match gg_h_construct_new_string "^[[:space:]]*new-string" contained containedin=gg_r_construct_new_string
+    syn match gg_h_clause_new_string " length \@=" contained containedin=gg_r_construct_new_string
+    hi def link gg_h_clause_new_string    golfClause
+    hi def link gg_h_clause_output_new_string    golfClauseOutput
+    hi def link gg_h_construct_new_string    golfConstruct
+    hi def link gg_h_print_inline_new_string    golfConstruct
 syn region gg_r_construct_set_number start="^[[:space:]]*set-number" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_set_number,gg_r_inline_set_number,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_set_number,gg_r_inline_set_number,gg_r_at
@@ -833,6 +871,32 @@ syn region gg_r_construct_set_bool start="^[[:space:]]*set-bool" skip="\\[[:spac
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_set_bool,gg_r_inline_set_bool,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_set_bool,gg_r_inline_set_bool,gg_r_at
     syn match gg_h_construct_set_bool "^[[:space:]]*set-bool" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " and \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " && \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " &&,\@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " &&$" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " case-insensitive \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " case-insensitive,\@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " case-insensitive$" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " contain \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " equal \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " every \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " from-condition \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " greater-equal \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " greater-than \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " length \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " lesser-equal \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " lesser-than \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " ! \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " !,\@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " !$" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " not-contain \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " not-equal \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " not-every \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " or \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " || \@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " ||,\@=" contained containedin=gg_r_construct_set_bool
+    syn match gg_h_clause_set_bool " ||$" contained containedin=gg_r_construct_set_bool
     syn match gg_h_clause_set_bool " process-scope \@=" contained containedin=gg_r_construct_set_bool
     syn match gg_h_clause_set_bool " process-scope,\@=" contained containedin=gg_r_construct_set_bool
     syn match gg_h_clause_set_bool " process-scope$" contained containedin=gg_r_construct_set_bool
@@ -926,9 +990,15 @@ syn region gg_r_construct_get_param start="^[[:space:]]*get-param" skip="\\[[:sp
     syn match gg_h_clause_get_param " , \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " ,,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " ,$" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " array \@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " array,\@=" contained containedin=gg_r_construct_get_param
-    syn match gg_h_clause_get_param " array$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " bool-array \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " bool-array,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " bool-array$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " number-array \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " number-array,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " number-array$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " string-array \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " string-array,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " string-array$" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool$" contained containedin=gg_r_construct_get_param
@@ -1051,105 +1121,6 @@ syn region gg_r_construct_replace_string start="^[[:space:]]*replace-string" ski
     hi def link gg_h_clause_output_replace_string    golfClauseOutput
     hi def link gg_h_construct_replace_string    golfConstruct
     hi def link gg_h_print_inline_replace_string    golfConstruct
-syn region gg_r_construct_pf_url start="^[[:space:]]*pf-url" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_pf_url,gg_r_inline_pf_url,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_pf_url,gg_r_inline_pf_url,gg_r_at
-    syn match gg_h_construct_pf_url "^[[:space:]]*pf-url" contained containedin=gg_r_construct_pf_url
-    syn match gg_h_clause_pf_url " , \@=" contained containedin=gg_r_construct_pf_url
-    syn match gg_h_clause_pf_url " ,,\@=" contained containedin=gg_r_construct_pf_url
-    syn match gg_h_clause_pf_url " ,$" contained containedin=gg_r_construct_pf_url
-    syn match gg_h_print_inline_pf_url " ,\(>>\)\@=" contained containedin=gg_r_inline_pf_url
-    syn match gg_h_print_inline_pf_url " , \@=" contained containedin=gg_r_inline_pf_url
-    syn match gg_h_clause_output_pf_url " to \@=" contained containedin=gg_r_construct_pf_url
-    syn match gg_h_print_inline_pf_url " to \@=" contained containedin=gg_r_inline_pf_url
-    syn match gg_h_clause_pf_url " to-error \@=" contained containedin=gg_r_construct_pf_url
-    syn match gg_h_clause_pf_url " to-error,\@=" contained containedin=gg_r_construct_pf_url
-    syn match gg_h_clause_pf_url " to-error$" contained containedin=gg_r_construct_pf_url
-    syn match gg_h_print_inline_pf_url " to-error\(>>\)\@=" contained containedin=gg_r_inline_pf_url
-    syn match gg_h_print_inline_pf_url " to-error \@=" contained containedin=gg_r_inline_pf_url
-    syn region gg_r_inline_pf_url start="<<[[:space:]]*pf-url \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
-    syn match gg_h_print_inline_pf_url '<<[[:space:]]*pf-url \@=' contained containedin=gg_r_inline_pf_url
-    syn match gg_h_print_inline_pf_url '>>' contained containedin=gg_r_inline_pf_url
-    hi def link gg_h_clause_pf_url    golfClause
-    hi def link gg_h_clause_output_pf_url    golfClauseOutput
-    hi def link gg_h_construct_pf_url    golfConstruct
-    hi def link gg_h_print_inline_pf_url    golfConstruct
-syn region gg_r_construct_trace_run start="^[[:space:]]*trace-run" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_trace_run,gg_r_inline_trace_run,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_trace_run,gg_r_inline_trace_run,gg_r_at
-    syn match gg_h_construct_trace_run "^[[:space:]]*trace-run" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " , \@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " ,,\@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " ,$" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_output_trace_run " to \@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " to-error \@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " to-error,\@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " to-error$" contained containedin=gg_r_construct_trace_run
-    hi def link gg_h_clause_trace_run    golfClause
-    hi def link gg_h_clause_output_trace_run    golfClauseOutput
-    hi def link gg_h_construct_trace_run    golfConstruct
-    hi def link gg_h_print_inline_trace_run    golfConstruct
-syn region gg_r_construct_report_error start="^[[:space:]]*report-error" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_report_error,gg_r_inline_report_error,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_report_error,gg_r_inline_report_error,gg_r_at
-    syn match gg_h_construct_report_error "^[[:space:]]*report-error" contained containedin=gg_r_construct_report_error
-    syn match gg_h_clause_report_error " , \@=" contained containedin=gg_r_construct_report_error
-    syn match gg_h_clause_report_error " ,,\@=" contained containedin=gg_r_construct_report_error
-    syn match gg_h_clause_report_error " ,$" contained containedin=gg_r_construct_report_error
-    syn match gg_h_clause_output_report_error " to \@=" contained containedin=gg_r_construct_report_error
-    syn match gg_h_clause_report_error " to-error \@=" contained containedin=gg_r_construct_report_error
-    syn match gg_h_clause_report_error " to-error,\@=" contained containedin=gg_r_construct_report_error
-    syn match gg_h_clause_report_error " to-error$" contained containedin=gg_r_construct_report_error
-    hi def link gg_h_clause_report_error    golfClause
-    hi def link gg_h_clause_output_report_error    golfClauseOutput
-    hi def link gg_h_construct_report_error    golfConstruct
-    hi def link gg_h_print_inline_report_error    golfConstruct
-syn region gg_r_construct_pf_web start="^[[:space:]]*pf-web" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_pf_web,gg_r_inline_pf_web,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_pf_web,gg_r_inline_pf_web,gg_r_at
-    syn match gg_h_construct_pf_web "^[[:space:]]*pf-web" contained containedin=gg_r_construct_pf_web
-    syn match gg_h_clause_pf_web " , \@=" contained containedin=gg_r_construct_pf_web
-    syn match gg_h_clause_pf_web " ,,\@=" contained containedin=gg_r_construct_pf_web
-    syn match gg_h_clause_pf_web " ,$" contained containedin=gg_r_construct_pf_web
-    syn match gg_h_print_inline_pf_web " ,\(>>\)\@=" contained containedin=gg_r_inline_pf_web
-    syn match gg_h_print_inline_pf_web " , \@=" contained containedin=gg_r_inline_pf_web
-    syn match gg_h_clause_output_pf_web " to \@=" contained containedin=gg_r_construct_pf_web
-    syn match gg_h_print_inline_pf_web " to \@=" contained containedin=gg_r_inline_pf_web
-    syn match gg_h_clause_pf_web " to-error \@=" contained containedin=gg_r_construct_pf_web
-    syn match gg_h_clause_pf_web " to-error,\@=" contained containedin=gg_r_construct_pf_web
-    syn match gg_h_clause_pf_web " to-error$" contained containedin=gg_r_construct_pf_web
-    syn match gg_h_print_inline_pf_web " to-error\(>>\)\@=" contained containedin=gg_r_inline_pf_web
-    syn match gg_h_print_inline_pf_web " to-error \@=" contained containedin=gg_r_inline_pf_web
-    syn region gg_r_inline_pf_web start="<<[[:space:]]*pf-web \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
-    syn match gg_h_print_inline_pf_web '<<[[:space:]]*pf-web \@=' contained containedin=gg_r_inline_pf_web
-    syn match gg_h_print_inline_pf_web '>>' contained containedin=gg_r_inline_pf_web
-    hi def link gg_h_clause_pf_web    golfClause
-    hi def link gg_h_clause_output_pf_web    golfClauseOutput
-    hi def link gg_h_construct_pf_web    golfConstruct
-    hi def link gg_h_print_inline_pf_web    golfConstruct
-syn region gg_r_construct_pf_out start="^[[:space:]]*pf-out" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_pf_out,gg_r_inline_pf_out,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_pf_out,gg_r_inline_pf_out,gg_r_at
-    syn match gg_h_construct_pf_out "^[[:space:]]*pf-out" contained containedin=gg_r_construct_pf_out
-    syn match gg_h_clause_pf_out " , \@=" contained containedin=gg_r_construct_pf_out
-    syn match gg_h_clause_pf_out " ,,\@=" contained containedin=gg_r_construct_pf_out
-    syn match gg_h_clause_pf_out " ,$" contained containedin=gg_r_construct_pf_out
-    syn match gg_h_print_inline_pf_out " ,\(>>\)\@=" contained containedin=gg_r_inline_pf_out
-    syn match gg_h_print_inline_pf_out " , \@=" contained containedin=gg_r_inline_pf_out
-    syn match gg_h_clause_output_pf_out " to \@=" contained containedin=gg_r_construct_pf_out
-    syn match gg_h_print_inline_pf_out " to \@=" contained containedin=gg_r_inline_pf_out
-    syn match gg_h_clause_pf_out " to-error \@=" contained containedin=gg_r_construct_pf_out
-    syn match gg_h_clause_pf_out " to-error,\@=" contained containedin=gg_r_construct_pf_out
-    syn match gg_h_clause_pf_out " to-error$" contained containedin=gg_r_construct_pf_out
-    syn match gg_h_print_inline_pf_out " to-error\(>>\)\@=" contained containedin=gg_r_inline_pf_out
-    syn match gg_h_print_inline_pf_out " to-error \@=" contained containedin=gg_r_inline_pf_out
-    syn region gg_r_inline_pf_out start="<<[[:space:]]*pf-out \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
-    syn match gg_h_print_inline_pf_out '<<[[:space:]]*pf-out \@=' contained containedin=gg_r_inline_pf_out
-    syn match gg_h_print_inline_pf_out '>>' contained containedin=gg_r_inline_pf_out
-    hi def link gg_h_clause_pf_out    golfClause
-    hi def link gg_h_clause_output_pf_out    golfClauseOutput
-    hi def link gg_h_construct_pf_out    golfConstruct
-    hi def link gg_h_print_inline_pf_out    golfConstruct
 syn region gg_r_construct_flush_output start="^[[:space:]]*flush-output" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_flush_output,gg_r_inline_flush_output,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_flush_output,gg_r_inline_flush_output,gg_r_at
@@ -1158,14 +1129,6 @@ syn region gg_r_construct_flush_output start="^[[:space:]]*flush-output" skip="\
     hi def link gg_h_clause_output_flush_output    golfClauseOutput
     hi def link gg_h_construct_flush_output    golfConstruct
     hi def link gg_h_print_inline_flush_output    golfConstruct
-syn region gg_r_construct_internal_mode start="^[[:space:]]*internal-mode" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_internal_mode,gg_r_inline_internal_mode,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_internal_mode,gg_r_inline_internal_mode,gg_r_at
-    syn match gg_h_construct_internal_mode "^[[:space:]]*internal-mode" contained containedin=gg_r_construct_internal_mode
-    hi def link gg_h_clause_internal_mode    golfClause
-    hi def link gg_h_clause_output_internal_mode    golfClauseOutput
-    hi def link gg_h_construct_internal_mode    golfConstruct
-    hi def link gg_h_print_inline_internal_mode    golfConstruct
 syn region gg_r_construct_extended_mode start="^[[:space:]]*extended-mode" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_extended_mode,gg_r_inline_extended_mode,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_extended_mode,gg_r_inline_extended_mode,gg_r_at
@@ -1202,6 +1165,15 @@ syn region gg_r_construct_string_number start="^[[:space:]]*string-number" skip=
     hi def link gg_h_clause_output_string_number    golfClauseOutput
     hi def link gg_h_construct_string_number    golfConstruct
     hi def link gg_h_print_inline_string_number    golfConstruct
+syn region gg_r_construct_abs_number start="^[[:space:]]*abs-number" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_abs_number,gg_r_inline_abs_number,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_abs_number,gg_r_inline_abs_number,gg_r_at
+    syn match gg_h_construct_abs_number "^[[:space:]]*abs-number" contained containedin=gg_r_construct_abs_number
+    syn match gg_h_clause_output_abs_number " to \@=" contained containedin=gg_r_construct_abs_number
+    hi def link gg_h_clause_abs_number    golfClause
+    hi def link gg_h_clause_output_abs_number    golfClauseOutput
+    hi def link gg_h_construct_abs_number    golfConstruct
+    hi def link gg_h_print_inline_abs_number    golfConstruct
 syn region gg_r_construct_get_req start="^[[:space:]]*get-req" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_req,gg_r_inline_get_req,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_req,gg_r_inline_get_req,gg_r_at
@@ -1236,6 +1208,9 @@ syn region gg_r_construct_get_req start="^[[:space:]]*get-req" skip="\\[[:space:
     syn match gg_h_clause_get_req " referring-url \@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " referring-url,\@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " referring-url$" contained containedin=gg_r_construct_get_req
+    syn match gg_h_clause_get_req " source-file \@=" contained containedin=gg_r_construct_get_req
+    syn match gg_h_clause_get_req " source-file,\@=" contained containedin=gg_r_construct_get_req
+    syn match gg_h_clause_get_req " source-file$" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_output_get_req " to \@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " trace-file \@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " trace-file,\@=" contained containedin=gg_r_construct_get_req
@@ -1326,10 +1301,14 @@ syn region gg_r_construct_get_time start="^[[:space:]]*get-time" skip="\\[[:spac
     syn match gg_h_construct_get_time "^[[:space:]]*get-time" contained containedin=gg_r_construct_get_time
     syn match gg_h_clause_get_time " day \@=" contained containedin=gg_r_construct_get_time
     syn match gg_h_clause_get_time " format \@=" contained containedin=gg_r_construct_get_time
+    syn match gg_h_clause_get_time " from-epoch \@=" contained containedin=gg_r_construct_get_time
     syn match gg_h_clause_get_time " hour \@=" contained containedin=gg_r_construct_get_time
     syn match gg_h_clause_get_time " minute \@=" contained containedin=gg_r_construct_get_time
     syn match gg_h_clause_get_time " month \@=" contained containedin=gg_r_construct_get_time
     syn match gg_h_clause_get_time " second \@=" contained containedin=gg_r_construct_get_time
+    syn match gg_h_clause_get_time " since-epoch \@=" contained containedin=gg_r_construct_get_time
+    syn match gg_h_clause_get_time " since-epoch,\@=" contained containedin=gg_r_construct_get_time
+    syn match gg_h_clause_get_time " since-epoch$" contained containedin=gg_r_construct_get_time
     syn match gg_h_clause_get_time " timezone \@=" contained containedin=gg_r_construct_get_time
     syn match gg_h_clause_output_get_time " to \@=" contained containedin=gg_r_construct_get_time
     syn match gg_h_clause_get_time " year \@=" contained containedin=gg_r_construct_get_time
@@ -1352,6 +1331,8 @@ syn region gg_r_construct_call_handler start="^[[:space:]]*call-handler" skip="\
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_call_handler,gg_r_inline_call_handler,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_call_handler,gg_r_inline_call_handler,gg_r_at
     syn match gg_h_construct_call_handler "^[[:space:]]*call-handler" contained containedin=gg_r_construct_call_handler
+    syn match gg_h_clause_output_call_handler " return-value \@=" contained containedin=gg_r_construct_call_handler
+    syn match gg_h_print_inline_call_handler " return-value \@=" contained containedin=gg_r_inline_call_handler
     syn region gg_r_inline_call_handler start="<<[[:space:]]*call-handler \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_call_handler '<<[[:space:]]*call-handler \@=' contained containedin=gg_r_inline_call_handler
     syn match gg_h_print_inline_call_handler '>>' contained containedin=gg_r_inline_call_handler
@@ -1385,11 +1366,11 @@ syn region gg_r_construct_read_remote start="^[[:space:]]*read-remote" skip="\\[
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_read_remote,gg_r_inline_read_remote,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_read_remote,gg_r_inline_read_remote,gg_r_at
     syn match gg_h_construct_read_remote "^[[:space:]]*read-remote" contained containedin=gg_r_construct_read_remote
-    syn match gg_h_clause_output_read_remote " data \@=" contained containedin=gg_r_construct_read_remote
-    syn match gg_h_clause_output_read_remote " error \@=" contained containedin=gg_r_construct_read_remote
-    syn match gg_h_clause_output_read_remote " handler-status \@=" contained containedin=gg_r_construct_read_remote
-    syn match gg_h_clause_output_read_remote " status \@=" contained containedin=gg_r_construct_read_remote
-    syn match gg_h_clause_output_read_remote " status-text \@=" contained containedin=gg_r_construct_read_remote
+    syn match gg_h_clause_read_remote " data \@=" contained containedin=gg_r_construct_read_remote
+    syn match gg_h_clause_read_remote " error \@=" contained containedin=gg_r_construct_read_remote
+    syn match gg_h_clause_read_remote " exit-status \@=" contained containedin=gg_r_construct_read_remote
+    syn match gg_h_clause_read_remote " status \@=" contained containedin=gg_r_construct_read_remote
+    syn match gg_h_clause_read_remote " status-text \@=" contained containedin=gg_r_construct_read_remote
     hi def link gg_h_clause_read_remote    golfClause
     hi def link gg_h_clause_output_read_remote    golfClauseOutput
     hi def link gg_h_construct_read_remote    golfConstruct
@@ -1423,19 +1404,19 @@ syn region gg_r_construct_run_remote start="^[[:space:]]*run-remote" skip="\\[[:
     syn match gg_h_clause_run_remote " content \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " content-length \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " content-type \@=" contained containedin=gg_r_construct_run_remote
-    syn match gg_h_clause_output_run_remote " data \@=" contained containedin=gg_r_construct_run_remote
+    syn match gg_h_clause_run_remote " data \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " environment \@=" contained containedin=gg_r_construct_run_remote
-    syn match gg_h_clause_output_run_remote " error \@=" contained containedin=gg_r_construct_run_remote
-    syn match gg_h_clause_output_run_remote " finished-okay \@=" contained containedin=gg_r_construct_run_remote
-    syn match gg_h_clause_output_run_remote " handler-status \@=" contained containedin=gg_r_construct_run_remote
+    syn match gg_h_clause_run_remote " error \@=" contained containedin=gg_r_construct_run_remote
+    syn match gg_h_clause_run_remote " exit-status \@=" contained containedin=gg_r_construct_run_remote
+    syn match gg_h_clause_run_remote " finished-okay \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " local \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " location \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " method \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " request-body \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " request-path \@=" contained containedin=gg_r_construct_run_remote
-    syn match gg_h_clause_output_run_remote " started \@=" contained containedin=gg_r_construct_run_remote
-    syn match gg_h_clause_output_run_remote " status \@=" contained containedin=gg_r_construct_run_remote
-    syn match gg_h_clause_output_run_remote " status-text \@=" contained containedin=gg_r_construct_run_remote
+    syn match gg_h_clause_run_remote " started \@=" contained containedin=gg_r_construct_run_remote
+    syn match gg_h_clause_run_remote " status \@=" contained containedin=gg_r_construct_run_remote
+    syn match gg_h_clause_run_remote " status-text \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " timeout \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " url-params \@=" contained containedin=gg_r_construct_run_remote
     syn match gg_h_clause_run_remote " url-path \@=" contained containedin=gg_r_construct_run_remote
@@ -1914,14 +1895,258 @@ syn region gg_r_construct_silent_header start="^[[:space:]]*silent-header" skip=
     hi def link gg_h_clause_output_silent_header    golfClauseOutput
     hi def link gg_h_construct_silent_header    golfConstruct
     hi def link gg_h_print_inline_silent_header    golfConstruct
-syn region gg_r_construct_handler_status start="^[[:space:]]*handler-status" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_handler_status,gg_r_inline_handler_status,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_handler_status,gg_r_inline_handler_status,gg_r_at
-    syn match gg_h_construct_handler_status "^[[:space:]]*handler-status" contained containedin=gg_r_construct_handler_status
-    hi def link gg_h_clause_handler_status    golfClause
-    hi def link gg_h_clause_output_handler_status    golfClauseOutput
-    hi def link gg_h_construct_handler_status    golfConstruct
-    hi def link gg_h_print_inline_handler_status    golfConstruct
+syn region gg_r_construct_exit_status start="^[[:space:]]*exit-status" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_exit_status,gg_r_inline_exit_status,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_exit_status,gg_r_inline_exit_status,gg_r_at
+    syn match gg_h_construct_exit_status "^[[:space:]]*exit-status" contained containedin=gg_r_construct_exit_status
+    hi def link gg_h_clause_exit_status    golfClause
+    hi def link gg_h_clause_output_exit_status    golfClauseOutput
+    hi def link gg_h_construct_exit_status    golfConstruct
+    hi def link gg_h_print_inline_exit_status    golfConstruct
+syn region gg_r_construct_trace_run start="^[[:space:]]*trace-run" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_trace_run,gg_r_inline_trace_run,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_trace_run,gg_r_inline_trace_run,gg_r_at
+    syn match gg_h_construct_trace_run "^[[:space:]]*trace-run" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " , \@=" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " ,,\@=" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " ,$" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " to \@=" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " to-error \@=" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " to-error,\@=" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " to-error$" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " url-encode \@=" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " url-encode,\@=" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " url-encode$" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " web-encode \@=" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " web-encode,\@=" contained containedin=gg_r_construct_trace_run
+    syn match gg_h_clause_trace_run " web-encode$" contained containedin=gg_r_construct_trace_run
+    hi def link gg_h_clause_trace_run    golfClause
+    hi def link gg_h_clause_output_trace_run    golfClauseOutput
+    hi def link gg_h_construct_trace_run    golfConstruct
+    hi def link gg_h_print_inline_trace_run    golfConstruct
+syn region gg_r_construct_report_error start="^[[:space:]]*report-error" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_report_error,gg_r_inline_report_error,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_report_error,gg_r_inline_report_error,gg_r_at
+    syn match gg_h_construct_report_error "^[[:space:]]*report-error" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " , \@=" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " ,,\@=" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " ,$" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " to \@=" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " to-error \@=" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " to-error,\@=" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " to-error$" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " url-encode \@=" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " url-encode,\@=" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " url-encode$" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " web-encode \@=" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " web-encode,\@=" contained containedin=gg_r_construct_report_error
+    syn match gg_h_clause_report_error " web-encode$" contained containedin=gg_r_construct_report_error
+    hi def link gg_h_clause_report_error    golfClause
+    hi def link gg_h_clause_output_report_error    golfClauseOutput
+    hi def link gg_h_construct_report_error    golfConstruct
+    hi def link gg_h_print_inline_report_error    golfConstruct
+syn region gg_r_construct_print_format start="^[[:space:]]*print-format" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_print_format,gg_r_inline_print_format,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_print_format,gg_r_inline_print_format,gg_r_at
+    syn match gg_h_construct_print_format "^[[:space:]]*print-format" contained containedin=gg_r_construct_print_format
+    syn match gg_h_clause_print_format " , \@=" contained containedin=gg_r_construct_print_format
+    syn match gg_h_clause_print_format " ,,\@=" contained containedin=gg_r_construct_print_format
+    syn match gg_h_clause_print_format " ,$" contained containedin=gg_r_construct_print_format
+    syn match gg_h_print_inline_print_format " ,\(>>\)\@=" contained containedin=gg_r_inline_print_format
+    syn match gg_h_print_inline_print_format " , \@=" contained containedin=gg_r_inline_print_format
+    syn match gg_h_clause_print_format " to \@=" contained containedin=gg_r_construct_print_format
+    syn match gg_h_print_inline_print_format " to \@=" contained containedin=gg_r_inline_print_format
+    syn match gg_h_clause_print_format " to-error \@=" contained containedin=gg_r_construct_print_format
+    syn match gg_h_clause_print_format " to-error,\@=" contained containedin=gg_r_construct_print_format
+    syn match gg_h_clause_print_format " to-error$" contained containedin=gg_r_construct_print_format
+    syn match gg_h_print_inline_print_format " to-error\(>>\)\@=" contained containedin=gg_r_inline_print_format
+    syn match gg_h_print_inline_print_format " to-error \@=" contained containedin=gg_r_inline_print_format
+    syn match gg_h_clause_print_format " url-encode \@=" contained containedin=gg_r_construct_print_format
+    syn match gg_h_clause_print_format " url-encode,\@=" contained containedin=gg_r_construct_print_format
+    syn match gg_h_clause_print_format " url-encode$" contained containedin=gg_r_construct_print_format
+    syn match gg_h_print_inline_print_format " url-encode\(>>\)\@=" contained containedin=gg_r_inline_print_format
+    syn match gg_h_print_inline_print_format " url-encode \@=" contained containedin=gg_r_inline_print_format
+    syn match gg_h_clause_print_format " web-encode \@=" contained containedin=gg_r_construct_print_format
+    syn match gg_h_clause_print_format " web-encode,\@=" contained containedin=gg_r_construct_print_format
+    syn match gg_h_clause_print_format " web-encode$" contained containedin=gg_r_construct_print_format
+    syn match gg_h_print_inline_print_format " web-encode\(>>\)\@=" contained containedin=gg_r_inline_print_format
+    syn match gg_h_print_inline_print_format " web-encode \@=" contained containedin=gg_r_inline_print_format
+    syn region gg_r_inline_print_format start="<<[[:space:]]*print-format \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_print_format '<<[[:space:]]*print-format \@=' contained containedin=gg_r_inline_print_format
+    syn match gg_h_print_inline_print_format '>>' contained containedin=gg_r_inline_print_format
+    hi def link gg_h_clause_print_format    golfClause
+    hi def link gg_h_clause_output_print_format    golfClauseOutput
+    hi def link gg_h_construct_print_format    golfConstruct
+    hi def link gg_h_print_inline_print_format    golfConstruct
+syn region gg_r_construct_print_out start="^[[:space:]]*print-out" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_print_out,gg_r_inline_print_out,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_print_out,gg_r_inline_print_out,gg_r_at
+    syn match gg_h_construct_print_out "^[[:space:]]*print-out" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " length \@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_print_inline_print_out " length \@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_clause_print_out " new-line \@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " new-line,\@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " new-line$" contained containedin=gg_r_construct_print_out
+    syn match gg_h_print_inline_print_out " new-line\(>>\)\@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_print_inline_print_out " new-line \@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_clause_print_out " source-file \@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " source-file,\@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " source-file$" contained containedin=gg_r_construct_print_out
+    syn match gg_h_print_inline_print_out " source-file\(>>\)\@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_print_inline_print_out " source-file \@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_clause_print_out " source-line \@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " source-line,\@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " source-line$" contained containedin=gg_r_construct_print_out
+    syn match gg_h_print_inline_print_out " source-line\(>>\)\@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_print_inline_print_out " source-line \@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_clause_print_out " url-encode \@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " url-encode,\@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " url-encode$" contained containedin=gg_r_construct_print_out
+    syn match gg_h_print_inline_print_out " url-encode\(>>\)\@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_print_inline_print_out " url-encode \@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_clause_print_out " web-encode \@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " web-encode,\@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " web-encode$" contained containedin=gg_r_construct_print_out
+    syn match gg_h_print_inline_print_out " web-encode\(>>\)\@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_print_inline_print_out " web-encode \@=" contained containedin=gg_r_inline_print_out
+    syn region gg_r_inline_print_out start="<<[[:space:]]*print-out \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_print_out '<<[[:space:]]*print-out \@=' contained containedin=gg_r_inline_print_out
+    syn match gg_h_print_inline_print_out '>>' contained containedin=gg_r_inline_print_out
+    hi def link gg_h_clause_print_out    golfClause
+    hi def link gg_h_clause_output_print_out    golfClauseOutput
+    hi def link gg_h_construct_print_out    golfConstruct
+    hi def link gg_h_print_inline_print_out    golfConstruct
+syn region gg_r_construct_p_path start="^[[:space:]]*p-path" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_path,gg_r_inline_p_path,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_path,gg_r_inline_p_path,gg_r_at
+    syn match gg_h_construct_p_path "^[[:space:]]*p-path" contained containedin=gg_r_construct_p_path
+    syn match gg_h_clause_p_path " new-line \@=" contained containedin=gg_r_construct_p_path
+    syn match gg_h_clause_p_path " new-line,\@=" contained containedin=gg_r_construct_p_path
+    syn match gg_h_clause_p_path " new-line$" contained containedin=gg_r_construct_p_path
+    syn match gg_h_print_inline_p_path " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_path
+    syn match gg_h_print_inline_p_path " new-line \@=" contained containedin=gg_r_inline_p_path
+    syn region gg_r_inline_p_path start="<<[[:space:]]*p-path \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_p_path '<<[[:space:]]*p-path \@=' contained containedin=gg_r_inline_p_path
+    syn match gg_h_print_inline_p_path '>>' contained containedin=gg_r_inline_p_path
+    hi def link gg_h_clause_p_path    golfClause
+    hi def link gg_h_clause_output_p_path    golfClauseOutput
+    hi def link gg_h_construct_p_path    golfConstruct
+    hi def link gg_h_print_inline_p_path    golfConstruct
+syn region gg_r_construct_print_path start="^[[:space:]]*print-path" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_print_path,gg_r_inline_print_path,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_print_path,gg_r_inline_print_path,gg_r_at
+    syn match gg_h_construct_print_path "^[[:space:]]*print-path" contained containedin=gg_r_construct_print_path
+    syn match gg_h_clause_print_path " new-line \@=" contained containedin=gg_r_construct_print_path
+    syn match gg_h_clause_print_path " new-line,\@=" contained containedin=gg_r_construct_print_path
+    syn match gg_h_clause_print_path " new-line$" contained containedin=gg_r_construct_print_path
+    syn match gg_h_print_inline_print_path " new-line\(>>\)\@=" contained containedin=gg_r_inline_print_path
+    syn match gg_h_print_inline_print_path " new-line \@=" contained containedin=gg_r_inline_print_path
+    syn region gg_r_inline_print_path start="<<[[:space:]]*print-path \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_print_path '<<[[:space:]]*print-path \@=' contained containedin=gg_r_inline_print_path
+    syn match gg_h_print_inline_print_path '>>' contained containedin=gg_r_inline_print_path
+    hi def link gg_h_clause_print_path    golfClause
+    hi def link gg_h_clause_output_print_path    golfClauseOutput
+    hi def link gg_h_construct_print_path    golfConstruct
+    hi def link gg_h_print_inline_print_path    golfConstruct
+syn region gg_r_construct_pf_out start="^[[:space:]]*pf-out" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_pf_out,gg_r_inline_pf_out,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_pf_out,gg_r_inline_pf_out,gg_r_at
+    syn match gg_h_construct_pf_out "^[[:space:]]*pf-out" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_clause_pf_out " , \@=" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_clause_pf_out " ,,\@=" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_clause_pf_out " ,$" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_print_inline_pf_out " ,\(>>\)\@=" contained containedin=gg_r_inline_pf_out
+    syn match gg_h_print_inline_pf_out " , \@=" contained containedin=gg_r_inline_pf_out
+    syn match gg_h_clause_pf_out " to \@=" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_print_inline_pf_out " to \@=" contained containedin=gg_r_inline_pf_out
+    syn match gg_h_clause_pf_out " to-error \@=" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_clause_pf_out " to-error,\@=" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_clause_pf_out " to-error$" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_print_inline_pf_out " to-error\(>>\)\@=" contained containedin=gg_r_inline_pf_out
+    syn match gg_h_print_inline_pf_out " to-error \@=" contained containedin=gg_r_inline_pf_out
+    syn match gg_h_clause_pf_out " url-encode \@=" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_clause_pf_out " url-encode,\@=" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_clause_pf_out " url-encode$" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_print_inline_pf_out " url-encode\(>>\)\@=" contained containedin=gg_r_inline_pf_out
+    syn match gg_h_print_inline_pf_out " url-encode \@=" contained containedin=gg_r_inline_pf_out
+    syn match gg_h_clause_pf_out " web-encode \@=" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_clause_pf_out " web-encode,\@=" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_clause_pf_out " web-encode$" contained containedin=gg_r_construct_pf_out
+    syn match gg_h_print_inline_pf_out " web-encode\(>>\)\@=" contained containedin=gg_r_inline_pf_out
+    syn match gg_h_print_inline_pf_out " web-encode \@=" contained containedin=gg_r_inline_pf_out
+    syn region gg_r_inline_pf_out start="<<[[:space:]]*pf-out \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_pf_out '<<[[:space:]]*pf-out \@=' contained containedin=gg_r_inline_pf_out
+    syn match gg_h_print_inline_pf_out '>>' contained containedin=gg_r_inline_pf_out
+    hi def link gg_h_clause_pf_out    golfClause
+    hi def link gg_h_clause_output_pf_out    golfClauseOutput
+    hi def link gg_h_construct_pf_out    golfConstruct
+    hi def link gg_h_print_inline_pf_out    golfConstruct
+syn region gg_r_construct_pf_url start="^[[:space:]]*pf-url" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_pf_url,gg_r_inline_pf_url,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_pf_url,gg_r_inline_pf_url,gg_r_at
+    syn match gg_h_construct_pf_url "^[[:space:]]*pf-url" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_clause_pf_url " , \@=" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_clause_pf_url " ,,\@=" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_clause_pf_url " ,$" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_print_inline_pf_url " ,\(>>\)\@=" contained containedin=gg_r_inline_pf_url
+    syn match gg_h_print_inline_pf_url " , \@=" contained containedin=gg_r_inline_pf_url
+    syn match gg_h_clause_pf_url " to \@=" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_print_inline_pf_url " to \@=" contained containedin=gg_r_inline_pf_url
+    syn match gg_h_clause_pf_url " to-error \@=" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_clause_pf_url " to-error,\@=" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_clause_pf_url " to-error$" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_print_inline_pf_url " to-error\(>>\)\@=" contained containedin=gg_r_inline_pf_url
+    syn match gg_h_print_inline_pf_url " to-error \@=" contained containedin=gg_r_inline_pf_url
+    syn match gg_h_clause_pf_url " url-encode \@=" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_clause_pf_url " url-encode,\@=" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_clause_pf_url " url-encode$" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_print_inline_pf_url " url-encode\(>>\)\@=" contained containedin=gg_r_inline_pf_url
+    syn match gg_h_print_inline_pf_url " url-encode \@=" contained containedin=gg_r_inline_pf_url
+    syn match gg_h_clause_pf_url " web-encode \@=" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_clause_pf_url " web-encode,\@=" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_clause_pf_url " web-encode$" contained containedin=gg_r_construct_pf_url
+    syn match gg_h_print_inline_pf_url " web-encode\(>>\)\@=" contained containedin=gg_r_inline_pf_url
+    syn match gg_h_print_inline_pf_url " web-encode \@=" contained containedin=gg_r_inline_pf_url
+    syn region gg_r_inline_pf_url start="<<[[:space:]]*pf-url \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_pf_url '<<[[:space:]]*pf-url \@=' contained containedin=gg_r_inline_pf_url
+    syn match gg_h_print_inline_pf_url '>>' contained containedin=gg_r_inline_pf_url
+    hi def link gg_h_clause_pf_url    golfClause
+    hi def link gg_h_clause_output_pf_url    golfClauseOutput
+    hi def link gg_h_construct_pf_url    golfConstruct
+    hi def link gg_h_print_inline_pf_url    golfConstruct
+syn region gg_r_construct_pf_web start="^[[:space:]]*pf-web" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_pf_web,gg_r_inline_pf_web,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_pf_web,gg_r_inline_pf_web,gg_r_at
+    syn match gg_h_construct_pf_web "^[[:space:]]*pf-web" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_clause_pf_web " , \@=" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_clause_pf_web " ,,\@=" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_clause_pf_web " ,$" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_print_inline_pf_web " ,\(>>\)\@=" contained containedin=gg_r_inline_pf_web
+    syn match gg_h_print_inline_pf_web " , \@=" contained containedin=gg_r_inline_pf_web
+    syn match gg_h_clause_pf_web " to \@=" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_print_inline_pf_web " to \@=" contained containedin=gg_r_inline_pf_web
+    syn match gg_h_clause_pf_web " to-error \@=" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_clause_pf_web " to-error,\@=" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_clause_pf_web " to-error$" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_print_inline_pf_web " to-error\(>>\)\@=" contained containedin=gg_r_inline_pf_web
+    syn match gg_h_print_inline_pf_web " to-error \@=" contained containedin=gg_r_inline_pf_web
+    syn match gg_h_clause_pf_web " url-encode \@=" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_clause_pf_web " url-encode,\@=" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_clause_pf_web " url-encode$" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_print_inline_pf_web " url-encode\(>>\)\@=" contained containedin=gg_r_inline_pf_web
+    syn match gg_h_print_inline_pf_web " url-encode \@=" contained containedin=gg_r_inline_pf_web
+    syn match gg_h_clause_pf_web " web-encode \@=" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_clause_pf_web " web-encode,\@=" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_clause_pf_web " web-encode$" contained containedin=gg_r_construct_pf_web
+    syn match gg_h_print_inline_pf_web " web-encode\(>>\)\@=" contained containedin=gg_r_inline_pf_web
+    syn match gg_h_print_inline_pf_web " web-encode \@=" contained containedin=gg_r_inline_pf_web
+    syn region gg_r_inline_pf_web start="<<[[:space:]]*pf-web \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_pf_web '<<[[:space:]]*pf-web \@=' contained containedin=gg_r_inline_pf_web
+    syn match gg_h_print_inline_pf_web '>>' contained containedin=gg_r_inline_pf_web
+    hi def link gg_h_clause_pf_web    golfClause
+    hi def link gg_h_clause_output_pf_web    golfClauseOutput
+    hi def link gg_h_construct_pf_web    golfConstruct
+    hi def link gg_h_print_inline_pf_web    golfConstruct
 syn region gg_r_construct_p_web start="^[[:space:]]*p-web" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_web,gg_r_inline_p_web,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_web,gg_r_inline_p_web,gg_r_at
@@ -1933,6 +2158,26 @@ syn region gg_r_construct_p_web start="^[[:space:]]*p-web" skip="\\[[:space:]]*$
     syn match gg_h_clause_p_web " new-line$" contained containedin=gg_r_construct_p_web
     syn match gg_h_print_inline_p_web " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_web
     syn match gg_h_print_inline_p_web " new-line \@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_clause_p_web " source-file \@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " source-file,\@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " source-file$" contained containedin=gg_r_construct_p_web
+    syn match gg_h_print_inline_p_web " source-file\(>>\)\@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_print_inline_p_web " source-file \@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_clause_p_web " source-line \@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " source-line,\@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " source-line$" contained containedin=gg_r_construct_p_web
+    syn match gg_h_print_inline_p_web " source-line\(>>\)\@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_print_inline_p_web " source-line \@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_clause_p_web " url-encode \@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " url-encode,\@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " url-encode$" contained containedin=gg_r_construct_p_web
+    syn match gg_h_print_inline_p_web " url-encode\(>>\)\@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_print_inline_p_web " url-encode \@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_clause_p_web " web-encode \@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " web-encode,\@=" contained containedin=gg_r_construct_p_web
+    syn match gg_h_clause_p_web " web-encode$" contained containedin=gg_r_construct_p_web
+    syn match gg_h_print_inline_p_web " web-encode\(>>\)\@=" contained containedin=gg_r_inline_p_web
+    syn match gg_h_print_inline_p_web " web-encode \@=" contained containedin=gg_r_inline_p_web
     syn region gg_r_inline_p_web start="<<[[:space:]]*p-web \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_web '<<[[:space:]]*p-web \@=' contained containedin=gg_r_inline_p_web
     syn match gg_h_print_inline_p_web '>>' contained containedin=gg_r_inline_p_web
@@ -1951,6 +2196,26 @@ syn region gg_r_construct_p_url start="^[[:space:]]*p-url" skip="\\[[:space:]]*$
     syn match gg_h_clause_p_url " new-line$" contained containedin=gg_r_construct_p_url
     syn match gg_h_print_inline_p_url " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_url
     syn match gg_h_print_inline_p_url " new-line \@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_clause_p_url " source-file \@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " source-file,\@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " source-file$" contained containedin=gg_r_construct_p_url
+    syn match gg_h_print_inline_p_url " source-file\(>>\)\@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_print_inline_p_url " source-file \@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_clause_p_url " source-line \@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " source-line,\@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " source-line$" contained containedin=gg_r_construct_p_url
+    syn match gg_h_print_inline_p_url " source-line\(>>\)\@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_print_inline_p_url " source-line \@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_clause_p_url " url-encode \@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " url-encode,\@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " url-encode$" contained containedin=gg_r_construct_p_url
+    syn match gg_h_print_inline_p_url " url-encode\(>>\)\@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_print_inline_p_url " url-encode \@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_clause_p_url " web-encode \@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " web-encode,\@=" contained containedin=gg_r_construct_p_url
+    syn match gg_h_clause_p_url " web-encode$" contained containedin=gg_r_construct_p_url
+    syn match gg_h_print_inline_p_url " web-encode\(>>\)\@=" contained containedin=gg_r_inline_p_url
+    syn match gg_h_print_inline_p_url " web-encode \@=" contained containedin=gg_r_inline_p_url
     syn region gg_r_inline_p_url start="<<[[:space:]]*p-url \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_url '<<[[:space:]]*p-url \@=' contained containedin=gg_r_inline_p_url
     syn match gg_h_print_inline_p_url '>>' contained containedin=gg_r_inline_p_url
@@ -1962,11 +2227,33 @@ syn region gg_r_construct_p_num start="^[[:space:]]*p-num" skip="\\[[:space:]]*$
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_num,gg_r_inline_p_num,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_num,gg_r_inline_p_num,gg_r_at
     syn match gg_h_construct_p_num "^[[:space:]]*p-num" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " length \@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_print_inline_p_num " length \@=" contained containedin=gg_r_inline_p_num
     syn match gg_h_clause_p_num " new-line \@=" contained containedin=gg_r_construct_p_num
     syn match gg_h_clause_p_num " new-line,\@=" contained containedin=gg_r_construct_p_num
     syn match gg_h_clause_p_num " new-line$" contained containedin=gg_r_construct_p_num
     syn match gg_h_print_inline_p_num " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_num
     syn match gg_h_print_inline_p_num " new-line \@=" contained containedin=gg_r_inline_p_num
+    syn match gg_h_clause_p_num " source-file \@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " source-file,\@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " source-file$" contained containedin=gg_r_construct_p_num
+    syn match gg_h_print_inline_p_num " source-file\(>>\)\@=" contained containedin=gg_r_inline_p_num
+    syn match gg_h_print_inline_p_num " source-file \@=" contained containedin=gg_r_inline_p_num
+    syn match gg_h_clause_p_num " source-line \@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " source-line,\@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " source-line$" contained containedin=gg_r_construct_p_num
+    syn match gg_h_print_inline_p_num " source-line\(>>\)\@=" contained containedin=gg_r_inline_p_num
+    syn match gg_h_print_inline_p_num " source-line \@=" contained containedin=gg_r_inline_p_num
+    syn match gg_h_clause_p_num " url-encode \@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " url-encode,\@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " url-encode$" contained containedin=gg_r_construct_p_num
+    syn match gg_h_print_inline_p_num " url-encode\(>>\)\@=" contained containedin=gg_r_inline_p_num
+    syn match gg_h_print_inline_p_num " url-encode \@=" contained containedin=gg_r_inline_p_num
+    syn match gg_h_clause_p_num " web-encode \@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " web-encode,\@=" contained containedin=gg_r_construct_p_num
+    syn match gg_h_clause_p_num " web-encode$" contained containedin=gg_r_construct_p_num
+    syn match gg_h_print_inline_p_num " web-encode\(>>\)\@=" contained containedin=gg_r_inline_p_num
+    syn match gg_h_print_inline_p_num " web-encode \@=" contained containedin=gg_r_inline_p_num
     syn region gg_r_inline_p_num start="<<[[:space:]]*p-num \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_num '<<[[:space:]]*p-num \@=' contained containedin=gg_r_inline_p_num
     syn match gg_h_print_inline_p_num '>>' contained containedin=gg_r_inline_p_num
@@ -1978,11 +2265,33 @@ syn region gg_r_construct_p_source_file start="^[[:space:]]*p-source-file" skip=
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_source_file,gg_r_inline_p_source_file,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_source_file,gg_r_inline_p_source_file,gg_r_at
     syn match gg_h_construct_p_source_file "^[[:space:]]*p-source-file" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " length \@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_print_inline_p_source_file " length \@=" contained containedin=gg_r_inline_p_source_file
     syn match gg_h_clause_p_source_file " new-line \@=" contained containedin=gg_r_construct_p_source_file
     syn match gg_h_clause_p_source_file " new-line,\@=" contained containedin=gg_r_construct_p_source_file
     syn match gg_h_clause_p_source_file " new-line$" contained containedin=gg_r_construct_p_source_file
     syn match gg_h_print_inline_p_source_file " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_source_file
     syn match gg_h_print_inline_p_source_file " new-line \@=" contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_clause_p_source_file " source-file \@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " source-file,\@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " source-file$" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_print_inline_p_source_file " source-file\(>>\)\@=" contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_print_inline_p_source_file " source-file \@=" contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_clause_p_source_file " source-line \@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " source-line,\@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " source-line$" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_print_inline_p_source_file " source-line\(>>\)\@=" contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_print_inline_p_source_file " source-line \@=" contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_clause_p_source_file " url-encode \@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " url-encode,\@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " url-encode$" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_print_inline_p_source_file " url-encode\(>>\)\@=" contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_print_inline_p_source_file " url-encode \@=" contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_clause_p_source_file " web-encode \@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " web-encode,\@=" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_clause_p_source_file " web-encode$" contained containedin=gg_r_construct_p_source_file
+    syn match gg_h_print_inline_p_source_file " web-encode\(>>\)\@=" contained containedin=gg_r_inline_p_source_file
+    syn match gg_h_print_inline_p_source_file " web-encode \@=" contained containedin=gg_r_inline_p_source_file
     syn region gg_r_inline_p_source_file start="<<[[:space:]]*p-source-file" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_source_file '<<[[:space:]]*p-source-file' contained containedin=gg_r_inline_p_source_file
     syn match gg_h_print_inline_p_source_file '>>' contained containedin=gg_r_inline_p_source_file
@@ -1990,38 +2299,6 @@ syn region gg_r_construct_p_source_file start="^[[:space:]]*p-source-file" skip=
     hi def link gg_h_clause_output_p_source_file    golfClauseOutput
     hi def link gg_h_construct_p_source_file    golfConstruct
     hi def link gg_h_print_inline_p_source_file    golfConstruct
-syn region gg_r_construct_p_source_line start="^[[:space:]]*p-source-line" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_source_line,gg_r_inline_p_source_line,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_source_line,gg_r_inline_p_source_line,gg_r_at
-    syn match gg_h_construct_p_source_line "^[[:space:]]*p-source-line" contained containedin=gg_r_construct_p_source_line
-    syn match gg_h_clause_p_source_line " new-line \@=" contained containedin=gg_r_construct_p_source_line
-    syn match gg_h_clause_p_source_line " new-line,\@=" contained containedin=gg_r_construct_p_source_line
-    syn match gg_h_clause_p_source_line " new-line$" contained containedin=gg_r_construct_p_source_line
-    syn match gg_h_print_inline_p_source_line " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_source_line
-    syn match gg_h_print_inline_p_source_line " new-line \@=" contained containedin=gg_r_inline_p_source_line
-    syn region gg_r_inline_p_source_line start="<<[[:space:]]*p-source-line" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
-    syn match gg_h_print_inline_p_source_line '<<[[:space:]]*p-source-line' contained containedin=gg_r_inline_p_source_line
-    syn match gg_h_print_inline_p_source_line '>>' contained containedin=gg_r_inline_p_source_line
-    hi def link gg_h_clause_p_source_line    golfClause
-    hi def link gg_h_clause_output_p_source_line    golfClauseOutput
-    hi def link gg_h_construct_p_source_line    golfConstruct
-    hi def link gg_h_print_inline_p_source_line    golfConstruct
-syn region gg_r_construct_p_path start="^[[:space:]]*p-path" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_path,gg_r_inline_p_path,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_path,gg_r_inline_p_path,gg_r_at
-    syn match gg_h_construct_p_path "^[[:space:]]*p-path" contained containedin=gg_r_construct_p_path
-    syn match gg_h_clause_p_path " new-line \@=" contained containedin=gg_r_construct_p_path
-    syn match gg_h_clause_p_path " new-line,\@=" contained containedin=gg_r_construct_p_path
-    syn match gg_h_clause_p_path " new-line$" contained containedin=gg_r_construct_p_path
-    syn match gg_h_print_inline_p_path " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_path
-    syn match gg_h_print_inline_p_path " new-line \@=" contained containedin=gg_r_inline_p_path
-    syn region gg_r_inline_p_path start="<<[[:space:]]*p-path \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
-    syn match gg_h_print_inline_p_path '<<[[:space:]]*p-path \@=' contained containedin=gg_r_inline_p_path
-    syn match gg_h_print_inline_p_path '>>' contained containedin=gg_r_inline_p_path
-    hi def link gg_h_clause_p_path    golfClause
-    hi def link gg_h_clause_output_p_path    golfClauseOutput
-    hi def link gg_h_construct_p_path    golfConstruct
-    hi def link gg_h_print_inline_p_path    golfConstruct
 syn region gg_r_construct_p_out start="^[[:space:]]*p-out" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_out,gg_r_inline_p_out,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_out,gg_r_inline_p_out,gg_r_at
@@ -2033,6 +2310,26 @@ syn region gg_r_construct_p_out start="^[[:space:]]*p-out" skip="\\[[:space:]]*$
     syn match gg_h_clause_p_out " new-line$" contained containedin=gg_r_construct_p_out
     syn match gg_h_print_inline_p_out " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_out
     syn match gg_h_print_inline_p_out " new-line \@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_clause_p_out " source-file \@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " source-file,\@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " source-file$" contained containedin=gg_r_construct_p_out
+    syn match gg_h_print_inline_p_out " source-file\(>>\)\@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_print_inline_p_out " source-file \@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_clause_p_out " source-line \@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " source-line,\@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " source-line$" contained containedin=gg_r_construct_p_out
+    syn match gg_h_print_inline_p_out " source-line\(>>\)\@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_print_inline_p_out " source-line \@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_clause_p_out " url-encode \@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " url-encode,\@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " url-encode$" contained containedin=gg_r_construct_p_out
+    syn match gg_h_print_inline_p_out " url-encode\(>>\)\@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_print_inline_p_out " url-encode \@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_clause_p_out " web-encode \@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " web-encode,\@=" contained containedin=gg_r_construct_p_out
+    syn match gg_h_clause_p_out " web-encode$" contained containedin=gg_r_construct_p_out
+    syn match gg_h_print_inline_p_out " web-encode\(>>\)\@=" contained containedin=gg_r_inline_p_out
+    syn match gg_h_print_inline_p_out " web-encode \@=" contained containedin=gg_r_inline_p_out
     syn region gg_r_inline_p_out start="<<[[:space:]]*p-out \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
     syn match gg_h_print_inline_p_out '<<[[:space:]]*p-out \@=' contained containedin=gg_r_inline_p_out
     syn match gg_h_print_inline_p_out '>>' contained containedin=gg_r_inline_p_out
@@ -2040,6 +2337,44 @@ syn region gg_r_construct_p_out start="^[[:space:]]*p-out" skip="\\[[:space:]]*$
     hi def link gg_h_clause_output_p_out    golfClauseOutput
     hi def link gg_h_construct_p_out    golfConstruct
     hi def link gg_h_print_inline_p_out    golfConstruct
+syn region gg_r_construct_p_source_line start="^[[:space:]]*p-source-line" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_p_source_line,gg_r_inline_p_source_line,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_p_source_line,gg_r_inline_p_source_line,gg_r_at
+    syn match gg_h_construct_p_source_line "^[[:space:]]*p-source-line" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " length \@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_print_inline_p_source_line " length \@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_clause_p_source_line " new-line \@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " new-line,\@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " new-line$" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_print_inline_p_source_line " new-line\(>>\)\@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_print_inline_p_source_line " new-line \@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_clause_p_source_line " source-file \@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " source-file,\@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " source-file$" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_print_inline_p_source_line " source-file\(>>\)\@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_print_inline_p_source_line " source-file \@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_clause_p_source_line " source-line \@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " source-line,\@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " source-line$" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_print_inline_p_source_line " source-line\(>>\)\@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_print_inline_p_source_line " source-line \@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_clause_p_source_line " url-encode \@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " url-encode,\@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " url-encode$" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_print_inline_p_source_line " url-encode\(>>\)\@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_print_inline_p_source_line " url-encode \@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_clause_p_source_line " web-encode \@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " web-encode,\@=" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_clause_p_source_line " web-encode$" contained containedin=gg_r_construct_p_source_line
+    syn match gg_h_print_inline_p_source_line " web-encode\(>>\)\@=" contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_print_inline_p_source_line " web-encode \@=" contained containedin=gg_r_inline_p_source_line
+    syn region gg_r_inline_p_source_line start="<<[[:space:]]*p-source-line" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=gg_r_at keepend
+    syn match gg_h_print_inline_p_source_line '<<[[:space:]]*p-source-line' contained containedin=gg_r_inline_p_source_line
+    syn match gg_h_print_inline_p_source_line '>>' contained containedin=gg_r_inline_p_source_line
+    hi def link gg_h_clause_p_source_line    golfClause
+    hi def link gg_h_clause_output_p_source_line    golfClauseOutput
+    hi def link gg_h_construct_p_source_line    golfConstruct
+    hi def link gg_h_print_inline_p_source_line    golfConstruct
 syn region gg_r_construct_run_query start="^[[:space:]]*run-query" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_run_query,gg_r_inline_run_query,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_run_query,gg_r_inline_run_query,gg_r_at
@@ -2068,12 +2403,12 @@ syn region gg_r_construct_run_query start="^[[:space:]]*run-query" skip="\\[[:sp
     syn match gg_h_clause_run_query " on-error-exit$" contained containedin=gg_r_construct_run_query
     syn match gg_h_clause_output_run_query " output \@=" contained containedin=gg_r_construct_run_query
     syn match gg_h_clause_output_run_query " row-count \@=" contained containedin=gg_r_construct_run_query
-    syn match gg_h_clause_run_query " urlencode \@=" contained containedin=gg_r_construct_run_query
-    syn match gg_h_clause_run_query " urlencode,\@=" contained containedin=gg_r_construct_run_query
-    syn match gg_h_clause_run_query " urlencode$" contained containedin=gg_r_construct_run_query
-    syn match gg_h_clause_run_query " webencode \@=" contained containedin=gg_r_construct_run_query
-    syn match gg_h_clause_run_query " webencode,\@=" contained containedin=gg_r_construct_run_query
-    syn match gg_h_clause_run_query " webencode$" contained containedin=gg_r_construct_run_query
+    syn match gg_h_clause_run_query " url-encode \@=" contained containedin=gg_r_construct_run_query
+    syn match gg_h_clause_run_query " url-encode,\@=" contained containedin=gg_r_construct_run_query
+    syn match gg_h_clause_run_query " url-encode$" contained containedin=gg_r_construct_run_query
+    syn match gg_h_clause_run_query " web-encode \@=" contained containedin=gg_r_construct_run_query
+    syn match gg_h_clause_run_query " web-encode,\@=" contained containedin=gg_r_construct_run_query
+    syn match gg_h_clause_run_query " web-encode$" contained containedin=gg_r_construct_run_query
     hi def link gg_h_clause_run_query    golfClause
     hi def link gg_h_clause_output_run_query    golfClauseOutput
     hi def link gg_h_construct_run_query    golfConstruct
@@ -2106,12 +2441,12 @@ syn region gg_r_construct_run_prepared_query start="^[[:space:]]*run-prepared-qu
     syn match gg_h_clause_run_prepared_query " on-error-exit$" contained containedin=gg_r_construct_run_prepared_query
     syn match gg_h_clause_output_run_prepared_query " output \@=" contained containedin=gg_r_construct_run_prepared_query
     syn match gg_h_clause_output_run_prepared_query " row-count \@=" contained containedin=gg_r_construct_run_prepared_query
-    syn match gg_h_clause_run_prepared_query " urlencode \@=" contained containedin=gg_r_construct_run_prepared_query
-    syn match gg_h_clause_run_prepared_query " urlencode,\@=" contained containedin=gg_r_construct_run_prepared_query
-    syn match gg_h_clause_run_prepared_query " urlencode$" contained containedin=gg_r_construct_run_prepared_query
-    syn match gg_h_clause_run_prepared_query " webencode \@=" contained containedin=gg_r_construct_run_prepared_query
-    syn match gg_h_clause_run_prepared_query " webencode,\@=" contained containedin=gg_r_construct_run_prepared_query
-    syn match gg_h_clause_run_prepared_query " webencode$" contained containedin=gg_r_construct_run_prepared_query
+    syn match gg_h_clause_run_prepared_query " url-encode \@=" contained containedin=gg_r_construct_run_prepared_query
+    syn match gg_h_clause_run_prepared_query " url-encode,\@=" contained containedin=gg_r_construct_run_prepared_query
+    syn match gg_h_clause_run_prepared_query " url-encode$" contained containedin=gg_r_construct_run_prepared_query
+    syn match gg_h_clause_run_prepared_query " web-encode \@=" contained containedin=gg_r_construct_run_prepared_query
+    syn match gg_h_clause_run_prepared_query " web-encode,\@=" contained containedin=gg_r_construct_run_prepared_query
+    syn match gg_h_clause_run_prepared_query " web-encode$" contained containedin=gg_r_construct_run_prepared_query
     hi def link gg_h_clause_run_prepared_query    golfClause
     hi def link gg_h_clause_output_run_prepared_query    golfClauseOutput
     hi def link gg_h_construct_run_prepared_query    golfConstruct
@@ -2258,6 +2593,12 @@ syn region gg_r_construct_if_not_defined start="^[[:space:]]*if-not-defined" ski
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_if_not_defined,gg_r_inline_if_not_defined,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_if_not_defined,gg_r_inline_if_not_defined,gg_r_at
     syn match gg_h_construct_if_not_defined "^[[:space:]]*if-not-defined" contained containedin=gg_r_construct_if_not_defined
+    syn match gg_h_clause_if_not_defined " equal \@=" contained containedin=gg_r_construct_if_not_defined
+    syn match gg_h_clause_if_not_defined " greater-equal \@=" contained containedin=gg_r_construct_if_not_defined
+    syn match gg_h_clause_if_not_defined " greater-than \@=" contained containedin=gg_r_construct_if_not_defined
+    syn match gg_h_clause_if_not_defined " lesser-equal \@=" contained containedin=gg_r_construct_if_not_defined
+    syn match gg_h_clause_if_not_defined " lesser-than \@=" contained containedin=gg_r_construct_if_not_defined
+    syn match gg_h_clause_if_not_defined " not-equal \@=" contained containedin=gg_r_construct_if_not_defined
     hi def link gg_h_clause_if_not_defined    golfClause
     hi def link gg_h_clause_output_if_not_defined    golfClauseOutput
     hi def link gg_h_construct_if_not_defined    golfConstruct
@@ -2266,6 +2607,12 @@ syn region gg_r_construct_if_defined start="^[[:space:]]*if-defined" skip="\\[[:
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_if_defined,gg_r_inline_if_defined,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_if_defined,gg_r_inline_if_defined,gg_r_at
     syn match gg_h_construct_if_defined "^[[:space:]]*if-defined" contained containedin=gg_r_construct_if_defined
+    syn match gg_h_clause_if_defined " equal \@=" contained containedin=gg_r_construct_if_defined
+    syn match gg_h_clause_if_defined " greater-equal \@=" contained containedin=gg_r_construct_if_defined
+    syn match gg_h_clause_if_defined " greater-than \@=" contained containedin=gg_r_construct_if_defined
+    syn match gg_h_clause_if_defined " lesser-equal \@=" contained containedin=gg_r_construct_if_defined
+    syn match gg_h_clause_if_defined " lesser-than \@=" contained containedin=gg_r_construct_if_defined
+    syn match gg_h_clause_if_defined " not-equal \@=" contained containedin=gg_r_construct_if_defined
     hi def link gg_h_clause_if_defined    golfClause
     hi def link gg_h_clause_output_if_defined    golfClauseOutput
     hi def link gg_h_construct_if_defined    golfConstruct

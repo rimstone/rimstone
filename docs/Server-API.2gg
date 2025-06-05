@@ -145,11 +145,11 @@ begin-handler /example public
 
     set-number fact
     call-extended get_factorial (10, &fact)
-    @Factorial is <<p-num fact>>
+    @Factorial is <<print-out fact>>
 
     set-string res
     call-extended fact_msg (10, &res)
-    p-out res
+    print-out res
     @
 end-handler
 

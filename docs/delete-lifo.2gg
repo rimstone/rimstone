@@ -45,6 +45,7 @@ delete-lifo mylist
  LIFO
 
 \fBdelete-lifo\fP  
+\fBget-lifo\fP  
 \fBnew-lifo\fP  
 \fBpurge-lifo\fP  
 \fBread-lifo\fP  

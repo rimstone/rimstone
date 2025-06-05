@@ -46,14 +46,15 @@ In this example, a process-scoped hash (that is available to multiple requests o
  Program flow
 
 \fBbreak-loop\fP  
+\fBcall-handler\fP  
 \fBcode-blocks\fP  
 \fBcontinue-loop\fP  
 \fBdo-once\fP  
 \fBexit-handler\fP  
 \fBif-defined\fP  
 \fBif-true\fP  
+\fBquit-process\fP  
 \fBreturn-handler\fP  
-\fBset-bool\fP  
 \fBstart-loop\fP   
 See all 
 \fBdocumentation\fP

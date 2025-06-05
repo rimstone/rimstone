@@ -42,11 +42,11 @@ To read a text file line by line, and display as a web page with line breaks:
 
 read-line "/home/bear/tmp/ll/filexx" to one_line status st
     string-length one_line to line_len
-    @Line length is <<p-num line_len>>, line is <<p-web one_line>> status <<p-num st>><br/>
+    @Line length is <<print-out line_len>>, line is <<p-web one_line>> status <<print-out st>><br/>
 end-read-line
 if-true st lesser-than 0
     get-req error to err
-    @Error in reading, error [<<p-out err>>]
+    @Error in reading, error [<<print-out err>>]
 end-if
 
 .EE

@@ -13,7 +13,7 @@ delete-file "some_directory" status stc
 if-true stc equal GG_ERR_DELETE
     get-req errno to e
     @Cannot delete file
-    pf-out "Error %ld\en", e
+    print-format "Error %ld\en", e
 end-if
 
 .EE

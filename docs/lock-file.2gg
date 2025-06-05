@@ -39,7 +39,7 @@ You can use any file name (likely choose a name that signifies the purpose of a 
     get-app directory to dir
     // Create lock file name
     write-string fname
-    @<<p-out dir>>/.lock
+    @<<print-out dir>>/.lock
     end-write-string
     // Enter loop in which something is done, OR, program waits for others to complete their work before doing its own
     set-number lockid

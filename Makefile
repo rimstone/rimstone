@@ -90,24 +90,13 @@ else
     ASAN=
 endif
 
-#Add debian build flags required for debian packages
-ifeq ($(GG_DEBIAN_BUILD),1)
-    DEBIAN_CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
-    DEBIAN_CFLAGS:=$(shell dpkg-buildflags --get CFLAGS)
-    DEBIAN_LFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
-else
-    DEBIAN_LFLAGS=
-    DEBIAN_CFLAGS=
-    DEBIAN_CPPFLAGS=
-endif
-
-
 #C flags are as strict as we can do, in order to discover as many bugs as early on
-CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wl,-z,relro,-z,now $(DEBIAN_CFLAGS) $(DEBIAN_CPPFLAGS)
+CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wdate-time -ffile-prefix-map=/home/bear/tmp/deb=. -flto=auto
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
-LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -Wl,--enable-new-dtags -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(ASAN) $(DEBIAN_LFLAGS)
+LFLAGS_COMMON=-flto=auto -Wl,-z,relro,-z,now
+LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -Wl,--enable-new-dtags -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(LFLAGS_COMMON) $(ASAN)
 
 #note that for make DI=1, DEBUGINFO can be checked. But we don't specify DEBUGINFO for sudo make install.
 #then we wanted to have them all. Otherwise, none will be there, because we explicitly delete them here.
@@ -260,67 +249,67 @@ selinux.setup:
 	chmod 0755 selinux.setup
 
 mgrg: mgrg.o 
-	$(CC) -o mgrg mgrg.o $(LFLAGS)
+	$(CC) -o mgrg mgrg.o $(LFLAGS) 
 	$(call strip_sym)
 
 libsrvcgolf.so: chandle.o hash.o json.o msg.o utf.o srvc_golfrt.o golfrtc.o golfmems.o 
 	rm -f libsrvcgolf.so
-	$(CC) -shared -o libsrvcgolf.so $^ 
+	$(CC) -shared -o libsrvcgolf.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolf.so: chandle.o hash.o json.o msg.o utf.o golfrt.o golfrtc.o golfmems.o 
 	rm -f libgolf.so
-	$(CC) -shared -o libgolf.so $^ 
+	$(CC) -shared -o libgolf.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolfpg.so: pg.o 
 	rm -f libgolfpg.so
-	$(CC) -shared -o libgolfpg.so $^ 
+	$(CC) -shared -o libgolfpg.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolflite.so: lite.o 
 	rm -f libgolflite.so
-	$(CC) -shared -o libgolflite.so $^ 
+	$(CC) -shared -o libgolflite.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolfmys.so: mys.o 
 	rm -f libgolfmys.so
-	$(CC) -shared -o libgolfmys.so $^ 
+	$(CC) -shared -o libgolfmys.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolfdb.so: db.o 
 	rm -f libgolfdb.so
-	$(CC) -shared -o libgolfdb.so $^ 
+	$(CC) -shared -o libgolfdb.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolfsec.so: sec.o 
 	rm -f libgolfsec.so
-	$(CC) -shared -o libgolfsec.so  $^ 
+	$(CC) -shared -o libgolfsec.so  $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolfxml.so: xml.o 
 	rm -f libgolfxml.so
-	$(CC) -shared -o libgolfxml.so $^ 
+	$(CC) -shared -o libgolfxml.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
-libgolfarr.so: arr.o 
+libgolfarr.so: arr_string.o  arr_number.o arr_bool.o
 	rm -f libgolfarr.so
-	$(CC) -shared -o libgolfarr.so $^ 
+	$(CC) -shared -o libgolfarr.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolfcurl.so: curl.o 
 	rm -f libgolfcurl.so
-	$(CC) -shared -o libgolfcurl.so $^ 
+	$(CC) -shared -o libgolfcurl.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolftree.so: tree.o 
 	rm -f libgolftree.so
-	$(CC) -shared -o libgolftree.so $^ 
+	$(CC) -shared -o libgolftree.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 libgolfpcre2.so: pcre2.o 
 	rm -f libgolfpcre2.so
-	$(CC) -shared -o libgolfpcre2.so $^ 
+	$(CC) -shared -o libgolfpcre2.so $^ $(LFLAGS_COMMON)
 	$(call strip_sym)
 
 utf.o: utf.c golf.h
@@ -401,8 +390,14 @@ curl.o: curl.c golf.h
 xml.o: xml.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
-arr.o: arr.c golf.h
-	$(CC) -c -o $@ $< $(CFLAGS) 
+arr_string.o: arr.c golf.h
+	$(CC) -c -o $@ $< $(CFLAGS) -DGG_ARR_STRING
+
+arr_number.o: arr.c golf.h
+	$(CC) -c -o $@ $< $(CFLAGS) -DGG_ARR_NUMBER
+
+arr_bool.o: arr.c golf.h
+	$(CC) -c -o $@ $< $(CFLAGS) -DGG_ARR_BOOL
 
 pcre2.o: pcre2.c golf.h
 	NEWPCRE2=$$(./sys greater_than_eq "$(PCRE2_VER)" "10.37"); if [ "$$NEWPCRE2" == "0" ]; then GLIBC_REGEX="-DGG_C_GLIBC_REGEX"; fi ; $(CC) -c -o $@ $< $$GLIBC_REGEX $(CFLAGS) 

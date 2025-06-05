@@ -12,18 +12,17 @@ Get data from an array.
 read-array <array> \\
     key <key> \\
     value <value> \\
-    [ delete [ <delete> ] ] \\
-    [ status <status> ] 
+    [ delete [ <delete> ] ] 
 
 .EE
 .RE
 
 .SH DESCRIPTION
-read-array will obtain an element from <array>, which is a string <value> (in "value" clause) based on a number <key> (in "key" clause). <key> is a number from 0 up to (excluding) the currently allocated array size. Note that array may be allocated beyond the highest index of an element written to it. <array> was created by \fBnew-array\fP. 
+read-array will obtain an element from <array> (that was created with \fBnew-array\fP); an element obtained is <value> (in "value" clause) based on a number <key> (in "key" clause). <key> is a number from 0 up to (excluding) the currently allocated array size. The type of <value> is determined when <array> is created (see "type" clause), and can be either a string, number or a boolean.
 
-You can also delete an element from the array by using "delete" clause - the <value> is still obtained though it is no longer in the array. The array element is deleted if "delete" clause is used without boolean variable <delete>, or if <delete> evaluates to true.
+You can also delete an element from the array by using "delete" clause - the <value> is still obtained though it is no longer in the array. The array element is deleted if "delete" clause is used without boolean variable <delete>, or if <delete> evaluates to true. "Deleting" means that if string store would be set to an empty string, a number would be set to 0, and a boolean would be set to false.
 
-If no <key> was found in the array (meaning an array element with index <key> was either never written or was deleted), then <status> number (in "status" clause) is GG_ERR_EXIST and <value> is unchanged, otherwise <status> is GG_OKAY. 
+Note that array may be allocated beyond the highest index of an element written to it; reading from such elements that have never been written to will produce an empty string, a number 0 or a boolean false value (depending on the type of array).
 
 .SH EXAMPLES
 In this example, a new array is created, a value is written to it, and then the value is obtained and the element deleted; return status is checked:
@@ -32,18 +31,14 @@ In this example, a new array is created, a value is written to it, and then the 
 .EX
 
 // Create new array
-new-array arr
+new-array arr type string
 
 // Write to array
 write-array arr key 500 value "some data"
 
 // Read from array
 read-array arr key 500 value res status st delete
-if-true st equal GG_ERR_EXIST
-    @No data in the array at index 500!
-else-if
-    @Deleted value is <<p-out res>>
-end-if
+@Deleted value is <<print-out res>>
 
 .EE
 .RE

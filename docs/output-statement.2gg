@@ -23,9 +23,9 @@ With "@" statement, any \fBinline-code\fP executes and any output from those sta
 
 With "!" statement, all text is output verbatim, and any inline code is not executed. This is useful when the text printed out should not be checked for any \fBinline-code\fP.
 
-All trailing whitespaces are trimmed from each source code line. If you need to write trailing whitespaces, with "@" statement you can use \fBp-out\fP as \fBinline-code\fP. Maximum line length is 8KB - this is the source code line length, the actual run-time output length is unlimited.
+All trailing whitespaces are trimmed from each source code line. If you need to write trailing whitespaces, with "@" statement you can use \fBprint-out\fP as \fBinline-code\fP. Maximum line length is 8KB - this is the source code line length, the actual run-time output length is unlimited.
 
-Note that all characters are output as they are written, including the escape character (\e). If you wish to output characters requiring an escape character, such as new line and tab (as is done in C by using \en, \et etc.), use \fBp-out\fP as \fBinline-code\fP.
+Note that all characters are output as they are written, including the escape character (\e). If you wish to output characters requiring an escape character, such as new line and tab (as is done in C by using \en, \et etc.), use \fBprint-out\fP as \fBinline-code\fP.
 
 .SH EXAMPLES
 Outputting "Hello there": 
@@ -44,7 +44,7 @@ You can use other Golf statements inlined and mixed with the text you are output
 .EX
 
 set-string weatherType="sunny"
-@Today's weather is <<p-out weatherType>>
+@Today's weather is <<print-out weatherType>>
 
 .EE
 .RE
@@ -75,7 +75,7 @@ In contrast to "@" statement, "!" statement outputs all texts verbatim  and does
 .EX
 
 set-string weatherType="sunny"
-!Today's weather is <<p-out weatherType>>
+!Today's weather is <<print-out weatherType>>
 
 .EE
 .RE
@@ -85,7 +85,7 @@ which would output
 .RS 4
 .EX
 
-Today's weather is <<p-out weatherType>>
+Today's weather is <<print-out weatherType>>
 
 .EE
 .RE
@@ -96,15 +96,8 @@ Today's weather is <<p-out weatherType>>
 \fBfinish-output\fP  
 \fBflush-output\fP  
 \fBoutput-statement\fP  
-\fBpf-out\fP  
-\fBpf-url\fP  
-\fBpf-web\fP  
-\fBp-num\fP  
-\fBp-out\fP  
-\fBp-path\fP  
-\fBp-source-file\fP  
-\fBp-source-line\fP  
-\fBp-url\fP  
-\fBp-web\fP   
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
 See all 
 \fBdocumentation\fP

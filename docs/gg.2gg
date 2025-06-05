@@ -96,7 +96,7 @@ Specify maximum upload size for a file (in bytes). The default is approximately 
 .RS 4
 \[bu]    
 --max-errors=<max errors>
-During building of an application, emit a maximum of <max errors> diagnostic messages per .golf source file. The default is 5.
+During building of C code precompiled from .golf source code, gcc will emit a maximum of <max errors> diagnostic messages per .golf source file. The default is 5. Note that Golf precompiler stops after the first error in most cases and this setting doesn't apply to it.
 
 
 .RE
@@ -137,6 +137,14 @@ A request handler is written in a source file whose path matches fully or partia
 \[bu]    
 --exclude-dir
 By default, all ".golf" files (including in all subdirectories regardless of how many levels there may be), are picked up for compilation. If "--exclude-dir" is used, then you can specify any number of subdirectories, separated by commas, to be excluded. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+--ignore-warn
+Do not display any warnings during compilation of a Golf application.
 
 
 .RE

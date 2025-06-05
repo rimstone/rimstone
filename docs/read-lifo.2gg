@@ -46,7 +46,7 @@ In this example, a LIFO list is created, and two key/value pairs added. They are
            break-loop
        end-if
 
-       @Obtained key <<p-out k>> with value <<p-out v>>
+       @Obtained key <<print-out k>> with value <<print-out v>>
     end-loop
 
     // Go through the list again, use rewind-lifo for that
@@ -57,7 +57,7 @@ In this example, a LIFO list is created, and two key/value pairs added. They are
        if-true st not-equal GG_OKAY
            break-loop
        end-if
-       @Again obtained key <<p-out k>> with value <<p-out v>>
+       @Again obtained key <<print-out k>> with value <<print-out v>>
     end-loop
 
     // Delete all in LIFO
@@ -77,6 +77,7 @@ In this example, a LIFO list is created, and two key/value pairs added. They are
  LIFO
 
 \fBdelete-lifo\fP  
+\fBget-lifo\fP  
 \fBnew-lifo\fP  
 \fBpurge-lifo\fP  
 \fBread-lifo\fP  

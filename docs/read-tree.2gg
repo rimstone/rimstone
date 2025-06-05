@@ -96,9 +96,9 @@ In this example, a million key/value pairs are inserted into a tree, and then ea
         // search tree for each key previously inserted
         read-tree mytree equal (key) status st value data
         if-true st not-equal GG_OKAY
-            @Could not find key <<p-out key>>
+            @Could not find key <<print-out key>>
         else-if
-            @Found data <<p-out data>> associated with key <<p-out key>>
+            @Found data <<print-out data>> associated with key <<print-out key>>
         end-if
         delete-string key
     end-loop

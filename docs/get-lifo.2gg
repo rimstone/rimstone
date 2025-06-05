@@ -1,0 +1,44 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+get-lifo \-  (LIFO)
+.SH PURPOSE
+Get information about linked list.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+get-lifo <list> count <count>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+get-lifo will obtain information about LIFO <list> created with \fBnew-lifo\fP. 
+
+<count> (in "count" clause) is the number of elements in the list.
+
+.SH EXAMPLES
+Get the number of elements in list "mylist" in number "size":
+
+.RS 4
+.EX
+
+get-list mylist count size
+
+.EE
+.RE
+
+.SH SEE ALSO
+ LIFO
+
+\fBdelete-lifo\fP  
+\fBget-lifo\fP  
+\fBnew-lifo\fP  
+\fBpurge-lifo\fP  
+\fBread-lifo\fP  
+\fBrewind-lifo\fP  
+\fBwrite-lifo\fP   
+See all 
+\fBdocumentation\fP

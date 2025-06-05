@@ -39,6 +39,7 @@ Other than decimals and character constants, you can also use hexadecimal number
 .SH SEE ALSO
  Numbers
 
+\fBabs-number\fP  
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  
 \fBset-number\fP  

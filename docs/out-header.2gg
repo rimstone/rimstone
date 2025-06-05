@@ -27,7 +27,7 @@ out-header use \\
 .SH DESCRIPTION
 out-header outputs HTTP header and also sends any cookies produced by \fBset-cookie\fP and \fBdelete-cookie\fP. A web page must have an HTTP header output before any other response. 
 
-If out-header is not used, a default HTTP header is sent out just before the very first output (see \fBoutput-statement\fP, \fBp-out\fP etc.) at which point any cookie updates are sent as well; this default header is the same as using "out-header default".
+If out-header is not used, a default HTTP header is sent out just before the very first output (see \fBoutput-statement\fP, \fBprint-out\fP etc.) at which point any cookie updates are sent as well; this default header is the same as using "out-header default".
 
 If you use out-header multiple times, all but the very first one are ignored.
 

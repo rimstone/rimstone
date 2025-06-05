@@ -1,9 +1,8 @@
 You can contribute to Golf by 
 * testing of features and bug fixes,
-* suggesting bug fixes and enhancements both for code and documentation. You can use [Issues](https://github.com/golf-lang/golf) for most of those, or for security or private issues you can contact us via the contact form at [Golf blog](https://golf-lang.blogspot.com/) or via [email](mailto:team@golf-lang.com).
+* suggesting bug fixes and enhancements both for code and documentation (or new blog topics) via [email](mailto:team@golf-lang.com). Please do not use issues page on github, gitlab, sourceforge or others, as that makes it difficult for us to keep track of in different places. You can also contact us via the contact form at [Golf blog](https://golf-lang.blogspot.com/).
 * giving credit by including Golf home page link (golf-lang.com) and its logo in your web pages,
-* spreading the word on blogs, forums and social media, 
-* asking questions at [Issues](https://github.com/golf-lang/golf) on how-to do things that can help you and others using Golf. 
+* spreading the word on blogs, forums and social media.
 
 Golf, like Lua, SQLite and others, is a free open source project that does not accept external code patches \- only the core team can make changes to the project. The reason for this approach comes from core team's previous experiences, with some of the factors being:
 * long\-term maintenance of external code patches (be it features or bugs) can be a burden, 

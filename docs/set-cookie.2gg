@@ -20,9 +20,9 @@ set-cookie ( <cookie name>=<cookie value> \\
 .RE
 
 .SH DESCRIPTION
-To set a cookie named by string <cookie name> to string value <cookie value>, use set-cookie statement. A cookie must be set prior to outputting any actual response (such as with \fBoutput-statement\fP or \fBp-out\fP for example), or the program will \fBerror out\fP and stop. 
+To set a cookie named by string <cookie name> to string value <cookie value>, use set-cookie statement. A cookie must be set prior to outputting any actual response (such as with \fBoutput-statement\fP or \fBprint-out\fP for example), or the program will \fBerror out\fP and stop. 
 
-Cookie's <expiration> date (as a a string, see \fBget-time\fP) is given with "expires" clause. The default is session cookie meaning the cookie expires when client session closes.
+Cookie's <expiration> date (as a string, see \fBget-time\fP) is given with "expires" clause. The default is session cookie meaning the cookie expires when client session closes.
 
 Cookie's <path> is specified with "path" clause. The default is the URL path of the \fBrequest\fP URL.
 

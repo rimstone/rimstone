@@ -17,10 +17,10 @@ Inline Golf code in an output statement.
 .SH DESCRIPTION
 You can write Golf statements within an \fBoutput-statement\fP by using them between << and >> delimiters. 
 
-The following statements can be inlined: \fBp-path\fP,\fBp-out\fP, \fBp-web\fP, \fBp-url\fP, \fBpf-out\fP, \fBpf-web\fP, \fBpf-url\fP, \fBp-num\fP, \fBcurrent-row\fP, \fBnumber-string\fP, \fBstring-length\fP, \fBcall-handler\fP.
+The following statements can be inlined: \fBprint-out\fP,\fBprint-format\fP, \fBcurrent-row\fP, \fBnumber-string\fP, \fBstring-length\fP, \fBcall-handler\fP.
 
 .SH EXAMPLES
-\fBp-out\fP statement displays a string, and in the following code it's used to display a result within an \fBoutput-statement\fP (i.e. within "@" statement):
+\fBprint-out\fP statement displays a string, and in the following code it's used to display a result within an \fBoutput-statement\fP (i.e. within "@" statement):
 
 .RS 4
 .EX
@@ -28,10 +28,10 @@ The following statements can be inlined: \fBp-path\fP,\fBp-out\fP, \fBp-web\fP, 
 run-query ="select firstName, lastName from people" output firstName, lastName
    @<tr>
    @    <td>
-   @        First name is <<p-out  firstName>>
+   @        First name is <<print-out  firstName>>
    @    </td>
    @    <td>
-   @        Last name is <<p-out lastName>>
+   @        Last name is <<print-out lastName>>
    @    </td>
    @</tr>
 end-query
@@ -68,7 +68,7 @@ A \fBwrite-string\fP is typically used with output statements; in this case we p
 
 set-string mins="42"
 (( my_string
-@There is <<p-out mins>> minutes left!
+@There is <<print-out mins>> minutes left!
 ))
 
 .EE

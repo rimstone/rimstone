@@ -52,7 +52,7 @@ export GG_DATA="$GG_ROOT/var/lib/gg"
 
 export GG_C_RESTPATH=""
 export GG_C_MAXUPLOAD="25000000"
-export GG_C_CPUS=$(grep -c '^processor' /proc/cpuinfo)
+export GG_C_CPUS=$(nproc)
 if (( GG_C_CPUS < 1 )); then
     export GG_C_CPUS="1"
 fi
@@ -112,6 +112,7 @@ OPTIONS:
              --public
              --single-file
              --exclude-dir=<dir list>
+             --ignore-warn
 -i       display build flags for FastCGI client
              --include
                  displays C compile flags
@@ -131,7 +132,7 @@ function main() {
 #list of Golf options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o k:e:t:,q,g,o,l,m,i,h,c,v,s,u,r --long exclude-dir:,man,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o k:e:t:,q,g,o,l,m,i,h,c,v,s,u,r --long ignore-warn,exclude-dir:,man,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit -1
@@ -174,6 +175,11 @@ _DO_QUICK=0
             apropos -s 2gg '.*' | sed 's/(2gg)//g'
             shift 
             exit 0
+            ;;
+        --ignore-warn  )
+            export GG_C_IGNORE_WARN="1"
+            _DEVOPT=1
+            shift 
             ;;
         --debug  )
             export GG_C_DEBUG="1"
@@ -361,12 +367,6 @@ _DO_QUICK=0
         -c )
 #clean the project's temp and object files. This is to be able to fully recompile the project afterwards.
             _DO_CLEAN="1"
-            shift 
-            ;;
-        -d )
-#include debugging info in program
-            export GG_C_DEBUG="1"
-            _DEVOPT=1
             shift 
             ;;
         -l )
@@ -811,6 +811,7 @@ function mkset() {
     echo "GG_C_TRACE='$GG_C_TRACE'
 GG_C_SKIPLINES='$GG_C_SKIPLINES'
 GG_C_ASAN='$GG_C_ASAN'
+GG_C_IGNORE_WARN='$GG_C_IGNORE_WARN'
 GG_C_DEBUG='$GG_C_DEBUG'
 GG_C_PUBLIC='$GG_C_PUBLIC'
 GG_C_SINGLE_FILE='$GG_C_SINGLE_FILE'
@@ -1105,14 +1106,14 @@ function copy_if_diff () {
 
 #
 #
-#sets a list of many source code files (source.golf, golfapp.h, gg_dispatch_request.golf etc.)
+#sets a list of many source code files (source.golf, golfapp.h, gg_dispatch_request.c etc.)
 #takes care of generated vs provided source code: if a certain handler is provided, then don't generate it.
 #
 #
 function gen_src() {
 
 #
-#Files generated here are $GG_BLD/source.golf,golfapp.h,gg_dispatch_request.golf.
+#Files generated here are $GG_BLD/source.golf,golfapp.h,gg_dispatch_request.c.
 #
 
 #
@@ -1203,7 +1204,12 @@ $OF"
     for _F in $GG_REQLIST; do
         RN=${_F%.*}
         #if main, cannot have that, since we have main() already. Must delete $_T.new in order to regenerate, otherwise main would remain
-        if [ "${RN}" == "main" ]; then rm -f $GG_BLD/$_T.new ; error "Service handler name cannot be 'main'" ; fi
+        #NOTE: if updating here, update in v1.c in is_reserved()
+        CC_KEYS=" auto break bool case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while main "
+        if [[ " $CC_KEYS " =~ .*\ $RN\ .* ]]; then
+            rm -f $GG_BLD/$_T.new 
+            error "Service handler name cannot be a C reserved word [$RN]"
+        fi
         echo "void ${RN}();" >> $GG_BLD/$_T.new
     done
     echo >> $GG_BLD/$_T.new
@@ -1219,9 +1225,9 @@ $OF"
     fi
 
 #
-#Generate gg_dispatch_request.golf, the main request handler. Based on the source code names of handler files (.golf files)
+#Generate gg_dispatch_request.c, the main request handler. Based on the source code names of handler files (.golf files)
 #
-    _T="gg_dispatch_request.golf"
+    _T="/.flatsrc/gg_dispatch_request.c"
 #Generate request files, this is used for a dispatcher
 #and for a dispatcher, only request files matter 
     _NUMF=$(echo $GG_REQLIST | wc -w)
@@ -1235,14 +1241,15 @@ $OF"
     echo >>$GG_BLD/$_T.new
     echo "// GOLF auto-generated request dispatcher" >>$GG_BLD/$_T.new
     echo >>$GG_BLD/$_T.new
-    echo "begin-handler /gg_dispatch_request public" >>$GG_BLD/$_T.new
+    echo "#include \"golf.h\"" >>$GG_BLD/$_T.new
+    echo "void gg_dispatch_request() {" >>$GG_BLD/$_T.new
 
 
 #req_done used to skip before/after execution if no handler used
     echo "    volatile int req_done;" >>$GG_BLD/$_T.new #volatile because of longjmp, so the init below doesn't get optimized
 
     if [ "$_NUMF" != "0" ]; then
-        echo "    get-req name to req" >>$GG_BLD/$_T.new
+        echo "    char *req=gg_get_config()->ctx.req->name;" >>$GG_BLD/$_T.new
     fi
     #
     # Setting up longjmp must be done after ANY local variables are established so they are not lost after any exit-handler
@@ -1308,7 +1315,7 @@ $OF"
 #There can be NOTHING after .after() that uses any automatic variables from gg_dispatch_request() or
 #exit-handler (and longjmp) will not work
 #
-    echo "end-handler" >>$GG_BLD/$_T.new
+    echo "}" >>$GG_BLD/$_T.new
     echo >>$GG_BLD/$_T.new
 
     copy_if_diff "$_T"
@@ -1433,9 +1440,9 @@ function build_app() {
 #if GG_SHOW_MAKE is not "-s", then it's not silent, and display what it's doing
 #otherwise use -s for silent
     if [ "$GG_SHOW_MAKE" == "" ]; then
-        make -j $GG_C_CPUS SHELL="bash -x -e" -f "$GG_LIBRARY_PATH"/vmakefile all
+        make -j$GG_C_CPUS SHELL="bash -x -e" -f "$GG_LIBRARY_PATH"/vmakefile all
     else
-        make -j $GG_C_CPUS $GG_SHOW_MAKE  -f "$GG_LIBRARY_PATH"/vmakefile all
+        make -j$GG_C_CPUS $GG_SHOW_MAKE  -f "$GG_LIBRARY_PATH"/vmakefile all
     fi
     )
 }

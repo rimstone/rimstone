@@ -7,7 +7,7 @@ web-framework-for-C-programming-language \- Golf documentation (C-language)
 .B GOLF AS A WEB FRAMEWORK FOR C PROGRAMMING LANGUAGE
 .LP
 
-Golf source code translates to C before compilation for maximum performance; as a result, Golf offers the ability to include C code directly in extended mode (via \fBcall-extended\fP statement) which means Golf is also an effective framework for C programming language.
+Golf source code translates to C before compilation for maximum performance; as a result, Golf offers the ability to include C code directly in extended mode (via \fBcall-extended\fP statement and \fBServer-API\fP) which means Golf is also an effective framework for C programming language.
 
 Golf offers simple statements to perform complex common tasks, as well as memory safety. The C code that you'd include via call-extended statement may or may not be memory safe; thus once your application is in extended mode (see \fBextended-mode\fP), your application may no longer be memory safe.
 

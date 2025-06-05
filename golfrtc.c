@@ -1061,7 +1061,9 @@ bool cmp_type (gg_num t1, gg_num t2)
     else if ((t1 == GG_DEFNUMBER || t1 == GG_DEFNUMBERSTATIC) && (t2 == GG_DEFNUMBER || t2 == GG_DEFNUMBERSTATIC)) return true;
     else if ((t1 == GG_DEFBOOL || t1 == GG_DEFBOOLSTATIC) && (t2 == GG_DEFBOOL || t2 == GG_DEFBOOLSTATIC)) return true;
     else if ((t1 == GG_DEFHASH || t1 == GG_DEFHASHSTATIC) && (t2 == GG_DEFHASH || t2 == GG_DEFHASHSTATIC)) return true;
-    else if ((t1 == GG_DEFARRAY || t1 == GG_DEFARRAYSTATIC) && (t2 == GG_DEFARRAY || t2 == GG_DEFARRAYSTATIC)) return true;
+    else if ((t1 == GG_DEFARRAYSTRING || t1 == GG_DEFARRAYSTRINGSTATIC) && (t2 == GG_DEFARRAYSTRING || t2 == GG_DEFARRAYSTRINGSTATIC)) return true;
+    else if ((t1 == GG_DEFARRAYNUMBER || t1 == GG_DEFARRAYNUMBERSTATIC) && (t2 == GG_DEFARRAYNUMBER || t2 == GG_DEFARRAYNUMBERSTATIC)) return true;
+    else if ((t1 == GG_DEFARRAYBOOL || t1 == GG_DEFARRAYBOOLSTATIC) && (t2 == GG_DEFARRAYBOOL || t2 == GG_DEFARRAYBOOLSTATIC)) return true;
     else if ((t1 == GG_DEFTREE || t1 == GG_DEFTREESTATIC) && (t2 == GG_DEFTREE || t2 == GG_DEFTREESTATIC)) return true;
     else if ((t1 == GG_DEFLIST || t1 == GG_DEFLISTSTATIC) && (t2 == GG_DEFLIST || t2 == GG_DEFLISTSTATIC)) return true;
     else if ((t1 == GG_DEFJSON ) && (t2 == GG_DEFJSON )) return true;
@@ -1548,9 +1550,13 @@ char *typename (gg_num type)
     else if (type == GG_DEFMSG) return GG_KEY_T_MESSAGE;
     else if (type == GG_DEFBROKEN) return GG_KEY_T_SPLITSTRING;
     else if (type == GG_DEFHASH) return GG_KEY_T_HASH;
-    else if (type == GG_DEFARRAY) return GG_KEY_T_ARRAY;
+    else if (type == GG_DEFARRAYSTRING) return GG_KEY_T_ARRAYSTRING;
+    else if (type == GG_DEFARRAYNUMBER) return GG_KEY_T_ARRAYNUMBER;
+    else if (type == GG_DEFARRAYBOOL) return GG_KEY_T_ARRAYBOOL;
     else if (type == GG_DEFHASHSTATIC) return "process-scope " GG_KEY_T_HASH;
-    else if (type == GG_DEFARRAYSTATIC) return "process-scope " GG_KEY_T_ARRAY;
+    else if (type == GG_DEFARRAYSTRINGSTATIC) return "process-scope " GG_KEY_T_ARRAYSTRING;
+    else if (type == GG_DEFARRAYNUMBERSTATIC) return "process-scope " GG_KEY_T_ARRAYNUMBER;
+    else if (type == GG_DEFARRAYBOOLSTATIC) return "process-scope " GG_KEY_T_ARRAYBOOL;
     else if (type == GG_DEFJSON) return GG_KEY_T_JSON;
     else if (type == GG_DEFXML) return GG_KEY_T_XML;
     else if (type == GG_DEFTREE) return GG_KEY_T_TREE;

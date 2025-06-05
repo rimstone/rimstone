@@ -4,12 +4,12 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 600.3.25
+.B REFERENCE FOR GOLF VERSION 601.4.0
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
 
-Browse by topic:    API,   Application information,   Array,   Base64,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Encryption,   Error handling,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   Install golf,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
+Browse by topic:    API,   Application information,   Array,   Base64,   Booleans,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Encryption,   Error handling,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   Install golf,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
 
 
 
@@ -50,6 +50,16 @@ Base64
 
 \fBdecode-base64\fP  
 \fBencode-base64\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Booleans
+
+\fBboolean-expressions\fP  
+\fBset-bool\fP   
 .RE
 
 
@@ -308,6 +318,7 @@ License
 LIFO
 
 \fBdelete-lifo\fP  
+\fBget-lifo\fP  
 \fBnew-lifo\fP  
 \fBpurge-lifo\fP  
 \fBread-lifo\fP  
@@ -358,6 +369,7 @@ Messages
 \[bu]    
 Numbers
 
+\fBabs-number\fP  
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  
 \fBset-number\fP  
@@ -373,16 +385,9 @@ Output
 \fBfinish-output\fP  
 \fBflush-output\fP  
 \fBoutput-statement\fP  
-\fBpf-out\fP  
-\fBpf-url\fP  
-\fBpf-web\fP  
-\fBp-num\fP  
-\fBp-out\fP  
-\fBp-path\fP  
-\fBp-source-file\fP  
-\fBp-source-line\fP  
-\fBp-url\fP  
-\fBp-web\fP   
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
 .RE
 
 
@@ -392,7 +397,7 @@ Output
 Program execution
 
 \fBexec-program\fP  
-\fBhandler-status\fP   
+\fBexit-status\fP   
 .RE
 
 
@@ -402,14 +407,15 @@ Program execution
 Program flow
 
 \fBbreak-loop\fP  
+\fBcall-handler\fP  
 \fBcode-blocks\fP  
 \fBcontinue-loop\fP  
 \fBdo-once\fP  
 \fBexit-handler\fP  
 \fBif-defined\fP  
 \fBif-true\fP  
+\fBquit-process\fP  
 \fBreturn-handler\fP  
-\fBset-bool\fP  
 \fBstart-loop\fP   
 .RE
 
@@ -513,6 +519,7 @@ Strings
 \fBcount-substring\fP  
 \fBdelete-string\fP  
 \fBlower-string\fP  
+\fBnew-string\fP  
 \fBread-split\fP  
 \fBreplace-string\fP  
 \fBset-string\fP  

@@ -54,7 +54,7 @@ The following is a list that is process-scoped, i.e. it is a linked-list server,
     if-true op equal "add" // Add data to list
         // Make a copy of key,data so they are Golf-allocated
         write-list t key (key) value data append
-        @Added [<<p-out key>>] value [<<p-out data>>]
+        @Added [<<print-out key>>] value [<<print-out data>>]
 
     else-if op equal "delete" // Delete first data and obtain the value deleted
         position-list t first
@@ -63,7 +63,7 @@ The following is a list that is process-scoped, i.e. it is a linked-list server,
             @Not found 
         else-if
             // If found, then delete key and value
-            @Deleted key [<<p-out key>>], [<<p-out val>>]
+            @Deleted key [<<print-out key>>], [<<print-out val>>]
             delete-list t 
         end-if
 
@@ -104,7 +104,7 @@ The following is a list that is process-scoped, i.e. it is a linked-list server,
         if-true st equal GG_ERR_EXIST
             @Not found
         else-if
-            @Key [<<p-out key>>], value [<<p-out val>>]
+            @Key [<<print-out key>>], value [<<print-out val>>]
         end-if
 
     else-if op equal "purge" // remove all, keep the list

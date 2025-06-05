@@ -72,7 +72,7 @@ end-if
 if-true dt equal new_dt length new_len
     @Success!
 else-if
-    @Failure! [<<p-out dt>>] [<<p-out new_dt>>]
+    @Failure! [<<print-out dt>>] [<<print-out new_dt>>]
 end-if
 
 .EE

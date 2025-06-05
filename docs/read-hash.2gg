@@ -69,7 +69,7 @@ read-hash h key "X0029" value res status f delete
 if-true f equal GG_ERR_EXIST
     @No data in the hash!
 else-if
-    @Deleted value is <<p-out res>>
+    @Deleted value is <<print-out res>>
 end-if
 
 .EE
@@ -88,7 +88,7 @@ start-loop
     if-true f equal GG_ERR_EXIST
         break;
     end-if
-    pf-out "Key [%s] data [%s]\en", k, r
+    print-format "Key [%s] data [%s]\en", k, r
 end-loop
 
 .EE

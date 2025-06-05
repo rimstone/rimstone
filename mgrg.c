@@ -239,7 +239,17 @@ static void initfile (char *ipath, gg_num mode, uid_t uid, gid_t guid) {
     log_msg ("Setting privileges on file [%s]", ipath);
     struct stat sbuff;
     if (stat(ipath, &sbuff) != 0) return;
-    if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
+    // We check if this isn't local install; if so, we will try chown;
+    // If local install, we'll check if current user/group matches what we want to change to, and if not, emit error; otherwise continue since
+    // nothing's changing
+    if (GG_ROOT[0] == 0)
+    {
+        if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
+    }
+    else
+    {
+        if (uid != run_user_id && guid != run_user_grp_id) exit_error ("Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
+    }
     if (chmod(ipath, mode) != 0) exit_error ("Cannot set permissions for file [%s]", GG_FERR);
 }
 
@@ -250,7 +260,17 @@ static void initfile (char *ipath, gg_num mode, uid_t uid, gid_t guid) {
 static void initdir (char *ipath, gg_num mode, uid_t uid, gid_t guid) {
     log_msg ("Creating directory [%s]", ipath);
     if (mkdir (ipath, mode) != 0) if (errno != EEXIST) exit_error ("Cannot create directory [%s], [%s]", ipath, GG_FERR); 
-    if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of directory [%s], [%s]", ipath, GG_FERR);
+    // We check if this isn't local install; if so, we will try chown;
+    // If local install, we'll check if current user/group matches what we want to change to, and if not, emit error; otherwise continue since
+    // nothing's changing
+    if (GG_ROOT[0] == 0)
+    {
+        if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of directory [%s], [%s]", ipath, GG_FERR);
+    }
+    else
+    {
+        if (uid != run_user_id && guid != run_user_grp_id) exit_error ("Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
+    }
     if (chmod(ipath, mode) != 0) exit_error ("Cannot set permissions for directory [%s]", GG_FERR);
 }
 
@@ -991,7 +1011,7 @@ int main(int argc, char **argv)
         //
         // BEGIN ROOT - this section is the only time mgrg is allowed as root
         // This is mgrg -i setup, the only time we need root privs.
-        // NOTE: if GG_ROOT is not "", this is a local install, and there's no root involved!
+        // NOTE: if GG_ROOT is not "", this is a local install, and there's no root involved! (even if sudo is used we won't switch to seteuid!!)
         //
         if (GG_ROOT[0] == 0)
         {

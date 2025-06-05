@@ -98,7 +98,7 @@ Parse the following XML document and display all element names and values from i
             break-loop
         end-if
         text-utf v 
-        @Key [<<p-out k>>] Value [<<p-out v>>] 
+        @Key [<<print-out k>>] Value [<<print-out v>>] 
     end-loop
     xml-doc delete x 
 %%

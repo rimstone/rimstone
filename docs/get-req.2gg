@@ -14,7 +14,7 @@ get-req \\
         | arg-count | arg-value <arg index> \\
         | header <header> | referring-url | method \\
         | content-type | trace-file | process-id | name \\
-        | external-call | directory
+        | external-call | directory | source-file
     to <variable>
 
 .EE
@@ -54,7 +54,7 @@ Information related to an input request can be obtained with get-req statement a
 get-req cookie-count to cookie_c
 start-loop repeat cookie_c use i
     get-req cookie i to cookie_val
-    pf-web "cookie %s\en", cookie_val
+    print-format "cookie %s\en", cookie_val web-encode
     @<br/>
 end-loop
 
@@ -81,10 +81,10 @@ In this example, we get the number of cookies, and then print out each cookie va
 .EX
 
 get-req arg-count to ac
-pf-out "Total args [%ld]", ac
+print-format "Total args [%ld]", ac
 start-loop repeat ac use i
     get-req arg-value i to av
-    pf-out "%s\en", av
+    print-format "%s\en", av
 end-loop
 
 .EE
@@ -157,6 +157,13 @@ Note that not all HTTP request headers are set by the caller. For example, SERVE
 .RS 4
 \[bu]    
 "external-call" is a boolean that is true if the call to the current request handler is from an external caller, or false if called from another handler.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"source-file" is the name of the current source file (a string).
 
 
 .RE

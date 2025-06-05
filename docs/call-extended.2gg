@@ -63,6 +63,8 @@ Each <variable> can be of C type (or a pointer to C type):
 
 A <function> should not return a value. Rather, use a variable passed as a pointer if you wish to pass the function's output back to your Golf code.
 
+For more on using C in <function>s, see \fBServer-API\fP.
+
 .LP
 .B CHANGING CURRENT WORKING DIRECTORY
 .LP
@@ -130,7 +132,7 @@ extended-mode
 begin-handler /fact public
     set-number fact
     call-extended factorial (10, &fact)
-    p-num fact
+    print-out fact
 end-handler
 
 .EE
@@ -148,7 +150,7 @@ extended-mode
 begin-handler /mod public
     set-number mod
     call-extended mod10(103, mod)
-    p-num mod
+    print-out mod
 end-handler
 
 .EE

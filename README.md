@@ -1,4 +1,4 @@
-Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Golf Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf) \(with mirrors on [Gitlab](https://gitlab.com/golf-lang/golf/) and [Debian Salsa](https://salsa.debian.org/golf/golf)\)\. Installation packages and source installs below are for both x86\_64 and aarch64\.
+Golf is a programming language and  application server for building web services and back\-end solutions on Linux\. Golf is easy to develop with, memory\-safe and high\-performance\. Read [About Golf](https://golf-lang.com//about-golf.html)\. Visit [Documentation](https://golf-lang.com//documentation.html)\. Try [Hello World](https://golf-lang.com//123-hello-world.html)\. Visit [Golf Blog](https://golf-lang.blogspot.com/) for useful articles and changelog\. Licensed under [Apache 2](https://golf-lang.com//license.html) Free Open Source License\. Source code is at [https://github\.com/golf\-lang/golf](https://github.com/golf-lang/golf) \(with mirrors on [Gitlab](https://gitlab.com/golf-lang/golf/), [SourceForge](https://sourceforge.net/p/golf/code) and [Debian Salsa](https://salsa.debian.org/golf/golf)\)\. Installation packages and source installs below are for both x86\_64 and aarch64\.
 ## Install Golf package \(x86\_64 and aarch64\)
 [Ubuntu](https://golf-lang.com//install-ubuntu.html)
 [Debian](https://golf-lang.com//install-debian.html)
@@ -11,19 +11,16 @@ Golf is a programming language and  application server for building web services
 [Fedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia](https://golf-lang.com//install-from-source-fedora-redhat-rocky-alma-centos-amazon-mageia.html)
 [OpenSUSE](https://golf-lang.com//install-from-source-opensuse.html)
 [Arch, Manjaro](https://golf-lang.com//install-from-source-arch-manjaro.html)
-## Install Golf from source code without root access
-[Debian, Ubuntu, Raspbian](https://golf-lang.com//install-in-any-folder-debian-ubuntu-raspbian.html)
-[Fedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia](https://golf-lang.com//install-in-any-folder-fedora-redhat-rocky-alma-centos-amazon-mageia.html)
-[OpenSUSE](https://golf-lang.com//install-in-any-folder-opensuse.html)
-[Arch, Manjaro](https://golf-lang.com//install-in-any-folder-arch-manjaro.html)
 ## Current version
-Current version is 600\.3\.25\. This release passed 2418 automated functional tests\.
+Current version is 601\.4\.0\. This release passed 2551 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 ## Articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
-* 2025\-05\-19 [Golf 600\.3\.23 released](https://golf-lang.blogspot.com/2025/05/golf-600321-released.html)
+* 2025\-06\-05 [Golf 601\.4\.0 released](https://golf-lang.blogspot.com/2025/06/golf-60140-released.html)
+* 2025\-06\-04 [Major new release of Golf coming soon](https://golf-lang.blogspot.com/2025/06/major-new-release-of-golf-coming-soon.html)
+* 2025\-05\-19 [Golf 600\.3\.25 released](https://golf-lang.blogspot.com/2025/05/golf-600321-released.html)
 * 2025\-05\-17 [Golf 600\.3\.13 released](https://golf-lang.blogspot.com/2025/05/golf-5311-released.html)
 * 2025\-05\-13 [How to write Web Service API with Golf](https://golf-lang.blogspot.com/2025/05/how-to-write-web-service-api-with-golf.html)
 * 2025\-05\-08 [Random numbers in Golf](https://golf-lang.blogspot.com/2025/05/random-numbers-in-golf.html)

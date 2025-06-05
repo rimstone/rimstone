@@ -36,19 +36,25 @@ See \fBerror-handling\fP when report-error is called.
 
 .RS 4
 \[bu]    
+%c for a number displayed as a character,
+
+.RE
+
+.RS 4
+\[bu]    
 %<number>s for a string output with a width of at least <number> (any excess filled with spaces to the left),
 
 .RE
 
 .RS 4
 \[bu]    
-%ld for a number
+%ld for a number (use "lo" for displaying in octal notation and "lx" for hexadecimal notation).
 
 .RE
 
 .RS 4
 \[bu]    
-%<number>ld for a number output with a width of at least <number> (any excess filled with spaces to the left)
+%<number>ld for a number output with a width of at least <number> (any excess filled with spaces to the left). Use "lo" for displaying in octal notation and "lx" for hexadecimal notation.
 .RE
 
 

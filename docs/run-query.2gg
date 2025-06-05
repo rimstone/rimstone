@@ -53,8 +53,8 @@ run-query executes a query specified with string <query text>.
 .EX
 
 run-query @db = "select firstName, lastName from employees" output first_name, last_name
-    @First name <<p-out first_name>>
-    @Last name <<p-out last_name>>
+    @First name <<print-out first_name>>
+    @Last name <<print-out last_name>>
 end-loop
 
 .EE
@@ -66,8 +66,8 @@ Note that the output is by default web-encoded. You can set the encoding of colu
 .EX
 
 run-query @db = "select firstName, lastName from employees" output first_name noencode, last_name urlencode
-    @First name <<p-out first_name>>
-    @Last name <<p-out last_name>>
+    @First name <<print-out first_name>>
+    @Last name <<print-out last_name>>
 end-loop
 
 .EE
@@ -192,7 +192,7 @@ Select first and last name (output is firstName and lastName) based on employee 
 
 get-param empid
 run-query @db = "select firstName, lastName from employee where employeeId='%s'" output firstName, lastName input empid
-    @Employee is <<p-out  firstName>> <<p-out lastName>>
+    @Employee is <<print-out  firstName>> <<print-out lastName>>
 end-query
 
 .EE

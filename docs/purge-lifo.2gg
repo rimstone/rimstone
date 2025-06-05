@@ -23,6 +23,7 @@ See \fBread-lifo\fP.
  LIFO
 
 \fBdelete-lifo\fP  
+\fBget-lifo\fP  
 \fBnew-lifo\fP  
 \fBpurge-lifo\fP  
 \fBread-lifo\fP  

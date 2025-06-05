@@ -28,11 +28,11 @@ Delete node with key "123", and obtain its value:
 set-string k = "123"
 delete-tree mytree key k value val status st
 if-true st not-equal GG_OKAY
-   @Could not find key <<p-out k>>
+   @Could not find key <<print-out k>>
    exit-handler
 end-if
 // display key/value deleted
-@Deleted key <<p-out k>> with value <<p-out val>>
+@Deleted key <<print-out k>> with value <<print-out val>>
 // delete the original value
 delete-string val
 

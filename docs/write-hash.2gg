@@ -48,7 +48,7 @@ Writing new value with the same key and obtaining the previous value (which is "
 
 write-hash h key "mykey" value "new data" status st old-value od
 if-true st equal GG_INFO_EXIST
-    @Previous value for this key is <<p-out od>>
+    @Previous value for this key is <<print-out od>>
 end-if
 
 .EE
@@ -74,22 +74,22 @@ The following is a key/value service, where a process-scoped hash is created. It
         if-true st equal GG_INFO_EXIST
             delete-string old_data
         end-if
-        @Added [<<p-out key>>]
+        @Added [<<print-out key>>]
     else-if op equal "delete" // Delete data and obtain the value deleted
         read-hash h key (key) value val delete status st
         if-true st equal GG_ERR_EXIST
-            @Not found [<<p-out key>>]
+            @Not found [<<print-out key>>]
         else-if
             // If found, then delete key and value
-            @Deleted [<<p-out val>>]
+            @Deleted [<<print-out val>>]
             delete-string val
         end-if
     else-if op equal "query" // Query hash based on key value
         read-hash h key (key) value val status st
         if-true st equal GG_ERR_EXIST
-            @Not found, queried [<<p-out key>>]
+            @Not found, queried [<<print-out key>>]
         else-if
-            @Value [<<p-out val>>]
+            @Value [<<print-out val>>]
         end-if
     end-if
 %%

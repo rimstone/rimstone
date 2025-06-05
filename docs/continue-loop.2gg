@@ -28,7 +28,7 @@ start-loop repeat 1000 use i start-with 1
     if-true i equal cont_loop
         continue-loop 
     end-if
-    @Completed <<p-num i>> loops so far
+    @Completed <<print-out i>> loops so far
 end-loop
 
 .EE
@@ -38,14 +38,15 @@ end-loop
  Program flow
 
 \fBbreak-loop\fP  
+\fBcall-handler\fP  
 \fBcode-blocks\fP  
 \fBcontinue-loop\fP  
 \fBdo-once\fP  
 \fBexit-handler\fP  
 \fBif-defined\fP  
 \fBif-true\fP  
+\fBquit-process\fP  
 \fBreturn-handler\fP  
-\fBset-bool\fP  
 \fBstart-loop\fP   
 See all 
 \fBdocumentation\fP

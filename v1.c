@@ -76,6 +76,7 @@
 #define GG_KEYPREVIOUS "previous"
 #define GG_KEYNEXT "next"
 #define GG_KEYKEY "key "
+#define GG_KEYRETURNVALUE "return-value "
 #define GG_KEYGETLESSER "get-lesser"
 #define GG_KEYLESSER "lesser "
 #define GG_KEYLESSERTHAN "lesser-than "
@@ -87,6 +88,8 @@
 #define GG_KEYNOTCONTAIN "not-contain "
 #define GG_KEYGREATERTHAN "greater-than "
 #define GG_KEYEVERY "every "
+#define GG_KEYSOURCEFILE "source-file"
+#define GG_KEYSOURCELINE "source-line"
 #define GG_KEYNOTEVERY "not-every "
 #define GG_KEYGREATEREQUAL "greater-equal "
 #define GG_KEYUPDATEKEY "update-key "
@@ -135,6 +138,7 @@
 #define GG_KEYISSERVICE "is-service"
 #define GG_KEYSTATUS "status "
 #define GG_KEYENDOFFILE "end-of-file "
+#define GG_KEYFROMCONDITION "from-condition "
 #define GG_KEYFROM "from "
 #define GG_KEYFROMLENGTH "from-length "
 #define GG_KEYTRAVERSE "traverse"
@@ -219,14 +223,18 @@
 #define GG_KEYAT "@"
 #define GG_KEYCOLON ":"
 #define GG_KEYNOTEQUAL "not-equal "
+#define GG_KEYAND0 "&&"
+#define GG_KEYOR0 "||"
+#define GG_KEYNOT0 "!"
 #define GG_KEYAND "and "
 #define GG_KEYOR "or "
+#define GG_KEYNOT "not"
 #define GG_KEYNOENCODE "noencode"
-#define GG_KEYWEBENCODE "webencode"
-#define GG_KEYURLENCODE "urlencode"
+#define GG_KEYWEBENCODE "web-encode"
+#define GG_KEYURLENCODE "url-encode"
 #define GG_KEYURLPATH "url-path "
 #define GG_KEYDATA "data "
-#define GG_KEYHANDLERSTATUS "handler-status "
+#define GG_KEYEXITSTATUS "exit-status "
 #define GG_KEYYEAR "year "
 #define GG_KEYMONTH "month "
 #define GG_KEYDAY "day "
@@ -257,6 +265,8 @@
 #define GG_KEYINPUT "input "
 #define GG_KEYFINISHEDOKAY "finished-okay "
 #define GG_KEYSTARTED "started "
+#define GG_KEYSINCEEPOCH "since-epoch"
+#define GG_KEYFROMEPOCH "from-epoch "
 // Input or output variable
 #define GG_OUT 0
 #define GG_IN 1
@@ -293,7 +303,6 @@
 // modes of compilation
 #define GG_MODE_SAFE 0
 #define GG_MODE_EXTENDED 1
-#define GG_MODE_INTERNAL 2
 // string constant, is it, and if so, what kind, see is_constant_string()
 #define GG_CONST_OK 0
 #define GG_CONST_BAD 1
@@ -307,6 +316,16 @@
 #define GG_MAX_CODE_LEVEL 30 
 // Max clauses in a statement, that have no data. Used to check there's no extraneous data after them
 #define GG_MAX_CLAUSE 50
+// Backward-compatibility print functions (since 600.3.28)
+#define GG_P_SOURCELINE 2
+#define GG_P_SOURCEFILE 3
+#define GG_P_NUM 4
+#define GG_P_URL 5
+#define GG_P_WEB 6
+//
+//when using undecorate , get just the part passed the flat source directory
+#define GG_BLD_DIR_OFFSET gg_bld_dir_len + strlen (".flatsrc") + 1
+//
 
 //
 //
@@ -322,6 +341,7 @@ typedef struct s_gg_var
     gg_num lnum;
     bool is_process; // true if is process-scoped
     char *rname; // real variable name
+    bool used; // true if variable asked for (i.e. used)
 } gg_var;
 
 
@@ -420,6 +440,9 @@ typedef struct s_gg_if {
 //
 //
 
+gg_num gg_curr_errors = 0; // current number of errors
+gg_num gg_max_errors = 5; // max number of errors before giving up
+bool gg_ignore_warn = false; // if true, do not display warnings
 bool gg_single_file = false; // by default request handlers can be grouped in same-prefix files, with this being true, each must be in own file
 bool gg_public = false; // by default all request handlers are private unless made public, with --public this flag will be switched to true
 bool do_once_open = false; // true if do-once open
@@ -458,6 +481,7 @@ char *app_path = ""; // app prefix not defined
 char *gg_app_name=NULL;
 char *gg_dbconf_dir = NULL;
 char *gg_bld_dir = NULL;
+int gg_bld_dir_len =0;
 gg_num lnum = 0; // current line worked on 
 char *src_file_name = NULL; // file_name of the source
 gg_num print_mode = 0; // 1 if @  to print out
@@ -503,7 +527,6 @@ char gg_query_id_str[GG_MAX_QUERYNAME_LEN + 1]; // query ID being worked on
 //
 void init_gg_gen_ctx (gg_gen_ctx *gen_ctx);
 void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name);
-void _gg_report_error (char *format, ...)  __attribute__ ((format (printf, 1, 2)));
 gg_num recog_statement (char *cinp, gg_num pos, char *opt, char **mtext, gg_num *msize, gg_num isLast, gg_num *is_inline);
 gg_num find_query (gg_gen_ctx *gen_ctx);
 void new_query (gg_gen_ctx *gen_ctx, gg_db_parse *vp);
@@ -552,7 +575,6 @@ void free_query (char *qryname, bool skip_data);
 void convert_puts(char *pline);
 void do_numstr (char *to, char *num0, char *base);
 void setup_internal_hash(char *fname, char *hash, bool is_req);
-void deprecated (char **old, char **new, char *oldkey, char *newkey);
 void gg_report_warning (char *format, ...)  __attribute__ ((format (printf, 1, 2)));
 gg_num carve_stmt_obj (char **mtext, bool has_value, bool is_constant);
 void match_file (char *file_name, char *reqname);
@@ -574,27 +596,299 @@ void new_service_find(char *mtext, char **server, char **method, char **apath, c
 void new_service_carve(char **server, char **method, char **apath, char **req, char **body, char **upay, char **timeout, char **env, char **loc, char **url);
 void new_service_impl (char *mtext, char *server, char *method, char *apath, char *req, char *body, char *upay, char *loc, char *url, char *env, char *timeout);
 void run_service (char *mtext);
-gg_num check_var (char **v, gg_num type, bool *is_unkn);
+gg_num check_var (char **v, gg_num type);
 void check_format(char *mtext, char *comma, char **list);
 gg_num is_constant_string (char *s);
 gg_num is_len_format (char *s, char *f, gg_num flen);
 void check_level(char *prline);
 gg_num typeid (char *type);
-bool add_var (char *var, gg_num type, char *realname);
+bool add_var (char *var, gg_num type, char *realname, bool watched_for_unused);
 bool find_var (char *name, gg_num *type, gg_num *line, char **realname, bool *is_process);
 void make_var (char **v, gg_num type);
 void check_c (char *mtext);
+char *check_bool (char *e, bool *found, bool *err);
 char *check_exp (char *e, bool *found, bool *err);
 char *check_str (char *e, bool *err);
 void save_param (char *pname);
 void check_sub (char *sub);
 char *undecorate (char *src);
+void do_print (char *mtext, gg_num backmode);
+void do_printf (char *mtext, bool rep_error, bool trace_none, bool trace, gg_gen_ctx *gen_ctx, gg_num backmode);
+bool is_reserved (char *word);
+bool var_exists (char *name, gg_num type, gg_num *real_type, gg_num *lnum);
+char *process_bool_exp (char *v);
+char *process_string_exp (char *v);
+char *process_number_exp (char *v);
 
 //
 //
 // Implementation of functions used in GOLF alone
 //
 //
+
+//
+// Check if variable 'name' exists and is of type 'type', returns true if it does, false if it doesn't exist or not of right type
+// If it doesn't exist real_type is GG_DEFUNKN; it can be NULL.
+// If it exists, real_type is its real type, and lnum is where it's defined; both can be NULL.
+//
+bool var_exists (char *name, gg_num type, gg_num *real_type, gg_num *lnum)
+{
+    gg_num vtype;
+    gg_num l;
+    char *rname;
+    bool found = find_var (name, &vtype, &l, &rname, NULL);
+    if (found)
+    {
+        if (!cmp_type (type, vtype)) 
+        {
+            if (real_type) *real_type = vtype;
+            if (lnum) *lnum = l;
+            return false; 
+        } else 
+        {
+            if (real_type) *real_type = vtype; // if we're looking for GG_DEFSTRING but get GG_DEFSTRINGSTATIC for instance!!!
+                                               // so we know which one we got!
+            return true;
+        }
+    }
+    else 
+    {
+        if (real_type) *real_type = GG_DEFUNKN;
+        return false;
+    }
+}
+
+
+//
+// Returns true if word is a reserved C words, those can't be used as names for anything
+//
+bool is_reserved (char *word)
+{
+    // NOTE: if updating here, update in gg when building 'void' list of function prototypes
+    char *keys[] = {
+        "auto", "break", "bool", "case", "char", "const", "continue", "default", "do",
+        "double", "else", "enum", "extern", "float", "for", "goto", "if",
+        "int", "long", "register", "return", "short", "signed", "sizeof",
+        "static", "struct", "switch", "typedef", "union", "unsigned", "void",
+        "volatile", "while", "main"
+    };
+    int numkeys = sizeof(keys) / sizeof(char*);
+
+    gg_num i;
+    for (i = 0; i < numkeys; i++) {
+        if (strcmp(word, keys[i]) == 0) return true;
+    }
+    return false;
+}
+
+
+
+//
+//
+// Perform print-format statement. This is encapsulated like this so that old-style statements (pf-out, etc.) will still work.
+// mtext is the statement's text (minus the statement name itself)
+// backmode is 0, if this is new print-out (or >0) otherwise, see below
+// rep_error is true if this is report-error, trace is true if this is trace, trace_none is true if just trace without any params.
+// gen_ctx is the compiler context.
+//
+//
+void do_printf (char *mtext, bool rep_error, bool trace_none, bool trace, gg_gen_ctx *gen_ctx, gg_num backmode)
+{
+
+
+    // Example:
+    // printf "%s %ld", str, int
+    // this is no-enc printout
+
+    //printf statements must have a comma, so instead of printf-url "xxx" it must be printf-url "%s",xxx
+    //to avoid hard to track bugs
+    //look also for format (starting with unquoted quote), to know where the printf part starts
+    char *comma = find_keyword (mtext, GG_KEYCOMMA, 0);
+    char *toerr = find_keyword (mtext, GG_KEYTOERROR, 1);
+    char *to = find_keyword (mtext, GG_KEYTO, 1);
+    char *webe = find_keyword (mtext, GG_KEYWEBENCODE, 1);
+    char *urle = find_keyword (mtext, GG_KEYURLENCODE, 1);
+
+
+    carve_statement (&toerr, "print-format", GG_KEYTOERROR, 0, 0);
+    carve_statement (&to, "print-format", GG_KEYTO, 0, 1);
+    carve_statement (&comma, "print-format", GG_KEYCOMMA, 0, 1);
+    carve_statement (&webe, "print-format", GG_KEYWEBENCODE, 0, 0);
+    carve_statement (&urle, "print-format", GG_KEYURLENCODE, 0, 0);
+    //
+    // Simulate various parts of statements, if they are not there but we need them
+    if (backmode != 0)
+    {
+        if (backmode == GG_P_URL) urle=GG_KEYURLENCODE;
+        else if (backmode == GG_P_WEB) webe=GG_KEYWEBENCODE;
+        else gg_report_error ("Unknown backward compatibility mode for print-out (%ld)", backmode);
+    }
+    //
+    // printf to stdout for standalone app, or to web/string otherwise 
+    // Simulate various parts of statements, if they are not there but we need them
+    gg_num c_printf_web = (webe != NULL ? 1:0);
+    gg_num c_printf_url = (urle != NULL ? 1:0);
+    gg_num c_printf = ((c_printf_web == 0 && c_printf_url == 0) ? 1:0);
+
+    if (rep_error && (to != NULL || toerr != NULL)) gg_report_error ("Cannot use to-error or 'to' clause with report-error statement");
+    if ((trace || trace_none) && (to != NULL || toerr != NULL)) gg_report_error ("Cannot use to-error or 'to' clause with trace statement");
+
+
+    // check it's a string constant
+    gg_num flen = trimit (mtext);
+    if (!trace_none && (mtext[0] != '"' || mtext[flen-1] != '"')) gg_report_error ("format must be a string literal, found [%s]", mtext);
+
+    if (comma == NULL && !trace_none) {comma = mtext; mtext=gg_strdup("\"%s\"");} // make up format for gcc, format must be dynamic as it will be carved
+    char *format = mtext; // since mtext will become a generated variable below in carve_stmt_obj
+    carve_stmt_obj (&mtext, trace_none?false:true, true); // mtext is format
+    if (trace) oprintf("GG_UNUSED(%s);\n", mtext); // if trace with some string, this string will be unused if not DEBUG
+
+
+    if (toerr != NULL && to != NULL) gg_report_error( "cannot use both to-error and 'to' clause; use one or the other");
+    define_statement (&to, GG_DEFSTRING, false); // exact length is set by gg_write_to_string
+    //
+    if (!trace_none) check_var (&mtext, GG_DEFSTRING);
+
+    //Check only %s or %ld
+
+    char *list;
+
+    //
+    // Look for each option and collect relevant info
+    // First we MUST get each options position
+    if (trace_none)
+    {
+        oprintf("GG_TRACE(\"\");\n");
+    }
+    else if (trace)
+    {
+        char *list;
+        check_format(format, comma, &list);
+        oprintf("GG_TRACE(%s", mtext);
+        oprintf("%s", list);
+        oprintf(");\n");
+        gg_free (list);
+    }
+    else if (rep_error)
+    {
+        check_format(format, comma, &list);
+        oprintf("gg_report_error(%s", mtext);
+        oprintf("%s", list);
+        oprintf(");\n");
+        gg_free (list);
+    }
+    else if (to == NULL) 
+    {
+        check_format(format, comma, &list);
+        oprintf ("gg_printf(%s, %s, %s", toerr!=NULL?"true":"false", rep_error?"GG_NOENC":(c_printf!=0?"GG_NOENC":(c_printf_web!=0?"GG_WEB":"GG_URL")),   mtext);
+        oprintf("%s", list);
+        oprintf(");\n");
+        gg_free (list);
+    }
+    else
+    {
+        // this is ... to [ define ] <str>
+        //
+        oprintf("gg_write_to_string (&(%s));\n", to);
+        gen_ctx->total_write_string++;
+        //toerr is guaranteed to be NULL here, see above
+        check_format(format, comma, &list);
+        oprintf ("gg_printf(true, %s, %s", c_printf!=0?"GG_NOENC":(c_printf_web!=0?"GG_WEB":"GG_URL"),mtext);
+        oprintf("%s", list);
+        oprintf(");\n");
+        gg_free (list);
+        oprintf("gg_write_to_string_notrim();\n"); 
+        oprintf("gg_write_to_string (NULL);\n"); 
+        gen_ctx->total_write_string--;
+    }
+}
+
+
+//
+//
+// Perform print-out statement. This is encapsulated like this so that old-style statements (p-out, etc.) will still work.
+// mtext is the statement's text (minus the statement name itself)
+// backmode is 0, if this is new print-out (or >0) otherwise, see below
+//
+//
+void do_print (char *mtext, gg_num backmode)
+{
+    char *length = find_keyword (mtext, GG_KEYLENGTH, 1);
+    char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1); // can be used with any other clause
+    char *sfile = find_keyword (mtext, GG_KEYSOURCEFILE, 1);
+    char *sline = find_keyword (mtext, GG_KEYSOURCELINE, 1);
+    char *webe = find_keyword (mtext, GG_KEYWEBENCODE, 1);
+    char *urle = find_keyword (mtext, GG_KEYURLENCODE, 1);
+
+    carve_statement (&nl, "print-out", GG_KEYNEWLINE, 0, 0);
+    carve_statement (&sfile, "print-out", GG_KEYSOURCEFILE, 0, 0);
+    carve_statement (&sline, "print-out", GG_KEYSOURCELINE, 0, 0);
+    carve_statement (&webe, "print-out", GG_KEYWEBENCODE, 0, 0);
+    carve_statement (&urle, "print-out", GG_KEYURLENCODE, 0, 0);
+    carve_statement (&length, "print-out", GG_KEYLENGTH, 0, 1);
+    //
+    // Simulate various parts of statements, if they are not there but we need them
+    if (backmode != 0)
+    {
+        if (backmode == GG_P_SOURCELINE) sline=GG_KEYSOURCELINE;
+        else if (backmode == GG_P_SOURCEFILE) sfile=GG_KEYSOURCEFILE;
+        else if (backmode == GG_P_NUM) ;
+        else if (backmode == GG_P_URL) urle=GG_KEYURLENCODE;
+        else if (backmode == GG_P_WEB) webe=GG_KEYWEBENCODE;
+        else gg_report_error ("Unknown backward compatibility mode for print-out (%ld)", backmode);
+    }
+
+    if (webe != NULL && (sfile != NULL || sline != NULL || urle != NULL)) gg_report_error ("Cannot use web-encode clause with other clauses");
+    if (urle != NULL && (sfile != NULL || sline != NULL || webe != NULL)) gg_report_error ("Cannot use url-encode clause with other clauses");
+    if (length != NULL && (sfile != NULL || sline != NULL)) gg_report_error ("Cannot use length clause with other clauses, except url-encode and web-encode");
+
+    if (sfile != NULL)
+    {
+        if (sline != NULL || webe != NULL || urle != NULL) gg_report_error ("Cannot use source-file clause with other clauses");
+        carve_stmt_obj (&mtext, false, false);
+        char *osrc = undecorate (src_file_name+GG_BLD_DIR_OFFSET);
+        oprintf("gg_puts (GG_NOENC, \"%s\", %ld, false);\n", osrc, strlen(osrc)); // optimized to compute strlen at compile time
+        gg_free (osrc);
+        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
+    }
+    else if (sline != NULL)
+    {
+        if (sfile != NULL || webe != NULL || urle != NULL) gg_report_error ("Cannot use source-line clause with other clauses");
+        carve_stmt_obj (&mtext, false, false);
+        do_numstr (NULL, "__LINE__",  NULL);
+        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
+    }
+    else
+    {
+        gg_num t = check_var (&mtext, GG_DEFUNKN);
+        if (cmp_type (t, GG_DEFNUMBER))
+        {
+            if (webe != NULL || sfile != NULL || sline != NULL || urle != NULL || length != NULL) gg_report_error ("Cannot use other clauses (except new-line) when outputting a number");
+            carve_stmt_obj (&mtext, true, true);
+            do_numstr (NULL, mtext, NULL);
+            if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
+        }
+        // print-out assumes it's a string if internal mode!
+        else if (cmp_type (t, GG_DEFSTRING))
+        {
+            if (sfile != NULL || sline != NULL) gg_report_error ("Cannot use other clauses (except new-line, length, web-encode and url-encode) when outputting a string");
+            if (webe != NULL && urle != NULL) gg_report_error ("Cannot use both url-encode and web-encode");
+            carve_stmt_obj (&mtext, true, true);
+            check_var (&mtext, GG_DEFSTRING);
+            check_var (&length, GG_DEFNUMBER);
+            if (length == NULL) length = "GG_EMPTY_LONG_PLAIN_ZERO";
+
+            if (urle != NULL) oprintf("gg_puts (GG_URL, %s, %s, true);\n", mtext, length); 
+            else if (webe != NULL) oprintf("gg_puts (GG_WEB, %s, %s, true);\n", mtext, length); 
+            else oprintf("gg_puts (GG_NOENC, %s, %s, true);\n", mtext, length); 
+            if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
+        }
+        else if (cmp_type (t, GG_DEFUNKN))
+        {
+            gg_report_error( "Unsupported type in print-out");
+        }
+    }
+}
 
 
 //
@@ -693,11 +987,13 @@ void save_param (char *pname)
     if (pname[plen-1] == ')') pname[plen-1] = ' ';
     gg_trim (pname, &plen, false);
     char gg_sparam_file[300];
-    snprintf (gg_sparam_file, sizeof(gg_sparam_file), "%s/.setparam/%s.sp", gg_bld_dir, src_file_name);
+    char *base = gg_basename (src_file_name);
+    snprintf (gg_sparam_file, sizeof(gg_sparam_file), "%s/.setparam/%s.sp", gg_bld_dir, base);
     FILE *f = fopen (gg_sparam_file, "a");
     if (f == NULL) gg_report_error ("Cannot open file [%s]", gg_sparam_file);
     fprintf (f, "%s\n", pname);
     fclose(f);
+    gg_free (base);
 }
 
 
@@ -737,8 +1033,11 @@ char *check_exp (char *cur, bool *found, bool *err)
             // allow string[] notation for an integer expression
             // if it is, then remove [] and verify that index is integer, and allow this as a valid C expression (that evaluates to int)
             char *ind;
-            char *open_p;
-            if ((open_p = strchr (cur, '[')) != NULL)
+            char *open_p = cur+1; // +1 since we know *cur is alpha or _
+            while (isalnum (*open_p)) open_p++; // search for anything other than name, if found '[', look for index
+                                                // if not, move to the next possibility
+                                                // here we use isalnum, since variable name cannot start with a digit but can contain it
+            if (*open_p == '[')
             {
                 // this is number = str[index]
                 ind = open_p + 1;
@@ -781,8 +1080,14 @@ char *check_exp (char *cur, bool *found, bool *err)
                 }
                 // check that variable is a string
                 bool str_found = find_var (cur, &vtype, &l, &rname, NULL);
-                if (!str_found) gg_report_error ("Variable [%s] is not found", rname);
-                if (!cmp_type (vtype, GG_DEFSTRING)) gg_report_error ("Variable [%s] is not a string", rname);
+                if (!str_found) 
+                {
+                    gg_report_error ("Variable [%s] is not found", rname);
+                }
+                if (!cmp_type (vtype, GG_DEFSTRING)) 
+                {
+                    gg_report_error ("Variable [%s] is not a string", rname);
+                }
                 // check at run time accessing this byte is valid memory, this is in order
                 // so the deepest expressions are checked first, as it should be
                 oprintf ("if (gg_mem_get_len(gg_mem_get_id(%s))-1 < (%s) || (%s) < 0) gg_report_error (\"Cannot access byte [%%ld] in string\", (long)(%s));\n", cur, ind, ind, ind);
@@ -800,8 +1105,14 @@ char *check_exp (char *cur, bool *found, bool *err)
                 char *name = gg_strdupl (vname, 0, cur-vname);
                 name[cur-vname] = 0; // end string
                 bool found = find_var (name, &vtype, &l, &rname, NULL);
-                if (!found) gg_report_error ("Variable [%s] is not found", rname);
-                if (!cmp_type (vtype, GG_DEFNUMBER)) gg_report_error ("Variable [%s] is not a number", rname);
+                if (!found) 
+                {
+                    gg_report_error ("Variable [%s] is not found", rname);
+                }
+                if (!cmp_type (vtype, GG_DEFNUMBER)) 
+                {
+                    gg_report_error ("Variable [%s] is not a number", rname);
+                }
             }
         }
         else if (isdigit (*cur))
@@ -823,8 +1134,13 @@ char *check_exp (char *cur, bool *found, bool *err)
         else if (*cur == '\'')
         {
             cur++;
-            if (*cur == 0) gg_report_error ("Incomplete character after single quote");
-            cur++;
+            if (*cur == 0) gg_report_error ("Incomplete character after single quote"); 
+            if (*cur == '\\')  // this is say '\n'
+            {
+                cur++;
+                if (!(*cur == 'a' || *cur == 'b' || *cur == 'f' || *cur == 'n' || *cur == 'r' || *cur == 't' || *cur == 'v' || *cur == '\\' || *cur == '\'')) gg_report_error ("Invalid escape sequence (\\%c)", *cur); 
+                cur++;
+            } else cur++;
             if (*cur != '\'') gg_report_error ("Expected single quote");
             cur++;
             *found = true;
@@ -848,11 +1164,77 @@ char *check_exp (char *cur, bool *found, bool *err)
 
 
 //
+// Parse boolean expression using !, && and || (as well as parenthesis)
+// Returns current point in parsing, not useful to caller, only err is useful.
+//
+char *check_bool (char *cur, bool *found, bool *err)
+{
+    *found = false;
+    *err = false;
+    while (isspace(*cur)) cur++;
+
+    if (*cur == '(') 
+    {
+        // First find enclosed expressions
+        cur = check_bool (cur+1, found, err); if (*err) return ""; if (!*found) { *err = true; return "";}
+        if (*cur != ')') {*err = true; return "";}
+        cur++;
+        while (isspace(*cur)) cur++;
+    }
+    else
+    {
+        // Find begin token of an expression
+        if (cur[0] == '!') 
+        {
+            cur = check_bool (cur+1, found, err); if (*err) return ""; if (!*found) { *err = true; return "";}
+        }
+        else if (isalpha(*cur) || *cur == '_') 
+        {
+            *found = true;
+            gg_num vtype;
+            gg_num l;
+            char *rname;
+            char *vname = cur;
+            cur++; // we already know *cur is alphanum or underscore
+            while (isalnum(*cur) || *cur == '_') cur++;
+            // get var name
+            char *name = gg_strdupl (vname, 0, cur-vname);
+            name[cur-vname] = 0; // end string
+            bool found = find_var (name, &vtype, &l, &rname, NULL);
+            if (!found) 
+            {
+                gg_report_error ("Variable [%s] is not found", rname);
+            }
+            if (!cmp_type (vtype, GG_DEFBOOL)) 
+            {
+                gg_report_error ("Variable [%s] is not a boolean", rname);
+            }
+        }
+    }
+    while (isspace(*cur)) cur++;
+
+    // Once token found, find if it's connected to another token (first char has been advanced to non-space)
+    bool is_and = (cur[0] == '&' && cur[1] == '&');
+    bool is_or = (cur[0] == '|' && cur[1] == '|');
+    if (is_and || is_or) 
+    {
+        if (!*found) { *err = true;; return "";} // something must have been found prior to operators
+        cur = check_bool(cur+2, found, err); if (*err) return ""; if (!*found) { *err = true; return "";}
+    }
+
+    if (*found && *cur != ')' && *cur != 0) *err = true; // if there's something and it's not followed by an operator 
+                                                         // what follows must be either ) or nothing
+
+    return cur;
+    
+}
+
+
+//
 // Parse string expression for validity, and check if string variables in it are proper. This does solely concatenation of strings with plus sign.
 // Emits messages if errors. 
-// cur is the expression, and err is true
-// if there's a syntax error or false if not.
-// Returns actual code that computes the string expression, or NULL if this is just a string or constant that can be processed normally
+// cur is the expression, and err is true if there's a syntax error or false if not.
+// Returns actual code that computes the string expression,(so code that does computation or cur itself if it's just a variable), or GG_EMPTY_STRING if error.
 // String expressions are a+b+c... i.e. concatenation only
 //
 char *check_str (char *cur, bool *err)
@@ -869,7 +1251,20 @@ char *check_str (char *cur, bool *err)
         char *lp = gg_find_keyword0 (cur, GG_KEYPLUS, 0, 0);
         if (first) 
         { 
-            if (lp == NULL) return NULL; // no plus, just a single var or constant, which will be verified later in check_var()
+            if (lp == NULL) 
+            {
+                if (cur[0] == '"') // check if starts with double quote, and interpret as string expression
+                {
+                    if (is_constant_string(cur) == GG_CONST_OK) 
+                    {
+                        make_mem (&cur);
+                        return cur;
+                    }
+                    else gg_report_error ("Syntax error in a string literal [%s]", cur);
+                }
+                else if (!var_exists (cur, GG_DEFSTRING, NULL, NULL)) { *err = true; return GG_EMPTY_STRING; }
+                else return cur;
+            }
             // if there's a plus, create a variable that will hold the result
             snprintf (sres, sizeof(sres), "_gg_sres_%ld", sres_id++);
         }
@@ -888,37 +1283,13 @@ char *check_str (char *cur, bool *err)
         // check if expression is a variable or string constant
         if (is_constant_string(cur) != GG_CONST_OK)
         {
-            gg_num vtype;
-            gg_num l;
-            char *rname;
-            bool found = find_var (cur, &vtype, &l, &rname, NULL);
-            if (found)
-            {
-                if (!cmp_type (GG_DEFSTRING, vtype))
-                {
-                    if (gg_mode != GG_MODE_INTERNAL) 
-                    {
-                        gg_report_error ("Variable [%s] is defined on line [%ld] as [%s], but is used as type [%s]", rname, l, typename(vtype), typename(GG_DEFSTRING));
-                    }
-                    else 
-                        return NULL;
-                }
-            }
-            else
-            {
-                if (gg_mode != GG_MODE_INTERNAL) 
-                {
-                    gg_report_error ("Variable [%s] not found", cur); 
-                }
-                else 
-                    return NULL;
-            }
+            if (!var_exists (cur, GG_DEFSTRING, NULL, NULL)) { *err = true; return GG_EMPTY_STRING; }
         }
         c_elem=cur;
         gg_store(vars, gg_strdup(sres), gg_strdup(c_elem));
         //
         first = false;
-        if (lp == NULL) break;
+        if (lp == NULL) break; else *lp = '+'; // restore plus sign sign we stored the variable into fifo with gg_store
         cur = lp + 1; // skip the plus
     }
     oprintf ("char *%s = GG_EMPTY_STRING;\n", sres);
@@ -967,7 +1338,7 @@ void check_c (char *m)
         if (lp[0] != 0) // make sure it works for fun() meaning no arguments
         {
             // if input variable, check it
-            check_var (&lp, GG_DEFUNKN_CHECK, NULL);
+            check_var (&lp, GG_DEFUNKN);
             oprintf("GG_UNUSED (%s);\n", lp);
         }
         lp = nc;
@@ -981,7 +1352,7 @@ void check_c (char *m)
 // Return false if not found, true if exists (i.e. found)
 // Variable is found to exist if it exists on any level outside this one (prior to it)
 // rname is the real name of variable
-// if is_process is not NULL, then varible is set to be either process-scoped or not, based on its value
+// if is_process is not NULL, then variable is set to be either process-scoped or not, based on its value
 // type, line, rname can be NULL if we don't need some of them
 //
 bool find_var (char *name, gg_num *type, gg_num *line, char **rname, bool *is_process)
@@ -1003,6 +1374,7 @@ bool find_var (char *name, gg_num *type, gg_num *line, char **rname, bool *is_pr
                 char *n = strchr (var->name, '+');
                 if (var->rname[0] != 0) *rname = var->rname; else *rname = (n != NULL ? n+1:n);
             }
+            var->used = true;
             return true; // variable found on leven 'lev'
         }
         lev --;
@@ -1016,8 +1388,9 @@ bool find_var (char *name, gg_num *type, gg_num *line, char **rname, bool *is_pr
 // Returns true if existed, false if created
 // Checks if variable of different type exists, and if so, errors out.
 // realname is the real name, i.e. what's in the source file
+// watched_for_unused is true if this variable will be watched for non-use
 //
-bool add_var (char *var, gg_num type, char *realname)
+bool add_var (char *var, gg_num type, char *realname, bool watched_for_unused)
 {
     // Check if it exists
     gg_num st;
@@ -1037,6 +1410,8 @@ bool add_var (char *var, gg_num type, char *realname)
     v->rname = (realname == NULL ? "":gg_strdup (realname));
     v->type = type;
     v->lnum = lnum;
+    v->used = watched_for_unused?false:true; // if watched, we start with false, otherwise declared it "used", meaning
+                                                   // we won't generate error messages;
     v->is_process = false;
     gg_add_hash (gg_varh, v->name, NULL, (void*)v, NULL, &st);
     return false;
@@ -1054,7 +1429,9 @@ gg_num typeid (char *type)
     else if (!strcmp (type, GG_KEY_T_MESSAGE)) return GG_DEFMSG;
     else if (!strcmp (type, GG_KEY_T_SPLITSTRING)) return GG_DEFBROKEN;
     else if (!strcmp (type, GG_KEY_T_HASH)) return GG_DEFHASH;
-    else if (!strcmp (type, GG_KEY_T_ARRAY)) return GG_DEFARRAY;
+    else if (!strcmp (type, GG_KEY_T_ARRAYSTRING)) return GG_DEFARRAYSTRING;
+    else if (!strcmp (type, GG_KEY_T_ARRAYNUMBER)) return GG_DEFARRAYNUMBER;
+    else if (!strcmp (type, GG_KEY_T_ARRAYBOOL)) return GG_DEFARRAYBOOL;
     else if (!strcmp (type, GG_KEY_T_JSON)) return GG_DEFJSON;
     else if (!strcmp (type, GG_KEY_T_XML)) return GG_DEFXML;
     else if (!strcmp (type, GG_KEY_T_TREE)) return GG_DEFTREE;
@@ -1196,7 +1573,7 @@ gg_num is_constant_string (char *s)
 }
 
 //
-// Check format whenever needed. It supports %%, %s, %.*s, %ld and %*ld
+// Check format whenever needed. It supports %%, %s, %.*s, %ld/o/x and %*ld/o/x and %c
 // Following parameters are checked for accuracy of type
 // list is a list of comma separated params, starting with a comma
 // caller must release *list
@@ -1242,7 +1619,7 @@ void check_format(char *mtext, char *comma, char **list)
         else if (*(next+1) == 's' || (fmt_len = is_len_format(next+1, "s", 1)))
         {
             // should be GG_DEFSTRING
-            if (gg_mode != GG_MODE_INTERNAL && is_constant_string(par) != GG_CONST_OK &&  !cmp_type (check_var (&par, GG_DEFUNKN, NULL), GG_DEFSTRING)) gg_report_error ("Parameter #%ld in format should be of string type", pos);
+            if (is_constant_string(par) != GG_CONST_OK &&  !cmp_type (check_var (&par, GG_DEFUNKN), GG_DEFSTRING)) gg_report_error ("Parameter #%ld in format should be of string type", pos);
             if (fmt_len == 0) next+=2; else next+=1+fmt_len;
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
@@ -1250,16 +1627,16 @@ void check_format(char *mtext, char *comma, char **list)
         else if ((*(next+1) == 'l' && (*(next+2) == 'd' || *(next+2) == 'o' || *(next+2) == 'x')) || ((fmt_len = is_len_format(next+1, "ld", 2)) || (fmt_len = is_len_format(next+1, "lo", 2)) || (fmt_len = is_len_format(next+1, "lx", 2))))
         {
             // should be GG_DEFNUMBER
-            gg_num t = check_var (&par, GG_DEFUNKN, NULL);
-            if (gg_mode != GG_MODE_INTERNAL && (!cmp_type (t, GG_DEFNUMBER) && !cmp_type (t, GG_DEFBOOL))) gg_report_error ("Parameter #%ld in format should be of number type", pos);
+            gg_num t = check_var (&par, GG_DEFUNKN);
+            if ((!cmp_type (t, GG_DEFNUMBER) && !cmp_type (t, GG_DEFBOOL))) gg_report_error ("Parameter #%ld in format should be of number type", pos);
             if (fmt_len == 0) next+=3; else next+=1+fmt_len;
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
         else if ((*(next+1) == 'c'))
         {
             // should be GG_DEFNUMBER (this is character from string)
-            gg_num t = check_var (&par, GG_DEFUNKN, NULL);
-            if (gg_mode != GG_MODE_INTERNAL && (!cmp_type (t, GG_DEFNUMBER))) gg_report_error ("Parameter #%ld in format should be of number type", pos);
+            gg_num t = check_var (&par, GG_DEFUNKN);
+            if ((!cmp_type (t, GG_DEFNUMBER))) gg_report_error ("Parameter #%ld in format should be of number type", pos);
             next+=2;
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
@@ -1322,7 +1699,7 @@ void call_service_impl (char *st, char *finok, char *started, char *mtext)
     snprintf (totreq_s, sizeof(totreq_s), "%ld", totreq);
     oprintf ("{_gg_st=gg_call_fcgi (%s, %s, %s%s%s, %s%s%s);}\n", req_var, totreq_s, finok==NULL?"":"&(", finok==NULL?"NULL":finok, finok==NULL?"":")", started==NULL?"":"&(", started==NULL?"NULL":started, started==NULL?"":")" );
     if (st != NULL) oprintf("%s=_gg_st;\n",st);
-    else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+    else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
     total_fcgi_arr++;
 }
 
@@ -1332,14 +1709,14 @@ void read_service_find(char *mtext, char **data, char **error, char **rmsg, char
     *data = find_keyword (mtext, GG_KEYDATA, 1);
     *error = find_keyword (mtext, GG_KEYERROR, 1);
     *rmsg = find_keyword (mtext, GG_KEYSTATUSTEXT, 1);
-    *rstatus = find_keyword (mtext, GG_KEYHANDLERSTATUS, 1);
+    *rstatus = find_keyword (mtext, GG_KEYEXITSTATUS, 1);
 }
 void read_service_carve(char **data, char **error, char **rmsg, char **rstatus)
 {
     carve_statement (data, "read-remote", GG_KEYDATA, 0, 1);
     carve_statement (error, "read-remote", GG_KEYERROR, 0, 1);
     carve_statement (rmsg, "read-remote", GG_KEYSTATUSTEXT, 0, 1);
-    carve_statement (rstatus, "read-remote", GG_KEYHANDLERSTATUS, 0, 1);
+    carve_statement (rstatus, "read-remote", GG_KEYEXITSTATUS, 0, 1);
 }
 void read_service_define(char **data, char **error, char **rmsg, char **rstatus)
 {
@@ -1363,13 +1740,13 @@ void read_service_define(char **data, char **error, char **rmsg, char **rstatus)
 //
 void read_service_impl(char *mtext, char *data, char *error, char *st, char *rmsg, char *rstatus)
 {
-    check_var (&mtext, GG_DEFSERVICE, NULL);
+    check_var (&mtext, GG_DEFSERVICE);
     //
     if (data == NULL && error == NULL && st == NULL && rstatus == NULL) gg_report_error( "at least one clause must be specified in new-remote statement");
     if (data != NULL) oprintf ("%s = gg_cli_data(%s);\n", data, mtext);
     if (error != NULL) oprintf ("%s = gg_cli_error(%s);\n", error, mtext);
     if (st != NULL) oprintf ("%s = (%s)->return_code;\n", st, mtext);
-    else oprintf("if ((%s)->return_code != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)((%s)->return_code));\n", mtext, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, mtext);
+    else oprintf("if ((%s)->return_code != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)((%s)->return_code));\n", mtext, GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum, mtext);
     if (rmsg != NULL) oprintf ("%s = gg_strdup((%s)->errm);\n", rmsg, mtext);
     if (rstatus != NULL) oprintf ("%s = (%s)->req_status;\n", rstatus, mtext);
 }
@@ -1445,14 +1822,14 @@ void new_service (char *mtext)
 
 void new_service_impl (char *mtext, char *server, char *method, char *apath, char *req, char *body, char *upay, char *loc, char *url, char *env, char *timeout)
 {
-    check_var (&server, GG_DEFSTRING, NULL);
-    check_var (&method, GG_DEFSTRING, NULL);
-    check_var (&apath, GG_DEFSTRING, NULL);
-    check_var (&req, GG_DEFSTRING, NULL);
-    check_var (&upay, GG_DEFSTRING, NULL);
-    check_var (&loc, GG_DEFSTRING, NULL);
-    check_var (&timeout, GG_DEFNUMBER, NULL);
-    check_var (&url, GG_DEFSTRING, NULL);
+    check_var (&server, GG_DEFSTRING);
+    check_var (&method, GG_DEFSTRING);
+    check_var (&apath, GG_DEFSTRING);
+    check_var (&req, GG_DEFSTRING);
+    check_var (&upay, GG_DEFSTRING);
+    check_var (&loc, GG_DEFSTRING);
+    check_var (&timeout, GG_DEFNUMBER);
+    check_var (&url, GG_DEFSTRING);
     //
     if (server != NULL && loc != NULL) gg_report_error ("Only one of 'local' or 'location' can be used");
     if (server == NULL && loc == NULL) gg_report_error ("Either 'local' or 'location' must be specified");
@@ -1478,9 +1855,9 @@ void new_service_impl (char *mtext, char *server, char *method, char *apath, cha
         make_mem (&content);
         make_mem (&ctype);
         //
-        check_var (&content, GG_DEFSTRING, NULL);
-        check_var (&ctype, GG_DEFSTRING, NULL);
-        check_var (&clen, GG_DEFNUMBER, NULL);
+        check_var (&content, GG_DEFSTRING);
+        check_var (&ctype, GG_DEFSTRING);
+        check_var (&clen, GG_DEFNUMBER);
     }
 
     if (method == NULL) { method = "\"GET\""; make_mem(&method);} // by default method is get 
@@ -1550,7 +1927,7 @@ void run_service (char *mtext)
     // this is if err_too_many (which can't happen since it's only one, or out of memory, so say it
     if (rmsg != NULL) oprintf ("if (_gg_st == GG_ERR_MEMORY) %s = gg_strdup(\"Out of memory\"); else %s = gg_strdup (\"Unknown error\");\n", rmsg,rmsg);
     else oprintf(";"); // for compiler peace of mind
-    if (st==NULL) oprintf("gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum); // this really should never happen since call_service_impl() should catch this
+    if (st==NULL) oprintf("gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum); // this really should never happen since call_service_impl() should catch this
     oprintf ("}\n");
 }
 
@@ -1614,7 +1991,12 @@ void make_mem (char **clause)
                                                                             // so whatever number that is, that's how many spaces are in front of *clause
     // without this bool guard, a new variable would be created with invocation here
     oprintf ("static bool _gg_gstr_once%ld = true;\n", gmem); 
-    oprintf ("static char *gg_gstr_ret%ld;\n", gmem); 
+    //
+    //
+    // NOTE: internal variable that starts with _gg__<string def code (see golf.h)>__ is **always** a string!! check_var **depends** on this
+    //
+    //
+    oprintf ("static char *_gg__" GG_STRINGIZE(GG_DEFSTRING)  "__ret%ld;\n", gmem); 
     //
     // Adding variable must be done at the level when it's generated since we count levels by {} in code generated
     // So add it before the next { down here
@@ -1622,11 +2004,11 @@ void make_mem (char **clause)
 #define GG_MAKE_MEM_LEN 35
     char *makem = gg_malloc(GG_MAKE_MEM_LEN);
     // if we're converting literal into string variable, this is where we give it name which propogates to caller
-    snprintf (makem, GG_MAKE_MEM_LEN, "gg_gstr_ret%ld", gmem);
-    add_var (makem, GG_DEFSTRING, *clause);
+    snprintf (makem, GG_MAKE_MEM_LEN, "_gg__" GG_STRINGIZE(GG_DEFSTRING)  "__ret%ld", gmem);
+    add_var (makem, GG_DEFSTRING, *clause, false);
     *clause = makem; // must be AFTER add_var or otherwise realname in add_var would be generated name!
     oprintf ("if (_gg_gstr_once%ld) {\n", gmem); 
-    oprintf ("gg_gstr_ret%ld = gg_mem_add_const (_gg_gstr%ld, sizeof(_gg_gstr%ld)-GG_ALIGN);\n", gmem, gmem, gmem); 
+    oprintf ("_gg__" GG_STRINGIZE(GG_DEFSTRING)  "__ret%ld = gg_mem_add_const (_gg_gstr%ld, sizeof(_gg_gstr%ld)-GG_ALIGN);\n", gmem, gmem, gmem); 
     oprintf ("_gg_gstr_once%ld = false;\n}\n", gmem); 
 
     //
@@ -1641,7 +2023,7 @@ void make_mem (char **clause)
 // bifs is the code that goes before the entire "if" statement, currently it's only for else-if, which is "} else {"
 // we do not generate "if () {} else if () {}", but rather "if () {} else { if() {} }"
 // ifs is the leading portion of "if" statement that should be generated, with the parsed condition to follow.
-// ife is the ending portion of "if" statement that should be generated, with the parsed condition to follow.
+// ife is the ending portion of "if" statement that should be generated
 //
 //
 //
@@ -1704,15 +2086,15 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         less = find_keyword (cm, GG_KEYLESSERTHAN, 1);
         lesseq = find_keyword (cm, GG_KEYLESSEREQUAL, 1);
         gr = find_keyword (cm, GG_KEYGREATERTHAN, 1);
+        greq = find_keyword (cm, GG_KEYGREATEREQUAL, 1);
         mod = find_keyword (cm, GG_KEYEVERY, 1);
         notmod = find_keyword (cm, GG_KEYNOTEVERY, 1);
-        greq = find_keyword (cm, GG_KEYGREATEREQUAL, 1);
         cont = find_keyword (cm, GG_KEYCONTAIN, 1);
         notcont = find_keyword (cm, GG_KEYNOTCONTAIN, 1);
         caseins = find_keyword (cm, GG_KEYCASEINSENSITIVE, 1);
         len = find_keyword (cm, GG_KEYLENGTH, 1);
 
-        if (gg_mode != GG_MODE_INTERNAL && (eq == NULL && neq == NULL && less == NULL && lesseq == NULL && gr == NULL && mod == NULL && notmod == NULL && greq == NULL && cont == NULL && notcont == NULL && caseins == NULL && len == NULL)) gg_report_error ("conditional clause is missing or empty");
+        if (eq == NULL && neq == NULL && less == NULL && lesseq == NULL && gr == NULL && mod == NULL && notmod == NULL && greq == NULL && cont == NULL && notcont == NULL && caseins == NULL && len == NULL) gg_report_error ("conditional clause is missing or empty");
 
         gg_num eq_pos = INT_MAX;
         gg_num neq_pos = INT_MAX;
@@ -1737,6 +2119,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         if (caseins) carve_statement (&caseins, "if-true", GG_KEYCASEINSENSITIVE, 0, 0);  // carve it out, so it doesn't mess up other clauses
         if (len) carve_statement (&len, "if-true", GG_KEYLENGTH, 0, 1);  // carve it out, so it doesn't mess up other clauses
 
+        check_var (&len, GG_DEFNUMBER);
+
         gg_num m = MIN(MIN (MIN (MIN (MIN (MIN(eq_pos, neq_pos), MIN(less_pos,lesseq_pos)), MIN(gr_pos,greq_pos)), MIN(notcont_pos,cont_pos)), mod_pos), notmod_pos);
         if (m == INT_MAX) break;
         // must be after break or _gg_ifcond.. would be duplicated or unused
@@ -1756,8 +2140,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             {
                 make_mem (&eq);
                 //
-                gg_num t1 = check_var (&n_cm, GG_DEFUNKN, NULL);
-                check_var (&eq, t1, NULL); 
+                gg_num t1 = check_var (&n_cm, GG_DEFUNKN);
+                check_var (&eq, t1); 
                 // Here now can call specific function based on type and there's no need for Generic()
                 if (!len) oprintf("_gg_ifcond%ld = GG_CMP_EQ%s((%s), (%s));\n", gvar, caseins?"_C":"", n_cm, eq);  
                 else oprintf("_gg_ifcond%ld = GG_CMP_EQ%s_L((%s), (%s), (%s));\n",gvar, caseins?"_C":"", n_cm, eq, len);  
@@ -1777,8 +2161,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             {
                 make_mem (&neq);
                 //
-                gg_num t1 = check_var (&n_cm, GG_DEFUNKN, NULL);
-                check_var (&neq, t1, NULL);
+                gg_num t1 = check_var (&n_cm, GG_DEFUNKN);
+                check_var (&neq, t1);
                 if (!len) oprintf("_gg_ifcond%ld = !GG_CMP_EQ%s((%s), (%s));\n", gvar, caseins?"_C":"", n_cm, neq); 
                 else oprintf("_gg_ifcond%ld = !GG_CMP_EQ%s_L((%s), (%s),(%s));\n", gvar, caseins?"_C":"", n_cm, neq, len); 
             }
@@ -1792,8 +2176,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             make_mem (&n_cm);
             make_mem (&lesseq);
             //
-            gg_num t1 = check_var (&n_cm, GG_DEFUNKN, NULL);
-            check_var (&lesseq, t1, NULL);
+            gg_num t1 = check_var (&n_cm, GG_DEFUNKN);
+            check_var (&lesseq, t1);
             if (!len) oprintf("_gg_ifcond%ld = GG_CMP_LESSEQ%s((%s), (%s));\n", gvar, caseins?"_C":"", n_cm, lesseq); 
             else oprintf("_gg_ifcond%ld = GG_CMP_LESSEQ%s_L((%s), (%s), (%s));\n", gvar, caseins?"_C":"", n_cm, lesseq, len); 
         }
@@ -1806,8 +2190,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             make_mem (&n_cm);
             make_mem (&greq);
             //
-            gg_num t1 = check_var (&n_cm, GG_DEFUNKN, NULL);
-            check_var (&greq, t1, NULL);
+            gg_num t1 = check_var (&n_cm, GG_DEFUNKN);
+            check_var (&greq, t1);
             if (!len) oprintf("_gg_ifcond%ld = GG_CMP_GREQ%s((%s), (%s));\n", gvar, caseins?"_C":"", n_cm, greq); 
             else oprintf("_gg_ifcond%ld = GG_CMP_GREQ%s_L((%s), (%s), (%s));\n", gvar, caseins?"_C":"", n_cm, greq, len); 
         }
@@ -1820,8 +2204,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             make_mem (&n_cm);
             make_mem (&less);
             //
-            gg_num t1 = check_var (&n_cm, GG_DEFUNKN, NULL);
-            check_var (&less, t1, NULL);
+            gg_num t1 = check_var (&n_cm, GG_DEFUNKN);
+            check_var (&less, t1);
             if (!len) oprintf("_gg_ifcond%ld = GG_CMP_LESS%s((%s), (%s));\n", gvar, caseins?"_C":"", n_cm, less); 
             else oprintf("_gg_ifcond%ld = GG_CMP_LESS%s_L((%s), (%s), (%s));\n", gvar, caseins?"_C":"", n_cm, less, len); 
         }
@@ -1833,8 +2217,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             char *n_cm = cm;
             // no need for make_me since these must be numbers
             //
-            gg_num t1 = check_var (&n_cm, GG_DEFNUMBER, NULL);
-            check_var (&notmod, t1, NULL);
+            gg_num t1 = check_var (&n_cm, GG_DEFNUMBER);
+            check_var (&notmod, t1);
             oprintf("_gg_ifcond%ld = ((%s)%%(%s));\n", gvar, n_cm, notmod); 
         }
         else if (mod_pos == m) 
@@ -1845,8 +2229,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             char *n_cm = cm;
             // no need for make_me since these must be numbers
             //
-            gg_num t1 = check_var (&n_cm, GG_DEFNUMBER, NULL);
-            check_var (&mod, t1, NULL);
+            gg_num t1 = check_var (&n_cm, GG_DEFNUMBER);
+            check_var (&mod, t1);
             oprintf("_gg_ifcond%ld = !((%s)%%(%s));\n", gvar, n_cm, mod); 
         }
         else if (gr_pos == m) 
@@ -1858,8 +2242,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             make_mem (&n_cm);
             make_mem (&gr);
             //
-            gg_num t1 = check_var (&n_cm, GG_DEFUNKN, NULL);
-            check_var (&gr, t1, NULL);
+            gg_num t1 = check_var (&n_cm, GG_DEFUNKN);
+            check_var (&gr, t1);
             if (!len) oprintf("_gg_ifcond%ld = GG_CMP_GR%s((%s), (%s));\n", gvar, caseins?"_C":"", n_cm, gr); 
             else oprintf("_gg_ifcond%ld = GG_CMP_GR%s_L((%s), (%s), (%s));\n", gvar, caseins?"_C":"", n_cm, gr, len); 
         }
@@ -1872,8 +2256,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             make_mem (&n_cm);
             make_mem (&cont);
             //
-            check_var (&n_cm, GG_DEFSTRING, NULL);
-            check_var (&cont, GG_DEFSTRING, NULL);
+            check_var (&n_cm, GG_DEFSTRING);
+            check_var (&cont, GG_DEFSTRING);
             oprintf("_gg_ifcond%ld = (GG_CONTAINS%s((%s), (%s))!=NULL);\n", gvar, caseins?"_C":"", n_cm, cont);
         }
         else if (notcont_pos == m) 
@@ -1885,8 +2269,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             make_mem (&n_cm);
             make_mem (&notcont);
             //
-            check_var (&n_cm, GG_DEFSTRING, NULL);
-            check_var (&notcont, GG_DEFSTRING, NULL);
+            check_var (&n_cm, GG_DEFSTRING);
+            check_var (&notcont, GG_DEFSTRING);
             oprintf("_gg_ifcond%ld = (GG_CONTAINS%s((%s), (%s))==NULL);\n",gvar, caseins?"_C":"", n_cm, notcont);
         }
         else gg_report_error ("Internal error in logic condition");
@@ -1976,7 +2360,13 @@ void make_var (char **v, gg_num type)
     char *var;
 #define GG_MAX_VEXP_LEN 50
     var = gg_malloc(GG_MAX_VEXP_LEN);
-    snprintf (var, GG_MAX_VEXP_LEN, "gg_dexp%ld", gg_dexp);
+    //
+    //
+    // The name of this variable has its type encoded in the name. We use this in check_var
+    // so *do not* change this naming covention (_gg__<code>__<some counter>) without a **very** good reason!!
+    //
+    //
+    snprintf (var, GG_MAX_VEXP_LEN, "_gg__%ld__dexp%ld", type, gg_dexp); 
     char rtype[100];
     bool simple_type = true;
     if (cmp_type(GG_DEFSTRING, type)) strcpy (rtype, "char*");
@@ -1989,10 +2379,58 @@ void make_var (char **v, gg_num type)
     // add new variable gg_dexp... to the hash of variables only if simple type, because we can't specify constants for other types in code anyway
     if (simple_type)
     {
-        add_var (*v, type, realname);
+        add_var (*v, type, realname, false);
         oprintf( "GG_UNUSED(%s);\n", *v);
     }
     gg_dexp++;
+}
+
+
+//
+// When we're sure v is boolean, we check it and either return or error out
+//
+char *process_bool_exp (char *v)
+{
+    if (!strcmp (v, "true") || !strcmp (v, "false")) return v;
+    bool found;
+    bool err;
+    check_bool (v, &found, &err);
+    if (!err) 
+    {
+        make_var (&v, GG_DEFBOOL); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
+        return v; // new variable instead of expression
+    }
+    else 
+    {
+        gg_report_error ("Syntax error in boolean expression [%s]", v);
+    }
+}
+
+//
+// When we're sure v is string, we check it and either return string var to be used or error out
+//
+char *process_string_exp (char *v)
+{
+    // check if string expression
+    bool err;
+    char *res = check_str (v, &err);
+    if (!err)
+    { 
+        return res; 
+    } else gg_report_error ("Expression [%s] is not of string type", v); 
+}
+
+//
+// When we're sure v is string, we check it and either return string var to be used or error out
+//
+char *process_number_exp (char *v)
+{
+    bool found;
+    bool err;
+    check_exp (v, &found, &err);
+    if (!err) make_var (&v, GG_DEFNUMBER); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
+    else gg_report_error ("Syntax error in number expression [%s]", v);
+    return v;
 }
 
 //
@@ -2003,23 +2441,23 @@ void make_var (char **v, gg_num type)
 // If type if GG_DEFUNKN, then return type found is returned and of course no check is performed
 // check_var must be called after any define_statement, and it must be after any make_mem as it checks variables
 // and not constants.
-// is_unkn is true if this is trully unknown var/expression, meaning returned type is DEFSTRING etc, but we really don't know, typically in internal mode. Can be NULL if not needed.
 // Note: internal variables MUST start with '_gg' to be taken as correct!
 // IMPORTANT: check_var is ONLY for input variables; NEVER for output, which is handled with define statement!!!!! The only exception is use with type of GG_DEFUNKN to get the type.
 //
-gg_num check_var (char **var, gg_num type, bool *is_unkn)
+gg_num check_var (char **var, gg_num type)
 {
-    bool force_check = false;
-    if (type == GG_DEFUNKN_CHECK) {type=GG_DEFUNKN; force_check = true;}
-
+    
     char *v = *var;
-    if (is_unkn) *is_unkn = false;
-    if (v == NULL) return GG_DEFUNKN;
+    if (v == NULL) return type; // when a clause is not found (so find_keyword returns NULL) we still check variable
+                                // and so if NULL (which it would be if not found), just rubber stamp it
 
+    // trim expression and check if it's missing
     gg_num lv = strlen (v);
     v = gg_trim_ptr(v,  &lv);
-    if (v[0] == 0) return GG_DEFUNKN; // in some cases like with opt_clause(), the variable is not present (like case-insensitive in count-substring)
-                                      // and it's actuall "", and not NULL
+    if (v[0] == 0) return type; // in some cases like with opt_clause(), the variable is not present (like case-insensitive in count-substring)
+                                // and it's actuall "", and not NULL , so just rubberstamp it
+                               
+
     // if the var has () around it, remove it. There's no need for it, other than to use the same name
     // for a variable or function as is a keyword. If really needed, use (()), so the inner ones remain
     if (lv >= 3 && v[0] == '(' && v[lv-1] == ')')
@@ -2028,177 +2466,129 @@ gg_num check_var (char **var, gg_num type, bool *is_unkn)
         v[lv - 1] = 0;
         // We check what's in (..) because it could be (gg_num)strlen(x), which starts with ( and ends with ) but isn't a variable!
         // (this is only relevant in internal mode)
-        if (!(gg_mode == GG_MODE_INTERNAL && gg_is_valid_param_name (v+1, false, false) != 1))  
-        {
-            // remove leading ( 
-            v++;
-            *var = v; // we altered the location of var, make it correct
-        } else v[lv - 1] = ')'; // if it's internal and not a valid name, restore trailing )
+        // remove leading ( 
+        v++;
+        *var = v; // we altered the location of var, make it correct
     }
 
 
-    if (v[0] == '_' && v[1] == 'g' && v[2] == 'g')  return type; // internal vars are always of the right type (aka _gg...)
-                                                                 // but not "gg_..." vars, those are synonyms for user vars
-
-    if (cmp_type (type, GG_DEFSTRING)) // we check this for internal too. We however, detect if the expression is in the 
-                                       // form a+b+... where each is a string var, and if not we just pass on it - IF it's
-                                       // internal (because it can be char+num for instance, which is a typical C expression)
-                                       // and IF it's not internal, we error out
+    if (v[0] == '_' && v[1] == 'g' && v[2] == 'g')  
     {
-        // check if string expression
-        bool err;
-        char *res = check_str (*var, &err);
-        // This is for concatenation (plus) string expressions only, if res is NULL, it's just a string var or a constant, move on
-        if (res != NULL) 
-        { 
-            *var = res; 
-            return GG_DEFSTRING; 
+        if (!strncmp (v, "_gg__", 5)) // this is internal variable with type encoded in name
+        {
+            char *tcode = v+5;
+            char *ecode = strstr (tcode, "__");
+            if (ecode != NULL)
+            {
+                *ecode = 0;
+                gg_num code = atol (tcode);
+                *ecode = '_';
+
+                return code;
+            }
         }
+        return type; // internal vars are always of the right type (aka _gg...)
+                     // but not "gg_..." vars, those are synonyms for user vars
+    }
+    if (cmp_type (type, GG_DEFSTRING)) // we check this for internal too. We however, detect if the expression is in the 
+                                       // form a+b+... where each is a string var, or just a string, or...
+    {
+        *var = process_string_exp (v);
+        return GG_DEFSTRING;
     }
 
-    if (cmp_type (type, GG_DEFNUMBER) && gg_mode != GG_MODE_INTERNAL)
+    if (cmp_type (type, GG_DEFNUMBER))
     {
         // check if number expression
-        bool found;
-        bool err;
-        check_exp (*var, &found, &err);
-        if (!err) make_var (var, type); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
-        else gg_report_error ("Syntax error in number expression [%s]", v);
-        v = *var;
+        *var = process_number_exp (*var);
+        return GG_DEFNUMBER;
     }
 
-    if (isalpha(v[0]))
+    if (cmp_type(type, GG_DEFBOOL))
     {
-        if (gg_is_valid_param_name (v, false, false) != 1) 
-        {
-            // check if this is str[]
-            if (gg_mode != GG_MODE_INTERNAL && strchr (v, '[') != NULL)
-            {
-                bool found;
-                bool err;
-                check_exp (v, &found, &err);
-                if (!err) make_var (var, GG_DEFNUMBER); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
-                else gg_report_error ("Syntax error in number expression [%s]", v);
-                return GG_DEFNUMBER;
-            }
+        // or true false
+        *var = process_bool_exp (v);
+        return GG_DEFBOOL;
+    }
 
-            // if the caller wants variable checked, check it
-            if (gg_mode != GG_MODE_INTERNAL) gg_report_error ("[%s] is not a valid name for variable or constant", v);
-            // if internal, proceed afterwards below outside the parent if() to check for type at gcc compile time
-            if (is_unkn) *is_unkn = true;
-            make_var (var, type); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
-            return type;
+    //
+    // Here, we now determine the type of expression
+    //
+
+    // Get passed any left parenthesis
+    gg_num i = 0;
+    while (v[i] == '(') i++;
+    gg_num ibeg = i; // beginning of something to check
+
+    if (v[ibeg] == '"') // check if starts with double quote, and interpret as string expression
+    {
+        if (is_constant_string(v) == GG_CONST_OK) { *var = v; return GG_DEFSTRING; } // must be string
+        else gg_report_error ("Syntax error in a string literal [%s]", v);
+    }
+    else if (v[ibeg] == '!') // this is partial recognition of boolean expression, just for negation
+    {
+        *var = process_bool_exp (v+ibeg);
+        return GG_DEFBOOL;
+    }
+    else if (isdigit(v[ibeg]) || v[ibeg] == '-' || v[ibeg] == '+') // check if starts with digit, + or -, and interpret as number expression
+    {
+        *var = process_number_exp (*var);
+        return GG_DEFNUMBER;
+    }
+    else if (isalpha(v[ibeg]))
+    {
+        i = ibeg;
+        i++; // we already know v[ibeg] is alpha
+        while (isalnum(v[i]) || v[i] == '_') i++; // advance to catch the name of variable, stop when anything else found
+                                                    // (such as [ or + or ) or whatever
+
+        char char_end = v[i]; // remember byte we temporarily nullify
+        v[i] = 0; // put the zero in ending to cap var name
+        char *firstn = gg_strdup (v+ibeg); // remember first variable name, so we don't have to save+nullify+restore a byte!
+        v[i] = char_end; // restore byte right after name
+        while (isspace(v[i])) i++; // advance character after the name to skip spaces
+        gg_num var_end = i; // and now var_end is position of whatever comes after name, after spaces skipped; and we have the name of variable
+                     // it may be the same as passed_end, or maybe a bit after it if there were spaces passed variable name
+        if (gg_is_valid_param_name (firstn, false, false) != 1) 
+        {
+            gg_report_error ("Unknown variable or expression [%s]", firstn);
         }
         else
         {
-
-            gg_num vtype;
-            gg_num l;
-            char *rname;
-            bool found = find_var (v, &vtype, &l, &rname, NULL);
-            if (found)
+            gg_num tp;
+            gg_num lnum;
+            // Start checking with string, it could be any type really, but string is probably the most common
+            if (var_exists (firstn, GG_DEFSTRING, &tp, &lnum)) 
             {
-                if (type != GG_DEFUNKN)
+                // check if what follows is [, in which case it's a number
+                if (v[var_end] == '[')
                 {
-                    if (!cmp_type (type, vtype)) gg_report_error ("Variable [%s] is defined on line [%ld] as [%s], but is used as type [%s]", rname, l, typename(vtype), typename(type));
-                    return vtype;
+                    *var = process_number_exp (v);
+                    return GG_DEFNUMBER;
                 }
                 else
                 {
-                    return vtype;
+                    *var = process_string_exp (v);
+                    return tp;
                 }
             }
-            else 
+            else if (tp == GG_DEFBOOL || tp == GG_DEFBOOLSTATIC)
             {
-                if (gg_mode != GG_MODE_INTERNAL || force_check) gg_report_error (GG_VAR_NOT_EXIST, v); 
+                *var = process_bool_exp (v);
+                return tp;
             }
+            else if (tp == GG_DEFNUMBER || tp == GG_DEFNUMBERSTATIC)
+            {
+                *var = process_number_exp (*var);
+                return tp;
+            } else return tp; // just return type found, other types do NOT have expressions (like trees, hashes etc)
         }
-    }
+    } else gg_report_error ("Unknown expression type or bad syntax for an expression");
 
-    if (cmp_type(type,GG_DEFSTRING) || type == GG_DEFUNKN) // if string, check if constant
-    {
-        if (is_constant_string(v) == GG_CONST_OK) return GG_DEFSTRING;
-        if (gg_mode == GG_MODE_INTERNAL) 
-        {
-            if (cmp_type(type, GG_DEFSTRING))
-            { 
-                if (is_unkn) *is_unkn = true;
-                // checking for NULL here is an oddity of golf tests
-                make_var (var, GG_DEFSTRING);  // we don't know what v or (*var) really is, so variable
-                return GG_DEFSTRING;
-            }
-        }
-    }
-    if (cmp_type(type,GG_DEFNUMBER) || type == GG_DEFUNKN) // if number, check if constant
-    {
-        gg_num st;
-        gg_str2num (v, 0, &st);
-        if (st == GG_OKAY) 
-        {
-            // make a constant integer to be a variable so its address & can be taken in set-param, perhaps
-            // would also allow its use elsewhere
-            make_var (var, GG_DEFNUMBER);  
-            return GG_DEFNUMBER;
-        }
-        if (gg_mode == GG_MODE_INTERNAL) 
-        {
-            if (cmp_type(type,GG_DEFNUMBER))
-            { 
-                if (is_unkn) *is_unkn = true;
-                make_var (var, GG_DEFNUMBER);  // we don't know what v or (*var) really is, so variable
-                return GG_DEFNUMBER;
-            }
-        }
-    }
-    if (cmp_type(type, GG_DEFBOOL) || type == GG_DEFUNKN) // if bool, check if constant
-    {
-        // can be number
-        gg_num st;
-        gg_str2num (v, 0, &st);
-        if (st == GG_OKAY) return GG_DEFNUMBER;
-        // or true false
-        if (!strcmp (v, "true") || !strcmp (v, "false")) return GG_DEFBOOL;
-        if (gg_mode == GG_MODE_INTERNAL) 
-        { 
-            if (cmp_type(type, GG_DEFBOOL)) 
-            { 
-                if (is_unkn) *is_unkn = true;
-                make_var (var, GG_DEFBOOL);  // we don't know what v or (*var) really is, so variable
-                return GG_DEFBOOL;
-            }
-        }
-    }
-    if (gg_mode == GG_MODE_INTERNAL) 
-    {
-        if (is_unkn) *is_unkn = true;
-        make_var (var, type);  // we don't know what v or (*var) really is, so variable
-        return type; // this returns whatever type was (unknown or some type), as in internal, it's very forgiving
-                     // and we count on gcc to tell us
-    }
-
-    //
-    // once constants are check, see if valid name/type
-    //
-    // First check v to see what type it is, then if it's the valid type
-    //
-    //
-    gg_report_error ("Cannot process variable or constant [%s] as it is not of type [%s]", v, typename(type));
-    return GG_OKAY;
+    return GG_DEFUNKN; //  will never get here, just for compiler sanity
 }
 
 
-//
-// Check if old and new clauses are used. oldkey and newkey are the keywords for them.  Direct user to what needs to be used.
-//
-void deprecated (char **old, char **new, char *oldkey, char *newkey)
-{
-    if (*old != NULL && *new == NULL) 
-    {
-        gg_report_warning("Option [%s] is deprecated and will be removed. Use [%s] instead", oldkey, newkey);
-        *new = *old;
-    }
-    else if (*old != NULL && *new != NULL) gg_report_error ("Cannot use both [%s] and [%s], use only [%s]", oldkey, newkey, newkey);
-}
 
 //
 // Generate code that loads pre-computed hash to memory. This hash allows near-instantaneous
@@ -2463,7 +2853,7 @@ char *opt_clause(char *clause, char *param, char *antiparam, gg_num type)
         if (clause[0] != 0) // there is true|false
         {
             res = gg_malloc(strlen(clause)+strlen(param)+strlen(antiparam) + 30);
-            check_var (&clause, GG_DEFBOOL, NULL); // make sure it's a boolean variable
+            check_var (&clause, GG_DEFBOOL); // make sure it's a boolean variable
             sprintf (res, "((%s)?(%s):(%s))", clause, param, antiparam);
             make_var (&res, type);
         }
@@ -2689,7 +3079,7 @@ void process_http_header (char *statement, char *header, char *temp_header, gg_n
         // check_var MUST be after ALL carve_statements
         if (request == 1) 
         {
-            check_var (&clen, GG_DEFNUMBER, NULL);
+            check_var (&clen, GG_DEFNUMBER);
         }
 
         make_mem (&ctype);
@@ -2701,12 +3091,12 @@ void process_http_header (char *statement, char *header, char *temp_header, gg_n
             make_mem (&cachecontrol);
             make_mem (&statustext);
             //
-            check_var (&filename, GG_DEFSTRING, NULL);
-            check_var (&cachecontrol, GG_DEFSTRING, NULL);
-            check_var (&statusid, GG_DEFNUMBER, NULL);
-            check_var (&statustext, GG_DEFSTRING, NULL);
-            check_var (&etagc, GG_DEFNUMBER, NULL);
-            check_var (&downloadc, GG_DEFSTRING, NULL);
+            check_var (&filename, GG_DEFSTRING);
+            check_var (&cachecontrol, GG_DEFSTRING);
+            check_var (&statusid, GG_DEFNUMBER);
+            check_var (&statustext, GG_DEFSTRING);
+            check_var (&etagc, GG_DEFNUMBER);
+            check_var (&downloadc, GG_DEFSTRING);
         }
 
 
@@ -2801,12 +3191,12 @@ gg_num outargs(char *args, char *outname, char *type, gg_num startwith, char pai
                 *eq = 0;
                 // generate code for name/value pair array (run time variable argument)
                 make_mem (&value);
-                check_var (&value, check_type_name, NULL);
+                check_var (&value, check_type_name);
                 oprintf("%s[%ld] = %s;\n", outname, exec_inputs, value);
                 exec_inputs++;
                 char *equals = eq+1;
                 make_mem (&equals);
-                check_var (&equals, check_type_val, NULL);
+                check_var (&equals, check_type_val);
                 oprintf("%s[%ld] = %s;\n", outname, exec_inputs, equals);
                 exec_inputs++;
             }
@@ -2814,7 +3204,7 @@ gg_num outargs(char *args, char *outname, char *type, gg_num startwith, char pai
             {
                 // generate code for program arguments array (run time variable argument)
                 make_mem(&value);
-                check_var (&value, check_type_val, NULL);
+                check_var (&value, check_type_val);
                 oprintf("%s[%ld] = %s;\n", outname, exec_inputs, value);
                 exec_inputs++;
             }
@@ -3588,21 +3978,21 @@ gg_num define_statement (char **statement, gg_num type, bool always)
     // For static types within do-once, lower their gg_level, but only if current level is do_once_level+1 - see "do-once" handler elsewhere here in this file
     // Note that do-once CANNOT be nested, so it makes this simpler here.
     //
-    if (do_once_open && gg_level == do_once_level+1 && (type == GG_DEFSTRINGSTATIC || type == GG_DEFNUMBERSTATIC || type == GG_DEFHASHSTATIC || type == GG_DEFARRAYSTATIC || type == GG_DEFTREESTATIC || type == GG_DEFLISTSTATIC || type == GG_DEFBOOLSTATIC))
+    if (do_once_open && gg_level == do_once_level+1 && (type == GG_DEFSTRINGSTATIC || type == GG_DEFNUMBERSTATIC || type == GG_DEFHASHSTATIC || type == GG_DEFARRAYSTRINGSTATIC || type == GG_DEFARRAYNUMBERSTATIC || type == GG_DEFARRAYBOOLSTATIC || type == GG_DEFTREESTATIC || type == GG_DEFLISTSTATIC || type == GG_DEFBOOLSTATIC))
     {
         // make this variable in the same scope as do-once. All other vars are in +1 level. 
         // Note that generated C code is all the same level as do-once. We simulate higher level. The other variables
         // within do-once (other than process-scoped) could theoretically be accessed outside do-once block, but Golf will
         // consider them non-existant, so they cannot be used - this prevents gcc from generating uninitialized warnings/errors.
         gg_level--; // this is the level C compiler see
-        add_var_res = add_var (*statement, type, NULL);
+        add_var_res = add_var (*statement, type, NULL, true);
         gg_level++;
     }
     else
     {
         // when do-once is in effect, gg_level is +1 (even though C compiler's level is one less), which prevents user
         // from using variables made in do-once outside it (technically in C they could, but in Golf they can't, see above comment)
-        add_var_res = add_var (*statement, type, NULL);
+        add_var_res = add_var (*statement, type, NULL, true);
     }
 
     // Create var name  and store it to hash
@@ -3619,8 +4009,12 @@ gg_num define_statement (char **statement, gg_num type, bool always)
         else if (type == GG_DEFBROKEN) oprintf ("gg_split_str *%s = NULL;\n",*statement);
         else if (type == GG_DEFHASH) oprintf ("gg_hash *%s = NULL;\n", *statement);
         else if (type == GG_DEFHASHSTATIC) oprintf ("static gg_hash *%s = NULL;\n", *statement);
-        else if (type == GG_DEFARRAY) oprintf ("gg_array *%s = NULL;\n", *statement);
-        else if (type == GG_DEFARRAYSTATIC) oprintf ("static gg_array *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAYSTRING) oprintf ("gg_arraystring *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAYSTRINGSTATIC) oprintf ("static gg_arraystring *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAYNUMBER) oprintf ("gg_arraynumber *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAYNUMBERSTATIC) oprintf ("static gg_arraynumber *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAYBOOL) oprintf ("gg_arraybool *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAYBOOLSTATIC) oprintf ("static gg_arraybool *%s = NULL;\n", *statement);
         else if (type == GG_DEFJSON) oprintf ("gg_json *%s = NULL;\n", *statement);
         else if (type == GG_DEFXML) oprintf ("gg_xml *%s = NULL;\n", *statement);
         else if (type == GG_DEFTREE) oprintf ("gg_tree *%s = NULL;\n", *statement);
@@ -3779,7 +4173,7 @@ void get_all_input_param (gg_gen_ctx *gen_ctx, char *iparams)
         if (st != GG_OKAY) break;
 
         make_mem (&value);
-        check_var (&value, GG_DEFSTRING, NULL);
+        check_var (&value, GG_DEFSTRING);
         add_input_param (gen_ctx, value);
     } 
 }
@@ -3897,9 +4291,11 @@ void oprintf (char *format, ...)
             }
             //start from the beginning since just flushed
             gg_free (oline);
+            oline = NULL;
             oline_len = 0;
             oline_size = 0;
             oline_prev_line = 0;
+            oline_prev_line_beg = 0;
             return;
         }
         else
@@ -3956,7 +4352,9 @@ void oprintf (char *format, ...)
 
     }
     else oline_written = vsnprintf (oline + oline_len, oline_size - oline_len - 1, format, args);
-    if (oline_written >= oline_size - oline_len- 1)
+    // checking for oline_written>0 because if it's 0, it means nothing's been written or everything's flushed,
+    // however oline_size and oline_len will be 0, and technically 0>=-1, but it doesn't make sense
+    if (oline_written > 0 && oline_written >= oline_size - oline_len- 1)
     {
         gg_report_error ("Source code line too long, exiting");
         exit (1);
@@ -3995,29 +4393,31 @@ void oprintf (char *format, ...)
 //
 void gg_report_warning (char *format, ...)
 {
+    if (gg_ignore_warn) return;
     char wrntext[GG_MAX_ERR_LEN + 1];
 
     va_list args;
     va_start (args, format);
     vsnprintf (wrntext, sizeof(wrntext) - 1, format, args);
     va_end (args);
-    fprintf (stdout, "%s%sWarning: %s", GG_COLOR_BOLD, GG_COLOR_PINK, wrntext);
+    fprintf (stderr, "%s%sWarning: %s", GG_COLOR_BOLD, GG_COLOR_PINK, wrntext);
     if (src_file_name != NULL)
     {
         // make sure path is displayed
-        char *r_src = undecorate(src_file_name);
-        fprintf (stdout, ", reading file [%s], line [%ld]", r_src, lnum);
+        char *r_src = undecorate (src_file_name+GG_BLD_DIR_OFFSET);
+        fprintf (stderr, ", reading file [%s], line [%ld]", r_src, lnum);
         gg_free(r_src);
     }
-    if (wrntext[0] != 0 && wrntext[strlen (wrntext) - 1] != '.')  fprintf(stdout, ".");
-    fprintf (stdout, "%s\n",GG_COLOR_NORMAL);
+    if (wrntext[0] != 0 && wrntext[strlen (wrntext) - 1] != '.')  fprintf(stderr, ".");
+    fprintf (stderr, "%s\n",GG_COLOR_NORMAL);
 }
 
 // 
 // Output error to stderr. The error means error during the preprocessing with GOLF.
 // There's a maximum length for it, and if it's more than that, ignore the rest.
 // If there is no dot at the end, put it there.
-// After that, exit program.
+// When gg_report_error is called, exit(1) is appended. However,
+// _gg_report_error can be called multiple times before it exits (see below)
 //
 void _gg_report_error (char *format, ...)
 {
@@ -4033,13 +4433,15 @@ void _gg_report_error (char *format, ...)
     if (src_file_name != NULL)
     {
         // make sure path is displayed
-        char *r_src = undecorate(src_file_name);
+        char *r_src = undecorate (src_file_name+GG_BLD_DIR_OFFSET);
         fprintf (stderr, ", reading file [%s], line [%ld]", r_src, lnum);
         gg_free(r_src);
     }
     if (errtext[0] != 0 && errtext[strlen (errtext) - 1] != '.')  fprintf(stderr, ".");
     fprintf (stderr, "%s\n",GG_COLOR_NORMAL);
-    exit (1);
+    fflush (stderr);
+    gg_curr_errors++;
+    if (gg_curr_errors >= gg_max_errors) exit (1);
 }
 
 
@@ -4347,6 +4749,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
     gg_num xml_id = 0;
     gg_num open_readline = 0;
     gg_num open_ifs = 0;
+    gg_num open_curly=0;
     gg_num line_len = 0; // unlike 'len' below, used only for concatenation of lines
 
     gg_num http_header_count = 0; // used for _gg_tmp_header_%ld 
@@ -4617,6 +5020,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
             gg_num newI3 = 0;
             gg_num newI4 = 0;
             gg_num newI5 = 0;
+            gg_num newI6 = 0;
+            gg_num newI7 = 0;
             gg_num newI8 = 0;
 
             // since every statement, after it's recognized and consumed, does continue, it comes back here.
@@ -4704,25 +5109,40 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             carve_stmt_obj (&mtext, false, false);
                             define_statement (&use, GG_DEFNUMBER, false); 
                             //
-                            check_var (&repeat, GG_DEFNUMBER, NULL);
-                            check_var (&swith, GG_DEFNUMBER, NULL);
-                            check_var (&add, GG_DEFNUMBER, NULL);
+                            check_var (&repeat, GG_DEFNUMBER);
+                            check_var (&swith, GG_DEFNUMBER);
+                            check_var (&add, GG_DEFNUMBER);
 
                             static gg_num _gg_loop = 0;
-                            if (repeat) oprintf("GG_IS_NUM(%s);\n", repeat);
-                            if (use!=NULL)oprintf("GG_IS_NUM(%s);\n", use);
                             //if (repeat == NULL  && use != NULL) gg_report_error("Must specify 'repeat' clause with 'use'");
                             if ((swith != NULL || add != NULL) && use == NULL) gg_report_error("Must specify 'use' clause with 'start-with' or 'add' clause");
                             if (use != NULL && gg_is_valid_param_name(use, false, false) != 1) gg_report_error(GG_NAME_INVALID, use);
                             if (use != NULL) oprintf("%s=%s-%s;\n", use, swith!=NULL?swith:"1", add==NULL?"1":add); // -<add> as we do ++/+= at the beginning of the loop
                             // allow for loop where we have repeat and don't have it
                             // if we don't have repeat, then just keep incrementing 'use' and we must use continue or break to get out
-                            if (repeat != NULL) oprintf ("gg_num _gg_loop%ld;\nfor (_gg_loop%ld=1; _gg_loop%ld <= (%s); _gg_loop%ld++) {\n", _gg_loop, _gg_loop, _gg_loop, repeat, _gg_loop);
-                            else oprintf ("gg_num _gg_loop%ld;\nfor (_gg_loop%ld=1; ; _gg_loop%ld++) {\n", _gg_loop, _gg_loop,  _gg_loop);
-                            if (use != NULL)
+                            if (repeat != NULL) 
                             {
-                                if (add == NULL) oprintf("(%s)++;\n", use); else oprintf("(%s)+=(%s);\n", use, add);
-                            } 
+                                // in a common scenario when add is 1 and using a variable, just use this variable and avoid two counters (better performance)
+                                if ((add == NULL || !strcmp (add, "1")) && use != NULL) 
+                                {
+                                    oprintf ("gg_num _gg_loop_end%ld=(%s)+(%s);\n", _gg_loop, swith==NULL?"1":swith, repeat);
+                                    oprintf ("for (%s=(%s); %s < _gg_loop_end%ld; (%s)++) {\n", use, swith==NULL?"1":swith, use, _gg_loop, use);
+                                }
+                                else 
+                                {
+                                    if (use != NULL)
+                                    {
+                                        // in this case add!=NULL (we checked above add=NULL && use != NULL)
+                                        oprintf ("gg_num _gg_loop_end%ld=(%s)+1;\n", _gg_loop, repeat);
+                                        oprintf ("gg_num _gg_loop%ld;\nfor (_gg_loop%ld=1, (%s)=(%s); _gg_loop%ld < _gg_loop_end%ld; _gg_loop%ld++,(%s)+=(%s)) {\n", _gg_loop, _gg_loop, use, swith==NULL?"1":swith, _gg_loop, _gg_loop, _gg_loop, use, add); // +1 needed with 'repeat' because we want the 'use' to come out at number over after the loop
+                                    }
+                                    else
+                                    {
+                                        oprintf ("gg_num _gg_loop%ld;\nfor (_gg_loop%ld=1; _gg_loop%ld < (%s)+1; _gg_loop%ld++) {\n", _gg_loop, _gg_loop, _gg_loop, repeat, _gg_loop); // +1 needed with 'repeat' because we want the 'use' to come out at number over after the loop
+                                    }
+                                }
+                            }
+                            else oprintf ("gg_num _gg_loop%ld;\nfor (_gg_loop%ld=1; ; _gg_loop%ld++) {\n", _gg_loop, _gg_loop,  _gg_loop);
 
                             _gg_loop++;
                         }
@@ -4745,10 +5165,46 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //GG_GUARD
                         i = newI+newI1;
 
-                        carve_stmt_obj (&mtext, true, false);
-                        if (gg_is_valid_param_name(mtext, false, false) != 1) gg_report_error(GG_NAME_INVALID, mtext);
+                        char *eq = find_keyword (mtext, GG_KEYEQUAL, 1);
+                        char *neq = find_keyword (mtext, GG_KEYNOTEQUAL, 1);
+                        char *less = find_keyword (mtext, GG_KEYLESSERTHAN, 1);
+                        char *lesseq = find_keyword (mtext, GG_KEYLESSEREQUAL, 1);
+                        char *gr = find_keyword (mtext, GG_KEYGREATERTHAN, 1);
+                        char *greq = find_keyword (mtext, GG_KEYGREATEREQUAL, 1);
 
-                        if (newI != 0) oprintf ("#ifdef %s\n",mtext);
+                        carve_statement (&eq, "if-defined", GG_KEYEQUAL, 0, 1); 
+                        carve_statement (&neq, "if-defined", GG_KEYNOTEQUAL, 0, 1); 
+                        carve_statement (&less, "if-defined", GG_KEYLESSERTHAN, 0, 1); 
+                        carve_statement (&lesseq, "if-defined", GG_KEYLESSEREQUAL, 0, 1); 
+                        carve_statement (&gr, "if-defined", GG_KEYGREATERTHAN, 0, 1); 
+                        carve_statement (&greq, "if-defined", GG_KEYGREATEREQUAL, 0, 1); 
+                        carve_stmt_obj (&mtext, true, false);
+                        // the name that's defined from either gg compilation (--cflag) or specified by the platform (such as
+                        // __x86_64__), can start with "_"
+                        if (!(mtext[0] == '_' || isalpha (mtext[0])) && gg_is_valid_param_name(mtext+1, false, false) != 1) gg_report_error(GG_NAME_INVALID, mtext);
+
+                        if (newI1 != 0 && (eq != NULL || neq != NULL || less != NULL || lesseq != NULL || gr != NULL || greq != NULL)) gg_report_error ("Cannot use comparison clauses with if-not-defined");
+                        gg_num tot = (eq != NULL ?1:0)+(neq != NULL ?1:0)+(less != NULL ?1:0)+(lesseq != NULL ?1:0)+(gr != NULL ?1:0)+(greq != NULL ?1:0);
+                        if (tot > 1) gg_report_error ("Only a single comparison operator can be used with if-defined");
+                        char *op = GG_EMPTY_STRING;
+                        if (tot == 1) 
+                        {
+                            op = (eq!=NULL?eq:(neq!=NULL?neq:(less!=NULL?less:(lesseq!=NULL?lesseq:(gr!=NULL?gr:(greq!=NULL?greq:NULL))))));
+                            gg_num st;
+                            gg_str2num (op, 0, &st);
+                            if (st != GG_OKAY)  gg_report_error ("Invalid number in if-defined comparison");
+                        }
+
+                        if (newI != 0) 
+                        {
+                            if (eq != NULL) oprintf ("#if %s==%s\n", mtext, op);
+                            else if (neq != NULL) oprintf ("#if %s!=%s\n", mtext, op);
+                            else if (less != NULL) oprintf ("#if %s<%s\n", mtext, op);
+                            else if (lesseq != NULL) oprintf ("#if %s<=%s\n", mtext, op);
+                            else if (gr != NULL) oprintf ("#if %s>%s\n", mtext, op);
+                            else if (greq != NULL) oprintf ("#if %s>=%s\n", mtext, op);
+                            else oprintf ("#ifdef %s\n",mtext);
+                        }
                         else oprintf ("#ifndef %s\n",mtext);
 
                         continue; // skip the statement and continue analyzing 
@@ -4761,7 +5217,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_stmt_obj (&mtext, false, false);
                         oprintf ("{\n");
-
+                        open_curly++;
                         continue; // skip the statement and continue analyzing 
                     }
                     else if ((newI=recog_statement(line, i, "}", &mtext, &msize, 1, &gg_is_inline)) != 0) 
@@ -4772,6 +5228,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_stmt_obj (&mtext, false, false);
                         oprintf ("}\n");
+                        open_curly--;
 
                         continue; // skip the statement and continue analyzing 
                     }
@@ -4781,7 +5238,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
 
                         carve_stmt_obj (&mtext, true, false);
-                        check_var (&mtext, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFNUMBER);
                         oprintf ("gg_sleepabit (%s);\n", mtext);
 
                         continue; // skip the statement and continue analyzing 
@@ -4843,7 +5300,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&errt, GG_DEFSTRING, false); // allocated with strdup in db.c, exact length
                         define_statement (&err, GG_DEFSTRING, false); // allocated with strdup in db.c, exact length
                         //
-                        check_var (&opt, GG_DEFSTRING, NULL);
+                        check_var (&opt, GG_DEFSTRING);
 
                         get_db_config (database);
                         //erract is GG_ON_ERROR_CONTINUE/EXIT for statement-specific on-error continue/exit or GG_OKAY if db-level on-error is in effect
@@ -4898,7 +5355,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&errt, GG_DEFSTRING, false); // allocated with strdup in db.c, exact length
                         define_statement (&err, GG_DEFSTRING, false); // allocated with strdup in db.c, exact length
                         //
-                        check_var (&opt, GG_DEFSTRING, NULL);
+                        check_var (&opt, GG_DEFSTRING);
                         //
                         get_db_config (database);
                         //erract is GG_ON_ERROR_CONTINUE/EXIT for statement-specific on-error continue/exit or GG_OKAY if db-level on-error is in effect
@@ -4932,7 +5389,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&errt, GG_DEFSTRING, false); // allocated with strdup in db.c, exact length
                         define_statement (&err, GG_DEFSTRING, false); // allocated with strdup in db.c, exact length
                         //
-                        check_var (&opt, GG_DEFSTRING, NULL);
+                        check_var (&opt, GG_DEFSTRING);
                         //
                         get_db_config (database);
                         //erract is GG_ON_ERROR_CONTINUE/EXIT for statement-specific on-error continue/exit or GG_OKAY if db-level on-error is in effect
@@ -5067,7 +5524,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         vp.rcount = rcount;
 
                         //
-                        check_var (&(vp.eq), GG_DEFSTRING, NULL);
+                        check_var (&(vp.eq), GG_DEFSTRING);
 
                         // check on-error: can be only continue or exit
                         on_error_act (vp.on_error_cont, vp.on_error_exit, &(vp.on_error_action));
@@ -5104,41 +5561,55 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (line[i] == '!') is_verbatim = 1;
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "p-out", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    // Note: if 1 in 5th param in recog_statement, it means nothing afterwards, it must always be first!
+                    else if ((newI2=recog_statement(line, i, "p-source-line", &mtext, &msize, 1, &gg_is_inline)) != 0 ||
+                        (newI4=recog_statement(line, i, "p-source-file", &mtext, &msize, 1, &gg_is_inline)) != 0 ||
+                        (newI3=recog_statement(line, i, "p-source-line", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                        (newI=recog_statement(line, i, "p-out", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                        (newI5=recog_statement(line, i, "p-source-file", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                        (newI6=recog_statement(line, i, "p-num", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                        (newI7=recog_statement(line, i, "p-url", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                        (newI8=recog_statement(line, i, "p-web", &mtext, &msize, 0, &gg_is_inline)) != 0)
                     {
                         GG_GUARD
-                        i = newI;
-                        char *length = find_keyword (mtext, GG_KEYLENGTH, 1);
-                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
-
-                        carve_statement (&length, "p-out", GG_KEYLENGTH, 0, 1);
-                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
-                        carve_stmt_obj (&mtext, true, true);
-                        //
-                        check_var (&length, GG_DEFNUMBER, NULL);
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-
-                        if (length == NULL) length = "GG_EMPTY_LONG_PLAIN_ZERO";
-
-                        oprintf("gg_puts (GG_NOENC, %s, %s, true);\n", mtext, length); 
-                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
-
+                        i = newI+newI2+newI3+newI4+newI5+newI6+newI7+newI8;
+                        gg_report_warning ("p-* family of statements has been deprecated. Use print-out instead");
+                        // GG_KEYLENGTH GG_KEYNEWLINE GG_KEYSOURCEFILE GG_KEYSOURCELINE GG_KEYWEBENCODE GG_KEYURLENCODE
+                        if (newI != 0) do_print (mtext, 0);
+                        else if (newI2 != 0 || newI3 != 0) do_print (mtext, GG_P_SOURCELINE);
+                        else if (newI4 != 0 || newI5 != 0) do_print (mtext, GG_P_SOURCEFILE);
+                        else if (newI6 != 0) do_print (mtext, GG_P_NUM);
+                        else if (newI7 != 0) do_print (mtext, GG_P_URL);
+                        else if (newI8 != 0) do_print (mtext, GG_P_WEB);
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "p-path", &mtext, &msize, 0, &gg_is_inline)) != 0)
+                    else if ((newI1=recog_statement(line, i, "pf-web", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                        (newI2=recog_statement(line, i, "pf-url", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                        (newI=recog_statement(line, i, "pf-out", &mtext, &msize, 0, &gg_is_inline)) != 0)
                     {
                         GG_GUARD
-                        i = newI;
-                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
-
-                        carve_statement (&nl, "p-path", GG_KEYNEWLINE, 0, 0);
+                        i = newI+newI2+newI1;
+                        // GG_KEYCOMMA GG_KEYTOERROR GG_KEYTO GG_KEYWEBENCODE GG_KEYURLENCODE
+                        gg_report_warning ("pf-* family of statements has been deprecated. Use print-format instead");
+                        if (newI1 != 0) do_printf (mtext, false, false, false, gen_ctx, GG_P_WEB);
+                        else if (newI2 != 0) do_printf (mtext, false, false, false, gen_ctx, GG_P_URL);
+                        else if (newI != 0) do_printf (mtext, false, false, false, gen_ctx, 0);
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "print-path", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                        (newI1=recog_statement(line, i, "p-path", &mtext, &msize, 0, &gg_is_inline)))
+                    {
+                        GG_GUARD
+                        i = newI+newI1;
+                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1); // can be used with any other clause
                         check_sub (mtext); // this must be BEFORE carve_stmt_obj as it may create temp variable which is just some generated var name
                                            // it trims mtext, but we're about to do that anyway
+                        carve_statement (&nl, "print-out", GG_KEYNEWLINE, 0, 0);
                         carve_stmt_obj (&mtext, true, true);
 
                         // mtext is mandatory request path
                         make_mem(&mtext);
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         oprintf("gg_puts (GG_WEB, gg_app_path, gg_app_path_len, false);\n"); // optimized to compute strlen at compile time
                         oprintf("gg_puts (GG_WEB, %s, gg_mem_get_len(gg_mem_get_id(%s)), false);\n", mtext, mtext); // optimized to compute strlen at compile time
@@ -5146,103 +5617,33 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
-                    else if ((newI1=recog_statement(line, i, "p-source-line", &mtext, &msize, 1, &gg_is_inline)) != 0 ||
-                          (newI=recog_statement(line, i, "p-source-line", &mtext, &msize, 0, &gg_is_inline)) != 0)
-                    {
-                        GG_GUARD
-                        i = newI+newI1;
-                        char *nl = NULL;
-                        if (newI != 0)
-                        {
-                            nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
-                            carve_statement (&nl, "p-source-line", GG_KEYNEWLINE, 0, 0);
-                        }
-                        carve_stmt_obj (&mtext, false, false);
-
-                        do_numstr (NULL, "__LINE__",  NULL);
-                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
-
-                        continue;
-                    }
-                    else if ((newI1=recog_statement(line, i, "p-source-file", &mtext, &msize, 1, &gg_is_inline)) != 0 ||
-                        (newI=recog_statement(line, i, "p-source-file", &mtext, &msize, 0, &gg_is_inline)) != 0)
-                    {
-                        GG_GUARD
-                        i = newI+newI1;
-                        char *nl = NULL;
-                        if (newI != 0)
-                        {
-                            nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
-                            carve_statement (&nl, "p-source-file", GG_KEYNEWLINE, 0, 0);
-                        }
-                        carve_stmt_obj (&mtext, false, false);
-
-                        char *osrc = undecorate (src_file_name);
-                        oprintf("gg_puts (GG_NOENC, \"%s\", %ld, false);\n", osrc, strlen(osrc)); // optimized to compute strlen at compile time
-                        gg_free (osrc);
-                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
-
-                        continue;
-                    }
-                    else if ((newI=recog_statement(line, i, "p-num", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "print-out", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
                         i = newI;
-
-                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
-
-                        carve_statement (&nl, "p-num", GG_KEYNEWLINE, 0, 0);
-                        carve_stmt_obj (&mtext, true, true);
-                        check_var (&mtext, GG_DEFNUMBER, NULL);
-
-                        do_numstr (NULL, mtext, NULL);
-                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
-
+                        // GG_KEYLENGTH GG_KEYNEWLINE GG_KEYSOURCELINE GG_KEYSOURCEFILE GG_KEYWEBENCODE GG_KEYURLENCODE
+                        do_print (mtext, 0);
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "p-url", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    else if ((newI=recog_statement(line, i, "print-format", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                            (newI3=recog_statement(line, i, "report-error", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
+                            (newI4=recog_statement(line, i, "trace-run", &mtext, &msize, 1, &gg_is_inline)) != 0 ||
+                            (newI5=recog_statement(line, i, "trace-run", &mtext, &msize, 0, &gg_is_inline)) != 0 
+                        )  
                     {
                         GG_GUARD
-                        i = newI;
-                        char *length = find_keyword (mtext, GG_KEYLENGTH, 1);
-                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
-
-                        carve_statement (&length, "p-url", GG_KEYLENGTH, 0, 1);
-                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
-                        carve_stmt_obj (&mtext, true, true);
-                        //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&length, GG_DEFNUMBER, NULL);
-
-                        if (length == NULL) length = "GG_EMPTY_LONG_PLAIN_ZERO";
-
-                        oprintf("gg_puts (GG_URL, %s, %s, true);\n", mtext, length); 
-                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
-
+                        i = newI+newI3+newI4+newI5;
+                        bool rep_error;
+                        bool trace_none=false;
+                        bool trace=false;
+                        // GG_KEYCOMMA GG_KEYTOERROR GG_KEYTO GG_KEYWEBENCODE GG_KEYURLENCODE
+                        if (newI3 != 0) rep_error = true; else rep_error = false;
+                        if (newI4 != 0) trace_none=true;
+                        if (newI5 != 0) trace=true;
+                        do_printf (mtext, rep_error, trace_none, trace, gen_ctx, 0);
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "p-web", &mtext, &msize, 0, &gg_is_inline)) != 0)  
-                    {
-                        GG_GUARD
-                        i = newI;
-                        char *length = find_keyword (mtext, GG_KEYLENGTH, 1);
-                        char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1);
-
-                        carve_statement (&length, "p-web", GG_KEYLENGTH, 0, 1);
-                        carve_statement (&nl, "p-out", GG_KEYNEWLINE, 0, 0);
-                        carve_stmt_obj (&mtext, true, true);
-                        //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&length, GG_DEFNUMBER, NULL);
-
-                        if (length == NULL) length = "GG_EMPTY_LONG_PLAIN_ZERO";
-
-                        oprintf("gg_puts (GG_WEB, %s, %s, true);\n", mtext, length); 
-                        if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
-
-                        continue;
-                    }
-                    else if ((newI=recog_statement(line, i, "handler-status", &mtext, &msize, 0, &gg_is_inline)) != 0 ) 
+                    else if ((newI=recog_statement(line, i, "exit-status", &mtext, &msize, 0, &gg_is_inline)) != 0 )
                     {
                         GG_GUARD
                         i = newI;
@@ -5322,12 +5723,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&in_file);
 
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&program_input, GG_DEFSTRING, NULL);
-                        check_var (&program_input_length, GG_DEFNUMBER, NULL);
-                        check_var (&out_file, GG_DEFSTRING, NULL);
-                        check_var (&err_file, GG_DEFSTRING, NULL);
-                        check_var (&in_file, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&program_input, GG_DEFSTRING);
+                        check_var (&program_input_length, GG_DEFNUMBER);
+                        check_var (&out_file, GG_DEFSTRING);
+                        check_var (&err_file, GG_DEFSTRING);
+                        check_var (&in_file, GG_DEFSTRING);
 
                         // cannot have output-* and output (to string) at the same time
                         if (out_file != NULL && program_output != NULL) gg_report_error( "Specify either output-file or output in exec-program statement");
@@ -5392,7 +5793,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         program_error==NULL ? "NULL":program_error, 
                         program_error==NULL ? "":")");
                         if (program_status!=NULL) oprintf("%s=_gg_st;\n", program_status);
-                        else oprintf ("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        else oprintf ("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         if (err_file != NULL) oprintf ("}\n");
                         if (out_file != NULL) oprintf ("}\n");
                         if (in_file != NULL) oprintf ("}\n");
@@ -5412,7 +5813,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&header, "send-file", GG_KEYHEADERS, 0, 1);
                         carve_stmt_obj (&mtext, true, true);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         // if there's no header, by default:
                         char *temp_header = make_default_header(GG_HEADER_FILE, http_header_count, 0);
@@ -5446,11 +5847,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&id, GG_DEFNUMBER, false);
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         oprintf ("_gg_st=gg_lockfile (%s, &(%s));\n", mtext, id);
                         if (status != NULL) oprintf ("%s=_gg_st;\n", status);
-                        else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);}\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
 
                         continue;
                     }
@@ -5493,7 +5894,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_make_random
                         //
-                        check_var (&length, GG_DEFNUMBER, NULL);
+                        check_var (&length, GG_DEFNUMBER);
 
                         if (length == NULL)
                         {
@@ -5518,7 +5919,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_make_random
                         //
-                        check_var (&length, GG_DEFNUMBER, NULL);
+                        check_var (&length, GG_DEFNUMBER);
 
                         if (length == NULL)
                         {
@@ -5566,7 +5967,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&to, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         if (to != NULL) oprintf ("%s=(gg_num)gg_mem_get_len (gg_mem_get_id(%s));\n", to, mtext);
                         else 
@@ -5597,9 +5998,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&to, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&in, GG_DEFSTRING, NULL);
-                        check_var (&case_insensitivec, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&in, GG_DEFSTRING);
+                        check_var (&case_insensitivec, GG_DEFNUMBER);
 
                         oprintf ("%s=gg_count_substring (%s, %s, 0, %s);\n", to, in, mtext, case_insensitivec);
                         gg_free(case_insensitivec);
@@ -5638,14 +6039,14 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&mtext, GG_DEFSTRING, false); // exact length set in gg_derive_key
                         char *binaryc = opt_clause(binary, "true", "false", GG_DEFBOOL);
                         //
-                        check_var (&length, GG_DEFNUMBER, NULL);
-                        check_var (&from, GG_DEFSTRING, NULL);
-                        check_var (&fromlen, GG_DEFNUMBER, NULL);
-                        check_var (&digest, GG_DEFSTRING, NULL);
-                        check_var (&salt, GG_DEFSTRING, NULL);
-                        check_var (&salt_len, GG_DEFNUMBER, NULL);
-                        check_var (&iterations, GG_DEFNUMBER, NULL);
-                        check_var (&binaryc, GG_DEFBOOL, NULL);
+                        check_var (&length, GG_DEFNUMBER);
+                        check_var (&from, GG_DEFSTRING);
+                        check_var (&fromlen, GG_DEFNUMBER);
+                        check_var (&digest, GG_DEFSTRING);
+                        check_var (&salt, GG_DEFSTRING);
+                        check_var (&salt_len, GG_DEFNUMBER);
+                        check_var (&iterations, GG_DEFNUMBER);
+                        check_var (&binaryc, GG_DEFBOOL);
 
                         oprintf ("%s=gg_derive_key( %s, %s, %s, %s, %s, %s, %s, %s );\n", mtext, from, fromlen==NULL?"-1":fromlen, digest==NULL?GG_DEF_DIGEST:digest, iterations==NULL?"-1":iterations, salt==NULL?"NULL":salt, salt_len==NULL?"0":salt_len, length, binaryc);
                         gg_free(binaryc);
@@ -5674,10 +6075,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_hash_data
                         char *binaryc = opt_clause(binary, "true", "false", GG_DEFBOOL);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&key, GG_DEFSTRING, NULL);
-                        check_var (&digest, GG_DEFSTRING, NULL);
-                        check_var (&binaryc, GG_DEFBOOL, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&key, GG_DEFSTRING);
+                        check_var (&digest, GG_DEFSTRING);
+                        check_var (&binaryc, GG_DEFBOOL);
 
                         oprintf ("%s=gg_hmac (%s, %s, %s, %s);\n", to, key, mtext, digest==NULL?GG_DEF_DIGEST:digest, binaryc);
                         gg_free(binaryc);
@@ -5704,9 +6105,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_hash_data
                         char *binaryc = opt_clause(binary, "true", "false", GG_DEFBOOL);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&digest, GG_DEFSTRING, NULL);
-                        check_var (&binaryc, GG_DEFBOOL, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&digest, GG_DEFSTRING);
+                        check_var (&binaryc, GG_DEFBOOL);
 
                         oprintf ("%s=gg_hash_data (%s, %s, %s);\n", to, mtext, digest==NULL?GG_DEF_DIGEST:digest, binaryc);
                         gg_free(binaryc);
@@ -5729,8 +6130,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_b64_decode
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&ilen, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&ilen, GG_DEFNUMBER);
 
                         oprintf ("gg_b64_decode ((char*)(%s), %s, &((%s)));\n", mtext, ilen==NULL?"-1":ilen,to);
 
@@ -5752,8 +6153,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_b64_encode
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&ilen, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&ilen, GG_DEFNUMBER);
 
                         oprintf ("gg_b64_encode ((char*)(%s), %s, &(%s));\n", mtext, ilen==NULL?"-1":ilen,to);
 
@@ -5780,9 +6181,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_bin2hex
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&ilen, GG_DEFNUMBER, NULL);
-                        check_var (&pref, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&ilen, GG_DEFNUMBER);
+                        check_var (&pref, GG_DEFSTRING);
 
                         oprintf ("gg_bin2hex((char*)(%s), &(%s), %s, %s);\n", mtext, to, ilen==NULL?"-1":ilen, pref==NULL?"NULL":pref);
 
@@ -5802,8 +6203,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_hex2bin
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&ilen, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&ilen, GG_DEFNUMBER);
 
                         oprintf ("gg_hex2bin ((char*)(%s), &(%s), %s);\n", mtext, to, ilen==NULL?"-1":ilen);
 
@@ -5827,8 +6228,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (newI != 0) define_statement (&status, GG_DEFNUMBER, false);
 
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&inlength, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&inlength, GG_DEFNUMBER);
 
                         if (inlength == NULL) inlength="-1";
 
@@ -5836,7 +6237,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (newI != 0)
                         {
                             if (status != NULL) oprintf("%s=_gg_st;\n", status);
-                            else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                            else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         }
 
 
@@ -5858,8 +6259,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in golf encode
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&inlength, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&inlength, GG_DEFNUMBER);
 
                         if (inlength == NULL) inlength = "-1";
 
@@ -5879,7 +6280,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, true);
 
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         oprintf ("gg_num _gg_trim_len%ld=gg_mem_get_len (gg_mem_get_id(%s));\n", trim_count, mtext);
                         oprintf ("gg_trim (%s, &_gg_trim_len%ld, true);\n", mtext, trim_count);
@@ -5934,17 +6335,17 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&to, GG_DEFSTRING, false); // gg_encrypt sets exact length
                         char *binaryc = opt_clause(binary, "1", "0", GG_DEFNUMBER);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&inlength, GG_DEFNUMBER, NULL);
-                        check_var (&salt_len, GG_DEFNUMBER, NULL);
-                        check_var (&iterations, GG_DEFNUMBER, NULL);
-                        check_var (&iv, GG_DEFSTRING, NULL);
-                        check_var (&password, GG_DEFSTRING, NULL);
-                        check_var (&salt, GG_DEFSTRING, NULL);
-                        check_var (&cipher, GG_DEFSTRING, NULL);
-                        check_var (&digest, GG_DEFSTRING, NULL);
-                        check_var (&binaryc, GG_DEFNUMBER, NULL);
-                        check_var (&ccache, GG_DEFBOOL, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&inlength, GG_DEFNUMBER);
+                        check_var (&salt_len, GG_DEFNUMBER);
+                        check_var (&iterations, GG_DEFNUMBER);
+                        check_var (&iv, GG_DEFSTRING);
+                        check_var (&password, GG_DEFSTRING);
+                        check_var (&salt, GG_DEFSTRING);
+                        check_var (&cipher, GG_DEFSTRING);
+                        check_var (&digest, GG_DEFSTRING);
+                        check_var (&binaryc, GG_DEFNUMBER);
+                        check_var (&ccache, GG_DEFBOOL);
 
                         if (ccache != NULL && cache == NULL) gg_report_error( "clear-cache cannot be used without cache in encrypt/decrypt-data statement");
 
@@ -6009,7 +6410,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&path, GG_DEFSTRING, false);
                         define_statement (&basename, GG_DEFSTRING, false);
 
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         if (size != NULL || type != NULL || mode != NULL) 
                         {
@@ -6047,11 +6448,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&errt, GG_DEFSTRING, false); // exact length set in glim_utf_to_text
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in glim_utf_to_text
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         oprintf ("char *_gg_errt%ld = GG_EMPTY_STRING;\n", code_text);
                         oprintf ("_gg_st = gg_utf_to_text (%s, %s, %s%s%s, &_gg_errt%ld);\n", mtext, len == NULL ? "-1":len, to==NULL?"":"&(", to==NULL?"NULL":to, to==NULL?"":")", code_text);
-                        if (status != NULL) oprintf ("if (_gg_st == -1) {GG_ERR0;%s=GG_ERR_UTF;} else %s=_gg_st;\n", status, status); else oprintf("if (_gg_st == -1) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_UTF);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (status != NULL) oprintf ("if (_gg_st == -1) {GG_ERR0;%s=GG_ERR_UTF;} else %s=_gg_st;\n", status, status); else oprintf("if (_gg_st == -1) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_UTF);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         if (errt != NULL) oprintf ("%s = _gg_errt%ld;\n", errt, code_text); 
 
                         code_text++;
@@ -6071,11 +6472,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&status, GG_DEFNUMBER, false);
                         define_statement (&errt, GG_DEFSTRING, false); // exact length set in glim_text_to_utf
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         oprintf ("char *_gg_errt%ld = NULL;\n", code_text);
                         oprintf ("_gg_st_str = gg_text_to_utf (%s, 0, &_gg_errt%ld, 1, true);\n", mtext, code_text);
-                        if (status != NULL) oprintf ("if (_gg_st_str != NULL) %s=GG_OKAY; else {GG_ERR0;%s=GG_ERR_UTF;}\n", status, status); else oprintf("if (_gg_st_str == NULL) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_UTF);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (status != NULL) oprintf ("if (_gg_st_str != NULL) %s=GG_OKAY; else {GG_ERR0;%s=GG_ERR_UTF;}\n", status, status); else oprintf("if (_gg_st_str == NULL) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_UTF);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         if (errt != NULL) oprintf ("%s = _gg_errt%ld;\n", errt, code_text);
 
 
@@ -6099,8 +6500,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&to, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&to, GG_DEFSTRING);
 
                         //
                         // Look for each option and collect relevant info
@@ -6108,7 +6509,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = rename ((%s), (%s));GG_ERR;\n", mtext, to);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_RENAME);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_RENAME);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         }
                         else
                         {
@@ -6130,7 +6531,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         //
                         // Look for each option and collect relevant info, namely OS errno
@@ -6138,7 +6539,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = rmdir (%s);GG_ERR;\n", mtext);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)((errno == EEXIST||errno==ENOTEMPTY)?GG_ERR_EXIST:GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)((errno == EEXIST||errno==ENOTEMPTY)?GG_ERR_EXIST:GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         }
                         else
                         {
@@ -6162,9 +6563,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&status, GG_DEFNUMBER, false);
-                        check_var (&mode, GG_DEFNUMBER, NULL);
+                        check_var (&mode, GG_DEFNUMBER);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         //
                         // Look for each option and collect relevant info, namely OS errno
@@ -6172,7 +6573,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = chmod (%s, %s);GG_ERR;\n", mtext, mode);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)(errno==ENOENT?GG_ERR_EXIST:GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)(errno==ENOENT?GG_ERR_EXIST:GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         }
                         else
                         {
@@ -6194,9 +6595,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, true);
 
                         define_statement (&status, GG_DEFNUMBER, false);
-                        check_var (&mode, GG_DEFNUMBER, NULL);
+                        check_var (&mode, GG_DEFNUMBER);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
                         if (mode == NULL) mode = "0700";
 
                         //
@@ -6205,7 +6606,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = mkdir (%s, %s);GG_ERR;\n", mtext, mode);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)(errno==EEXIST?GG_ERR_EXIST?GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)(errno==EEXIST?GG_ERR_EXIST?GG_ERR_FAILED));\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         }
                         else
                         {
@@ -6229,7 +6630,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         //
                         // Look for each option and collect relevant info, namely OS errno
@@ -6237,7 +6638,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = chdir (%s);GG_ERR;\n", home == NULL ? (edir == NULL ? mtext:"gg_get_config()->app.run_dir"): "gg_get_config()->app.home_dir");
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_FAILED);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                            oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_FAILED);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         }
                         else
                         {
@@ -6265,7 +6666,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         //
                         // Look for each option and collect relevant info
@@ -6273,7 +6674,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("_gg_st = unlink (%s);GG_ERR;\n", mtext);
                         if (status == NULL)
                         {
-                            oprintf("if (_gg_st != GG_OKAY && errno != ENOENT) gg_report_error (\"%s\", \"%s\", (gg_num)%ld,  (gg_num)GG_ERR_DELETE);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                            oprintf("if (_gg_st != GG_OKAY && errno != ENOENT) gg_report_error (\"%s\", \"%s\", (gg_num)%ld,  (gg_num)GG_ERR_DELETE);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         }
                         else
                         {
@@ -6321,11 +6722,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&method);    
                         make_mem(&cookiejar);    
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&cert, GG_DEFSTRING, NULL);
-                        check_var (&method, GG_DEFSTRING, NULL);
-                        check_var (&cookiejar, GG_DEFSTRING, NULL);
-                        check_var (&timeout, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&cert, GG_DEFSTRING);
+                        check_var (&method, GG_DEFSTRING);
+                        check_var (&cookiejar, GG_DEFSTRING);
+                        check_var (&timeout, GG_DEFNUMBER);
 
                         // process body clause after ward because it is done within a copy of carved out 'body' above
                         char *files = NULL;
@@ -6342,7 +6743,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             carve_statement (&fields, "call-web", GG_KEYFIELDS, 0, 1);
                             make_mem(&content);    
                             //
-                            check_var (&content, GG_DEFSTRING, NULL);
+                            check_var (&content, GG_DEFSTRING);
                         }
 
                         //defines
@@ -6412,7 +6813,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         total_body++;
 
                         oprintf ("_gg_st=gg_post_url_with_response(%s, &(%s), %s%s%s, %s%s%s, %s, %s, %s%s%s, %s, %s, %s, %s, %s, %s, %s, %s);\n", mtext, resp, head==NULL ? "":"&(",head==NULL ? "NULL":head, head==NULL ? "":")", err==NULL ? "":"&(",err==NULL ? "NULL":err, err==NULL ? "":")", nocert != NULL ? "NULL" : (cert != NULL ? cert : "\"\""), cookiejar == NULL ? "NULL":cookiejar, resp_code==NULL ? "":"&(",resp_code==NULL ? "NULL":resp_code, resp_code==NULL ? "":")", timeout==NULL ? "120":timeout, body == NULL ? "0":"1", fields == NULL ? "NULL":fields_var, files == NULL ? "NULL":files_var, req_header == NULL ? "NULL":req_header_ptr, method == NULL ? "NULL" :method, content==NULL?"NULL":content, clen==NULL?"-1":clen);
-                        if (len != NULL) oprintf("%s=_gg_st;\n",len); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (len != NULL) oprintf("%s=_gg_st;\n",len); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
 
                         continue;
                     }
@@ -6423,27 +6824,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         run_service (mtext);
                         // list of keywords for vim, picked up automatically
                         // GG_KEYLOCATION GG_KEYMETHOD GG_KEYAPPPATH GG_KEYREQUESTPATH GG_KEYREQUESTBODY GG_KEYURLPARAMS GG_KEYTIMEOUT GG_KEYENVIRONMENT  GG_KEYLOCAL  GG_KEYURLPATH GG_KEYCONTENTLENGTH GG_KEYCONTENT GG_KEYCONTENTTYPE GG_KEYCONTENTLENGTH GG_KEYCONTENTTYPE
-                        // GG_KEYDATA  GG_KEYERROR  GG_KEYSTATUSTEXT GG_KEYHANDLERSTATUS GG_KEYSTATUS
+                        // GG_KEYDATA  GG_KEYERROR  GG_KEYSTATUSTEXT GG_KEYEXITSTATUS GG_KEYSTATUS
                         // GG_KEYFINISHEDOKAY GG_KEYSTARTED GG_KEYSTATUS
                         // end list of keywords
                         //
-                        // this commented out is just so getvim will color output - DO NOT REMOVE
-                        //char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
-                        //char *stt = find_keyword (mtext, GG_KEYSTATUSTEXT, 1);
-                        //char *hst = find_keyword (mtext, GG_KEYHANDLERSTATUS, 1);
-                        //char *data = find_keyword (mtext, GG_KEYDATA, 1);
-                        //char *err = find_keyword (mtext, GG_KEYERROR, 1);
-                        //char *fok = find_keyword (mtext, GG_KEYFINISHEDOKAY, 1);
-                        //char *start = find_keyword (mtext, GG_KEYSTARTED, 1);
-                        //
-                        //this define_statement MUST stay for coloring
-                        //define_statement (&st, GG_DEFNUMBER, false);
-                        //define_statement (&stt, GG_DEFNUMBER, false);
-                        //define_statement (&hst, GG_DEFNUMBER, false);
-                        //define_statement (&data, GG_DEFSTRING, false);
-                        //define_statement (&err, GG_DEFSTRING, false);
-                        //define_statement (&start, GG_DEFNUMBER, false);
-                        //define_statement (&fok, GG_DEFNUMBER, false);
                         //
                         continue;
                     }
@@ -6462,21 +6846,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
                         read_service (mtext);
                         // list of keywords for vim, picked up automatically
-                        // GG_KEYDATA  GG_KEYERROR GG_KEYSTATUSTEXT GG_KEYHANDLERSTATUS GG_KEYSTATUS
+                        // GG_KEYDATA  GG_KEYERROR GG_KEYSTATUSTEXT GG_KEYEXITSTATUS GG_KEYSTATUS
                         //
-                        // this commented out is just so getvim will color output - DO NOT REMOVE
-                        //char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
-                        //char *stt = find_keyword (mtext, GG_KEYSTATUSTEXT, 1);
-                        //char *hst = find_keyword (mtext, GG_KEYHANDLERSTATUS, 1);
-                        //char *data = find_keyword (mtext, GG_KEYDATA, 1);
-                        //char *err = find_keyword (mtext, GG_KEYERROR, 1);
-                        //
-                        //this define_statement MUST stay for coloring
-                        //define_statement (&st, GG_DEFNUMBER, false);
-                        //define_statement (&stt, GG_DEFNUMBER, false);
-                        //define_statement (&hst, GG_DEFNUMBER, false);
-                        //define_statement (&data, GG_DEFSTRING, false);
-                        //define_statement (&err, GG_DEFSTRING, false);
                         //
                         continue;
                     }
@@ -6484,7 +6855,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
-                        if (gg_mode != GG_MODE_EXTENDED && gg_mode != GG_MODE_INTERNAL) gg_report_error ("call-extended statement cannot be used in safe mode, see *-mode statements");
+                        if (gg_mode != GG_MODE_EXTENDED) gg_report_error ("call-extended statement cannot be used in safe mode, see *-mode statements");
                         carve_stmt_obj (&mtext, true, false);
                         // list of keywords for vim, picked up automatically
                         check_c (mtext);
@@ -6515,6 +6886,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                     {
                         GG_GUARD
                         i = newI;
+                        char *rval = find_keyword (mtext, GG_KEYRETURNVALUE, 1);
+                        carve_statement (&rval, "call-handler", GG_KEYRETURNVALUE, 0, 1);
+                        define_statement (&rval, GG_DEFNUMBER, false); 
+
                         //
                         // must check if mtext clause is string constant *before* other variable checks below, because
                         // they may create a temp variable for it
@@ -6526,7 +6901,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         check_sub (mtext); // this must be BEFORE carve_stmt_obj as it may create temp variable which is just some generated var name
                                            // it trims mtext, but we're about to do that anyway
                         carve_stmt_obj (&mtext, true, true);
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
                         static gg_num call_handler_c = 0;
                         if (is_constant)
                         {
@@ -6536,6 +6911,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf ("gg_subs(%s, &_gg_call_h_%ld);\n", mtext, call_handler_c);
                             call_handler_c++;
                         } else oprintf ("gg_subs(%s, NULL);\n", mtext);
+                        if (rval) oprintf("%s=gg_get_config ()->ctx.req->return_val;\n", rval);
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "uniq-file", &mtext, &msize, 0, &gg_is_inline)) != 0)  
@@ -6572,6 +6948,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // First we MUST get each options position
                         //
                         char *res = find_keyword (mtext, GG_KEYTO, 1);
+                        char *epoch = find_keyword (mtext, GG_KEYSINCEEPOCH, 1);
+                        char *fepoch = find_keyword (mtext, GG_KEYFROMEPOCH, 1);
                         char *timezone = find_keyword (mtext, GG_KEYTIMEZONE, 1);
                         char *year = find_keyword (mtext, GG_KEYYEAR, 1);
                         char *month = find_keyword (mtext, GG_KEYMONTH, 1);
@@ -6586,6 +6964,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // for ALL of them
                         //
                         carve_statement (&res, "get-time", GG_KEYTO, 1, 1);
+                        carve_statement (&epoch, "get-time", GG_KEYSINCEEPOCH, 0, 0);
+                        carve_statement (&fepoch, "get-time", GG_KEYFROMEPOCH, 0, 1);
                         carve_statement (&timezone, "get-time", GG_KEYTIMEZONE, 0, 1);
                         carve_statement (&year, "get-time", GG_KEYYEAR, 0, 1);
                         carve_statement (&month, "get-time", GG_KEYMONTH, 0, 1);
@@ -6596,21 +6976,33 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&format, "get-time", GG_KEYFORMAT, 0, 1);
                         carve_stmt_obj (&mtext, false, false);
 
-                        make_mem(&timezone);    
-                        make_mem(&format);    
+                        if (epoch != NULL && (timezone != NULL || year != NULL || month != NULL || day != NULL || hour != NULL || min != NULL || sec != NULL || format != NULL || fepoch != NULL))
+                        {
+                            gg_report_error ("Cannot use timezone/year/month/day/hour/min/sec/format/from-epoch clause(s) if since-epoch clause is used");
+                        }
+
+                        if (epoch == NULL)
+                        {
+                            make_mem(&timezone);    
+                            make_mem(&format);    
+                        }
 
                         // handle any possibly created variables 
                         // res is mandatory, but even if not, define_statement will skip if NULL
-                        define_statement (&res, GG_DEFSTRING, false); // exact length set in gg_time
-                        check_var (&res, GG_DEFSTRING, NULL);
-                        check_var (&timezone, GG_DEFSTRING, NULL);
-                        check_var (&year, GG_DEFNUMBER, NULL);
-                        check_var (&month, GG_DEFNUMBER, NULL);
-                        check_var (&day, GG_DEFNUMBER, NULL);
-                        check_var (&hour, GG_DEFNUMBER, NULL);
-                        check_var (&min, GG_DEFNUMBER, NULL);
-                        check_var (&sec, GG_DEFNUMBER, NULL);
-                        check_var (&format, GG_DEFSTRING, NULL);
+                        if (epoch != NULL) define_statement (&res, GG_DEFNUMBER, false); // seconds since epoch
+                        else define_statement (&res, GG_DEFSTRING, false); // exact length set in gg_time
+                        if (epoch == NULL)
+                        {
+                            check_var (&timezone, GG_DEFSTRING);
+                            check_var (&year, GG_DEFNUMBER);
+                            check_var (&month, GG_DEFNUMBER);
+                            check_var (&day, GG_DEFNUMBER);
+                            check_var (&hour, GG_DEFNUMBER);
+                            check_var (&min, GG_DEFNUMBER);
+                            check_var (&sec, GG_DEFNUMBER);
+                            check_var (&format, GG_DEFSTRING);
+                            check_var (&fepoch, GG_DEFNUMBER);
+                        }
 
                         // No need to check if res!=NULL (i.e. it's mandatory), the above carve_statement checks that
 
@@ -6620,8 +7012,15 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // every option has a keyword preceding it, including the first one.
                         //
 
-                        oprintf ("%s=gg_time(%s, %s, %s, %s, %s, %s, %s, %s);\n", res, timezone==NULL ? "\"GMT\"":timezone, format==NULL ? "NULL":format, year==NULL ? "0":year, month==NULL ? "0":month, 
-                            day==NULL ? "0":day, hour==NULL ? "0":hour, min==NULL ? "0":min, sec==NULL ? "0":sec);
+                        if (epoch == NULL)
+                        {
+                            oprintf ("%s=gg_time(%s, %s, %s, %s, %s, %s, %s, %s, %s);\n", res, fepoch==NULL?"-1":fepoch, timezone==NULL ? "\"GMT\"":timezone, format==NULL ? "NULL":format, year==NULL ? "0":year, month==NULL ? "0":month, 
+                                day==NULL ? "0":day, hour==NULL ? "0":hour, min==NULL ? "0":min, sec==NULL ? "0":sec);
+                        }
+                        else
+                        {
+                            oprintf ("%s=time(NULL); if ((time_t)(%s)==(time_t)-1) gg_report_error (\"Cannot obtain time, error [%%d]\",errno);\n", res, res);
+                        }
 
 
                         continue;
@@ -6679,13 +7078,13 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // result can be defined
                         define_statement (&result, GG_DEFSTRING, false); // exact length is set in gg_regex
                         define_statement (&status, GG_DEFNUMBER, false);
-                        check_var (&replace_with, GG_DEFSTRING, NULL);
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&case_insensitivec, GG_DEFNUMBER, NULL);
-                        check_var (&ccache, GG_DEFBOOL, NULL);
-                        check_var (&utfc, GG_DEFNUMBER, NULL);
-                        check_var (&single_matchc, GG_DEFNUMBER, NULL);
-                        check_var (&in, GG_DEFSTRING, NULL);
+                        check_var (&replace_with, GG_DEFSTRING);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&case_insensitivec, GG_DEFNUMBER);
+                        check_var (&ccache, GG_DEFBOOL);
+                        check_var (&utfc, GG_DEFNUMBER);
+                        check_var (&single_matchc, GG_DEFNUMBER);
+                        check_var (&in, GG_DEFSTRING);
 
                         //
                         // If there is data right after statement (i.e. 'match') and it has no option (such as call-web https://...)
@@ -6706,7 +7105,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (replace_with == NULL) oprintf ("%s=gg_regex(%s, %s, %s, %s, %s, %s, %s, %s%s);\n", status==NULL?"_gg_st":status, in, pattern, "NULL", "NULL", utfc, case_insensitivec, single_matchc, cache==NULL?"":"&",cache==NULL?"NULL":regname);
                         else oprintf ("%s=gg_regex(%s, %s, %s, &(%s), %s, %s, %s, %s%s);\n", status==NULL?"_gg_st":status, in, pattern, replace_with, result, utfc, case_insensitivec, single_matchc, cache==NULL?"":"&",cache==NULL?"NULL":regname);
                         //We don't check here, because not replacing anything doesn't mean it's an error
-                        //if (status == NULL) oprintf("if (_gg_st == 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        //if (status == NULL) oprintf("if (_gg_st == 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         gg_free(case_insensitivec);
                         gg_free(single_matchc);
                         gg_free(utfc);
@@ -6743,7 +7142,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         // result can be defined
                         define_statement (&to, GG_DEFSTRING, false); // exact length is set below with strdup
-                        check_var (&env, GG_DEFSTRING, NULL);
+                        check_var (&env, GG_DEFSTRING);
 
                         gg_num tot_opt = (env!=NULL?1:0)+(osname!=NULL?1:0)+(osver!=NULL?1:0)+(dir!=NULL?1:0);
                         if (tot_opt != 1)
@@ -6833,6 +7232,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // Look for each option and collect relevant info
                         // First we MUST get each options position
                         //
+                        char *sfile = find_keyword (mtext, GG_KEYSOURCEFILE, 1);
                         char *ext = find_keyword (mtext, GG_KEYEXTERNALCALL, 1);
                         char *dir = find_keyword (mtext, GG_KEYDIRECTORY, 1);
                         char *name = find_keyword (mtext, GG_KEYNAME0, 1);
@@ -6854,6 +7254,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // After all options positions have been found, we must get the options 
                         // for ALL of them
                         //
+                        carve_statement (&sfile, "get-req", GG_KEYSOURCEFILE, 0, 0);
                         carve_statement (&ext, "get-req", GG_KEYEXTERNALCALL, 0, 0);
                         carve_statement (&name, "get-req", GG_KEYNAME0, 0, 0);
                         carve_statement (&method, "get-req", GG_KEYMETHOD, 0, 0);
@@ -6877,7 +7278,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // result can be defined
                         if (ext != NULL ) define_statement (&to, GG_DEFBOOL, false);
                         else if (numcookie != NULL || argnum != NULL || method != NULL ) define_statement (&to, GG_DEFNUMBER, false);
-                        else if (ctype != NULL || argval != NULL || cookie != NULL || header != NULL || name != NULL || dir != NULL) 
+                        else if (ctype != NULL || argval != NULL || cookie != NULL || header != NULL || name != NULL || dir != NULL || sfile != NULL) 
                         {
                             define_statement (&to, GG_DEFSTRING, false); // exact length set with strdup below
                         }
@@ -6887,10 +7288,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                             define_statement (&to, GG_DEFSTRING, false); // exact length set with strdup below
                         }
-                        check_var (&argval, GG_DEFNUMBER, NULL);
-                        check_var (&header, GG_DEFSTRING, NULL);
+                        check_var (&argval, GG_DEFNUMBER);
+                        check_var (&cookie, GG_DEFNUMBER);
+                        check_var (&header, GG_DEFSTRING);
 
-                        gg_num tot_opt = (tracefile!=NULL?1:0)+(argval!=NULL?1:0)+(ext!=NULL?1:0)+(argnum!=NULL?1:0)+(ref!=NULL?1:0)+(numcookie!=NULL?1:0)+(cookie!=NULL?1:0)+(header!=NULL?1:0)+(process_id!=NULL?1:0)+(eno!=NULL?1:0)+(err!=NULL?1:0)+(method!=NULL?1:0)+(dir!=NULL?1:0)+(ctype!=NULL?1:0)+(name!=NULL?1:0);
+                        gg_num tot_opt = (tracefile!=NULL?1:0)+(argval!=NULL?1:0)+(ext!=NULL?1:0)+(argnum!=NULL?1:0)+(ref!=NULL?1:0)+(numcookie!=NULL?1:0)+(cookie!=NULL?1:0)+(header!=NULL?1:0)+(process_id!=NULL?1:0)+(eno!=NULL?1:0)+(err!=NULL?1:0)+(method!=NULL?1:0)+(dir!=NULL?1:0)+(ctype!=NULL?1:0)+(name!=NULL?1:0)+(sfile!=NULL?1:0);
                         if (tot_opt != 1)
                         {
                             gg_report_error( "Exactly one option must be in get-req statement (%ld)", tot_opt);
@@ -6914,8 +7316,32 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // Unfortunately we have to do strlen on the path, as there doesn't seem to be a way to get it. At least such memory is safe to handle.
                         if (dir !=NULL) oprintf ("{char *path=gg_malloc(GG_MAX_PATH_LEN); char *rpath=getcwd(path, GG_MAX_PATH_LEN);GG_ERR;if (rpath==NULL) {%s=GG_EMPTY_STRING;gg_free(path);} else {path = gg_realloc (gg_mem_get_id(path), strlen(path)+1); %s=path;}}\n", to, to); 
                         if (name !=NULL) oprintf ("%s=gg_strdup(gg_get_config()->ctx.req->name);\n", to); 
+                        if (sfile !=NULL) 
+                        {
+                            char *osrc = undecorate (src_file_name+GG_BLD_DIR_OFFSET);
+                            oprintf ("%s=gg_strdup(\"%s\");\n",to, osrc); 
+                            gg_free (osrc);
+                        }
                         if (ctype !=NULL) oprintf ("%s=gg_strdup(gg_getenv(\"CONTENT_TYPE\"));\n", to); 
 
+
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "abs-number", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        char *to = find_keyword (mtext, GG_KEYTO, 1);
+
+                        carve_statement (&to, "string-number", GG_KEYTO, 1, 1); 
+                        
+                        carve_stmt_obj (&mtext, true, true);
+                        define_statement (&to, GG_DEFNUMBER, false);
+                        //
+                        check_var (&mtext, GG_DEFNUMBER);
+
+                        oprintf ("%s=llabs((long long)(%s));\n", to, mtext);
 
                         continue;
                     }
@@ -6936,10 +7362,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&to, GG_DEFNUMBER, false);
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         oprintf ("%s=gg_str2num (%s, %s, &_gg_st);\n", to, mtext, base!=NULL?base:"0");
-                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
 
 
                         continue;
@@ -6959,36 +7385,30 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, false);
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_num2str
                         define_statement (&st, GG_DEFNUMBER, false);
-                        check_var (&mtext, GG_DEFNUMBER, NULL);
-                        check_var (&base, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFNUMBER);
+                        check_var (&base, GG_DEFNUMBER);
 
                         //Example for deprecation: length is old, buffer-size new
-                        //deprecated(&len, &buflen, old gg key, new gg key);
 
                         char *num0 = mtext; // number to convert, cannot use 'num' for var name as it is a type (solved now with gg_num)
 
 
                         do_numstr (to, num0, base); // _gg_st is produced inside do_numstr(), it's 0 if failed
                         if (st!=NULL) oprintf("if (_gg_st==0) (%s)=GG_ERR_FAILED; else (%s)=GG_OKAY;\n", st, st);
-                        else oprintf("if (_gg_st == 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_FAILED);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        else oprintf("if (_gg_st == 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_FAILED);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
 
                         continue;
                     }
-                    else if ((newI1=recog_statement(line, i, "extended-mode", &mtext, &msize, 1, &gg_is_inline)) != 0 
-                        || (newI2=recog_statement(line, i, "internal-mode", &mtext, &msize, 1, &gg_is_inline)) != 0) 
+                    else if ((newI1=recog_statement(line, i, "extended-mode", &mtext, &msize, 1, &gg_is_inline)) != 0)
                     {
                         //No checking if this is within a block, since this is outside any code and doesn't generate code
                         //GG_GUARD
-                        i = newI1+newI2;
+                        i = newI1;
 
                         carve_stmt_obj (&mtext, false, false);
                         //
-                        // 
-                        // Note that FREEFORM is ***ONLY*** for internal use and testing and IS NOT SUPPORTED officially.
-                        //
                         //
                         if (newI1 != 0) gg_mode = GG_MODE_EXTENDED;
-                        else if (newI2 != 0) gg_mode = GG_MODE_INTERNAL;
 
                         if (num_recog > 1) gg_report_error ("extended-mode must be the very first statement in source file");
 
@@ -7001,118 +7421,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_stmt_obj (&mtext, false, false);
                         oprintf ("gg_flush_out();\n");
-
-                        continue;
-                    }
-                    else if ((newI=recog_statement(line, i, "pf-out", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
-                            (newI1=recog_statement(line, i, "pf-web", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
-                            (newI3=recog_statement(line, i, "report-error", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
-                            (newI4=recog_statement(line, i, "trace-run", &mtext, &msize, 1, &gg_is_inline)) != 0 ||
-                            (newI5=recog_statement(line, i, "trace-run", &mtext, &msize, 0, &gg_is_inline)) != 0 ||
-                            (newI2=recog_statement(line, i, "pf-url", &mtext, &msize, 0, &gg_is_inline)) != 0
-                        )  
-                    {
-                        GG_GUARD
-                        i = newI+newI1+newI2+newI3+newI4+newI5;
-                        bool rep_error;
-                        bool trace_none=false;
-                        bool trace=false;
-                        if (newI3 != 0) rep_error = true; else rep_error = false;
-                        if (newI4 != 0) trace_none=true;
-                        if (newI5 != 0) trace=true;
-
-                        // printf to stdout for standalone app, or to web/string otherwise 
-
-                        gg_num c_printf = (newI != 0 ? 1:0);
-                        gg_num c_printf_web = (newI1 != 0 ? 1:0);
-                        //gg_num c_printf_url = (newI2 != 0 ? 1:0);
-
-                        // Example:
-                        // printf "%s %ld", str, int
-                        // this is no-enc printout
-
-                        //printf statements must have a comma, so instead of printf-url "xxx" it must be printf-url "%s",xxx
-                        //to avoid hard to track bugs
-                        //look also for format (starting with unquoted quote), to know where the printf part starts
-                        char *comma = find_keyword (mtext, GG_KEYCOMMA, 0);
-                        char *toerr = find_keyword (mtext, GG_KEYTOERROR, 1);
-                        char *to = find_keyword (mtext, GG_KEYTO, 1);
-
-                        if (rep_error && (to != NULL || toerr != NULL)) gg_report_error ("Cannot use to-error or 'to' clause with report-error statement");
-                        if ((trace || trace_none) && (to != NULL || toerr != NULL)) gg_report_error ("Cannot use to-error or 'to' clause with trace statement");
-
-
-                        carve_statement (&toerr, "pf-*", GG_KEYTOERROR, 0, 0);
-                        carve_statement (&to, "pf-*", GG_KEYTO, 0, 1);
-                        carve_statement (&comma, "pf-*", GG_KEYCOMMA, 0, 1);
-
-                        // check it's a string constant
-                        gg_num flen = trimit (mtext);
-                        if (!trace_none && (mtext[0] != '"' || mtext[flen-1] != '"')) gg_report_error ("format must be a string literal, found [%s]", mtext);
-
-                        if (comma == NULL && !trace_none) {comma = mtext; mtext=gg_strdup("\"%s\"");} // make up format for gcc, format must be dynamic as it will be carved
-                        char *format = mtext; // since mtext will become a generated variable below in carve_stmt_obj
-                        carve_stmt_obj (&mtext, trace_none?false:true, true); // mtext is format
-                        if (trace) oprintf("GG_UNUSED(%s);\n", mtext); // if trace with some string, this string will be unused if not DEBUG
-
-
-                        if (toerr != NULL && to != NULL) gg_report_error( "cannot use both to-error and 'to' clause; use one or the other");
-                        define_statement (&to, GG_DEFSTRING, false); // exact length is set by gg_write_to_string
-                        //
-                        if (!trace_none) check_var (&mtext, GG_DEFSTRING, NULL);
-
-                        //Check only %s or %ld
-
-                        char *list;
-
-                        //
-                        // Look for each option and collect relevant info
-                        // First we MUST get each options position
-                        if (trace_none)
-                        {
-                            oprintf("GG_TRACE(\"\");\n");
-                        }
-                        else if (trace)
-                        {
-                            char *list;
-                            check_format(format, comma, &list);
-                            oprintf("GG_TRACE(%s", mtext);
-                            oprintf("%s", list);
-                            oprintf(");\n");
-                            gg_free (list);
-                        }
-                        else if (rep_error)
-                        {
-                            check_format(format, comma, &list);
-                            oprintf("gg_report_error(%s", mtext);
-                            oprintf("%s", list);
-                            oprintf(");\n");
-                            gg_free (list);
-                        }
-                        else if (to == NULL) 
-                        {
-                            check_format(format, comma, &list);
-                            oprintf ("gg_printf(%s, %s, %s", toerr!=NULL?"true":"false", rep_error?"GG_NOENC":(c_printf!=0?"GG_NOENC":(c_printf_web!=0?"GG_WEB":"GG_URL")),   mtext);
-                            oprintf("%s", list);
-                            oprintf(");\n");
-                            gg_free (list);
-                        }
-                        else
-                        {
-                            // this is ... to [ define ] <str>
-                            //
-                            oprintf("gg_write_to_string (&(%s));\n", to);
-                            gen_ctx->total_write_string++;
-                            //toerr is guaranteed to be NULL here, see above
-                            check_format(format, comma, &list);
-                            oprintf ("gg_printf(true, %s, %s", c_printf!=0?"GG_NOENC":(c_printf_web!=0?"GG_WEB":"GG_URL"),mtext);
-                            oprintf("%s", list);
-                            oprintf(");\n");
-                            gg_free (list);
-                            oprintf("gg_write_to_string_notrim();\n"); 
-                            oprintf("gg_write_to_string (NULL);\n"); 
-                            gen_ctx->total_write_string--;
-                        }
 
                         continue;
                     }
@@ -7134,11 +7442,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&copy);
                         make_mem(&copyend);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&copy, GG_DEFSTRING, NULL);
-                        check_var (&copyend, GG_DEFSTRING, NULL);
-                        check_var (&swith, GG_DEFNUMBER, NULL);
-                        check_var (&len, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&copy, GG_DEFSTRING);
+                        check_var (&copyend, GG_DEFSTRING);
+                        check_var (&swith, GG_DEFNUMBER);
+                        check_var (&len, GG_DEFNUMBER);
 
                         if ((copy == NULL && copyend == NULL) || (copy != NULL && copyend != NULL)) gg_report_error ("there must be either 'copy' or copy-end clause present");
 
@@ -7160,9 +7468,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, true);
                         define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_copy_string
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&swith, GG_DEFNUMBER, NULL);
-                        check_var (&len, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&swith, GG_DEFNUMBER);
+                        check_var (&len, GG_DEFNUMBER);
 
                         // must assign NULL, or it would assume cval is gg_string, which it may not be
                         if (len == NULL) oprintf ("%s = gg_strdupl (%s, %s, gg_mem_get_len(gg_mem_get_id(%s)));\n", to, mtext, swith==NULL?"0":swith, mtext); // exact length copied, so works for binary exactly
@@ -7185,13 +7493,13 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&path);
                         define_statement (&st, GG_DEFNUMBER, false);
                         char *secc = opt_clause(secure, "\"Secure; \"", "\"\"", GG_DEFSTRING);
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&path, GG_DEFSTRING, NULL);
-                        check_var (&secc, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&path, GG_DEFSTRING);
+                        check_var (&secc, GG_DEFSTRING);
 
 
                         oprintf("_gg_st=(gg_delete_cookie (gg_get_config()->ctx.req, %s, %s, %s)<0?GG_ERR_EXIST:GG_OKAY);\n", mtext, path==NULL?"NULL":path, secc ); 
-                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         gg_free(secc);
 
                         continue;
@@ -7241,13 +7549,13 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             char *secc = opt_clause(secure, "\"Secure; \"", "\"\"", GG_DEFSTRING);
                             char *httpc = opt_clause(nohttponly, "\"\"", "\"HttpOnly; \"", GG_DEFSTRING);
                             //
-                            check_var (&mtext, GG_DEFSTRING, NULL);
-                            check_var (&eq, GG_DEFSTRING, NULL);
-                            check_var (&exp, GG_DEFSTRING, NULL);
-                            check_var (&path, GG_DEFSTRING, NULL);
-                            check_var (&samesite, GG_DEFSTRING, NULL);
-                            check_var (&httpc, GG_DEFSTRING, NULL);
-                            check_var (&secc, GG_DEFSTRING, NULL);
+                            check_var (&mtext, GG_DEFSTRING);
+                            check_var (&eq, GG_DEFSTRING);
+                            check_var (&exp, GG_DEFSTRING);
+                            check_var (&path, GG_DEFSTRING);
+                            check_var (&samesite, GG_DEFSTRING);
+                            check_var (&httpc, GG_DEFSTRING);
+                            check_var (&secc, GG_DEFSTRING);
 
 
                             // enforce that Strict is the default for SameSite and HttpOnly is the default
@@ -7279,7 +7587,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             make_mem(&eq);
 
                             define_statement (&mtext, GG_DEFSTRING, false); // exact length set via strdup in gg_find_cookie
-                            check_var (&eq, GG_DEFSTRING, NULL);
+                            check_var (&eq, GG_DEFSTRING);
 
                             // memory assigned is created in gg_find_cookie, so it has refcount of 0 to begin with, just like
                             // any other statement
@@ -7326,7 +7634,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             //
                             // Make vim recognize type names
                             //
-                            // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_ARRAY GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
+                            // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_ARRAYSTRING GG_KEY_T_ARRAYNUMBER GG_KEY_T_ARRAYBOOL GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
 
                             // we used to forbid non-string/bool/number in non-call-handler. But we should be able to create say index in call-handler and pass it back
                             // to caller. In golfrt.c, we error out if such param with such type is not found.
@@ -7357,7 +7665,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                             if (eq == NULL) eq = gg_strdup (mtext); // if no =, assume it's the variable with the same name
                             make_mem(&eq);
-                            gg_num type = check_var (&eq, GG_DEFUNKN, NULL);
+                            gg_num type = check_var (&eq, GG_DEFUNKN);
                             if (type == GG_DEFUNKN) gg_report_error (GG_VAR_NOT_EXIST, eq);
 
 
@@ -7392,6 +7700,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         done_end_handler = true;
                         oprintf("}\n");
+                        if (open_curly != 0) gg_report_error ("Imbalance in blocks opening and closing {}");
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "after-handler", &mtext, &msize, 1, &gg_is_inline)) != 0)
@@ -7445,6 +7754,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //GG_GUARD
                         i = newI+newI1;
 
+                        open_curly = 0;
+
                         // do not allow splitting of begin-handler, because this allows us to quickly get .h file which contains
                         // all prototypes of handlers in gg (in gen_src) - without this we'd have to make a mess and detect \ and concatenate lines in bash
                         if (line_split) gg_report_error ("begin-handler (or %%) statement cannot be split on multiple lines");
@@ -7481,7 +7792,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         if (gg_is_valid_param_name(reqname, false, false) != 1) gg_report_error( "request path in begin-handler is not valid, it can have only alphanumeric characters, hyphens, underscores and forward slashes, and must start with an alphabet character");
 
-                        if (!strcmp (reqname, "main")) gg_report_error ("begin-handler name cannot be 'main'");
+                        if (is_reserved(reqname)) gg_report_error ("begin-handler name cannot be a C reserved word [%s]", reqname);
 
                         match_file (file_name, reqname);
 
@@ -7500,25 +7811,29 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
                         char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
                         char *ps = find_keyword (mtext, GG_KEYPROCESSSCOPE, 0);
+                        char *fcond = find_keyword (mtext, GG_KEYFROMCONDITION, 0);
                         carve_statement (&eq, "set-bool", GG_KEYEQUALSHORT, 0, 1);
                         carve_statement (&ps, "set-bool", GG_KEYPROCESSSCOPE, 0, 0);
+                        carve_statement (&fcond, "set-bool", GG_KEYFROMCONDITION, 0, 1);
                         carve_stmt_obj (&mtext, true, false);
                         gg_num is_def;
+                        // GG_KEYAND0 GG_KEYOR0 GG_KEYNOT0 
                         // if defined, it's always false
                         if (ps != NULL) is_def = define_statement (&mtext, GG_DEFBOOLSTATIC, false);
                         else is_def = define_statement (&mtext, GG_DEFBOOL, false);
 
                         // this is if not defined, and no equal, set to false
                         static char empty[] = "false"; //[] so trim will work on it in check_var
-                        if (eq == NULL) eq = empty;
+                        if (eq == NULL && fcond == NULL) eq = empty;
 
                         if (ps && is_def != 1) gg_report_error ("process-scope can only be used when variable is created");
 
                         // check correctness
-                        oprintf("GG_IS_BOOL(%s);\n", mtext);
-                        trimit (eq);
-                        oprintf("GG_IS_BOOL(%s);\n", eq);
-                        check_var (&eq, GG_DEFBOOL, NULL);
+                        if (fcond == NULL)
+                        {
+                            trimit (eq);
+                            check_var (&eq, GG_DEFBOOL);
+                        }
 
                         //
                         static gg_num gg_pscope = 0;
@@ -7529,7 +7844,14 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf("static bool _gg_nstat%ld = true;\n", gg_pscope);
                             oprintf("if (_gg_nstat%ld) {\n_gg_nstat%ld = false;\n", gg_pscope, gg_pscope);
                         }
-                        oprintf ("%s = %s;\n", mtext, eq);
+                        if (eq != NULL) oprintf ("%s = %s;\n", mtext, eq);
+                        else if (fcond != NULL) 
+                        {
+                            // GG_KEYEVERY GG_KEYNOTEVERY GG_KEYEQUAL GG_KEYNOTEQUAL GG_KEYOR GG_KEYAND GG_KEYLESSERTHAN GG_KEYLESSEREQUAL GG_KEYGREATERTHAN GG_KEYGREATEREQUAL GG_KEYCONTAIN GG_KEYNOTCONTAIN GG_KEYCASEINSENSITIVE GG_KEYLENGTH
+                            char ifs[300];
+                            snprintf(ifs, sizeof(ifs), "%s=(", mtext);
+                            parse_cond (fcond, "", ifs, ");\n");
+                        }
                         if (ps)
                         {
                             // with process scope, initialization happens only once, like with static, except we do assignment
@@ -7557,9 +7879,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (eq == NULL) eq = empty;
 
                         //
-                        check_var (&eq, GG_DEFNUMBER, NULL);
-                        oprintf("GG_IS_NUM(%s);\n", mtext);
-                        oprintf("GG_IS_NUM(%s);\n", eq);
+                        check_var (&eq, GG_DEFNUMBER);
 
 
                         if (ps && is_def != 1) gg_report_error ("process-scope can only be used when variable is created");
@@ -7594,6 +7914,37 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         continue;
                     }
+                    else if ((newI=recog_statement (line, i, "new-string", &mtext, &msize, 0, &gg_is_inline)) != 0)
+                    {
+                        GG_GUARD
+                        i = newI;
+                        char *len = find_keyword (mtext, GG_KEYLENGTH, 0);
+                        carve_statement (&len, "new-string", GG_KEYLENGTH, 1, 1);
+                        carve_stmt_obj (&mtext, true, false);
+                        define_statement (&mtext, GG_DEFSTRING, false); // correct as it uses GG_EMPTY_STRING for empty init
+                        gg_num st;
+                        gg_num size=gg_str2num (len, 0, &st);
+                        if (st == GG_OKAY && size <= 0) gg_report_error ("Length of a new string cannot be lesser than or equal to 0");
+                        if (st == GG_OKAY && size < 1024) 
+                        {
+                            char *cs = gg_malloc (size+3); // +1 for end null, +2 for 2 quotes, plus 1 charm
+                            cs[0] = '"';
+                            gg_num i;
+                            for (i = 1; i < size+1; i++) cs[i] = ' ';
+                            cs[i] = '"';
+                            cs[i+1] = 0;
+                            make_mem (&cs);
+                            // no need to add reference, this is new memory
+                            oprintf ("%s=%s;\n%s[0]=0;\n", mtext,cs,mtext); // string is empty each time execution passes through new-string
+                        }
+                        else
+                        {
+                            // check_var is here and above, since it produces a variable, so len would be _gg_d...
+                            check_var (&len, GG_DEFNUMBER);
+                            oprintf ("%s = (char*)gg_malloc ((%s)+1);\n%s[0] = 0;\n", mtext, len, mtext); // again, string is empty with each passing through
+                        }
+                        continue;
+                    }
                     else if ((newI=recog_statement (line, i, "set-string", &mtext, &msize, 0, &gg_is_inline)) != 0)
                     {
                         // TODO: set-unquoted-string which is the same as set-string but there's not surrounding quotes
@@ -7605,11 +7956,23 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *unq = find_keyword (mtext, GG_KEYUNQUOTED, 0);
                         char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
                         char *ps = find_keyword (mtext, GG_KEYPROCESSSCOPE, 0);
+                        char *len = find_keyword (mtext, GG_KEYLENGTH, 0);
                         carve_statement (&eq, "set-string", GG_KEYEQUALSHORT, 0, 1);
                         carve_statement (&ps, "set-string", GG_KEYPROCESSSCOPE, 0, 0);
                         carve_statement (&unq, "set-string", GG_KEYUNQUOTED, 0, 0);
+                        carve_statement (&len, "set-string", GG_KEYLENGTH, 0, 1);
                         carve_stmt_obj (&mtext, true, false);
                         gg_num is_def;
+
+                        if (len != NULL)
+                        {
+                            if (eq != NULL || ps != NULL || unq != NULL) gg_report_error ("Other clauses cannot be used with 'length' clause'");
+                            check_var (&len, GG_DEFNUMBER);
+                            if (gg_is_valid_param_name(mtext, false, false) != 1) gg_report_error( "Improper string variable name [%s]", mtext);
+                            check_var (&mtext, GG_DEFSTRING);
+                            oprintf ("{ gg_num _gg_s_id = gg_mem_get_id (%s); if ((%s)>=0 || (%s)<=gg_mem_get_len(_gg_s_id)) {gg_mem_set_len (_gg_s_id, (%s)+1);(%s)[%s] = 0;} else gg_report_error (\"String length [%%ld] is outside the string range [0-%%ld]\", %s, gg_mem_get_len(_gg_s_id));}\n", mtext, len, len, len, mtext, len, len);
+                            continue;
+                        }
 
                         // check for str[]
                         bool num_assign = false;
@@ -7642,13 +8005,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         if (num_assign)
                         {
-                            check_var (&eq, GG_DEFNUMBER, NULL);
+                            check_var (&eq, GG_DEFNUMBER);
                             oprintf ("if (gg_mem_get_len(gg_mem_get_id(%s))-1 < (%s) || (%s) < 0) gg_report_error (\"Cannot access byte [%%ld] in string\", (long)(%s));\n", mtext, ind, ind, ind);
                             oprintf ("%s[%s] = (%s);\n", mtext, ind, eq);
                             continue;
                         }
 
-                        oprintf("GG_IS_STRING(%s);\n", mtext);
                         
                         // Rules:
                         // process-scope can only go with equal and if variable is created here
@@ -7670,7 +8032,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                             make_mem (&eq);
                         }
-                        check_var (&eq, GG_DEFSTRING, NULL);
+                        check_var (&eq, GG_DEFSTRING);
 
                         //
                         // start if process-scope and equal used together
@@ -7690,7 +8052,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // X(not process) = Y(process), X is now process
                         // X(not process) = Y(not process), X is NOT process
                         // Basically if either one is process, the lvalue is process.
-                        gg_num mtext_p = check_var (&mtext, GG_DEFUNKN, NULL);
+                        gg_num mtext_p = check_var (&mtext, GG_DEFUNKN);
                         if (mtext_p == GG_DEFSTRINGSTATIC) 
                         {
                             oprintf ("gg_mem_set_process(%s, %s, true, false);\n", mtext, eq);
@@ -7700,7 +8062,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("gg_mem_add_ref (%s);\n", eq); // must be after gg_mem_set_process, because it becomes process-scoped
                                                                 // there's nothing to do
 
-                        gg_num eq_p = check_var (&eq, GG_DEFUNKN, NULL);
+                        gg_num eq_p = check_var (&eq, GG_DEFUNKN);
                         if (eq_p == GG_DEFSTRINGSTATIC || mtext_p == GG_DEFSTRINGSTATIC)
                         {
                             //
@@ -7805,13 +8167,13 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
                         carve_stmt_obj (&mtext, true, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
                         //
                         // Only string actually defined as process-scope can be freed as such (or rather it's 
                         // ref-count decreased, and then if 0, freed). Even references to it cannot be freed like this.
                         // Ordinary memory can be freed ONLY if never referenced.
                         //
-                        gg_num mtext_p = check_var (&mtext, GG_DEFUNKN, NULL);
+                        gg_num mtext_p = check_var (&mtext, GG_DEFUNKN);
                         if (mtext_p == GG_DEFSTRINGSTATIC) oprintf("_gg_free ((void*)(%s),0);\n", mtext);
                         else oprintf("gg_free_int ((void*)(%s));\n", mtext);
                         oprintf("%s=GG_EMPTY_STRING;\n", mtext);
@@ -7829,9 +8191,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&key);
                         make_mem(&value);
                         //
-                        check_var (&key, GG_DEFSTRING, NULL);
-                        check_var (&value, GG_DEFSTRING, NULL);
-                        check_var (&mtext, GG_DEFMSG, NULL);
+                        check_var (&key, GG_DEFSTRING);
+                        check_var (&value, GG_DEFSTRING);
+                        check_var (&mtext, GG_DEFMSG);
 
                         // key and value are copied to message, so no ref increment
                         oprintf ("gg_write_msg(%s, %s, %s);\n",mtext, key, value); 
@@ -7855,10 +8217,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&value, GG_DEFSTRING, false);
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFMSG, NULL);
+                        check_var (&mtext, GG_DEFMSG);
 
                         oprintf ("_gg_st=gg_read_msg(%s, %s%s%s, %s%s%s);\n", mtext, key!=NULL?"&(":"",key!=NULL?key:"NULL",key!=NULL?")":"",value!=NULL?"&(":"",value!=NULL?value:"NULL",value!=NULL?")":"");
-                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         continue;
 
                     }
@@ -7872,7 +8234,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, false);
                         define_statement (&to, GG_DEFSTRING, false); // exact length set below with gg_get_msg
                         //
-                        check_var (&mtext, GG_DEFMSG, NULL);
+                        check_var (&mtext, GG_DEFMSG);
 
                         oprintf ("{ char *_gg_gmsg =gg_get_msg(%s);\n",mtext); 
                         oprintf ("%s = _gg_gmsg;\n", to);
@@ -7894,7 +8256,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&from);
                         define_statement (&mtext, GG_DEFMSG, true);
                         //
-                        check_var (&from, GG_DEFSTRING, NULL);
+                        check_var (&from, GG_DEFSTRING);
 
                         oprintf ("%s=gg_new_msg(%s);\n",mtext, from==NULL?"NULL":from); 
 
@@ -7917,8 +8279,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&to, GG_DEFSTRING, false); // exact length set below with strdup/GG_EMPTY_STRING
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFNUMBER, NULL);
-                        check_var (&from, GG_DEFBROKEN, NULL);
+                        check_var (&mtext, GG_DEFNUMBER);
+                        check_var (&from, GG_DEFBROKEN);
 
                         // check split-string isn't NULL
                         oprintf ("if ((%s) != NULL && %s >= 1 && %s <= (%s)->num_pieces) {\n", from, mtext, mtext, from);
@@ -7926,7 +8288,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("%s = (%s)->pieces[(%s)-1];gg_mem_add_ref(%s);\n", to, from, mtext, to);
                         oprintf("} else {\n");
                         if (st != NULL) oprintf("%s=GG_ERR_OVERFLOW;\n", st);
-                        else oprintf("gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_OVERFLOW);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        else oprintf("gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_OVERFLOW);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         oprintf ("%s=GG_EMPTY_STRING;}\n",to); 
 
                         continue;
@@ -7962,9 +8324,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (to != NULL) define_statement (&to, GG_DEFBROKEN, true);
                         if (count != NULL) define_statement (&count, GG_DEFNUMBER, false);
                         //
-                        if (del == NULL) check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&with, GG_DEFSTRING, NULL);
-                        check_var (&del, GG_DEFBROKEN, NULL);
+                        if (del == NULL) check_var (&mtext, GG_DEFSTRING);
+                        check_var (&with, GG_DEFSTRING);
+                        check_var (&del, GG_DEFBROKEN);
 
                         if (to != NULL) oprintf("gg_break_down (%s, %s, &(%s));\n", mtext, with, to);
                         if (count != NULL) oprintf ("%s= (%s)->num_pieces;\n", count, to); // must be after gg_break_down to fill in the result
@@ -7980,8 +8342,18 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
 
                         carve_stmt_obj (&mtext, true, false);
-                        check_var (&mtext, GG_DEFUNKN, NULL); // just check variable is known, we don't care about type
-                        oprintf("GG_UNUSED (%s);\n", mtext);
+                        while (1) 
+                        {
+                            char *comma = find_keyword (mtext, GG_KEYCOMMA, 0);
+                            carve_statement (&comma, "unused-var", GG_KEYCOMMA, 0, 1); // separate entries with comma first, so
+                                                                                      // this find/carve MUST come before the rest below!
+                                                                                      //
+
+                            check_var (&mtext, GG_DEFUNKN); // just check variable is known, we don't care about type
+                            oprintf("GG_UNUSED (%s);\n", mtext);
+                            if (comma == NULL) break; else mtext = comma;
+                        }
+
                         continue;
 
                     }
@@ -8022,10 +8394,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         char *appendc = opt_clause(append, "true", "false", GG_DEFBOOL);
                         //
-                        check_var (&mtext, GG_DEFLIST, NULL);
-                        check_var (&key, GG_DEFSTRING, NULL);
-                        check_var (&value, GG_DEFSTRING, NULL);
-                        check_var (&appendc, GG_DEFBOOL, NULL);
+                        check_var (&mtext, GG_DEFLIST);
+                        check_var (&key, GG_DEFSTRING);
+                        check_var (&value, GG_DEFSTRING);
+                        check_var (&appendc, GG_DEFBOOL);
 
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
                         oprintf ("gg_list_store (%s, %s, (void*)%s, %s);\n", mtext, key, value, appendc);
@@ -8059,9 +8431,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFLIST, NULL);
-                        check_var (&upd, GG_DEFSTRING, NULL);
-                        check_var (&updkey, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFLIST);
+                        check_var (&upd, GG_DEFSTRING);
+                        check_var (&updkey, GG_DEFSTRING);
 
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
                         oprintf ("{ char *_gg_list_k; char *_gg_list_v; gg_list_retrieve (%s, &(_gg_list_k), (void**)&(_gg_list_v));\n", mtext);
@@ -8092,7 +8464,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         if (upd || updkey || st)
                         {
-                            if (st) oprintf ("else { (%s) = GG_ERR_EXIST; }\n", st); else oprintf("else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_EXIST);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                            if (st) oprintf ("else { (%s) = GG_ERR_EXIST; }\n", st); else oprintf("else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_EXIST);}\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         }
                         oprintf("}\n");
                         oprintf("gg_mem_process=false;\n");
@@ -8121,7 +8493,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFLIST, NULL);
+                        check_var (&mtext, GG_DEFLIST);
 
                         int where;
                         if (first != NULL) where = GG_LIST_FIRST;
@@ -8158,7 +8530,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         oprintf ("}\n");
                         if (st) oprintf ("(%s) = _gg_list_pos_st%ld;\n", st, pos_st);
-                        else oprintf("if (_gg_list_pos_st%ld != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_list_pos_st%ld);\n", pos_st, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, pos_st);
+                        else oprintf("if (_gg_list_pos_st%ld != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_list_pos_st%ld);\n", pos_st, GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum, pos_st);
                         
                         pos_st++;
                         oprintf("gg_mem_process=false;\n");
@@ -8174,7 +8546,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_stmt_obj (&mtext, true, false);
                         //
-                        check_var (&mtext, GG_DEFLIST, NULL);
+                        check_var (&mtext, GG_DEFLIST);
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
                         oprintf ("gg_list_purge (&(%s));\n", mtext);
                         oprintf("gg_mem_process=false;\n");
@@ -8191,10 +8563,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, false);
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFLIST, NULL);
+                        check_var (&mtext, GG_DEFLIST);
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
                         oprintf ("_gg_st=gg_list_delete (%s);\n", mtext);
-                        if (st != NULL) oprintf("%s=_gg_st;\n", st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (st != NULL) oprintf("%s=_gg_st;\n", st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         oprintf("gg_mem_process=false;\n");
 
                         continue;
@@ -8230,9 +8602,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&key);
                         make_mem(&value);
                         //
-                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
-                        check_var (&key, GG_DEFSTRING, NULL);
-                        check_var (&value, GG_DEFSTRING, NULL);
+                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO);
+                        check_var (&key, GG_DEFSTRING);
+                        check_var (&value, GG_DEFSTRING);
 
 
                         oprintf ("gg_store%s (%s, %s, (void*)%s);\n", lifo?"_l":"", mtext, key, value);
@@ -8249,7 +8621,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_stmt_obj (&mtext, true, false);
                         //
-                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
+                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO);
                         oprintf ("gg_rewind (%s);\n", mtext);
 
                         continue;
@@ -8264,7 +8636,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_stmt_obj (&mtext, true, false);
                         //
-                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
+                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO);
                         oprintf ("gg_fifo_delete (%s);\n", mtext);
 
                         continue;
@@ -8279,7 +8651,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_stmt_obj (&mtext, true, false);
                         //
-                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
+                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO);
                         oprintf ("gg_purge (&(%s));\n", mtext);
 
                         continue;
@@ -8305,10 +8677,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_retrieve
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO, NULL);
+                        check_var (&mtext, lifo?GG_DEFLIFO:GG_DEFFIFO);
 
                         oprintf ("_gg_st=gg_retrieve (%s, &(%s), (void**)&(%s));\n", mtext, key, value);
-                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         continue;
 
                     }
@@ -8335,12 +8707,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&status, GG_DEFNUMBER, false);
                         char *appendc = opt_clause(append, "1", "0", GG_DEFNUMBER);
                         //
-                        if (fileid == NULL) check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&from, GG_DEFSTRING, NULL);
-                        check_var (&appendc, GG_DEFNUMBER, NULL);
-                        check_var (&length, GG_DEFNUMBER, NULL);
-                        check_var (&pos, GG_DEFNUMBER, NULL);
-                        if (fileid != NULL) check_var (&fileid, GG_DEFFILE, NULL);
+                        if (fileid == NULL) check_var (&mtext, GG_DEFSTRING);
+                        check_var (&from, GG_DEFSTRING);
+                        check_var (&appendc, GG_DEFNUMBER);
+                        check_var (&length, GG_DEFNUMBER);
+                        check_var (&pos, GG_DEFNUMBER);
+                        if (fileid != NULL) check_var (&fileid, GG_DEFFILE);
 
 
                         if (mtext[0] != 0 && fileid!=NULL) gg_report_error( "you can specify either file name or file-id but not both in write-file statement");
@@ -8352,7 +8724,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (fileid != NULL) oprintf("_gg_st=gg_write_file_id (*((%s)->f), %s, %s, %s, %s, %s);\n", fileid, from, length, appendc, pos == NULL ? "0":pos, pos==NULL?"0":"1");
                         else oprintf("_gg_st=gg_write_file (%s, %s, %s, %s, %s, %s);\n",mtext, from, length, appendc, pos == NULL ? "0":pos, pos==NULL?"0":"1");
                         // _gg_st here is the number of bytes written, so 0 or more is okay, less than 0 is error
-                        if (status != NULL) oprintf("%s=_gg_st;\n",status); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (status != NULL) oprintf("%s=_gg_st;\n",status); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         gg_free(appendc);
                         continue;
                     }
@@ -8380,10 +8752,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&status, GG_DEFNUMBER, false);
                         define_statement (&read_to, GG_DEFSTRING, false); // exact length set in gg_read_file
                         //
-                        if (fileid == NULL) check_var (&read_from, GG_DEFSTRING, NULL);
-                        check_var (&pos, GG_DEFNUMBER, NULL);
-                        check_var (&length, GG_DEFNUMBER, NULL);
-                        if (fileid != NULL) check_var (&fileid, GG_DEFFILE, NULL);
+                        if (fileid == NULL) check_var (&read_from, GG_DEFSTRING);
+                        check_var (&pos, GG_DEFNUMBER);
+                        check_var (&length, GG_DEFNUMBER);
+                        if (fileid != NULL) check_var (&fileid, GG_DEFFILE);
 
                         if (length == NULL) length="0";
 
@@ -8391,7 +8763,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         else oprintf("_gg_st=gg_read_file (%s, &(%s), %s, %s, &_gg_st_bool);\n", read_from, read_to, pos==NULL?"0":pos, length);
                         if (eof != NULL) oprintf ("%s=_gg_st_bool;\n", eof);
                         // _gg_st is negative if error, otherwise size of data read which can be zero
-                        if (status != NULL) oprintf("%s=_gg_st;\n",status); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (status != NULL) oprintf("%s=_gg_st;\n",status); else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         continue;
 
                     }
@@ -8413,7 +8785,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&size, GG_DEFNUMBER, false);
                         define_statement (&reads, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFHASH, NULL);
+                        check_var (&mtext, GG_DEFHASH);
 
                         if (size == NULL && len == NULL && reads == NULL) gg_report_error( "one of 'length', 'size' or 'average-reads' must be in get-hash statement");
 
@@ -8431,7 +8803,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_stmt_obj (&mtext, true, false);
                         //
-                        check_var (&mtext, GG_DEFHASH, NULL);
+                        check_var (&mtext, GG_DEFHASH);
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
                         oprintf("gg_delete_hash (&(%s), true);\n", mtext);
                         oprintf("gg_mem_process=false;\n");
@@ -8446,8 +8818,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_statement (&size, "resize-hash", GG_KEYHASHSIZE, 1, 1);
                         carve_stmt_obj (&mtext, true, false);
                         //
-                        check_var (&mtext, GG_DEFHASH, NULL);
-                        check_var (&size, GG_DEFNUMBER, NULL);
+                        check_var (&mtext, GG_DEFHASH);
+                        check_var (&size, GG_DEFNUMBER);
 
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
                         oprintf("gg_resize_hash (&(%s), %s);\n", mtext, size);
@@ -8460,16 +8832,37 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         i = newI;
                         char *maxsize = find_keyword (mtext, GG_KEYMAXSIZE, 1);
                         char *process = find_keyword (mtext, GG_KEYPROCESSSCOPE, 1);
+                        char *type = find_keyword (mtext, GG_KEYTYPE, 1);
 
                         carve_statement (&maxsize, "new-array", GG_KEYMAXSIZE, 0, 1);
                         carve_statement (&process, "new-array", GG_KEYPROCESSSCOPE, 0, 0);
+                        carve_statement (&type, "new-array", GG_KEYTYPE, 0, 1);
+                        if (type != NULL) trimit (type); // type has to match
+                        else type ="string";
+                        gg_num at = typeid(type);
+                        if (!cmp_type (at, GG_DEFSTRING) && !cmp_type(at, GG_DEFNUMBER) && !cmp_type(at, GG_DEFBOOL)) gg_report_error("Unknown type [%s] in new-array", type);
+                        // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER  // see get-param if ever adding other types as arrays
                         carve_stmt_obj (&mtext, true, false);
-                        if (process) define_statement (&mtext, GG_DEFARRAYSTATIC, true); else define_statement (&mtext, GG_DEFARRAY, true);
+                        // check 'type' clause
+                        if (cmp_type(at, GG_DEFSTRING)) 
+                        {
+                            if (process) define_statement (&mtext, GG_DEFARRAYSTRINGSTATIC, true); else define_statement (&mtext, GG_DEFARRAYSTRING, true);
+                        }
+                        else if (cmp_type(at, GG_DEFNUMBER)) 
+                        {
+                            if (process) define_statement (&mtext, GG_DEFARRAYNUMBERSTATIC, true); else define_statement (&mtext, GG_DEFARRAYNUMBER, true);
+                        }
+                        if (cmp_type(at, GG_DEFBOOL)) 
+                        {
+                            if (process) define_statement (&mtext, GG_DEFARRAYBOOLSTATIC, true); else define_statement (&mtext, GG_DEFARRAYBOOL, true);
+                        }
                         //
-                        check_var (&maxsize, GG_DEFNUMBER, NULL);
+                        check_var (&maxsize, GG_DEFNUMBER);
 
                         oprintf("gg_mem_process=%s;\n", process?"true":"false");
-                        oprintf("%s = gg_new_array (%s, %s);\n", mtext, maxsize?maxsize:"0", process?"true":"false");
+                        if (cmp_type(at, GG_DEFSTRING)) oprintf("%s = gg_new_arraystring (%s, %s);\n", mtext, maxsize?maxsize:"0", process?"true":"false");
+                        else if (cmp_type(at, GG_DEFNUMBER)) oprintf("%s = gg_new_arraynumber (%s, %s);\n", mtext, maxsize?maxsize:"0", process?"true":"false");
+                        else if (cmp_type(at, GG_DEFBOOL)) oprintf("%s = gg_new_arraybool (%s, %s);\n", mtext, maxsize?maxsize:"0", process?"true":"false");
                         oprintf("gg_mem_process=false;\n");
                         continue;
                     }
@@ -8485,7 +8878,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, false);
                         if (process) define_statement (&mtext, GG_DEFHASHSTATIC, true); else define_statement (&mtext, GG_DEFHASH, true);
                         //
-                        check_var (&size, GG_DEFNUMBER, NULL);
+                        check_var (&size, GG_DEFNUMBER);
 
                         oprintf("gg_mem_process=%s;\n", process?"true":"false");
                         oprintf("gg_create_hash (&(%s), %s, NULL, %s);\n", mtext, size?size:"10", process?"true":"false");
@@ -8499,24 +8892,49 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *key = find_keyword (mtext, GG_KEYKEY, 1);
                         char *val = find_keyword (mtext, GG_KEYVALUE, 1);
                         char *oldd = find_keyword (mtext, GG_KEYOLDVALUE, 1);
-                        char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
 
                         carve_statement (&key, "write-array", GG_KEYKEY, 1, 1);
                         carve_statement (&val, "write-array", GG_KEYVALUE, 1, 1);
                         carve_statement (&oldd, "write-array", GG_KEYOLDVALUE, 0, 1);
-                        carve_statement (&st, "write-array", GG_KEYSTATUS, 0, 1);
-                        carve_stmt_obj (&mtext, true, false);
-                        define_statement (&oldd, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_add_hash with GG_EMPTY_STRING
-                        define_statement (&st, GG_DEFNUMBER, false);
-                        make_mem (&val);
                         //
-                        check_var (&mtext, GG_DEFARRAY, NULL);
-                        check_var (&key, GG_DEFNUMBER, NULL);
-                        check_var (&val, GG_DEFSTRING, NULL);
+                        carve_stmt_obj (&mtext, true, false);
+                        gg_num at = check_var (&mtext, GG_DEFUNKN);
+                        if (!cmp_type (at, GG_DEFARRAYSTRING) && !cmp_type(at, GG_DEFARRAYNUMBER) && !cmp_type(at, GG_DEFARRAYBOOL)) gg_report_error("Unknown type [%s] in new-array", typename(at));
+                        //
+                        if (cmp_type (at, GG_DEFARRAYSTRING)) define_statement (&oldd, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_add_hash with GG_EMPTY_STRING
+                        else if (cmp_type (at, GG_DEFARRAYNUMBER)) define_statement (&oldd, GG_DEFNUMBER, false);
+                        else if (cmp_type (at, GG_DEFARRAYBOOL)) define_statement (&oldd, GG_DEFBOOL, false);
+                        //
+                        //
+                        check_var (&key, GG_DEFNUMBER);
 
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
 
-                        oprintf("gg_write_array (%s, %s, %s, %s%s%s, %s%s%s);\n", mtext, key, val, oldd==NULL?"":"&(", oldd==NULL?"NULL":oldd, oldd==NULL?"":")", st==NULL?"":"&(", st==NULL?"NULL":st, st==NULL?"":")");
+                        //
+                        // In all of deferred assignments (where old value can be used to assign to new value), gg_write_array... will report an error
+                        // if key isn't correct. So setting afterwards is okay, because it means the key is correct memory-wise.
+                        //
+                        if (cmp_type (at, GG_DEFARRAYSTRING)) 
+                        {
+                            oprintf("gg_write_arraystring (%s, %s, %s%s%s);\n", mtext, key, oldd==NULL?"":"&(", oldd==NULL?"NULL":oldd, oldd==NULL?"":")");
+                            make_mem (&val);
+                            check_var (&val, GG_DEFSTRING);// here old_val can be used in val expression
+                            oprintf ("gg_mem_set_process ((%s)->str[%s], %s, (%s)->process, true);\n", mtext, key, val, mtext);
+                            oprintf ("(%s)->str[%s] = (%s)==NULL?GG_EMPTY_STRING:(%s);\n", mtext, key, val, val);
+                            oprintf ("gg_mem_replace_and_return (%s, %s);\n", oldd==NULL?"NULL":oldd, val); // val is here just to check if equal to old value, in which case nothing is done; otherwise old-value's is made normal if it were process mem (in which case it's given ref of 1 if it were to go down to 0 so it stays available through the rest of request)
+                        }
+                        else if (cmp_type (at, GG_DEFARRAYNUMBER)) 
+                        {
+                            oprintf("gg_write_arraynumber (%s, %s, %s%s%s);\n", mtext, key, oldd==NULL?"":"&(", oldd==NULL?"NULL":oldd, oldd==NULL?"":")");
+                            check_var (&val, GG_DEFNUMBER); // here old_val can be used in val expression
+                            oprintf ("(%s)->num[%s] = (%s);\n", mtext, key, val);
+                        }
+                        else if (cmp_type (at, GG_DEFARRAYBOOL)) 
+                        {
+                            oprintf("gg_write_arraybool (%s, %s, %s%s%s);\n", mtext, key, oldd==NULL?"":"&(", oldd==NULL?"NULL":oldd, oldd==NULL?"":")");
+                            check_var (&val, GG_DEFBOOL);
+                            oprintf ("(%s)->logic[%s] = %s;\n", mtext, key, val);
+                        }
                         oprintf("gg_mem_process=false;\n");
                         // both key and value are now referenced by the index as well as the original variables that put them here
                         continue;
@@ -8528,9 +8946,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         carve_stmt_obj (&mtext, true, false);
                         //
-                        check_var (&mtext, GG_DEFARRAY, NULL);
+                        gg_num at = check_var (&mtext, GG_DEFUNKN);
+                        if (!cmp_type (at, GG_DEFARRAYSTRING) && !cmp_type(at, GG_DEFARRAYNUMBER) && !cmp_type(at, GG_DEFARRAYBOOL)) gg_report_error("Unknown type [%s] in new-array", typename(at));
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
-                        oprintf("gg_purge_array (%s);\n", mtext);
+                        if (cmp_type (at, GG_DEFARRAYSTRING)) oprintf("gg_purge_arraystring (%s);\n", mtext);
+                        else if (cmp_type (at, GG_DEFARRAYNUMBER)) oprintf("gg_purge_arraynumber (%s);\n", mtext);
+                        else if (cmp_type (at, GG_DEFARRAYBOOL)) oprintf("gg_purge_arraybool (%s);\n", mtext);
                         oprintf("gg_mem_process=false;\n");
                         continue;
                     }
@@ -8541,35 +8962,38 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *key = find_keyword (mtext, GG_KEYKEY, 1);
                         char *val = find_keyword (mtext, GG_KEYVALUE, 1);
                         char *del = find_keyword (mtext, GG_KEYDELETE0, 1);
-                        char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
 
 
                         carve_statement (&key, "read-array", GG_KEYKEY, 1, 1);
                         carve_statement (&val, "read-array", GG_KEYVALUE, 1, 1);
-                        carve_statement (&st, "read-array", GG_KEYSTATUS, 0, 1);
                         carve_statement (&del, "read-array", GG_KEYDELETE0, 0, 2);
                         carve_stmt_obj (&mtext, true, false);
 
+                        gg_num at = check_var (&mtext, GG_DEFUNKN);
+                        if (!cmp_type (at, GG_DEFARRAYSTRING) && !cmp_type(at, GG_DEFARRAYNUMBER) && !cmp_type(at, GG_DEFARRAYBOOL)) gg_report_error("Unknown type [%s] in new-array", typename(at));
+
                         char *delc = opt_clause(del, "true", "false", GG_DEFBOOL);
 
-                        define_statement (&val, GG_DEFSTRING, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
-                        define_statement (&st, GG_DEFNUMBER, false);
+                        if (cmp_type (at, GG_DEFARRAYSTRING)) define_statement (&val, GG_DEFSTRING, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
+                        else if (cmp_type (at, GG_DEFARRAYNUMBER)) define_statement (&val, GG_DEFNUMBER, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
+                        else if (cmp_type (at, GG_DEFARRAYBOOL)) define_statement (&val, GG_DEFBOOL, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
+
 
                         //
-                        check_var (&delc, GG_DEFBOOL, NULL);
-                        check_var (&mtext, GG_DEFARRAY, NULL);
-                        check_var (&key, GG_DEFNUMBER, NULL);
+                        check_var (&delc, GG_DEFBOOL);
+                        check_var (&key, GG_DEFNUMBER);
 
 
                         //
                         // For read-array here, the output value is empty string when not found; for that reason we always get value (_gg_hfind), even when status
                         // is not GG_OKAY
                         //
-                        oprintf("{ ");
-                        oprintf("char *_gg_afind = gg_read_array (%s, %s, %s, &_gg_st);\n", mtext, key, delc);
-                        oprintf ("if (_gg_st == GG_OKAY) { %s = _gg_afind; gg_mem_add_ref(%s);}\n", val, val);
-                        if (st==NULL) oprintf("else gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
-                        else oprintf ("%s=_gg_st;\n", st);
+                        oprintf("{\n");
+                        if (cmp_type (at, GG_DEFARRAYSTRING)) oprintf("char *_gg_afind = gg_read_arraystring (%s, %s, %s);\n", mtext, key, delc);
+                        else if (cmp_type (at, GG_DEFARRAYNUMBER)) oprintf("gg_num _gg_afind = gg_read_arraynumber (%s, %s, %s);\n", mtext, key, delc);
+                        else if (cmp_type (at, GG_DEFARRAYBOOL)) oprintf("bool _gg_afind = gg_read_arraybool (%s, %s, %s);\n", mtext, key, delc);
+                        oprintf ("%s = _gg_afind; ", val);
+                        if (cmp_type (at, GG_DEFARRAYSTRING)) oprintf ("gg_mem_add_ref(%s);", val); 
                         oprintf("}\n");
 
                         gg_free(delc);
@@ -8594,9 +9018,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem (&key);
                         make_mem (&val);
                         //
-                        check_var (&mtext, GG_DEFHASH, NULL);
-                        check_var (&key, GG_DEFSTRING, NULL);
-                        check_var (&val, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFHASH);
+                        check_var (&key, GG_DEFSTRING);
+                        check_var (&val, GG_DEFSTRING);
 
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
 
@@ -8657,11 +9081,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         else
                         {
                             // check_var is for INPUT vars only
-                            check_var (&key, GG_DEFSTRING, NULL);
+                            check_var (&key, GG_DEFSTRING);
                         }
                         //
-                        check_var (&delc, GG_DEFBOOL, NULL);
-                        check_var (&mtext, GG_DEFHASH, NULL);
+                        check_var (&delc, GG_DEFBOOL);
+                        check_var (&mtext, GG_DEFHASH);
 
 
                         //
@@ -8673,7 +9097,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             oprintf("{ ");
                             oprintf("char *_gg_hfind = gg_find_hash (%s, %s, NULL, %s, &_gg_st);\n", mtext, key, delc);
                             oprintf ("if (_gg_st == GG_OKAY) { %s = _gg_hfind; gg_mem_add_ref(%s);}\n", val, val);
-                            if (st==NULL) oprintf("else gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                            if (st==NULL) oprintf("else gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                             else oprintf ("%s=_gg_st;\n", st);
                             oprintf("}\n");
 
@@ -8695,7 +9119,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                 // then report error
                                 //
                                 oprintf ("}\n");
-                                if (st == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum); else oprintf ("%s=_gg_st;\n", st);
+                                if (st == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);}\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum); else oprintf ("%s=_gg_st;\n", st);
                                 //
                                 //
                                 //
@@ -8724,7 +9148,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&val, GG_DEFSTRING, false); 
                         define_statement (&type, GG_DEFNUMBER, false);
 
-                        check_var (&mtext, GG_DEFJSON, NULL);
+                        check_var (&mtext, GG_DEFJSON);
                         oprintf ("if ((%s) != NULL && ((%s)->node_r < (%s)->node_c)) { \n;\n", mtext, mtext, mtext);
                         if (key != NULL) 
                         {
@@ -8770,7 +9194,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&val, GG_DEFSTRING, false); 
                         define_statement (&st, GG_DEFNUMBER, false); 
 
-                        check_var (&mtext, GG_DEFXML, NULL);
+                        check_var (&mtext, GG_DEFXML);
                         oprintf ("if ((%s) != NULL && ((%s)->node_r < (%s)->node_c)) { \n;\n", mtext, mtext, mtext);
                         if (key != NULL) 
                         {
@@ -8788,7 +9212,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (key != NULL) oprintf ("(%s) = GG_EMPTY_STRING;\n", key);
                         if (val != NULL) oprintf ("(%s) = GG_EMPTY_STRING;\n", val);
                         if (st) oprintf ("%s=GG_ERR_EXIST;\n", st);
-                        else oprintf("gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_EXIST);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        else oprintf("gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_EXIST);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         oprintf ("}\n");
 
                         continue;
@@ -8831,14 +9255,14 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             define_statement (&errl, GG_DEFNUMBER, false);
                             define_statement (&errc, GG_DEFNUMBER, false);
                             define_statement (&to, GG_DEFJSON, true);
-                            check_var (&len, GG_DEFNUMBER, NULL);
-                            check_var (&mtext, GG_DEFSTRING, NULL);
+                            check_var (&len, GG_DEFNUMBER);
+                            check_var (&mtext, GG_DEFSTRING);
                         }
                         if (del != NULL) 
                         {
                             carve_statement (&del, "json-doc", GG_KEYDELETE, 0, 1);
                             carve_stmt_obj (&mtext, false, false);
-                            check_var (&del, GG_DEFJSON, NULL);
+                            check_var (&del, GG_DEFJSON);
                         }
 
                         if (del != NULL) oprintf ("gg_del_json (&(%s));\n", del);
@@ -8858,7 +9282,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             }
                             else
                             {
-                                oprintf("if (gg_json_status_%ld != -1) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_JSON);\n", json_id, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                                oprintf("if (gg_json_status_%ld != -1) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_JSON);\n", json_id, GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                             }
                             if (errt != NULL)
                             {
@@ -8900,14 +9324,14 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             define_statement (&errl, GG_DEFNUMBER, false);
                             define_statement (&errc, GG_DEFNUMBER, false);
                             define_statement (&to, GG_DEFXML, true);
-                            check_var (&len, GG_DEFNUMBER, NULL);
-                            check_var (&mtext, GG_DEFSTRING, NULL);
+                            check_var (&len, GG_DEFNUMBER);
+                            check_var (&mtext, GG_DEFSTRING);
                         }
                         if (del != NULL) 
                         {
                             carve_statement (&del, "xml-doc", GG_KEYDELETE, 0, 1);
                             carve_stmt_obj (&mtext, false, false);
-                            check_var (&del, GG_DEFXML, NULL);
+                            check_var (&del, GG_DEFXML);
                         }
 
                         if (del != NULL) oprintf ("gg_del_xml (&(%s));\n", del);
@@ -8927,7 +9351,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             }
                             else
                             {
-                                oprintf("if (gg_xml_status_%ld != -1) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_XML);\n", xml_id, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                                oprintf("if (gg_xml_status_%ld != -1) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_XML);\n", xml_id, GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                             }
                             if (errt != NULL)
                             {
@@ -8974,6 +9398,25 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("gg_mem_process=%s;\n", process?"true":"false");
                         oprintf("%s = gg_tree_create(%s, %s, %s);\n", mtext,keyas, unsorted==NULL?"true":"false", process?"true":"false");
                         oprintf("gg_mem_process=false;\n");
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "get-lifo", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        char *count = find_keyword (mtext, GG_KEYCOUNT, 1);
+
+                        carve_statement (&count, "get-lifo", GG_KEYCOUNT, 0, 1);
+                        carve_stmt_obj (&mtext, true, false);
+
+                        if (count != NULL) define_statement (&count, GG_DEFNUMBER, false);
+                        //
+
+                        gg_num opt = (count != NULL?1:0);
+                        if (opt != 1) gg_report_error ("Must specify a single option");
+
+                        if (count != NULL) oprintf("%s = (%s)->num_of;\n", count, mtext);
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "get-list", &mtext, &msize, 0, &gg_is_inline)) != 0)  
@@ -9051,9 +9494,9 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem (&key);
                         make_mem (&value);
                         //
-                        check_var (&mtext, GG_DEFTREE, NULL);
-                        check_var (&key, GG_DEFSTRING, NULL);
-                        check_var (&value, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFTREE);
+                        check_var (&key, GG_DEFSTRING);
+                        check_var (&value, GG_DEFSTRING);
 
                         char cname[100];
                         oprintf ("gg_tree_cursor gg_tree_curs%ld;\n", wcurs);
@@ -9068,7 +9511,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("gg_tree_insert_f (%s, %s, %s, -1, %s);\n", ccursor, mtext, key, value);
                         oprintf("gg_mem_process=false;\n");
                         if (status != NULL) oprintf ("%s = (%s)->status;\n", status, ccursor);
-                        else oprintf("if ((%s)->status != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (%s)->status);\n", ccursor, GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, ccursor);
+                        else oprintf("if ((%s)->status != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (%s)->status);\n", ccursor, GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum, ccursor);
 
                         wcurs++;
                         continue;
@@ -9123,13 +9566,13 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem (&upd);
                         // End read-tree
                         //
-                        check_var (&mtext, GG_DEFTREE, NULL);
-                        check_var (&key, GG_DEFSTRING, NULL);
-                        check_var (&lekey, GG_DEFSTRING, NULL);
-                        check_var (&gekey, GG_DEFSTRING, NULL);
-                        check_var (&lkey, GG_DEFSTRING, NULL);
-                        check_var (&gkey, GG_DEFSTRING, NULL);
-                        check_var (&upd, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFTREE);
+                        check_var (&key, GG_DEFSTRING);
+                        check_var (&lekey, GG_DEFSTRING);
+                        check_var (&gekey, GG_DEFSTRING);
+                        check_var (&lkey, GG_DEFSTRING);
+                        check_var (&gkey, GG_DEFSTRING);
+                        check_var (&upd, GG_DEFSTRING);
 
                         // for key accessing, only one of the following can be used
                         gg_num is_one = (key!=NULL?1:0)+(lekey!=NULL?1:0)+(gekey!=NULL?1:0)+(lkey!=NULL?1:0)+(gkey!=NULL?1:0)+(mink!=NULL?1:0)+(maxk!=NULL?1:0);
@@ -9202,7 +9645,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // then report error
                         //
                         oprintf ("}\n");
-                        if (status == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (%s)->status);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, ccursor);
+                        if (status == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (%s)->status);}\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum, ccursor);
                         //
                         //
                         //
@@ -9229,8 +9672,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&status, GG_DEFNUMBER, false);
                         define_statement (&value, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing from found tree node
                         //
-                        check_var (&mtext, GG_DEFTREE, NULL);
-                        check_var (&key, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFTREE);
+                        check_var (&key, GG_DEFSTRING);
 
                         oprintf ("gg_tree_cursor gg_tree_curs%ld;\n", wcurs);
                         oprintf ("gg_tree_cursor *_gg_tree_curs%ld = &gg_tree_curs%ld;\n", wcurs, wcurs);
@@ -9252,7 +9695,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         oprintf ("}\n");
                         //If delete-tree doesn't delete, that's not considered application error!
-                        //if (status == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_tree_curs%ld->status);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, wcurs);
+                        //if (status == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_tree_curs%ld->status);}\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum, wcurs);
                         //
                         //
                         //
@@ -9293,8 +9736,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem (&upd);
                         // End read-tree
                         //
-                        check_var (&mtext, GG_DEFTREECURSOR, NULL);
-                        check_var (&upd, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFTREECURSOR);
+                        check_var (&upd, GG_DEFSTRING);
 
                         char *ucursor = mtext;
 
@@ -9338,7 +9781,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // then report error
                         //
                         oprintf ("}\n");
-                        if (status == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (%s)->status);}\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum, ucursor);
+                        if (status == NULL) oprintf(" else { gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (%s)->status);}\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum, ucursor);
                         //
                         //
                         // End read-tree 
@@ -9396,12 +9839,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         make_mem(&copy_to);
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&copy_to, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&copy_to, GG_DEFSTRING);
                         char *copy_from = mtext;
                         oprintf("_gg_st=gg_copy_file (%s, %s);\n", copy_from, copy_to);
                         if (status != NULL) oprintf ("%s=_gg_st;\n", status);
-                        else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        else oprintf("if (_gg_st < 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         continue;
 
                     }
@@ -9415,10 +9858,29 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("gg_disable_output();\n");
                         continue;
                     }
-                    else if ((newI=recog_statement(line, i, "return-handler", &mtext, &msize, 1, &gg_is_inline)) != 0)
+                    else if ((newI=recog_statement(line, i, "quit-process", &mtext, &msize, 1, &gg_is_inline)) != 0)
                     {
                         GG_GUARD
                         i = newI;
+
+                        // quit this process as if mgrg sent stop command
+                        oprintf("raise(SIGTERM); return;\n");
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "return-handler", &mtext, &msize, 1, &gg_is_inline)) != 0 ||
+                          (newI1=recog_statement(line, i, "return-handler", &mtext, &msize, 0, &gg_is_inline)) != 0)
+                    {
+                        GG_GUARD
+                        i = newI+newI1;
+                        
+                        if (newI1 != 0)  // returned value
+                        {
+                            carve_stmt_obj (&mtext, true, false);
+                            check_var (&mtext, GG_DEFNUMBER);
+                            oprintf("gg_get_config ()->ctx.req->return_val=(%s);\n", mtext);
+                            // if this is top level handler, it's also the same as exit-handler
+                            oprintf("if (!(gg_get_config ()->ctx.req->sub)) gg_get_config ()->ctx.req->ec =gg_get_config ()->ctx.req->return_val;\n");
+                        } else oprintf("gg_get_config ()->ctx.req->return_val=0;\n");
 
                         // return from handler, no return status, use set/get-param
                         oprintf("return;\n");
@@ -9458,15 +9920,15 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&get, GG_DEFNUMBER, false);
                         define_statement (&status, GG_DEFNUMBER, false);
                         //
-                        check_var (&set, GG_DEFNUMBER, NULL);
-                        check_var (&fileid, GG_DEFFILE, NULL);
+                        check_var (&set, GG_DEFNUMBER);
+                        check_var (&fileid, GG_DEFFILE);
 
                         if (get == NULL && set == NULL)  gg_report_error( "either 'get' or 'set' must be used in file-position statement");
                         if (get != NULL && set != NULL)  gg_report_error( "cannot specify both 'get' and 'set' in file-position statement");
                         if (get != NULL) oprintf("_gg_st=gg_get_file_pos (*((%s)->f), &(%s));\n", fileid, get);
                         else if (set != NULL) oprintf("_gg_st=gg_set_file_pos (*((%s)->f), %s);\n", fileid, set);
                         if (status != NULL) oprintf ("%s=_gg_st;\n", status);
-                        else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "close-file", &mtext, &msize, 0, &gg_is_inline)) != 0)
@@ -9481,7 +9943,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, false, false);
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
-                        check_var (&fileid, GG_DEFFILE, NULL);
+                        check_var (&fileid, GG_DEFFILE);
 
                         oprintf("_gg_st = gg_fclose (*((%s)->f));\n", fileid);
                        // we do not check for status not being checked here
@@ -9509,7 +9971,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&fileid, GG_DEFFILE, true);
                         define_statement (&st, GG_DEFNUMBER, false);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
 
                         //GG_ERR is set in gg_fopen
                         oprintf("%s = gg_calloc (1, sizeof(gg_file));\n", fileid); // this sets file pointer f to NULL
@@ -9517,7 +9979,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // where any open file descriptors are at least checked, if not closed
                         oprintf("static FILE *_gg_fileid_%ld;\n", file_count); 
                         oprintf("_gg_fileid_%ld = gg_fopen (%s, \"%s\");\n", file_count, mtext, newt!=NULL?"w+":"r+");
-                        if (st == NULL) oprintf("if (_gg_fileid_%ld == NULL) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_OPEN);\n", file_count,GG_STMT_FAIL_CHECK, undecorate(src_file_name), lnum);
+                        if (st == NULL) oprintf("if (_gg_fileid_%ld == NULL) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_OPEN);\n", file_count,GG_STMT_FAIL_CHECK, undecorate (src_file_name+GG_BLD_DIR_OFFSET), lnum);
                         else oprintf("if (_gg_fileid_%ld == NULL) %s=GG_ERR_OPEN; else %s=GG_OKAY;\n", file_count, st, st);
                         // set FILE*, and also the index into gg[] (the memind member), so that when closing, it can 
                         // clear the gg[]->ptr and make gg_done() faster
@@ -9603,8 +10065,8 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (del == NULL) {del = "\"\\n\"";}
                         make_mem (&del);
                         //
-                        check_var (&mtext, GG_DEFSTRING, NULL);
-                        check_var (&del, GG_DEFSTRING, NULL);
+                        check_var (&mtext, GG_DEFSTRING);
+                        check_var (&del, GG_DEFSTRING);
 
 
                         oprintf("{\n");
@@ -9665,7 +10127,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         check_golf(line+i);
                         oprintf("%s\n", line+i);
                         i += strlen (line+i);
-                        if (gg_mode != GG_MODE_INTERNAL) gg_report_error( "Unrecognized statement");
+                        gg_report_error( "Unrecognized statement");
                         continue;
                     }
                     else
@@ -9676,7 +10138,6 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             check_golf(line+i);
                             oprintf("%s", line+i);
                             i += strlen (line+i);
-                            if (gg_mode == GG_MODE_INTERNAL) gg_report_error( "Unrecognized statement");
                             continue;
                         }
                     }
@@ -9739,6 +10200,32 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
         if (feof_unlocked (f)) break; // something read in, then EOF
     }
+
+    // check if variable unused
+    gg_rewind_hash(gg_varh);
+    gg_num ost;
+    gg_var *ovar;
+    while (1)
+    {
+        gg_next_hash(gg_varh,  (void**)&ovar, &ost, false);
+        if (ost == GG_ERR_EXIST) break;
+        char *n = strchr (ovar->name, '+');
+        if (n != NULL) 
+        {
+            n++;
+            if (!ovar->used) 
+            {
+                // _gg_report_error (*note* underscore) will NOT exit, so this is to be used for errors where
+                // v1 *can* continue. This is the first, as so far code has been written to exit right away.
+                // Of course it's possible to continue, but the code must be built for it.
+                // In _gg_report_error, gg_curr_errors is set to >0, and at the end of main() this is checked and 
+                // main exits with code 1, which is needed for v1 calls in vmakefile, so v1 doesn't keep going and 
+                // trying to compile C code which we know is bad.
+                _gg_report_error ("Variable [%s] defined on line [%ld] is not used", n, ovar->lnum);
+            }
+        }
+    }
+
 
     if (do_once_open)
     {
@@ -9924,6 +10411,21 @@ int main (int argc, char* argv[])
             i++; // skip db location now
             continue;
         }
+        else if (!strcmp (argv[i], "-ignore-warn"))
+        {
+            gg_ignore_warn = true;
+        }
+        else if (!strcmp (argv[i], "-max-errors"))
+        {
+            if (i + 1 >= argc)
+            {
+                gg_report_error ( "Maximum number of errors not specified");
+                exit (1);
+            }
+            gg_max_errors = atol (argv[i+1]);
+            i++;
+            continue;
+        }
         else if (!strcmp (argv[i], "-v"))
         {
             verbose = 1;
@@ -9989,12 +10491,10 @@ int main (int argc, char* argv[])
     gg_is_valid_app_path(app_path);
 
     gg_bld_dir = (char*)gg_malloc (GG_FILE_NAME_LEN);
-    int bld_path_len = snprintf (gg_bld_dir, GG_FILE_NAME_LEN, GG_ROOT "/var/lib/gg/bld/%s", gg_app_name) + 1;
+    gg_bld_dir_len = snprintf (gg_bld_dir, GG_FILE_NAME_LEN, GG_ROOT "/var/lib/gg/bld/%s", gg_app_name) + 1;
     gg_dbconf_dir = (char*)gg_malloc (GG_FILE_NAME_LEN);
     snprintf (gg_dbconf_dir, GG_FILE_NAME_LEN, GG_ROOT "/var/lib/gg/%s/app/db", gg_app_name);
 
-    // turn off safe mode for generated code, which is safe by design
-    if (gg_mode!=GG_MODE_INTERNAL && (_main == 1 || !strcmp (src_file_name + bld_path_len, "gg_dispatch_request.golf"))) gg_mode=GG_MODE_INTERNAL;
 
     //
     //
@@ -10074,205 +10574,206 @@ int main (int argc, char* argv[])
     sz = sz/10;
     if (sz < 100) sz = 100;
     gg_create_hash (&gg_varh, sz, NULL, false);
-    add_var ("true", GG_DEFBOOL, NULL);
-    add_var ("false", GG_DEFBOOL, NULL);
+    add_var ("true", GG_DEFBOOL, NULL, false);
+    add_var ("false", GG_DEFBOOL, NULL, false);
     //
     // These are user-interfacing variables from golf.h and vcfgi.h
     // When they are added/removed there, they must be here too
     //
-    add_var ("GG_CLI_ERR_SOCK_READ", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_PROT_ERR", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_BAD_VER", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_SRV", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_UNK", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_OUT_MEM", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_RESOLVE_ADDR", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_PATH_TOO_LONG", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_CONNECT", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_TIMEOUT", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_SOCK_WRITE", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_INTERNAL", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_ENV_TOO_LONG", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_BAD_TIMEOUT", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_ENV_ODD", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_SOCKET", GG_DEFNUMBER, NULL);
-    add_var ("GG_CLI_ERR_TOTAL", GG_DEFNUMBER, NULL);
-    add_var ("GG_GET", GG_DEFNUMBER, NULL);
-    add_var ("GG_PUT", GG_DEFNUMBER, NULL);
-    add_var ("GG_POST", GG_DEFNUMBER, NULL);
-    add_var ("GG_PATCH", GG_DEFNUMBER, NULL);
-    add_var ("GG_DELETE", GG_DEFNUMBER, NULL);
-    add_var ("GG_OTHER", GG_DEFNUMBER, NULL);
-    add_var ("GG_FILE", GG_DEFNUMBER, NULL);
-    add_var ("GG_DIR", GG_DEFNUMBER, NULL);
-    add_var ("GG_OKAY", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_OPEN", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_OPEN_TARGET", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_READ", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_WRITE", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_POSITION", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_TOO_MANY", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_DELETE", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_REFERENCE", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_FAILED", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_WEB_CALL", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_CREATE", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_EXIST", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_INVALID", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_RENAME", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_MEMORY", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_UTF", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_FORMAT", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_CLOSE", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_OVERFLOW", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_LENGTH", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_JSON", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_XML", GG_DEFNUMBER, NULL);
-    add_var ("GG_ERR_UNKNOWN", GG_DEFNUMBER, NULL);
-    add_var ("GG_DB_MARIADB", GG_DEFNUMBER, NULL);
-    add_var ("GG_DB_POSTGRES", GG_DEFNUMBER, NULL);
-    add_var ("GG_DB_SQLITE", GG_DEFNUMBER, NULL);
-    add_var ("GG_INFO_EXIST", GG_DEFNUMBER, NULL);
-    add_var ("GG_JSON_TYPE_STRING", GG_DEFNUMBER, NULL);
-    add_var ("GG_JSON_TYPE_NUMBER", GG_DEFNUMBER, NULL);
-    add_var ("GG_JSON_TYPE_REAL", GG_DEFNUMBER, NULL);
-    add_var ("GG_JSON_TYPE_BOOL", GG_DEFNUMBER, NULL);
-    add_var ("GG_JSON_TYPE_NULL", GG_DEFNUMBER, NULL);
-    add_var ("GG_JSON_TYPE_NONE", GG_DEFNUMBER, NULL);
-    add_var ("GG_EMPTY_STRING", GG_DEFSTRING, NULL);
-    add_var ("NULL", GG_DEFSTRING, NULL);
+    add_var ("GG_CLI_ERR_SOCK_READ", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_PROT_ERR", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_BAD_VER", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_SRV", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_UNK", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_OUT_MEM", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_RESOLVE_ADDR", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_PATH_TOO_LONG", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_CONNECT", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_TIMEOUT", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_SOCK_WRITE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_INTERNAL", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_ENV_TOO_LONG", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_BAD_TIMEOUT", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_ENV_ODD", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_SOCKET", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_CLI_ERR_TOTAL", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_GET", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_PUT", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_POST", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_PATCH", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_DELETE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_OTHER", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_FILE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_DIR", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_OKAY", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_OPEN", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_OPEN_TARGET", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_READ", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_WRITE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_POSITION", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_TOO_MANY", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_DELETE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_REFERENCE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_FAILED", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_WEB_CALL", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_CREATE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_EXIST", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_INVALID", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_RENAME", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_MEMORY", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_UTF", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_FORMAT", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_CLOSE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_OVERFLOW", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_LENGTH", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_JSON", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_XML", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_ERR_UNKNOWN", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_DB_MARIADB", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_DB_POSTGRES", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_DB_SQLITE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_INFO_EXIST", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_JSON_TYPE_STRING", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_JSON_TYPE_NUMBER", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_JSON_TYPE_REAL", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_JSON_TYPE_BOOL", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_JSON_TYPE_NULL", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_JSON_TYPE_NONE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_SOURCE_LINE", GG_DEFNUMBER, NULL, false);
+    add_var ("GG_EMPTY_STRING", GG_DEFSTRING, NULL, false);
+    add_var ("NULL", GG_DEFSTRING, NULL, false);
     //
     // C errno constant
     //
-    add_var ("E2BIG", GG_DEFNUMBER, NULL);
-    add_var ("EACCES", GG_DEFNUMBER, NULL);
-    add_var ("EADDRINUSE", GG_DEFNUMBER, NULL);
-    add_var ("EADDRNOTAVAIL", GG_DEFNUMBER, NULL);
-    add_var ("EAFNOSUPPORT", GG_DEFNUMBER, NULL);
-    add_var ("EAGAIN", GG_DEFNUMBER, NULL);
-    add_var ("EWOULDBLOCK)", GG_DEFNUMBER, NULL);
-    add_var ("EALREADY", GG_DEFNUMBER, NULL);
-    add_var ("EBADE", GG_DEFNUMBER, NULL);
-    add_var ("EBADF", GG_DEFNUMBER, NULL);
-    add_var ("EBADFD", GG_DEFNUMBER, NULL);
-    add_var ("EBADMSG", GG_DEFNUMBER, NULL);
-    add_var ("EBADR", GG_DEFNUMBER, NULL);
-    add_var ("EBADRQC", GG_DEFNUMBER, NULL);
-    add_var ("EBADSLT", GG_DEFNUMBER, NULL);
-    add_var ("EBUSY", GG_DEFNUMBER, NULL);
-    add_var ("ECANCELED", GG_DEFNUMBER, NULL);
-    add_var ("ECHILD", GG_DEFNUMBER, NULL);
-    add_var ("ECHRNG", GG_DEFNUMBER, NULL);
-    add_var ("ECOMM", GG_DEFNUMBER, NULL);
-    add_var ("ECONNABORTED", GG_DEFNUMBER, NULL);
-    add_var ("ECONNREFUSED", GG_DEFNUMBER, NULL);
-    add_var ("ECONNRESET", GG_DEFNUMBER, NULL);
-    add_var ("EDEADLK", GG_DEFNUMBER, NULL);
-    add_var ("EDEADLOCK", GG_DEFNUMBER, NULL);
-    add_var ("EDESTADDRREQ", GG_DEFNUMBER, NULL);
-    add_var ("EDOM", GG_DEFNUMBER, NULL);
-    add_var ("EDQUOT", GG_DEFNUMBER, NULL);
-    add_var ("EEXIST", GG_DEFNUMBER, NULL);
-    add_var ("EFAULT", GG_DEFNUMBER, NULL);
-    add_var ("EFBIG", GG_DEFNUMBER, NULL);
-    add_var ("EHOSTDOWN", GG_DEFNUMBER, NULL);
-    add_var ("EHOSTUNREACH", GG_DEFNUMBER, NULL);
-    add_var ("EHWPOISON", GG_DEFNUMBER, NULL);
-    add_var ("EIDRM", GG_DEFNUMBER, NULL);
-    add_var ("EILSEQ", GG_DEFNUMBER, NULL);
-    add_var ("EINPROGRESS", GG_DEFNUMBER, NULL);
-    add_var ("EINTR", GG_DEFNUMBER, NULL);
-    add_var ("EINVAL", GG_DEFNUMBER, NULL);
-    add_var ("EIO", GG_DEFNUMBER, NULL);
-    add_var ("EISCONN", GG_DEFNUMBER, NULL);
-    add_var ("EISDIR", GG_DEFNUMBER, NULL);
-    add_var ("EISNAM", GG_DEFNUMBER, NULL);
-    add_var ("EKEYEXPIRED", GG_DEFNUMBER, NULL);
-    add_var ("EKEYREJECTED", GG_DEFNUMBER, NULL);
-    add_var ("EKEYREVOKED", GG_DEFNUMBER, NULL);
-    add_var ("EL2HLT", GG_DEFNUMBER, NULL);
-    add_var ("EL2NSYNC", GG_DEFNUMBER, NULL);
-    add_var ("EL3HLT", GG_DEFNUMBER, NULL);
-    add_var ("EL3RST", GG_DEFNUMBER, NULL);
-    add_var ("ELIBACC", GG_DEFNUMBER, NULL);
-    add_var ("ELIBBAD", GG_DEFNUMBER, NULL);
-    add_var ("ELIBMAX", GG_DEFNUMBER, NULL);
-    add_var ("ELIBSCN", GG_DEFNUMBER, NULL);
-    add_var ("ELIBEXEC", GG_DEFNUMBER, NULL);
-    add_var ("ELNRNG", GG_DEFNUMBER, NULL);
-    add_var ("ELOOP", GG_DEFNUMBER, NULL);
-    add_var ("EMEDIUMTYPE", GG_DEFNUMBER, NULL);
-    add_var ("EMFILE", GG_DEFNUMBER, NULL);
-    add_var ("EMLINK", GG_DEFNUMBER, NULL);
-    add_var ("EMSGSIZE", GG_DEFNUMBER, NULL);
-    add_var ("EMULTIHOP", GG_DEFNUMBER, NULL);
-    add_var ("ENAMETOOLONG", GG_DEFNUMBER, NULL);
-    add_var ("ENETDOWN", GG_DEFNUMBER, NULL);
-    add_var ("ENETRESET", GG_DEFNUMBER, NULL);
-    add_var ("ENETUNREACH", GG_DEFNUMBER, NULL);
-    add_var ("ENFILE", GG_DEFNUMBER, NULL);
-    add_var ("ENOANO", GG_DEFNUMBER, NULL);
-    add_var ("ENOBUFS", GG_DEFNUMBER, NULL);
-    add_var ("ENODATA", GG_DEFNUMBER, NULL);
-    add_var ("ENODEV", GG_DEFNUMBER, NULL);
-    add_var ("ENOENT", GG_DEFNUMBER, NULL);
-    add_var ("ENOEXEC", GG_DEFNUMBER, NULL);
-    add_var ("Exec", GG_DEFNUMBER, NULL);
-    add_var ("ENOKEY", GG_DEFNUMBER, NULL);
-    add_var ("ENOLCK", GG_DEFNUMBER, NULL);
-    add_var ("ENOLINK", GG_DEFNUMBER, NULL);
-    add_var ("ENOMEDIUM", GG_DEFNUMBER, NULL);
-    add_var ("ENOMEM", GG_DEFNUMBER, NULL);
-    add_var ("ENOMSG", GG_DEFNUMBER, NULL);
-    add_var ("ENONET", GG_DEFNUMBER, NULL);
-    add_var ("ENOPKG", GG_DEFNUMBER, NULL);
-    add_var ("ENOPROTOOPT", GG_DEFNUMBER, NULL);
-    add_var ("ENOSPC", GG_DEFNUMBER, NULL);
-    add_var ("ENOSR", GG_DEFNUMBER, NULL);
-    add_var ("ENOSTR", GG_DEFNUMBER, NULL);
-    add_var ("ENOSYS", GG_DEFNUMBER, NULL);
-    add_var ("ENOTBLK", GG_DEFNUMBER, NULL);
-    add_var ("ENOTCONN", GG_DEFNUMBER, NULL);
-    add_var ("ENOTDIR", GG_DEFNUMBER, NULL);
-    add_var ("ENOTEMPTY", GG_DEFNUMBER, NULL);
-    add_var ("ENOTRECOVERABLE", GG_DEFNUMBER, NULL);
-    add_var ("ENOTSOCK", GG_DEFNUMBER, NULL);
-    add_var ("ENOTSUP", GG_DEFNUMBER, NULL);
-    add_var ("ENOTTY", GG_DEFNUMBER, NULL);
-    add_var ("ENOTUNIQ", GG_DEFNUMBER, NULL);
-    add_var ("ENXIO", GG_DEFNUMBER, NULL);
-    add_var ("EOPNOTSUPP", GG_DEFNUMBER, NULL);
-    add_var ("EOVERFLOW", GG_DEFNUMBER, NULL);
-    add_var ("EOWNERDEAD", GG_DEFNUMBER, NULL);
-    add_var ("EPERM", GG_DEFNUMBER, NULL);
-    add_var ("EPFNOSUPPORT", GG_DEFNUMBER, NULL);
-    add_var ("EPIPE", GG_DEFNUMBER, NULL);
-    add_var ("EPROTO", GG_DEFNUMBER, NULL);
-    add_var ("EPROTONOSUPPORT", GG_DEFNUMBER, NULL);
-    add_var ("EPROTOTYPE", GG_DEFNUMBER, NULL);
-    add_var ("ERANGE", GG_DEFNUMBER, NULL);
-    add_var ("EREMCHG", GG_DEFNUMBER, NULL);
-    add_var ("EREMOTE", GG_DEFNUMBER, NULL);
-    add_var ("EREMOTEIO", GG_DEFNUMBER, NULL);
-    add_var ("ERESTART", GG_DEFNUMBER, NULL);
-    add_var ("ERFKILL", GG_DEFNUMBER, NULL);
-    add_var ("EROFS", GG_DEFNUMBER, NULL);
-    add_var ("ESHUTDOWN", GG_DEFNUMBER, NULL);
-    add_var ("ESPIPE", GG_DEFNUMBER, NULL);
-    add_var ("ESOCKTNOSUPPORT", GG_DEFNUMBER, NULL);
-    add_var ("ESRCH", GG_DEFNUMBER, NULL);
-    add_var ("ESTALE", GG_DEFNUMBER, NULL);
-    add_var ("ESTRPIPE", GG_DEFNUMBER, NULL);
-    add_var ("ETIME", GG_DEFNUMBER, NULL);
-    add_var ("ETIMEDOUT", GG_DEFNUMBER, NULL);
-    add_var ("ETOOMANYREFS", GG_DEFNUMBER, NULL);
-    add_var ("ETXTBSY", GG_DEFNUMBER, NULL);
-    add_var ("EUCLEAN", GG_DEFNUMBER, NULL);
-    add_var ("EUNATCH", GG_DEFNUMBER, NULL);
-    add_var ("EUSERS", GG_DEFNUMBER, NULL);
-    add_var ("EWOULDBLOCK", GG_DEFNUMBER, NULL);
-    add_var ("EXDEV", GG_DEFNUMBER, NULL);
-    add_var ("EXFULL", GG_DEFNUMBER, NULL);
+    add_var ("E2BIG", GG_DEFNUMBER, NULL, false);
+    add_var ("EACCES", GG_DEFNUMBER, NULL, false);
+    add_var ("EADDRINUSE", GG_DEFNUMBER, NULL, false);
+    add_var ("EADDRNOTAVAIL", GG_DEFNUMBER, NULL, false);
+    add_var ("EAFNOSUPPORT", GG_DEFNUMBER, NULL, false);
+    add_var ("EAGAIN", GG_DEFNUMBER, NULL, false);
+    add_var ("EWOULDBLOCK)", GG_DEFNUMBER, NULL, false);
+    add_var ("EALREADY", GG_DEFNUMBER, NULL, false);
+    add_var ("EBADE", GG_DEFNUMBER, NULL, false);
+    add_var ("EBADF", GG_DEFNUMBER, NULL, false);
+    add_var ("EBADFD", GG_DEFNUMBER, NULL, false);
+    add_var ("EBADMSG", GG_DEFNUMBER, NULL, false);
+    add_var ("EBADR", GG_DEFNUMBER, NULL, false);
+    add_var ("EBADRQC", GG_DEFNUMBER, NULL, false);
+    add_var ("EBADSLT", GG_DEFNUMBER, NULL, false);
+    add_var ("EBUSY", GG_DEFNUMBER, NULL, false);
+    add_var ("ECANCELED", GG_DEFNUMBER, NULL, false);
+    add_var ("ECHILD", GG_DEFNUMBER, NULL, false);
+    add_var ("ECHRNG", GG_DEFNUMBER, NULL, false);
+    add_var ("ECOMM", GG_DEFNUMBER, NULL, false);
+    add_var ("ECONNABORTED", GG_DEFNUMBER, NULL, false);
+    add_var ("ECONNREFUSED", GG_DEFNUMBER, NULL, false);
+    add_var ("ECONNRESET", GG_DEFNUMBER, NULL, false);
+    add_var ("EDEADLK", GG_DEFNUMBER, NULL, false);
+    add_var ("EDEADLOCK", GG_DEFNUMBER, NULL, false);
+    add_var ("EDESTADDRREQ", GG_DEFNUMBER, NULL, false);
+    add_var ("EDOM", GG_DEFNUMBER, NULL, false);
+    add_var ("EDQUOT", GG_DEFNUMBER, NULL, false);
+    add_var ("EEXIST", GG_DEFNUMBER, NULL, false);
+    add_var ("EFAULT", GG_DEFNUMBER, NULL, false);
+    add_var ("EFBIG", GG_DEFNUMBER, NULL, false);
+    add_var ("EHOSTDOWN", GG_DEFNUMBER, NULL, false);
+    add_var ("EHOSTUNREACH", GG_DEFNUMBER, NULL, false);
+    add_var ("EHWPOISON", GG_DEFNUMBER, NULL, false);
+    add_var ("EIDRM", GG_DEFNUMBER, NULL, false);
+    add_var ("EILSEQ", GG_DEFNUMBER, NULL, false);
+    add_var ("EINPROGRESS", GG_DEFNUMBER, NULL, false);
+    add_var ("EINTR", GG_DEFNUMBER, NULL, false);
+    add_var ("EINVAL", GG_DEFNUMBER, NULL, false);
+    add_var ("EIO", GG_DEFNUMBER, NULL, false);
+    add_var ("EISCONN", GG_DEFNUMBER, NULL, false);
+    add_var ("EISDIR", GG_DEFNUMBER, NULL, false);
+    add_var ("EISNAM", GG_DEFNUMBER, NULL, false);
+    add_var ("EKEYEXPIRED", GG_DEFNUMBER, NULL, false);
+    add_var ("EKEYREJECTED", GG_DEFNUMBER, NULL, false);
+    add_var ("EKEYREVOKED", GG_DEFNUMBER, NULL, false);
+    add_var ("EL2HLT", GG_DEFNUMBER, NULL, false);
+    add_var ("EL2NSYNC", GG_DEFNUMBER, NULL, false);
+    add_var ("EL3HLT", GG_DEFNUMBER, NULL, false);
+    add_var ("EL3RST", GG_DEFNUMBER, NULL, false);
+    add_var ("ELIBACC", GG_DEFNUMBER, NULL, false);
+    add_var ("ELIBBAD", GG_DEFNUMBER, NULL, false);
+    add_var ("ELIBMAX", GG_DEFNUMBER, NULL, false);
+    add_var ("ELIBSCN", GG_DEFNUMBER, NULL, false);
+    add_var ("ELIBEXEC", GG_DEFNUMBER, NULL, false);
+    add_var ("ELNRNG", GG_DEFNUMBER, NULL, false);
+    add_var ("ELOOP", GG_DEFNUMBER, NULL, false);
+    add_var ("EMEDIUMTYPE", GG_DEFNUMBER, NULL, false);
+    add_var ("EMFILE", GG_DEFNUMBER, NULL, false);
+    add_var ("EMLINK", GG_DEFNUMBER, NULL, false);
+    add_var ("EMSGSIZE", GG_DEFNUMBER, NULL, false);
+    add_var ("EMULTIHOP", GG_DEFNUMBER, NULL, false);
+    add_var ("ENAMETOOLONG", GG_DEFNUMBER, NULL, false);
+    add_var ("ENETDOWN", GG_DEFNUMBER, NULL, false);
+    add_var ("ENETRESET", GG_DEFNUMBER, NULL, false);
+    add_var ("ENETUNREACH", GG_DEFNUMBER, NULL, false);
+    add_var ("ENFILE", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOANO", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOBUFS", GG_DEFNUMBER, NULL, false);
+    add_var ("ENODATA", GG_DEFNUMBER, NULL, false);
+    add_var ("ENODEV", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOENT", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOEXEC", GG_DEFNUMBER, NULL, false);
+    add_var ("Exec", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOKEY", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOLCK", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOLINK", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOMEDIUM", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOMEM", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOMSG", GG_DEFNUMBER, NULL, false);
+    add_var ("ENONET", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOPKG", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOPROTOOPT", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOSPC", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOSR", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOSTR", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOSYS", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOTBLK", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOTCONN", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOTDIR", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOTEMPTY", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOTRECOVERABLE", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOTSOCK", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOTSUP", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOTTY", GG_DEFNUMBER, NULL, false);
+    add_var ("ENOTUNIQ", GG_DEFNUMBER, NULL, false);
+    add_var ("ENXIO", GG_DEFNUMBER, NULL, false);
+    add_var ("EOPNOTSUPP", GG_DEFNUMBER, NULL, false);
+    add_var ("EOVERFLOW", GG_DEFNUMBER, NULL, false);
+    add_var ("EOWNERDEAD", GG_DEFNUMBER, NULL, false);
+    add_var ("EPERM", GG_DEFNUMBER, NULL, false);
+    add_var ("EPFNOSUPPORT", GG_DEFNUMBER, NULL, false);
+    add_var ("EPIPE", GG_DEFNUMBER, NULL, false);
+    add_var ("EPROTO", GG_DEFNUMBER, NULL, false);
+    add_var ("EPROTONOSUPPORT", GG_DEFNUMBER, NULL, false);
+    add_var ("EPROTOTYPE", GG_DEFNUMBER, NULL, false);
+    add_var ("ERANGE", GG_DEFNUMBER, NULL, false);
+    add_var ("EREMCHG", GG_DEFNUMBER, NULL, false);
+    add_var ("EREMOTE", GG_DEFNUMBER, NULL, false);
+    add_var ("EREMOTEIO", GG_DEFNUMBER, NULL, false);
+    add_var ("ERESTART", GG_DEFNUMBER, NULL, false);
+    add_var ("ERFKILL", GG_DEFNUMBER, NULL, false);
+    add_var ("EROFS", GG_DEFNUMBER, NULL, false);
+    add_var ("ESHUTDOWN", GG_DEFNUMBER, NULL, false);
+    add_var ("ESPIPE", GG_DEFNUMBER, NULL, false);
+    add_var ("ESOCKTNOSUPPORT", GG_DEFNUMBER, NULL, false);
+    add_var ("ESRCH", GG_DEFNUMBER, NULL, false);
+    add_var ("ESTALE", GG_DEFNUMBER, NULL, false);
+    add_var ("ESTRPIPE", GG_DEFNUMBER, NULL, false);
+    add_var ("ETIME", GG_DEFNUMBER, NULL, false);
+    add_var ("ETIMEDOUT", GG_DEFNUMBER, NULL, false);
+    add_var ("ETOOMANYREFS", GG_DEFNUMBER, NULL, false);
+    add_var ("ETXTBSY", GG_DEFNUMBER, NULL, false);
+    add_var ("EUCLEAN", GG_DEFNUMBER, NULL, false);
+    add_var ("EUNATCH", GG_DEFNUMBER, NULL, false);
+    add_var ("EUSERS", GG_DEFNUMBER, NULL, false);
+    add_var ("EWOULDBLOCK", GG_DEFNUMBER, NULL, false);
+    add_var ("EXDEV", GG_DEFNUMBER, NULL, false);
+    add_var ("EXFULL", GG_DEFNUMBER, NULL, false);
     //
     // End of user interfacing variables
     //
@@ -10483,7 +10984,8 @@ int main (int argc, char* argv[])
 
     // release of memory done automatically by the OS and likely faster, so no
     // gg_done();
-    return 0;
+    // check if errors raised, if so exit with code 1
+    if (gg_curr_errors>0) return 1; else return 0;
 }
 
 

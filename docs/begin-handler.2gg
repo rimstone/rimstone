@@ -25,7 +25,7 @@ For example, a <request path> can be "/wine-items" or "/items/wine" etc. In gene
 
 The source ".golf" file name that implements a given begin-handler matches its path and name, fully or partially (see \fBrequest\fP). For example, <request path> of "/items/wine" might be implemented in  "items/wine.golf" file (meaning in file "wine.golf" in subdirectory "items").
 
-Note that you can also use "%%" instead of either begin-handler or end-handler or both. 
+Note that you can also use "%%" instead of either begin-handler or end-handler or both. A <request path> cannot be a C reserved word, such as for instance "main" or "typedef" etc.
 
 .LP
 .B SECURITY OF REQUEST CALLS

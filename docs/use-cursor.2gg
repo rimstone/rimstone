@@ -50,7 +50,7 @@ read-tree mytree equal k status st \\
     value val new-cursor cur
 start-loop
     if-true st equal GG_OKAY
-        @Value found is [<<p-out val>>] for key [<<p-out k>>]
+        @Value found is [<<print-out val>>] for key [<<print-out k>>]
         use-cursor cur get-lesser status st value val key k
     else-if
         break-loop

@@ -46,7 +46,7 @@ start-loop
         break-loop
     end-if
 
-    @Obtained key <<p-out k>> with value <<p-out v>>
+    @Obtained key <<print-out k>> with value <<print-out v>>
 end-loop
 
 // Go through the list again, use rewind-fifo for that
@@ -57,7 +57,7 @@ start-loop
     if-true st not-equal GG_OKAY
         break-loop
     end-if
-    @Again obtained key <<p-out k>> with value <<p-out v>>
+    @Again obtained key <<print-out k>> with value <<print-out v>>
 end-loop
 
 purge-fifo mylist

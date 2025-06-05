@@ -13,6 +13,8 @@ set-string <variable> [ unquoted ] [ process-scope ] [ = <string> ]
 
 set-string <variable> [ <index> ] = <number>
 
+set-string <variable> length <length> 
+
 .EE
 .RE
 
@@ -20,6 +22,8 @@ set-string <variable> [ <index> ] = <number>
 String variable <variable> will be assigned a value of <string> if clause "=" is present; otherwise <variable> is assigned an empty string.
 
 If "process-scope" clause is used, then <variable> will be of process scope, meaning its value will persist from one \fBrequest\fP to another for the life of the process; this clause can only be used if <variable> did not already exist.
+
+If "length" clause is used, then the length of string <variable> is set to <length>. Just like with all other string statements, you can only set the new length of the string between zero and the current string length. This is useful mostly when manipulating string's individual bytes, and generally not in other cases (see \fBnew-string\fP).
 
 If "unquoted" clause is used, then <string> literal is unquoted, and everything from equal clause ("=") to the rest of the line is a <string>; in this case there is no need to escape double quotes or backslashes. Note that in this case, "unquoted" and any other clause must appear prior to equal clause ("=") and after variable, because they wouldn't otherwise be recognized. For instance:
 
@@ -121,6 +125,7 @@ set-string my_string = "abc"
 \fBcount-substring\fP  
 \fBdelete-string\fP  
 \fBlower-string\fP  
+\fBnew-string\fP  
 \fBread-split\fP  
 \fBreplace-string\fP  
 \fBset-string\fP  

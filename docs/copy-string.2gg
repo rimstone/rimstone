@@ -74,6 +74,7 @@ copy-string other_string to my_str length 3 start-with 1
 \fBcount-substring\fP  
 \fBdelete-string\fP  
 \fBlower-string\fP  
+\fBnew-string\fP  
 \fBread-split\fP  
 \fBreplace-string\fP  
 \fBset-string\fP  

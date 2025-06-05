@@ -151,14 +151,15 @@ if-true can be nested, which can be up to 30 levels deep.
  Program flow
 
 \fBbreak-loop\fP  
+\fBcall-handler\fP  
 \fBcode-blocks\fP  
 \fBcontinue-loop\fP  
 \fBdo-once\fP  
 \fBexit-handler\fP  
 \fBif-defined\fP  
 \fBif-true\fP  
+\fBquit-process\fP  
 \fBreturn-handler\fP  
-\fBset-bool\fP  
 \fBstart-loop\fP   
 See all 
 \fBdocumentation\fP

@@ -1118,7 +1118,11 @@ void gg_set_fcgi (gg_cli **callin, char *server, char *req_method, char *app_pat
     {
         gg_num id = gg_mem_get_id(body);
         if (clen == 0) clen = (int)gg_mem_get_len(id);
-        else if (clen > gg_mem_get_len(id)) gg_report_error ("Memory used for request body is of length [%d] but only [%ld] allocated", clen, gg_mem_get_len(id));
+        else if (clen > gg_mem_get_len(id)) 
+        {
+            gg_report_error ("Memory used for request body is of length [%d] but only [%ld] allocated", clen, gg_mem_get_len(id));
+            exit (1);
+        }
         call->content_len = clen;
     }
     if (timeout >0) call->timeout = timeout;

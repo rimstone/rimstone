@@ -869,6 +869,7 @@ gg_num gg_lockfile(char *filepath, gg_num *lock_fd)
 //call_handler is a cached (previously computed) pointer to function. If call_handler is NULL
 //then there's no cache (not a constant call). If not NULL, then if *call_handler is NULL it hasn't 
 //been computed yet, if not-NULL, it's been computed and use it.
+//req->sub is true if this is not top-level call, or false if it is
 //
 void gg_subs(char *s, void ** call_handler)
 {
@@ -1777,6 +1778,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 // req is the request structure.
 // Returns >=0 index where it is in ip.ipars[].tval.value array 
 // Value is set, and no copy of it is made. Use copy-string to make a copy if needed.
+// type is the type of val
 //
 gg_num gg_set_input (gg_num name_id, void *val, gg_num type)
 {
@@ -1857,7 +1859,7 @@ void *gg_get_input_param (gg_num name_id, gg_num type)
                 if (st == GG_OKAY) return &retnum;
             }
         }
-        if (type != act) gg_report_error ("Parameter [%s] is supposed to be of type [%s], but the value is of type [%s]", _gg_sprm_par[name_id].name, typename(type), typename(_gg_sprm_par[name_id].type));
+        if (!cmp_type (type, act)) gg_report_error ("Parameter [%s] is supposed to be of type [%s], but the value is of type [%s]", _gg_sprm_par[name_id].name, typename(type), typename(_gg_sprm_par[name_id].type));
         if (cmp_type (GG_DEFSTRING, type)) 
         {
             if (!_gg_sprm_par[name_id].alloc ) 
@@ -2942,8 +2944,10 @@ void gg_break_down (char *value, char *delim, gg_split_str **broken_ptr)
 //
 // This function will RESTORE the timezone back to what it was when the program first started. So it
 // will temporarily set TZ to timezone variable, but before it exits, it will restore TZ to what it was.
+// If curr is -1, then current time is the basis for any time transformations and subsequent formatting here; 
+// if curr is otherwise, then that time is used (add/sub day, second etc) and format
 //
-char *gg_time (char *timezone, char *format, gg_num year, gg_num month, gg_num day, gg_num hour, gg_num min, gg_num sec)
+char *gg_time (time_t curr, char *timezone, char *format, gg_num year, gg_num month, gg_num day, gg_num hour, gg_num min, gg_num sec)
 {
     GG_TRACE ("");
 
@@ -2957,7 +2961,9 @@ char *gg_time (char *timezone, char *format, gg_num year, gg_num month, gg_num d
     tzset();
 
     // get absolute time in seconds
-    time_t t = time(NULL);
+    time_t t;
+    if (curr == (time_t)-1) t = time(NULL); else t=curr;
+    //
     struct tm tm = *localtime(&t);
     struct tm future;       /* as in future date */
 

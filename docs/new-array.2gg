@@ -9,19 +9,19 @@ Create array.
 .RS 4
 .EX
 
-new-array <array> [ max-size <max-size> ] [ process-scope ] 
+new-array <array> [ max-size <max-size> ] [ process-scope ]  [ type string | number | bool ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
-new-array creates new <array>. An array is an indexed array, with a number as an index, and with a string as an element in the array. 
+new-array creates new <array>. An array is an indexed array, with a number as an index, and with a either a string, number or boolean as an element in the array. By default (without "type" clause), <array> is an array of strings. You can specify "string", "number" or "bool" in "type" clause, in which case <array> is an array of strings, numbers or booleans respectively.
 
-A Golf array is flexible, which means that it will grow to accommodate your needs. By default, an array allocates room for 256 elements that can grow up to 1,000,000 elements, unless <max-size> number (in "max-size" clause) is specified in which case it can grow up to <max-size> elements. <max-size> must be at least 256.
+An array is flexible, which means that it will grow as needed. By default, an array allocates room for 256 elements that can grow up to 1,000,000 elements, unless <max-size> number (in "max-size" clause) is specified in which case it can grow up to <max-size> elements. <max-size> must be at least 256.
 
-Note that max-size specifies only the upper limit of allocation. The actual amount of memory allocated can vary greatly, and is only 256 elements for a new array.
+Note that max-size specifies only the upper limit of allocation. The actual amount of memory allocated can vary.
 
-With a Golf array, you do not need to pre-size the array; rather when you write an element, it will resize automatically. For instance, you can set an array element arr[0] and then arr[1000] (with nothing in-between), and Golf will automatically extend the array to accommodate. Note that an array will not automatically contract when tailing elements are deleted. Use \fBpurge-array\fP to delete all elements in the array and shrink its memory footprint when your processing is done.
+You do not need to pre-size the array; rather when you write an element, it will resize automatically. For instance, you can set an array element arr[0] and then arr[1000] (with nothing in-between), the array will be automatically extended to accommodate. Note that it will not automatically contract when tailing elements are deleted. Use \fBpurge-array\fP to delete all elements in the array and shrink its memory footprint when your processing is done.
 
 .LP
 .B SCOPE

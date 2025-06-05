@@ -23,7 +23,7 @@ To position to the first element, use "first" clause. Use "last" clause to make 
 
 A position just beyond the last element in <list> is considered the "end" of it; in this case write-list will append an element to <list> and this element becomes its last, which is equivalent to using write-list statement with "append" clause. 
 
-Use "end" clause to set current element to <list>'s end. Note that "end" clause is equivalent to using "next" clause on the the last element in <list>.
+Use "end" clause to set current element to <list>'s end. Note that "end" clause is equivalent to using "next" clause on the last element in <list>.
 
 If you attempt to position prior to the first element, after the end of <list>, or anywhere in an empty list, then <status> number (in "status" clause") is GG_ERR_EXIST, otherwise it is GG_OKAY. Note that if <status> is GG_ERR_EXIST, the current element will not change.
 

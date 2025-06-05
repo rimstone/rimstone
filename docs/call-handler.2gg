@@ -1,6 +1,7 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-call-handler \-  (service-processing)
+call-handler \-  (service-processing
+program-flow)
 .SH PURPOSE
 Call another handler within the same process.
 
@@ -9,7 +10,7 @@ Call another handler within the same process.
 .RS 4
 .EX
 
-call-handler <request path>
+call-handler <request path> [ return-value  <return value> ]
 
 .EE
 .RE
@@ -20,6 +21,8 @@ Calls another handler within the same request in the same process. You can call 
 <request path> is the \fBrequest\fP path served by the handler being called. It can be a string variable or a constant.
 
 Use \fBset-param\fP and \fBget-param\fP to pass parameters between the caller and callee handlers.
+
+You can obtain a <return value> from the called handler <request path> by using "return-value" clause. See \fBreturn-handler\fP on how to return a number value from <request path> handler.
 
 call-handler uses the same high-performance hash table used by a \fBrequest\fP to route requests by name; if <request path> is a constant string, then a hash table lookup is performed only once for the life of the process and all subsequent calls use a cached address of the request handler.
 
@@ -42,7 +45,7 @@ Copy to file "callsub.golf":
     ))
     // Get output from call-handler
     get-param out type string
-    @<<p-out s>> with output [<<p-out out>>]
+    @<<print-out s>> with output [<<print-out out>>]
 
     //
     // Second call to call-handler
@@ -54,7 +57,7 @@ Copy to file "callsub.golf":
     ))
     // Get output from call-handler
     get-param out type string
-    @<<p-out s>> with output [<<p-out out>>]
+    @<<print-out s>> with output [<<print-out out>>]
 %%
 
 .EE
@@ -69,7 +72,7 @@ And in "sub/service.golf" file (meaning file "service.golf" in subdirectory "sub
     @This is sub!
     get-param inp
     (( out
-    @got input: <<p-out inp>>
+    @got input: <<print-out inp>>
     ))
     set-param out = out
 %%
@@ -110,6 +113,19 @@ Output: This is sub! with output [got input: new string]
 .RE
 
 .SH SEE ALSO
+ Program flow
+
+\fBbreak-loop\fP  
+\fBcall-handler\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBquit-process\fP  
+\fBreturn-handler\fP  
+\fBstart-loop\fP   
  Service processing
 
 \fBafter-handler\fP  

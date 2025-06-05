@@ -215,7 +215,7 @@ Get the web page and print it out:
 .EX
 
 call-web "https://website.com/page.html" response resp 
-p-out resp
+print-out resp
 
 .EE
 .RE

@@ -30,7 +30,7 @@ run-remote <service> \\
     [ error <error> ] \\
     [ status <status> ] \\
     [ status-text <status text> ] \\
-    [ handler-status <service status> ]
+    [ exit-status <service status> ]
 
 .EE
 .RE
@@ -49,7 +49,7 @@ run-remote is a combination of \fBnew-remote\fP, \fBcall-remote\fP and \fBread-r
 <finished okay> (in "finished-okay" clause) to check if service call executed: if it's 1, then it has.
 .RE
 
-See details for each clause in \fBnew-remote\fP (for "local" through "timeout" clauses), \fBcall-remote\fP (for "status" through "finished-okay" clauses) and \fBread-remote\fP (for "data" through "handler-status" clauses).
+See details for each clause in \fBnew-remote\fP (for "local" through "timeout" clauses), \fBcall-remote\fP (for "status" through "finished-okay" clauses) and \fBread-remote\fP (for "data" through "exit-status" clauses).
 
 .SH EXAMPLES
 
@@ -61,11 +61,11 @@ begin-handler /serv public
         url-path "/hash-server-yey/server/op=add/key=sb_XYZ/data=sdb_123" \\
         finished-okay sfok \\
         data rdata error edata  \\
-        status st handler-status rstatus
+        status st exit-status rstatus
     if-true sfok  not-equal  1 or st  not-equal  GG_OKAY
         @Call did not succeed
     else-if
-        @Result is <<p-out rdata> and (any) error is <<p-out edata>>
+        @Result is <<print-out rdata> and (any) error is <<print-out edata>>
     end-if
 
 end-handler

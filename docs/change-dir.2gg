@@ -33,7 +33,7 @@ if-true s equal GG_OKAY
     @Directory changed
 else
     get-req errno to eno
-    @Error <<p-num eno>>
+    @Error <<print-out eno>>
 end-if
 
 .EE

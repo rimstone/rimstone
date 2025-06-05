@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "600.3.26"
+#define GG_VERSION "601.4.0"
 #ifndef GG_ROOT
 #   define GG_ROOT ""
 #endif
@@ -204,7 +204,9 @@ typedef void (*gg_request_handler)(); // request handler in golf dispatcher
 #else
 #define  GG_TRACE(...) (void)0
 #endif
-#define  gg_report_error(...) {_gg_report_error(__VA_ARGS__);exit(0);}
+// Note that in runtime golfrt.c, the exit(0) at the end does NOT happen as we perform a longjmp to go to the request.
+// For exiting the process, use GG_FATAL
+#define  gg_report_error(...) {_gg_report_error(__VA_ARGS__);exit(1);}
 void _gg_report_error (char *format, ...) __attribute__ ((format (printf, 1, 2)));
 
 
@@ -280,7 +282,11 @@ static inline gg_num gg_mem_get_id (void *ptr)
 
 // 
 // Defines
-// 
+//
+//Number to string conversion from define
+#define GG_STRINGIZE_(x) #x
+#define GG_STRINGIZE(x) GG_STRINGIZE_(x)
+//
 #define GG_ERR gg_errno=errno // save errno at the point of error for further examination later, if desired
 #define GG_ERR0 gg_errno=0 // no error, we caught it
 #define GG_INIT_STRING(x) x = GG_EMPTY_STRING // initialize existing string as empty for use with gg_malloc etc
@@ -331,6 +337,10 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_MODE_SAFE 0
 #define GG_MODE_EXTENDED 1
 #define GG_MODE_INTERNAL 2
+//
+//
+#define GG_SOURCE_LINE __LINE__
+//
 //
 //
 // The following are user-interfacing constants
@@ -389,7 +399,7 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_DEFBROKEN 8
 #define GG_DEFJSON 9
 #define GG_DEFHASH 10
-#define GG_DEFARRAY 11
+#define GG_DEFARRAYSTRING 11
 #define GG_DEFFIFO 12
 #define GG_DEFLIFO 13
 #define GG_DEFENCRYPT 15
@@ -401,14 +411,17 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_DEFHASHSTATIC 21
 #define GG_DEFTREESTATIC 22
 #define GG_DEFLIST 23
-#define GG_DEFARRAYSTATIC 24
+#define GG_DEFARRAYSTRINGSTATIC 24
 #define GG_DEFLISTSTATIC 25
 #define GG_DEFBOOL 26
 #define GG_DEFSTRINGSTATIC 27
 #define GG_DEFNUMBERSTATIC 28
 #define GG_DEFMSG 29
 #define GG_DEFBOOLSTATIC 30
-#define GG_DEFUNKN_CHECK 1023
+#define GG_DEFARRAYNUMBERSTATIC 31
+#define GG_DEFARRAYBOOLSTATIC 32
+#define GG_DEFARRAYNUMBER 33
+#define GG_DEFARRAYBOOL 34
 #define GG_DEFUNKN 1024
 // type names
 #define GG_KEY_T_STRING "string"
@@ -417,7 +430,9 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_KEY_T_MESSAGE "message"
 #define GG_KEY_T_SPLITSTRING "split-string"
 #define GG_KEY_T_HASH "hash"
-#define GG_KEY_T_ARRAY "array"
+#define GG_KEY_T_ARRAYSTRING "string-array"
+#define GG_KEY_T_ARRAYNUMBER "number-array"
+#define GG_KEY_T_ARRAYBOOL "bool-array"
 #define GG_KEY_T_TREE "tree"
 #define GG_KEY_T_JSON "json"
 #define GG_KEY_T_XML "xml"
@@ -515,12 +530,24 @@ static inline gg_num gg_mem_get_id (void *ptr)
 // 
 // Array type internal representation
 //
-typedef struct gg_array_s {
-    char **arr; // array of actual data
+typedef struct gg_arraybool_s {
+    char *logic; // for booleans
     gg_num max_elem; // how many total elements there can be - we don't allocate this before hand!
     gg_num alloc_elem; // how many elements are actually allocated
     bool process; // true if this is process-scoped
-} gg_array;
+} gg_arraybool;
+typedef struct gg_arraynumber_s {
+    gg_num *num; // for numbers
+    gg_num max_elem; // how many total elements there can be - we don't allocate this before hand!
+    gg_num alloc_elem; // how many elements are actually allocated
+    bool process; // true if this is process-scoped
+} gg_arraynumber;
+typedef struct gg_arraystring_s {
+    char **str;  // for strings
+    gg_num max_elem; // how many total elements there can be - we don't allocate this before hand!
+    gg_num alloc_elem; // how many elements are actually allocated
+    bool process; // true if this is process-scoped
+} gg_arraystring;
 
 
 
@@ -694,6 +721,7 @@ typedef struct gg_input_req_s
     gg_header *header; // if NULL, do nothing (no custom headers), if not-NULL use it to set custom headers
     char silent; // if 1, headers not output
     int ec; // exit code for command-line
+    int return_val; // return value for return-handler (see doc)
     char *body; // if POST/PUT/PATCH.. has just a body (no multipart), this is it
     gg_num body_len; // if POST/PUT/PATCH.. this is body length (for no multipart)
     gg_num method; // GG_GET/POST/PATCH/PUT/DELETE
@@ -1455,7 +1483,7 @@ void gg_delete_break_down (gg_split_str **broken_ptr);
 char * gg_get_tz ();
 gg_dbc *gg_execute_SQL (char *s,  gg_num *rows, char **er, char **err_message, gg_num returns_tuples, gg_num user_check, char is_prep, void **prep, gg_num paramcount, char **params, char erract);
 char *gg_num2str (gg_num al, gg_num *res_len, int base);
-char *gg_time (char *timezone, char *format, gg_num year, gg_num month, gg_num day, gg_num hour, gg_num min, gg_num sec);
+char *gg_time (time_t curr, char *timezone, char *format, gg_num year, gg_num month, gg_num day, gg_num hour, gg_num min, gg_num sec);
 gg_num gg_encode_base (gg_num enc_type, char *v, gg_num vLen, char **res, gg_num allocate_new);
 void gg_make_random (char **rnd, gg_num rnd_len, char type, bool crypto);
 void gg_checkmem ();
@@ -1526,10 +1554,20 @@ void gg_del_msg(gg_msg *msg);
 char *gg_get_msg(gg_msg *msg);
 gg_msg * gg_new_msg (char *from);
 void gg_sleepabit(gg_num milli);
-gg_array *gg_new_array (gg_num max_elem, bool process);
-void gg_purge_array (gg_array *arr);
-void gg_write_array (gg_array *arr, gg_num key, char *val, char **old_val, gg_num *st);
-char *gg_read_array (gg_array *arr, gg_num key, bool del, gg_num *st);
+//
+gg_arraystring *gg_new_arraystring (gg_num max_elem, bool process);
+gg_arraynumber *gg_new_arraynumber (gg_num max_elem, bool process);
+gg_arraybool *gg_new_arraybool (gg_num max_elem, bool process);
+void gg_purge_arraystring (gg_arraystring *arr);
+void gg_purge_arraynumber (gg_arraynumber *arr);
+void gg_purge_arraybool (gg_arraybool *arr);
+void gg_write_arraystring (gg_arraystring *arr, gg_num key, char **old_val);
+void gg_write_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *old_val);
+void gg_write_arraybool (gg_arraybool *arr, gg_num key, bool *old_val);
+char *gg_read_arraystring (gg_arraystring *arr, gg_num key, bool del);
+gg_num gg_read_arraynumber (gg_arraynumber *arr, gg_num key, bool del);
+bool gg_read_arraybool (gg_arraybool *arr, gg_num key, bool del);
+//
 
 gg_num gg_tree_bal (gg_tree_node *tree);
 gg_tree *gg_tree_create(char key_type, bool sorted, bool process);

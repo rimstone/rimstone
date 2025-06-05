@@ -35,7 +35,7 @@ begin-handler /msg public
         if-true s not-equal GG_OKAY
             break-loop
         end-if
-        @Key is <<p-out k>> and value is <<p-out v>>
+        @Key is <<print-out k>> and value is <<print-out v>>
     end-loop
 end-handler
 

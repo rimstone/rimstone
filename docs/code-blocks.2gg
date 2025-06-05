@@ -18,14 +18,14 @@ The following code will first print out "outside" and then "inside" twice, illus
 .EX
 
 begin-handler /scope public
-    @<<p-out s1>>
+    @<<print-out s1>>
     set-string s1="outside"
     {
         set-string s2="inner variable"
         set-string s1="inside"
-        @<<p-out s1>>
+        @<<print-out s1>>
     }
-    @<<p-out s1>>
+    @<<print-out s1>>
 end-handler
 
 .EE
@@ -35,14 +35,15 @@ end-handler
  Program flow
 
 \fBbreak-loop\fP  
+\fBcall-handler\fP  
 \fBcode-blocks\fP  
 \fBcontinue-loop\fP  
 \fBdo-once\fP  
 \fBexit-handler\fP  
 \fBif-defined\fP  
 \fBif-true\fP  
+\fBquit-process\fP  
 \fBreturn-handler\fP  
-\fBset-bool\fP  
 \fBstart-loop\fP   
 See all 
 \fBdocumentation\fP

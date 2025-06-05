@@ -57,7 +57,7 @@ Run "grep" program using a string as its standard input in order to remove a lin
 .EX
 
 exec-program "grep" args "-v", "bad line" "config" input "line 1\enline 2\enbad line\enline 3" output ovar 
-p-out ovar
+print-out ovar
 
 .EE
 .RE
@@ -79,7 +79,7 @@ Similar to the above example of listing files, but output results to a file (whi
 
 exec-program "ls" args "-a", "-l", "-s" output-file "lsout"
 read-file "lsout" to final_res
-p-out final_res
+print-out final_res
 
 .EE
 .RE
@@ -90,7 +90,7 @@ Count the lines of file "config" (which is redirected to the standard output of 
 .EX
 
 exec-program "wc" args "-l" input-file "config" output ovar
-p-out ovar
+print-out ovar
 
 .EE
 .RE
@@ -99,6 +99,6 @@ p-out ovar
  Program execution
 
 \fBexec-program\fP  
-\fBhandler-status\fP   
+\fBexit-status\fP   
 See all 
 \fBdocumentation\fP
