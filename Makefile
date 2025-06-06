@@ -22,6 +22,7 @@ OSNAME=$(shell . ./sys; echo -n $${GG_PLATFORM_ID})
 OSVERSION=$(shell . ./sys; echo -n $${GG_PLATFORM_VERSION})
 PGCONF=$(shell ./sys pgconf)
 DATE=$(shell date +"%b-%d-%Y")
+GCC_VER=$(shell gcc -dumpversion)
 GG_OS_CLOSE_2=$(shell grep OS_Close /usr/include/fcgios.h|grep shutdown|wc -l)
 
 #these 2 must match application name from config file from each application
@@ -90,8 +91,14 @@ else
     ASAN=
 endif
 
+ifeq ($(shell test $(GCC_VER) -ge 8; echo $$?),0)
+    GCC_FPREFIXMAP=-ffile-prefix-map=$(CURDIR)=.
+else
+    GCC_FPREFIXMAP=
+endif
+
 #C flags are as strict as we can do, in order to discover as many bugs as early on
-CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wdate-time -ffile-prefix-map=/home/bear/tmp/deb=. -flto=auto
+CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wdate-time $(GCC_FPREFIXMAP) -flto=auto
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)

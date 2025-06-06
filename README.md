@@ -12,13 +12,13 @@ Golf is a programming language and  application server for building web services
 [OpenSUSE](https://golf-lang.com//install-from-source-opensuse.html)
 [Arch, Manjaro](https://golf-lang.com//install-from-source-arch-manjaro.html)
 ## Current version
-Current version is 601\.4\.0\. This release passed 2551 automated functional tests\.
+Current version is 601\.4\.3\. This release passed 2551 automated functional tests\.
 ## Example
 Example of Golf code \(from [SaaS example](https://golf-lang.blogspot.com/2024/11/multi-tenant-saas-notes-web-application_43.html)\):
 ![Golf image](https://golf-lang.com/home-example.png)
 ## Articles
 [Blog](https://golf-lang.blogspot.com/) articles and examples:
-* 2025\-06\-05 [Golf 601\.4\.0 released](https://golf-lang.blogspot.com/2025/06/golf-60140-released.html)
+* 2025\-06\-05 [Golf 601\.4\.3 released](https://golf-lang.blogspot.com/2025/06/golf-60140-released.html)
 * 2025\-06\-04 [Major new release of Golf coming soon](https://golf-lang.blogspot.com/2025/06/major-new-release-of-golf-coming-soon.html)
 * 2025\-05\-19 [Golf 600\.3\.25 released](https://golf-lang.blogspot.com/2025/05/golf-600321-released.html)
 * 2025\-05\-17 [Golf 600\.3\.13 released](https://golf-lang.blogspot.com/2025/05/golf-5311-released.html)

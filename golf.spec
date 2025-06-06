@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    601.4.0
+Version:    601.4.3
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions
 Vendor:     Golf Team
@@ -71,7 +71,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-601.4.0
+%autosetup -n %{name}-601.4.3
 
 %build
 make clean
