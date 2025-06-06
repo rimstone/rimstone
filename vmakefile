@@ -97,7 +97,7 @@ endif
 
 #even though GG_DIAG_OUT is set to "", at run time it will have value from make_source macro. This is because of how makefile assignments work with = (and not :=)
 #ignoring char-subscripts (such as str[str[0]] is fine because golf checks for boundaries
-_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_ARRAY_USED) $(GG_XML_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_XML_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time $(GCC_FPREFIXMAP) -flto=auto $(_ASAN)  
+_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_ARRAY_USED) $(GG_XML_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_XML_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time $(GCC_FPREFIXMAP) $(_ASAN)  
 
 
 
@@ -160,7 +160,7 @@ $(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
 	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_IGNORE_WARN) $(GG_SINGLE_FILE) -plain-diag "$(GG_C_PLAINDIAG)" -max-errors $(GG_C_MAXERRORS) -main -name "$(GG_C_NAME)" -max-upload "$(GG_C_MAXUPLOAD)" -app-path "$(GG_C_RESTPATH)" -trace "$(GG_C_TRACE)" -out $(GG_BLD)/golfsrvcapp.c
 	$(_CC) -c $(GG_BLD)/golfsrvcapp.c  $(_CFLAGS) -DCMOD -o $@ -I`pwd` 
 
-_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) -Wl,--enable-new-dtags $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) -flto=auto -Wl,-z,relro,-z,now  $(_ASAN)
+_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) -Wl,--enable-new-dtags $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) -Wl,-z,relro,-z,now  $(_ASAN)
 
 
 
