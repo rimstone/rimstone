@@ -89,15 +89,9 @@ else
     GG_POSIXREGEX_FLAG=
 endif
 
-ifeq ($(shell test $(GCC_VER) -ge 8; echo $$?),0)
-    GCC_FPREFIXMAP=-ffile-prefix-map=$(CURDIR)=.
-else
-    GCC_FPREFIXMAP=
-endif
-
 #even though GG_DIAG_OUT is set to "", at run time it will have value from make_source macro. This is because of how makefile assignments work with = (and not :=)
 #ignoring char-subscripts (such as str[str[0]] is fine because golf checks for boundaries
-_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_ARRAY_USED) $(GG_XML_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_XML_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time $(GCC_FPREFIXMAP) $(_ASAN)  
+_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_ARRAY_USED) $(GG_XML_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_XML_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time $(_ASAN)  
 
 
 
