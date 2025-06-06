@@ -160,7 +160,7 @@ $(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
 	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_IGNORE_WARN) $(GG_SINGLE_FILE) -plain-diag "$(GG_C_PLAINDIAG)" -max-errors $(GG_C_MAXERRORS) -main -name "$(GG_C_NAME)" -max-upload "$(GG_C_MAXUPLOAD)" -app-path "$(GG_C_RESTPATH)" -trace "$(GG_C_TRACE)" -out $(GG_BLD)/golfsrvcapp.c
 	$(_CC) -c $(GG_BLD)/golfsrvcapp.c  $(_CFLAGS) -DCMOD -o $@ -I`pwd` 
 
-_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) -Wl,--enable-new-dtags $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) -Wl,-z,relro,-z,now  $(_ASAN)
+_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) -Wl,--enable-new-dtags $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) -Wl,-z,relro  $(_ASAN)
 
 
 

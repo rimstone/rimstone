@@ -102,7 +102,7 @@ CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
-LFLAGS_COMMON=-Wl,-z,relro,-z,now
+LFLAGS_COMMON=-Wl,-z,relro
 LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -Wl,--enable-new-dtags -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(LFLAGS_COMMON) $(ASAN)
 
 #note that for make DI=1, DEBUGINFO can be checked. But we don't specify DEBUGINFO for sudo make install.
