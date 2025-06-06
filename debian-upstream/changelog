@@ -1,4 +1,10 @@
-golf (601.4.15-1) unstable; urgency=medium
+golf (601.4.21-1) unstable; urgency=medium
+
+  * Build flags changes for relro, plus source upload.
+
+ -- Golf Team <team@golf-lang.com>  Fri, 6 Jun 2025 14:31:07 -0700
+
+golf (520-1) unstable; urgency=medium
 
   * Initial release.(Closes:1102267)
 
