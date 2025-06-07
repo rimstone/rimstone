@@ -1,3 +1,9 @@
+golf (601.4.39-1) unstable; urgency=medium
+
+  * New upstream release, stop using gcc option "-fcf-protection=full" to fix build failure
+
+ -- Golf Team <team@golf-lang.com>  Sat, 7 Jun 2025 09:21:22 -0700
+
 golf (601.4.37-1) unstable; urgency=medium
 
   * Build flags changes for relro, plus source upload.
