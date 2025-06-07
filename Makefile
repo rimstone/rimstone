@@ -15,22 +15,21 @@ NOUPDOCS=$(ND)
 ASAN=$(A)
 
 #get pcre2 version and libs
-PCRE2_VER=$(shell pcre2-config --version)
-PCRE2_LIBS=$(shell pcre2-config --libs-posix)
+PCRE2_VER:=$(shell pcre2-config --version)
+PCRE2_LIBS:=$(shell pcre2-config --libs-posix)
 #these must be the same (GG_PLATFORM_ID,GG_PLATFORM_VERSION) used in sys
-OSNAME=$(shell . ./sys; echo -n $${GG_PLATFORM_ID})
-OSVERSION=$(shell . ./sys; echo -n $${GG_PLATFORM_VERSION})
-PGCONF=$(shell ./sys pgconf)
-DATE=$(shell date +"%b-%d-%Y")
-GCC_VER=$(shell gcc -dumpversion)
-GG_OS_CLOSE_2=$(shell grep OS_Close /usr/include/fcgios.h|grep shutdown|wc -l)
+OSNAME:=$(shell . ./sys; echo -n $${GG_PLATFORM_ID})
+OSVERSION:=$(shell . ./sys; echo -n $${GG_PLATFORM_VERSION})
+PGCONF:=$(shell ./sys pgconf)
+DATE:=$(shell date +"%b-%d-%Y")
+GG_OS_CLOSE_2:=$(shell grep OS_Close /usr/include/fcgios.h|grep shutdown|wc -l)
 
 #these 2 must match application name from config file from each application
 
 CC=gcc
 
 #get build version and release, if .verstion not present, then empty
-PACKAGE_VERSION=$(shell . .version || true; echo $${PACKAGE_VERSION})
+PACKAGE_VERSION:=$(shell . .version || true; echo $${PACKAGE_VERSION})
 
 
 
@@ -51,7 +50,7 @@ V_BIN=/usr/bin
 V_MAN=/usr/share/man/man2
 
 #see if man pages exist (or if not, need reindex)
-MANEXIST=$(shell if [ -d "$(V_MAN)" ]; then echo "1"; else echo "0"; fi)
+MANEXIST:=$(shell if [ -d "$(V_MAN)" ]; then echo "1"; else echo "0"; fi)
 
 
 V_GG_DATADIR=/usr/share
@@ -60,23 +59,23 @@ V_GG_DATADIR_GOLF=/usr/share/doc/golf
 GG_SERVICE_INCLUDE=-I /usr/include/fastcgi
 
 ifeq ($(strip $(PGCONF)),yes)
-    GG_POSTGRES_INCLUDE=-I $(shell pg_config --includedir) 
+    GG_POSTGRES_INCLUDE:=-I $(shell pg_config --includedir) 
 else
-    GG_POSTGRES_INCLUDE=$(shell  pkg-config --cflags libpq) 
+    GG_POSTGRES_INCLUDE:=$(shell  pkg-config --cflags libpq) 
 endif
 
-GG_MARIA_INCLUDE=$(shell mariadb_config --include)
-GG_MARIA_LGPLCLIENT_LIBS=$(shell mariadb_config --libs) 
+GG_MARIA_INCLUDE:=$(shell mariadb_config --include)
+GG_MARIA_LGPLCLIENT_LIBS:=$(shell mariadb_config --libs) 
 #$(shell mariadb_config --libs_sys)
 
-GG_LIBXML2_INCLUDE=$(shell pkg-config --cflags libxml-2.0)
+GG_LIBXML2_INCLUDE:=$(shell pkg-config --cflags libxml-2.0)
 
 #based on DEBUGINFO from debug file, we use appropriate tags
 #Note: we always use -g in order to get line number of where the problem is
 #(optimization is still valid though)
 #if DEBUGINFO is 1, then no dbg files will be created, so delete any old ones as they wouldn't be accurate now
 ifeq ($(DEBUGINFO),1)
-    NONE=$(shell rm -f *.dbg)
+    NONE:=$(shell rm -f *.dbg)
     CFLAGS_WARN_ERROR=-Werror 
     OPTIM_COMP=-g3 -DDEBUG -rdynamic
     OPTIM_LINK=-rdynamic
@@ -91,15 +90,9 @@ else
     ASAN=
 endif
 
-ifeq ($(shell test $(GCC_VER) -ge 8; echo $$?),0)
-    GCC_FPREFIXMAP=-ffile-prefix-map=$(CURDIR)=.
-else
-    GCC_FPREFIXMAP=
-endif
-
 
 #C flags are as strict as we can do, in order to discover as many bugs as early on
-CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wdate-time -fstack-protector-strong -D_FORTIFY_SOURCE=3 -fstack-clash-protection -fcf-protection $(GCC_FPREFIXMAP)
+CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wdate-time -fno-stack-protector -fno-stack-clash-protection
 
 #linker flags include mariadb (LGPL), crypto (OpenSSL, permissive license). This is for building object code that's part 
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)

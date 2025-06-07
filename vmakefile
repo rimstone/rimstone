@@ -18,11 +18,10 @@ SHELL:=/bin/bash
 
 export GG_EXPLAIN
 
-_SYSTEMID=$(shell $$GG_LIBRARY_PATH/sys showid)
+_SYSTEMID:=$(shell $$GG_LIBRARY_PATH/sys showid)
 
 # c/linker flags
 _CC=gcc
-GCC_VER=$(shell gcc -dumpversion)
 
 #ASAN (internal)
 ifeq ($(strip $(GG_C_ASAN)),1)
@@ -89,15 +88,10 @@ else
     GG_POSIXREGEX_FLAG=
 endif
 
-ifeq ($(shell test $(GCC_VER) -ge 8; echo $$?),0)
-    GCC_FPREFIXMAP=-ffile-prefix-map=$(CURDIR)=.
-else
-    GCC_FPREFIXMAP=
-endif
-
 #even though GG_DIAG_OUT is set to "", at run time it will have value from make_source macro. This is because of how makefile assignments work with = (and not :=)
 #ignoring char-subscripts (such as str[str[0]] is fine because golf checks for boundaries
-_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_ARRAY_USED) $(GG_XML_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_XML_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(shell pwd) -I $(GG_INCLUDE_PATH) $(GG_C_CFLAGS) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time -fstack-protector-strong -D_FORTIFY_SOURCE=3 -fstack-clash-protection -fcf-protection $(_ASAN) $(GCC_FPREFIXMAP)
+#GG_C_CFLAGS *must* be the last in order to override anything else by user action!
+_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(GG_DIAG_OUT) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_MARIADB_USED) $(GG_CURL_USED) $(GG_TREE_USED) $(GG_ARRAY_USED) $(GG_XML_USED) $(GG_PCRE2_USED) $(GG_SERVICE_USED) $(GG_CRYPTO_USED) $(GG_XML_USED) $(GG_MODULES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(CURDIR) -I $(GG_INCLUDE_PATH) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(_ASAN) $(GG_C_CFLAGS)
 
 
 
@@ -138,7 +132,7 @@ endef
 #case we don't use caret, we produce one ourselves instead of gcc)
 #use ECODE (as exit code) to make sure non-zero exit code doesn't stop the build rule. Also use basename of the source file in .comperr... in order not to mix up output from different source files when makefile runs in parallel (export GG_ROOT for vdiag)
 define make_source
-	rm -f $(GG_BLD)/.setparam/$$(basename $<).sp; ECODE=0; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_IGNORE_WARN) $(GG_SINGLE_FILE) -plain-diag "1" -max-errors $(GG_C_MAXERRORS) -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$$(basename $@).c || ECODE=$$? ; if [ "$$ECODE" != "0" ]; then exit 1; fi ;           echo "">$(GG_BLD)/gg_sparam_$$(basename $<).h; if [ -f "$(GG_BLD)/.setparam/$$(basename $<).sp" ]; then for i in $$(cat $(GG_BLD)/.setparam/$$(basename $<).sp|sort -k 1|uniq); do echo "extern gg_num _gg_aprm_$$i;">>$(GG_BLD)/gg_sparam_$$(basename $<).h; done; echo "extern void **_gg_sprm_run; extern gg_num _gg_sprm_run_tot;">>$(GG_BLD)/gg_sparam_$$(basename $<).h ; fi ;         GG_DIAG_OUT="" ; ECODE=0 ; rm -f $(GG_BLD)/.comperr.$$(basename $@) ; $(_CC) -c $(GG_BLD)/__$$(basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr.$$(basename $@) 1>&2 || ECODE="$$?" ; if [ "$$ECODE" != "0" ]; then if [ "$$GG_C_PLAINDIAG" == "1" ]; then cat $(GG_BLD)/.comperr.$$(basename $@); exit -1; else GG_DIAG_OUT="-fno-diagnostics-show-caret"; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_IGNORE_WARN) $(GG_SINGLE_FILE) -plain-diag "$(GG_C_PLAINDIAG)" -max-errors $(GG_C_MAXERRORS) -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$$(basename $@).c; ECODE=0 ; $(_CC) -c $(GG_BLD)/__$$(basename $@).c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr.$$(basename $@) 1>&2 || ECODE="$$?" ; export GG_ROOT ; $(GG_LIBRARY_PATH)/vdiag "$(GG_C_NAME)" $(GG_C_PLAINDIAG) < $(GG_BLD)/.comperr.$$(basename $@) ; fi ; fi
+	TFILE="$@"; SFILE="$<"; rm -f $(GG_BLD)/.setparam/$${SFILE##*/}.sp; ECODE=0; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_IGNORE_WARN) $(GG_SINGLE_FILE) -plain-diag "1" -max-errors $(GG_C_MAXERRORS) -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$${TFILE##*/}.c || ECODE=$$? ; if [ "$$ECODE" != "0" ]; then exit 1; fi ;           >$(GG_BLD)/gg_sparam_$${SFILE##*/}.h; if [ -f "$(GG_BLD)/.setparam/$${SFILE##*/}.sp" ]; then for i in $$(cat $(GG_BLD)/.setparam/$${SFILE##*/}.sp|sort -k 1|uniq); do echo "extern gg_num _gg_aprm_$$i;">>$(GG_BLD)/gg_sparam_$${SFILE##*/}.h; done; echo "extern void **_gg_sprm_run; extern gg_num _gg_sprm_run_tot;">>$(GG_BLD)/gg_sparam_$${SFILE##*/}.h ; fi ;         GG_DIAG_OUT="" ; ECODE=0 ; rm -f $(GG_BLD)/.comperr.$${TFILE##*/} ; $(_CC) -c $(GG_BLD)/__$${TFILE##*/}.c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr.$${TFILE##*/} 1>&2 || ECODE="$$?" ; if [ "$$ECODE" != "0" ]; then if [ "$$GG_C_PLAINDIAG" == "1" ]; then cat $(GG_BLD)/.comperr.$${TFILE##*/}; exit -1; else GG_DIAG_OUT="-fno-diagnostics-show-caret"; $(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_IGNORE_WARN) $(GG_SINGLE_FILE) -plain-diag "$(GG_C_PLAINDIAG)" -max-errors $(GG_C_MAXERRORS) -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$${TFILE##*/}.c; ECODE=0 ; $(_CC) -c $(GG_BLD)/__$${TFILE##*/}.c  $(_CFLAGS) -o $@ -I`pwd` 2>$(GG_BLD)/.comperr.$${TFILE##*/} 1>&2 || ECODE="$$?" ; export GG_ROOT ; $(GG_LIBRARY_PATH)/vdiag "$(GG_C_NAME)" $(GG_C_PLAINDIAG) < $(GG_BLD)/.comperr.$${TFILE##*/} ; fi ; fi
 endef
 
 #the rest if compilation of source files and producing object files and libraries needed for apache,
@@ -150,17 +144,18 @@ $(GG_BLD)/%.o: $(GG_BLD)/.flatsrc/%.golf $(GG_INCLUDE_PATH)/golf.h $(GG_HEADER_F
 	$(call make_source)
 
 $(GG_BLD)/%.oc: %.c $(GG_INCLUDE_PATH)/golf.h $(GG_HEADER_FILES) $(GG_BLD)/golfapp.h $(GG_BLD)/blds
-	GG_BN=$$(basename $@) ; $(_CC) -c $${GG_BN%.*}.c  $(_CFLAGS) -o $@ -I`pwd` 
+	TFILE="$@"; GG_BN=$${TFILE##*/} ; $(_CC) -c $${GG_BN%.*}.c  $(_CFLAGS) -o $@ -I`pwd` 
 
 #does not need to depend on golfsrvcapp.c because it makes it. There's a dependency on params (blds) and list of files to be made (_OBJ_FILES)
 #because now we have hash list there that accounts for all request name. If we didn't have this, adding new .golf file would not be picked up until
 #the next next time something changes on the gg command line! /dev/null is used to suppress error message if there are no parameters in project.
 $(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
-	rm -f $(GG_BLD)/gg_sparam.h.new; GG_SPAR_LIST=$$(cat $(GG_BLD)/.setparam/* 2>/dev/null|sort -k 1|uniq); tot_sprm=0; for i in $$GG_SPAR_LIST; do ((tot_sprm=tot_sprm+1)); done; echo "$$tot_sprm" > $(GG_BLD)/.gg_sparam; for i in $$GG_SPAR_LIST; do echo "$$i" >> $(GG_BLD)/.gg_sparam; done; echo "gg_ipar _gg_sprm_par[$$tot_sprm] = {">>$(GG_BLD)/gg_sparam.h.new; j=0; for i in $$GG_SPAR_LIST; do if [ "$$j" != "0" ]; then echo ",">>$(GG_BLD)/gg_sparam.h.new; fi; echo "{.name=\"$$i\", .type=GG_DEFNONE}">>$(GG_BLD)/gg_sparam.h.new; ((j=j+1)); done; echo "};">>$(GG_BLD)/gg_sparam.h.new; j=0; for i in $$GG_SPAR_LIST; do echo "gg_num _gg_aprm_$$i=$$j;">>$(GG_BLD)/gg_sparam.h.new; ((j=j+1)); done; echo "void *_gg_sprm_run[$$j];">>$(GG_BLD)/gg_sparam.h.new; echo "gg_num _gg_sprm_run_tot=$$j;">>$(GG_BLD)/gg_sparam.h.new; _ISDIFF=$$(diff $(GG_BLD)/gg_sparam.h.new $(GG_BLD)/gg_sparam.h 2>/dev/null) || true ; if [[ "$$_ISDIFF" != "" || ! -f $(GG_BLD)/gg_sparam.h ]]; then mv $(GG_BLD)/gg_sparam.h.new $(GG_BLD)/gg_sparam.h ; else rm -rf $(GG_BLD)/gg_sparam.h.new; fi
+	rm -f $(GG_BLD)/gg_sparam.h.new; GG_SPAR_LIST=$$(find $(GG_BLD)/.setparam -type f -name "*" -print0 |xargs -0 cat 2>/dev/null|sort -k 1|uniq); tot_sprm=0; for i in $$GG_SPAR_LIST; do ((tot_sprm=tot_sprm+1)); done; echo "$$tot_sprm" > $(GG_BLD)/.gg_sparam; for i in $$GG_SPAR_LIST; do echo "$$i" >> $(GG_BLD)/.gg_sparam; done; echo "gg_ipar _gg_sprm_par[$$tot_sprm] = {">>$(GG_BLD)/gg_sparam.h.new; j=0; for i in $$GG_SPAR_LIST; do if [ "$$j" != "0" ]; then echo ",">>$(GG_BLD)/gg_sparam.h.new; fi; echo "{.name=\"$$i\", .type=GG_DEFNONE}">>$(GG_BLD)/gg_sparam.h.new; ((j=j+1)); done; echo "};">>$(GG_BLD)/gg_sparam.h.new; j=0; for i in $$GG_SPAR_LIST; do echo "gg_num _gg_aprm_$$i=$$j;">>$(GG_BLD)/gg_sparam.h.new; ((j=j+1)); done; echo "void *_gg_sprm_run[$$j];">>$(GG_BLD)/gg_sparam.h.new; echo "gg_num _gg_sprm_run_tot=$$j;">>$(GG_BLD)/gg_sparam.h.new; _ISDIFF=$$(diff $(GG_BLD)/gg_sparam.h.new $(GG_BLD)/gg_sparam.h 2>/dev/null) || true ; if [[ "$$_ISDIFF" != "" || ! -f $(GG_BLD)/gg_sparam.h ]]; then mv $(GG_BLD)/gg_sparam.h.new $(GG_BLD)/gg_sparam.h ; else rm -rf $(GG_BLD)/gg_sparam.h.new; fi
 	$(GG_LIBRARY_PATH)/v1 $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_IGNORE_WARN) $(GG_SINGLE_FILE) -plain-diag "$(GG_C_PLAINDIAG)" -max-errors $(GG_C_MAXERRORS) -main -name "$(GG_C_NAME)" -max-upload "$(GG_C_MAXUPLOAD)" -app-path "$(GG_C_RESTPATH)" -trace "$(GG_C_TRACE)" -out $(GG_BLD)/golfsrvcapp.c
 	$(_CC) -c $(GG_BLD)/golfsrvcapp.c  $(_CFLAGS) -DCMOD -o $@ -I`pwd` 
 
-_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) -Wl,--enable-new-dtags $(GG_C_LFLAGS)  -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) -Wl,-z,relro  $(_ASAN)
+#GG_C_LFLAGS *must* be the last in order to override anything else by user action!
+_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) -Wl,--enable-new-dtags -L$(GG_LIBRARY_PATH) $(_OPTIM_LINK) -Wl,-z,relro  $(_ASAN) $(GG_C_LFLAGS)
 
 
 

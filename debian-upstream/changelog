@@ -1,4 +1,4 @@
-golf (601.4.32-1) unstable; urgency=medium
+golf (601.4.37-1) unstable; urgency=medium
 
   * Build flags changes for relro, plus source upload.
 
