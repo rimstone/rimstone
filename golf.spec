@@ -5,7 +5,7 @@
 
 
 Name:   golf
-Version:    601.4.41
+Version:    601.4.51
 Release:    1%{?dist}
 Summary:    Language and server for web services and back-end solutions
 Vendor:     Golf Team
@@ -71,7 +71,7 @@ Golf is built with industry-standard Free Open Source libraries,
 extensible with C programming language.
 
 %prep
-%autosetup -n %{name}-601.4.41
+%autosetup -n %{name}-601.4.51
 
 %build
 make clean
@@ -159,5 +159,5 @@ semodule -r golf || true
 #SELINUXEND
 
 %changelog
-* Fri Jan 31 2025 Gliim LLC <team@golf-lang.com> - 2.0.0-1
+* Fri Jan 31 2025 Golf Team <team@golf-lang.com> - 2.0.0-1
 - Initial version. 

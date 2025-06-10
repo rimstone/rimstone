@@ -1034,7 +1034,7 @@ char *check_exp (char *cur, bool *found, bool *err)
             // if it is, then remove [] and verify that index is integer, and allow this as a valid C expression (that evaluates to int)
             char *ind;
             char *open_p = cur+1; // +1 since we know *cur is alpha or _
-            while (isalnum (*open_p)) open_p++; // search for anything other than name, if found '[', look for index
+            while (isalnum (*open_p) || *open_p == '_') open_p++; // search for anything other than name, if found '[', look for index
                                                 // if not, move to the next possibility
                                                 // here we use isalnum, since variable name cannot start with a digit but can contain it
             if (*open_p == '[')
@@ -2581,7 +2581,14 @@ gg_num check_var (char **var, gg_num type)
             {
                 *var = process_number_exp (*var);
                 return tp;
-            } else return tp; // just return type found, other types do NOT have expressions (like trees, hashes etc)
+            } else 
+            {
+                if (tp == GG_DEFUNKN) 
+                {
+                    // after looking at variable, not found
+                    gg_report_error ("Unknown expression type or bad syntax for an expression");
+                } else return tp; // just return type found, other types do NOT have expressions (like trees, hashes etc)
+            }
         }
     } else gg_report_error ("Unknown expression type or bad syntax for an expression");
 

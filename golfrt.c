@@ -4185,6 +4185,7 @@ void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bool begi
 //
 void *gg_add_string (void *to, void *add)
 {
+    GG_TRACE("");
     gg_num to_id = gg_mem_get_id (to);
     gg_num add_id = gg_mem_get_id(add);
     gg_num l_to = gg_mem_get_len (to_id);

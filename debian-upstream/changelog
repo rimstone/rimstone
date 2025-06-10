@@ -1,3 +1,9 @@
+golf (601.4.51-1) unstable; urgency=medium
+
+  * Source only upload.
+
+ -- Golf Team <team@golf-lang.com>  Tue, 10 Jun 2025 09:51:52 -0700
+
 golf (601.4.41-1) unstable; urgency=medium
 
   * New upstream release, stop using gcc option "-fcf-protection=full"
