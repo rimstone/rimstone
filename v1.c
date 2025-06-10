@@ -279,6 +279,7 @@
 #define GG_VAR_NOT_EXIST "Variable [%s] does not exist"
 #define GG_MSG_NESTED_QRY "Qry ID [%ld] is nested too deep, maximum nesting of [%d]"
 #define GG_MSG_SRC_NAME "Source file name [%s] is not valid. Use underscore and double underscore in source file name, and hyphen and forward slash in request name, respectively"
+#define GG_MSG_BAD_TYPE "Unknown expression type or bad syntax for an expression"
 // maximum length of a column name in db select query result 
 #define GG_MAX_COLNAME_LEN 64
 // pre-processing status of a qry, describes the way it is used in the code
@@ -619,6 +620,7 @@ bool var_exists (char *name, gg_num type, gg_num *real_type, gg_num *lnum);
 char *process_bool_exp (char *v);
 char *process_string_exp (char *v);
 char *process_number_exp (char *v);
+gg_num check_type(gg_num type, gg_num check_against);
 
 //
 //
@@ -2434,11 +2436,31 @@ char *process_number_exp (char *v)
 }
 
 //
+//
+// Check if type is equivalent with check_against. If it is, return type.
+// If it's not, error out.
+// This is used to make sure that the type of a variable is the correct, or emit an error otherwise.
+//
+//
+gg_num check_type(gg_num type, gg_num check_against)
+{
+    if (check_against != GG_DEFUNKN)
+    {
+        if (!cmp_type(type, check_against)) // if types not equivalent, error out
+        {
+            gg_report_error (GG_MSG_BAD_TYPE);
+        } else return type; // type is okay (checks out), report back
+    } else return type; // if unknown type passed to here, report back what type this is
+}
+
+//
 // Make sure every object/clause argument is a variable of some type. String constants have been converted to variables at this point.
 // However, numbers are still possible here.
 // type if GG_DEFNUMBER, GG_DEFSTRING etc. in which case variable v is checked to be of this type and errors out if not
 // returns type of v
 // If type if GG_DEFUNKN, then return type found is returned and of course no check is performed
+// If type is other than GG_DEFUNKN, then this variable *must* be of that type (or similar, such as STATIC version),
+// and if not, error is thrown.
 // check_var must be called after any define_statement, and it must be after any make_mem as it checks variables
 // and not constants.
 // Note: internal variables MUST start with '_gg' to be taken as correct!
@@ -2481,10 +2503,9 @@ gg_num check_var (char **var, gg_num type)
             if (ecode != NULL)
             {
                 *ecode = 0;
-                gg_num code = atol (tcode);
+                gg_num found_type = atol (tcode);
                 *ecode = '_';
-
-                return code;
+                return check_type (found_type, type); 
             }
         }
         return type; // internal vars are always of the right type (aka _gg...)
@@ -2528,12 +2549,12 @@ gg_num check_var (char **var, gg_num type)
     else if (v[ibeg] == '!') // this is partial recognition of boolean expression, just for negation
     {
         *var = process_bool_exp (v+ibeg);
-        return GG_DEFBOOL;
+        return check_type (GG_DEFBOOL, type); 
     }
     else if (isdigit(v[ibeg]) || v[ibeg] == '-' || v[ibeg] == '+') // check if starts with digit, + or -, and interpret as number expression
     {
         *var = process_number_exp (*var);
-        return GG_DEFNUMBER;
+        return check_type (GG_DEFNUMBER, type); 
     }
     else if (isalpha(v[ibeg]))
     {
@@ -2564,33 +2585,40 @@ gg_num check_var (char **var, gg_num type)
                 if (v[var_end] == '[')
                 {
                     *var = process_number_exp (v);
-                    return GG_DEFNUMBER;
+                    return check_type (GG_DEFNUMBER, type); 
                 }
                 else
                 {
                     *var = process_string_exp (v);
-                    return tp;
+                    return check_type (tp, type); 
                 }
             }
             else if (tp == GG_DEFBOOL || tp == GG_DEFBOOLSTATIC)
             {
                 *var = process_bool_exp (v);
-                return tp;
+                return check_type (tp, type); 
             }
             else if (tp == GG_DEFNUMBER || tp == GG_DEFNUMBERSTATIC)
             {
                 *var = process_number_exp (*var);
-                return tp;
+                return check_type (tp, type); 
             } else 
             {
                 if (tp == GG_DEFUNKN) 
                 {
                     // after looking at variable, not found
-                    gg_report_error ("Unknown expression type or bad syntax for an expression");
-                } else return tp; // just return type found, other types do NOT have expressions (like trees, hashes etc)
+                    gg_report_error (GG_MSG_BAD_TYPE);
+                } 
+                else 
+                {
+                    return check_type (tp, type); // just return type found, other types do NOT have expressions (like trees, hashes etc)
+                }
             }
         }
-    } else gg_report_error ("Unknown expression type or bad syntax for an expression");
+    } else 
+    {
+         gg_report_error (GG_MSG_BAD_TYPE);
+    }
 
     return GG_DEFUNKN; //  will never get here, just for compiler sanity
 }
