@@ -41,7 +41,7 @@ ifeq ($(strip $(GG_C_DEBUG)),1)
     _OPTIM_LINK=-rdynamic
     CFLAGS_WARN_ERROR=-Werror 
 else
-    _OPTIM_COMP=-g3 -O3
+    _OPTIM_COMP=-g -O3
     _OPTIM_LINK=
     CFLAGS_WARN_ERROR=
 endif
@@ -88,6 +88,9 @@ else
     GG_POSIXREGEX_FLAG=
 endif
 
+#Note we don't strip executables anymore. The debug info does not appear to make much, if any, difference any more.
+#-g (default with -O) doesn't create much of debug info, and it's not loaded into memory anyways.
+
 #even though GG_DIAG_OUT is set to "", at run time it will have value from make_source macro. This is because of how makefile assignments work with = (and not :=)
 #ignoring char-subscripts (such as str[str[0]] is fine because golf checks for boundaries
 #GG_C_CFLAGS *must* be the last in order to override anything else by user action!
@@ -117,15 +120,6 @@ GG_HEADER_FILES:=$(GG_HEADER_FILES)
 #string subst: short for $(patsubst %.golf,%.o,$(GG_SOURCE_FILES)) which finds whitespace-separated word in $(GG_SOURCE_FILES) that match %.golf and replaces them with %.o
 #the same for C files in GG_SOURCE_C_FILES
 _OBJ_FILES=$(GG_SOURCE_FILES:%.golf=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG_BLD)/%.oc)
-
-#strip symbols but keep _dbg for when needed (gdb->core or addr2line)
-#we have || true (i.e. surpress error in bash, but not error message)
-#so as not to stop the build process, as this isn't critical. It really
-#happens only if you build against live running server, something that's 
-#usually only done in testing, and stripping symbols is not a priority.
-define strip_sym
-	if [ "$(GG_C_DEBUG)" != "1" ]; then objcopy --only-keep-debug $@ $@_dbg || true ; objcopy --strip-unneeded $@ || true ; objcopy --add-gnu-debuglink=$@_dbg $@ || true ; fi
-endef
 
 #when making source, start with compiling; then if error, check if plain diagnostic (meaning no coloring and using C generated code); 
 #if not, recompile with error processed by vdiag script to produce highlights (in which
@@ -166,13 +160,11 @@ _LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GG_LIBRARY_PATH) -Wl,--enable-new-dtags
 $(GG_BLD)/$(GG_C_NAME).srvc: $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
 	$(_CC) -o $@ @$@.inarg $(_LFLAGS) $(GG_EVENT_STUBS) -lsrvcgolf -lfcgi $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
-	$(call strip_sym)
 	rm -f $@.inarg
 
 $(GG_BLD)/$(GG_C_NAME): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
 	$(_CC) -o $@ @$@.inarg $(_LFLAGS) $(GG_EVENT_STUBS) -lgolf $(GG_MOD_LIBS) $(GG_MODULES) $(GG_STUBS) 
-	$(call strip_sym)
 	rm -f $@.inarg
 
 

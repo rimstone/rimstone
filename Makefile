@@ -44,7 +44,6 @@ else
 endif
 
 V_LIB=/usr/lib/golf
-V_LIBD=/usr/lib/debug/golf
 V_INC=/usr/include/golf
 V_BIN=/usr/bin
 V_MAN=/usr/share/man/man2
@@ -73,15 +72,13 @@ GG_LIBXML2_INCLUDE:=$(shell pkg-config --cflags libxml-2.0)
 #based on DEBUGINFO from debug file, we use appropriate tags
 #Note: we always use -g in order to get line number of where the problem is
 #(optimization is still valid though)
-#if DEBUGINFO is 1, then no dbg files will be created, so delete any old ones as they wouldn't be accurate now
 ifeq ($(DEBUGINFO),1)
-    NONE:=$(shell rm -f *.dbg)
     CFLAGS_WARN_ERROR=-Werror 
     OPTIM_COMP=-g3 -DDEBUG -rdynamic
     OPTIM_LINK=-rdynamic
 else
     CFLAGS_WARN_ERROR=
-    OPTIM_COMP=-g3 -O3
+    OPTIM_COMP=-g -O3
     OPTIM_LINK=
 endif
 ifeq ($(ASAN),1)
@@ -90,6 +87,10 @@ else
     ASAN=
 endif
 
+#Note that package tools (arch, debian, fedora) separate debug info and strip executables and shared libraries.
+#This is why it's not done here. For source build, debug or otherwise, it's not done, since these days it really doesn't
+#make much in a way of performance improvement. If you're concerned about stripping, create a package or use the available one.
+#The default -g used for non-debug package creates little in a way of debug info. It's -g3 that creates a lot, but that's only for debug build.
 
 #C flags are as strict as we can do, in order to discover as many bugs as early on
 CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIA_INCLUDE) $(GG_POSTGRES_INCLUDE) $(GG_SERVICE_INCLUDE) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ROOT="\"$(GG_ROOT)\"" $(OPTIM_COMP) $(ASAN) -fmax-errors=5 -Wdate-time -fno-stack-protector -fno-stack-clash-protection
@@ -98,16 +99,6 @@ CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations
 #this is for installation at customer's site where we link GOLF with mariadb (LGPL), crypto (OpenSSL)
 LFLAGS_COMMON=-Wl,-z,relro
 LFLAGS=-Wl,-rpath=$(DESTDIR)$(V_LIB) -Wl,--enable-new-dtags -L$(DESTDIR)$(V_LIB) $(OPTIM_LINK) $(LFLAGS_COMMON) $(ASAN)
-
-#note that for make DI=1, DEBUGINFO can be checked. But we don't specify DEBUGINFO for sudo make install.
-#then we wanted to have them all. Otherwise, none will be there, because we explicitly delete them here.
-#If debugging build, no need to do anything, the executable is fully endowed with debugging symbols; but if
-#not, then separate debugging info, and strip the executable and then link it to debugging info. The only
-#exception is if this is debian build which does that (and lintian complains if we strip it ourselves).
-define strip_sym
-if [ "$(DEBUGINFO)" != "1" ]; then objcopy --only-keep-debug $@ $@.dbg || true ; if [[ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" ]]; then objcopy --strip-unneeded $@ || true ; objcopy --add-gnu-debuglink=$@.dbg $@ || true ; else rm -f $@.dbg || true ; fi ; fi
-endef
-
 
 #Libraries and executables must be 0755 or the packager (RPM) will say they are not satisfied
 #SELinux directory is created and files put there just so if it ever gets selinux installed
@@ -163,7 +154,7 @@ install:
 	install -D -m 0755 vdiag -t $(DESTDIR)$(V_LIB)/
 	install -D -m 0755 gg  -t $(DESTDIR)$(V_BIN)/
 	install -D -m 0755 mgrg  -t $(DESTDIR)$(V_BIN)/
-	if [[ "$(GG_DEBIAN_BUILD)" != "1" && "$(GG_FEDORA_BUILD)" != "1" && -f v1.dbg ]]; then install -m 0755 -d $(DESTDIR)$(V_LIBD) ; install -D -m 0644 v1.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 mgrg.dbg  -t $(DESTDIR)$(V_LIBD)/ ;  install -D -m 0644 libgolfpg.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfdb.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolflite.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfmys.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfsec.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolftree.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcurl.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfxml.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfarr.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfpcre2.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libsrvcgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolf.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfcli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; install -D -m 0644 libgolfscli.so.dbg -t $(DESTDIR)$(V_LIBD)/ ; fi
+	#install map pages if not a debian package, which does it automatically
 	if [ "$(GG_DEBIAN_BUILD)" != "1" ]; then install -m 0755 -d $(DESTDIR)$(V_MAN) ; install -D -m 0644 docs/*.2gg -t $(DESTDIR)$(V_MAN)/ ; if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi ; if [ "$(NOUPDOCS)" != "1" ]; then sed -i "s/\$$DATE/$(DATE)/g" $(DESTDIR)$(V_MAN)/*.2gg; fi ; for i in $$(ls $(DESTDIR)$(V_MAN)/*.2gg); do gzip -f $$i; done ; mandb >/dev/null 2>&1 || true ; fi
 	install -D -m 0755 sys -t $(DESTDIR)$(V_LIB)/
 #
@@ -204,7 +195,6 @@ uninstall:
 	rm -f $(DESTDIR)$(V_BIN)/mgrg
 	rm -f $(DESTDIR)$(V_MAN)/*.2gg ; rm -f $(DESTDIR)$(V_MAN)/*.2gg.gz ; mandb >/dev/null 2>&1 || true
 	rm -rf $(DESTDIR)$(V_LIB)
-	rm -rf $(DESTDIR)$(V_LIBD)
 
 .PHONY: binary
 binary:build
@@ -226,7 +216,6 @@ clean:
 	rm -rf *.tar.gz
 	rm -f *.o
 	rm -f *.so
-	rm -f *.dbg
 	rm -f mgrg v1
 	rm -f selinux.setup
 
@@ -242,7 +231,6 @@ v1.o: v1.c golf.h
 
 v1: v1.o golfmems.o chandle.o golfrtc.o hash.o  
 	$(CC) -o v1 $^ $(LFLAGS) 
-	$(call strip_sym)
 
 selinux.setup:
 	echo '#!/bin/bash'>selinux.setup
@@ -251,67 +239,54 @@ selinux.setup:
 
 mgrg: mgrg.o 
 	$(CC) -o mgrg mgrg.o $(LFLAGS) 
-	$(call strip_sym)
 
 libsrvcgolf.so: chandle.o hash.o json.o msg.o utf.o srvc_golfrt.o golfrtc.o golfmems.o 
 	rm -f libsrvcgolf.so
 	$(CC) -shared -o libsrvcgolf.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolf.so: chandle.o hash.o json.o msg.o utf.o golfrt.o golfrtc.o golfmems.o 
 	rm -f libgolf.so
 	$(CC) -shared -o libgolf.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolfpg.so: pg.o 
 	rm -f libgolfpg.so
 	$(CC) -shared -o libgolfpg.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolflite.so: lite.o 
 	rm -f libgolflite.so
 	$(CC) -shared -o libgolflite.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolfmys.so: mys.o 
 	rm -f libgolfmys.so
 	$(CC) -shared -o libgolfmys.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolfdb.so: db.o 
 	rm -f libgolfdb.so
 	$(CC) -shared -o libgolfdb.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolfsec.so: sec.o 
 	rm -f libgolfsec.so
 	$(CC) -shared -o libgolfsec.so  $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolfxml.so: xml.o 
 	rm -f libgolfxml.so
 	$(CC) -shared -o libgolfxml.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolfarr.so: arr_string.o  arr_number.o arr_bool.o
 	rm -f libgolfarr.so
 	$(CC) -shared -o libgolfarr.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolfcurl.so: curl.o 
 	rm -f libgolfcurl.so
 	$(CC) -shared -o libgolfcurl.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolftree.so: tree.o 
 	rm -f libgolftree.so
 	$(CC) -shared -o libgolftree.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 libgolfpcre2.so: pcre2.o 
 	rm -f libgolfpcre2.so
 	$(CC) -shared -o libgolfpcre2.so $^ $(LFLAGS_COMMON)
-	$(call strip_sym)
 
 utf.o: utf.c golf.h
 	$(CC) -c -o $@ $< $(CFLAGS) 
@@ -422,9 +397,7 @@ mgrg.o: mgrg.c
 libgolfcli.so: gcli.c gcli.h golf.h
 	rm -f libgolfcli.so
 	$(CC) -shared -o libgolfcli.so $^ $(CFLAGS)
-	$(call strip_sym)
 
 libgolfscli.so: gcli.c gcli.h golf.h
 	rm -f libgolfscli.so
 	$(CC) -shared -o libgolfscli.so $^ $(CFLAGS) -DGG_GOLFSRV=1
-	$(call strip_sym)

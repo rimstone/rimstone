@@ -2,7 +2,7 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
-Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBGolf Blog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP (with mirrors on \fBGitlab\fP, \fBSourceForge\fP and \fBDebian Salsa\fP). Installation packages and source installs below are for both x86_64 and aarch64.
+Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBGolf Blog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP (with mirrors on \fBGitlab\fP, \fBSourceForge\fP, \fBAUR\fP and \fBDebian Salsa\fP). Installation packages and source installs below are for both x86_64 and aarch64.
 
 .LP
 .B INSTALL GOLF PACKAGE (X86_64 AND AARCH64)
@@ -28,7 +28,7 @@ Golf is a programming language and  application server for building web services
 .B CURRENT VERSION
 .LP
 
-Current version is 601.4.54. This release passed 2561 automated functional tests.
+Current version is 601.4.58. This release passed 2563 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -45,43 +45,13 @@ Example of Golf code (from \fBSaaS example\fP):
 
 .RS 4
 \[bu]    
-2025-06-10 \fBGolf 601.4.54 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2025-06-07 \fBGolf 601.4.41\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2025-06-07 \fBGolf 601.4.37\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2025-06-05 \fBGolf 601.4.32 released\fP
+2025-06-10 \fBArch Linux and Ubuntu/Debian build from Golf source\fP
 .RE
 
 
 .RS 4
 \[bu]    
 2025-06-04 \fBMajor new release of Golf coming soon\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2025-05-19 \fBGolf 600.3.25 released\fP
-.RE
-
-
-.RS 4
-\[bu]    
-2025-05-17 \fBGolf 600.3.13 released\fP
 .RE
 
 
@@ -388,6 +358,42 @@ Example of Golf code (from \fBSaaS example\fP):
 .LP
 .B RELEASES
 .LP
+
+
+.RS 4
+\[bu]    
+2025-06-10 \fBGolf 601.4.58 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-06-07 \fBGolf 601.4.41 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-06-07 \fBGolf 601.4.37 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-06-05 \fBGolf 601.4.32 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-05-19 \fBGolf 600.3.25 released\fP
+.RE
+
+
+.RS 4
+\[bu]    
+2025-05-17 \fBGolf 600.3.13 released\fP
+.RE
 
 
 .RS 4
