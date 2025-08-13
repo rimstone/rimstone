@@ -32,15 +32,3 @@ write-lifo nf key "mykey" value "myvalue"
 .EE
 .RE
 
-.SH SEE ALSO
- LIFO
-
-\fBdelete-lifo\fP  
-\fBget-lifo\fP  
-\fBnew-lifo\fP  
-\fBpurge-lifo\fP  
-\fBread-lifo\fP  
-\fBrewind-lifo\fP  
-\fBwrite-lifo\fP   
-See all 
-\fBdocumentation\fP

@@ -67,14 +67,14 @@ void *gg_realloc(gg_num r, size_t size) reallocates memory identified with Golf 
 
 .RS 4
 \[bu]    
-void gg_mem_set_len (gg_num r, gg_num len) sets the length of memory identified with Golf memory handle "r" to "len" bytes. Note that all Golf memory must have a null-byte at the end for consistency, regardless of whether such memory holds pure binary data or an actual null-delimited string. So for example, a string "abc" would have "len" set to 4 to include a null byte, and binary data "\exFF\ex00\ex01" (which consists of 3 bytes, the middle of which is a null byte) would have "len" also set to 4 and you would place an extra zero byte at the end of it even if it's not part of the actual useful data. Note that whatever memory length you set, it must be lesser or equal to the length of memory you have actually allocated.
+void gg_mem_set_len (gg_num r, gg_num len) sets the length of memory identified with Golf memory handle "r" to "len" bytes. Note that all Golf memory must have a null-byte at the end for consistency, regardless of whether such memory holds pure binary data or an actual null-delimited string. So for example, a string "abc" would have "len" set to 4 to include a null byte, and binary data "\\xFF\\x00\\x01" (which consists of 3 bytes, the middle of which is a null byte) would have "len" also set to 4 and you would place an extra zero byte at the end of it even if it's not part of the actual useful data. Note that whatever memory length you set, it must be lesser or equal to the length of memory you have actually allocated.
 
 
 .RE
 
 .RS 4
 \[bu]    
-num gg_mem_get_len (gg_num r) returns the length of memory identified with Golf memory handle "r". The length returned is 1 bytes less than the memory set by gg_mem_set_len(), so for example for string "abc" the return value would be 3, as it would be for "\exFF\ex00\ex01".
+num gg_mem_get_len (gg_num r) returns the length of memory identified with Golf memory handle "r". The length returned is 1 bytes less than the memory set by gg_mem_set_len(), so for example for string "abc" the return value would be 3, as it would be for "\\xFF\\x00\\x01".
 .RE
 
 
@@ -115,7 +115,7 @@ void fact_msg (gg_num i, char **res)
     get_factorial (i, &f);
     gg_num bw = snprintf(r, MEMSIZE, "Factorial value (message from C function) is %ld", f) + 1;
     // reduce memory footprint to match the memory used (including the null byte)
-    // you can also use gg_mem_set_len() with bw as length for higher performance 
+    // you can also use gg_mem_set_len() with bw as length for better performance 
     // (but also higher memory usage)
     *res = gg_realloc (gg_mem_get_id(r), bw);
 }
@@ -197,10 +197,3 @@ Factorial value (message from C function) is 362880
 .EE
 .RE
 
-.SH SEE ALSO
- API
-
-\fBClient-API\fP  
-\fBServer-API\fP   
-See all 
-\fBdocumentation\fP

@@ -9,7 +9,7 @@ The name of the command-line executable is the same as the application name, and
 .RS 4
 .EX
 
-/var/lib/gg/bld/<app name>/<app name>
+$HOME/.golf/bld/<app name>/<app name>
 
 .EE
 .RE
@@ -153,12 +153,3 @@ If your parameters do not contain characters that need URL encoding, then you ca
 .LP
 
 You can also use a command-line program with \fBCGI\fP (Common Gateway Interface). 
-.SH SEE ALSO
- Running application
-
-\fBapplication-setup\fP  
-\fBCGI\fP  
-\fBcommand-line\fP  
-\fBservice\fP   
-See all 
-\fBdocumentation\fP

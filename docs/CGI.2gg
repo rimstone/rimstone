@@ -26,16 +26,16 @@ The following script sets up an application named "func_test" (any kind of appli
 \[char35]setup a "gg" directory under cgi-bin where your application can run
     sudo mkdir -p /usr/lib/cgi-bin/gg
     sudo chown $(whoami):$(whoami)  /usr/lib/cgi-bin/gg
-    sudo sed -i '1c\e/usr/lib/cgi-bin/gg' /etc/apache2/suexec/www-data
+    sudo sed -i '1c\\/usr/lib/cgi-bin/gg' /etc/apache2/suexec/www-data
 
 \[char35]copy your program to "gg" directory
-    sudo mv $GG_ROOT/var/lib/gg/bld/func-test/func-test /usr/lib/cgi-bin/gg
+    sudo mv $HOME/.golf/apps/func-test/.bld/func-test /usr/lib/cgi-bin/gg
     sudo chown $(whoami):$(whoami)  /usr/lib/cgi-bin/gg/func-test
     sudo chmod 700  /usr/lib/cgi-bin/gg/func-test
 
 \[char35]add user/group of Gliim application user to suexec    
     sudo sed -i "/SuexecUserGroup/d" /etc/apache2/sites-enabled/000-default.conf
-    sudo sed -i "s/<\e/VirtualHost>/SuexecUserGroup $(whoami) $(whoami)\en<\e/VirtualHost>/g" /etc/apache2/sites-enabled/000-default.conf
+    sudo sed -i "s/<\\/VirtualHost>/SuexecUserGroup $(whoami) $(whoami)\\n<\\/VirtualHost>/g" /etc/apache2/sites-enabled/000-default.conf
     sudo service apache2 restart
 
 \[char35]the application is at http://127.0.0.1/cgi-bin/gg/func-test?...
@@ -44,12 +44,3 @@ The following script sets up an application named "func_test" (any kind of appli
 .EE
 .RE
 
-.SH SEE ALSO
- Running application
-
-\fBapplication-setup\fP  
-\fBCGI\fP  
-\fBcommand-line\fP  
-\fBservice\fP   
-See all 
-\fBdocumentation\fP

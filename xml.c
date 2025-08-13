@@ -3,8 +3,6 @@
 // Licensed under Apache License v2. See LICENSE file.
 // On the web http://golf-lang.com/ - this file is part of Golf framework.
 //
-// gcc -o xml3 xml3.c $(pkg-config --cflags libxml-2.0) -lxml2 -g -std=gnu99
-
 
 //
 //
@@ -62,7 +60,6 @@ static void gg_add_xml (); // add more memory for XML nodes
 //
 void gg_set_xml (gg_xml **x)
 {
-    GG_TRACE("");
     // get json object
     *x = (gg_xml*)gg_malloc (sizeof(gg_xml));
 
@@ -71,16 +68,16 @@ void gg_set_xml (gg_xml **x)
 }
 
 // prototypes
-void gg_xml_beg( void *ctx, const xmlChar *localname, const xmlChar *prefix, const xmlChar *URI, int nb_namespaces, const xmlChar **namespaces, int nb_attributes, int nb_defaulted, const xmlChar **attributes);
-void gg_xml_seterr(void *userData, const struct _xmlError *error);
-void gg_xml_end( void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI);
-void gg_xml_data(void* ctx, const xmlChar * ch, int len);
+static void gg_xml_beg( void *ctx, const xmlChar *localname, const xmlChar *prefix, const xmlChar *URI, int nb_namespaces, const xmlChar **namespaces, int nb_attributes, int nb_defaulted, const xmlChar **attributes);
+static void gg_xml_seterr(void *userData, const struct _xmlError *error);
+static void gg_xml_end( void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI);
+static void gg_xml_data(void* ctx, const xmlChar * ch, int len);
 
 // 
 // Called when there's a a beginning of XML node or attribute. See libxml2 doc for input parameters. Some are ignored b/c
 // we don't do validation
 //
-void gg_xml_beg( void *ctx, const xmlChar *localname, const xmlChar *prefix, const xmlChar *URI, int nb_namespaces, const xmlChar **namespaces, int nb_attributes, int nb_defaulted, const xmlChar **attributes)
+static void gg_xml_beg( void *ctx, const xmlChar *localname, const xmlChar *prefix, const xmlChar *URI, int nb_namespaces, const xmlChar **namespaces, int nb_attributes, int nb_defaulted, const xmlChar **attributes)
 {
     GG_UNUSED(ctx);
     GG_UNUSED(prefix);
@@ -139,7 +136,7 @@ void gg_xml_beg( void *ctx, const xmlChar *localname, const xmlChar *prefix, con
 //
 // Process the end of a node
 //
-void gg_xml_end( void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI
+static void gg_xml_end( void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI
 )
 {
     GG_UNUSED(ctx);
@@ -182,7 +179,7 @@ void gg_xml_end( void* ctx, const xmlChar* localname, const xmlChar* prefix, con
 // Callback from libxml2 that processes data. It's often delivered in chunks, so even the very same continuous node value
 // could be delivered as more than one chunk.
 //
-void gg_xml_data(void* ctx, const xmlChar * ch, int len)
+static void gg_xml_data(void* ctx, const xmlChar * ch, int len)
 {
     GG_UNUSED(ctx);
     int alen = (len < 256 ? 256:len+256); // allocate more memory so we don't realloc when (and if) another chunk comes in
@@ -207,7 +204,7 @@ void gg_xml_data(void* ctx, const xmlChar * ch, int len)
 // Called when there's an error. Set error message (errm), line_ec/char_ec and is_error static flags
 // to be given to the caller in v1.c
 //
-void gg_xml_seterr(void *userData, const struct _xmlError *error)
+static void gg_xml_seterr(void *userData, const struct _xmlError *error)
 {
     GG_UNUSED(userData);
     errm = gg_strdup(error->message);
@@ -230,7 +227,6 @@ char *gg_xml_err()
 //
 void gg_add_xml ()
 {
-    GG_TRACE("");
     static gg_num incby;
     
     if (node_tot == 0) incby = GG_XML_NODES/2; // must start with half, so that initial block below is GG_XML_NODES, since 
@@ -256,7 +252,6 @@ void gg_add_xml ()
 //
 void gg_del_xml (gg_xml **x)
 {
-    GG_TRACE("");
     gg_num i;
     for (i = 0; i < (*x)->node_c; i++)
     {
@@ -276,7 +271,6 @@ void gg_del_xml (gg_xml **x)
 //
 gg_num gg_xml_new (char *val, gg_num len, gg_num *errc, gg_num *errl)
 {
-    GG_TRACE("");
 
     // create initial block of normalized nodes
     node_c = 0;
@@ -313,7 +307,7 @@ gg_num gg_xml_new (char *val, gg_num len, gg_num *errc, gg_num *errl)
 
     // use either length of data, or passed length, but passed length cannot be greater than
     // the actually data length (memory safety)
-    gg_num vlen = gg_mem_get_len(gg_mem_get_id( val) );
+    gg_num vlen = gg_mem_get_len(val);
     if (len == -1) len = vlen; // len is -1 only in root invocation
     else if (len > vlen) len = vlen; // do not cause segmentation violation
 

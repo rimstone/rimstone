@@ -38,8 +38,9 @@
 
 // If memory allocation fails in Golf, this is handled by gg_* functions
 // For a SERVICE client, the handling is explicit here in code
-#if GG_GOLFSRV==1
+#if GG_GOLFMEM==1
 #   include "golf.h"
+#   include <pthread.h>
     // OS malloc is used here, and not Golf, due to multithreading. Golf mem alloc is not
     // MT safe, and would be too slow if made to do so.
     void *gg_cli_one (void *inp);
@@ -219,7 +220,7 @@ int gg_write_socket(fc_local *fc_l, char *buf, int len)
 // Make a begin-request record for the server. Connection is not kept open.
 // The role is GG_CLI_RESPONDER.
 //
-void begin_request(fc_begin_req_body *beg_req)
+GG_ALWAYS_INLINE inline void begin_request(fc_begin_req_body *beg_req)
 {
     beg_req->flags  = 0; // do not keep connection open
     beg_req->role_1 = (GG_CLI_RESPONDER >>  8) & 0xff;
@@ -233,7 +234,7 @@ void begin_request(fc_begin_req_body *beg_req)
 // Build a header for request. content_len is the length of message, type is either
 // begin-request or the input to server.
 //
-fc_header build_hdr(fc_local *fc_l, int content_len, int type)
+GG_ALWAYS_INLINE inline fc_header build_hdr(fc_local *fc_l, int content_len, int type)
 {
     fc_header header;
     header.cont_len_1 = (content_len >> 8) & 0xff;
@@ -251,7 +252,7 @@ fc_header build_hdr(fc_local *fc_l, int content_len, int type)
 //
 // Close socket to server.
 //
-void shut_sock(fc_local *fc_l)
+GG_ALWAYS_INLINE inline void shut_sock(fc_local *fc_l)
 {
     if (fc_l->sock != -1) 
     {
@@ -447,7 +448,7 @@ void fc_server_read(fc_local *fc_l)
     return; // this is when message read okay
 }
 
-void gg_size_env(fc_local *fc_l, int name_len, int val_len)
+GG_ALWAYS_INLINE inline void gg_size_env(fc_local *fc_l, int name_len, int val_len)
 {
     if (name_len < 0x80) fc_l->param_len++; else fc_l->param_len += 4; 
     if (val_len < 0x80) fc_l->param_len++; else fc_l->param_len += 4; 
@@ -460,7 +461,7 @@ void gg_size_env(fc_local *fc_l, int name_len, int val_len)
 // length, val/val_len are its value and length. fcgi_inp_param is the stream that is open to the server.
 // Returns number of bytes written or -1 if failed;
 //
-int gg_send_env(fc_local *fc_l, char *name, int name_len, char *val, int val_len)
+GG_ALWAYS_INLINE inline int gg_send_env(fc_local *fc_l, char *name, int name_len, char *val, int val_len)
 {
     // First, setup a header, name, then value lengths
     unsigned char hdr[8+1]; // max possible length of header, plus 1
@@ -1003,8 +1004,7 @@ int gg_cli_request (gg_cli *fc_in)
 //
 void gg_cli_delete (gg_cli *callin)
 {
-#if GG_GOLFSRV==1
-    GG_TRACE("");
+#if GG_GOLFMEM==1
     if (callin->internal.server_alloc) gg_free (callin->server);
     if (callin->internal.path_alloc) { gg_free (callin->app_path); gg_free (callin->url_params); }
     gg_free (GG_MADJ(callin->internal.data));
@@ -1021,15 +1021,13 @@ void gg_cli_delete (gg_cli *callin)
 //
 // Return data response from server
 //
-char *gg_cli_data (gg_cli *callin)
+GG_ALWAYS_INLINE inline char *gg_cli_data (gg_cli *callin)
 {
-#if GG_GOLFSRV==1
-    GG_TRACE("");
+#if GG_GOLFMEM==1
     // convert memory to Golf if okay, so it goes under garbage collection
     gg_num mm = gg_add_mem (callin->internal.data);
     gg_vmset(callin->internal.data,mm);
-    gg_num id = gg_mem_get_id (GG_MADJ(callin->internal.data));
-    gg_mem_set_len (id, callin->data_len+1); 
+    gg_mem_set_len (GG_MADJ(callin->internal.data), callin->data_len+1); 
 #endif
     return GG_MADJ(callin->internal.data);
 }
@@ -1037,21 +1035,19 @@ char *gg_cli_data (gg_cli *callin)
 //
 // Return error response from server
 //
-char *gg_cli_error (gg_cli *callin)
+GG_ALWAYS_INLINE inline char *gg_cli_error (gg_cli *callin)
 {
-#if GG_GOLFSRV==1
-    GG_TRACE("");
+#if GG_GOLFMEM==1
     // convert memory to Golf if okay, so it goes under garbage collection
     gg_num mm = gg_add_mem (callin->internal.error);
     gg_vmset(callin->internal.error,mm);
-    gg_num id = gg_mem_get_id (GG_MADJ(callin->internal.error));
-    gg_mem_set_len (id, callin->error_len+1); 
+    gg_mem_set_len (GG_MADJ(callin->internal.error), callin->error_len+1); 
 #endif
     return GG_MADJ(callin->internal.error);
 }
 
 
-#if GG_GOLFSRV==1
+#if GG_GOLFMEM==1
 //
 // Create SERVICE object for call-fcgi. call is the object, server is the server (or Unix socket location)
 // req_method is GET, POST (default GET) etc. app_path is application path, req is request path, url_params is URL payload (i.e. the resot of URL)
@@ -1063,16 +1059,15 @@ char *gg_cli_error (gg_cli *callin)
 //
 void gg_set_fcgi (gg_cli **callin, char *server, char *req_method, char *app_path, char *req, char *url_params, char *ctype, char *body, int clen, int timeout, char **env, bool simple_server, bool simple_url)
 {
-    GG_TRACE("");
     *callin = gg_calloc (1, sizeof(gg_cli)); // always allocated
     gg_cli *call = *callin;
     if (env != NULL) call->env = env;
 
     if (simple_server)
     {
-        char *sockloc = gg_malloc (GG_MAX_SOCK_LEN+1);
-        gg_num bw = snprintf (sockloc, GG_MAX_SOCK_LEN, GG_ROOT "/var/lib/gg/%s/sock/sock", server);
-        gg_mem_set_len (gg_mem_get_id(sockloc), bw+1);
+        char *sockloc = gg_malloc (GG_MAX_OS_UDIR_LEN);
+        gg_num bw = gg_dir (GG_DIR_SOCKFILE, sockloc, GG_MAX_OS_UDIR_LEN, server, NULL);
+        gg_mem_set_len (sockloc, bw+1);
         call->server = sockloc;
         call->internal.server_alloc = true;
     }
@@ -1094,7 +1089,7 @@ void gg_set_fcgi (gg_cli **callin, char *server, char *req_method, char *app_pat
     {
         call->req = req; // just empty string here
         // url_params is the entire URL
-        gg_num ulen = gg_mem_get_len (gg_mem_get_id(url_params));
+        gg_num ulen = gg_mem_get_len (url_params);
         char *qs = memchr (url_params, '?', ulen); // look for query string
         if (qs == NULL)
         {
@@ -1116,11 +1111,11 @@ void gg_set_fcgi (gg_cli **callin, char *server, char *req_method, char *app_pat
     if (body != NULL) call->req_body = body;
     if (body != NULL) 
     {
-        gg_num id = gg_mem_get_id(body);
-        if (clen == 0) clen = (int)gg_mem_get_len(id);
-        else if (clen > gg_mem_get_len(id)) 
+        gg_num blen = gg_mem_get_len(body);
+        if (clen == 0) clen = (int)blen;
+        else if (clen > blen)
         {
-            gg_report_error ("Memory used for request body is of length [%d] but only [%ld] allocated", clen, gg_mem_get_len(id));
+            gg_report_error ("Memory used for request body is of length [%d] but only [%ld] allocated", clen, blen);
             exit (1);
         }
         call->content_len = clen;
@@ -1133,9 +1128,8 @@ void gg_set_fcgi (gg_cli **callin, char *server, char *req_method, char *app_pat
 // Execute single fcgi call. inp is request (gg_cli*), returns its status as void*
 // This is for multithreaded execution
 //
-void *gg_cli_one (void *inp)
+GG_ALWAYS_INLINE inline void *gg_cli_one (void *inp)
 {
-    GG_TRACE("");
     gg_cli *req = (gg_cli*) inp;
 
     int res = gg_cli_request (req);
@@ -1155,7 +1149,6 @@ void *gg_cli_one (void *inp)
 //
 gg_num gg_call_fcgi (gg_cli **req, gg_num threads, gg_num *finokay, gg_num *started)
 {
-    GG_TRACE("");
     if (threads == 1) 
     {
         // special case: just one thread, so no need for thread library
@@ -1188,7 +1181,6 @@ gg_num gg_call_fcgi (gg_cli **req, gg_num threads, gg_num *finokay, gg_num *star
         if (pthread_create(&(thread_id[i]), NULL, gg_cli_one, req[i]))
         {
             req[i]->internal.invalid_thread = 1; // mark threads that didn't start
-            GG_TRACE("Thread creation failed with [%d] [%s]", errno, strerror(errno));
         } else totrun++;
     }
     if (started != NULL) *started = totrun; 
@@ -1202,7 +1194,6 @@ gg_num gg_call_fcgi (gg_cli **req, gg_num threads, gg_num *finokay, gg_num *star
             {
                 // This should not happen: no deadlock (fcgi lib does no join), it's not the self-join;
                 // created threads are joinable. Likely thread crashed and is dead anyway.
-                GG_TRACE("Thread join failed with [%d] [%s]", errno, strerror(errno));
                 // allocate empty freeable memory for unable to join
                 req[i]->internal.data = GG_EMPTY_STRING;
                 req[i]->internal.error = GG_EMPTY_STRING;
@@ -1225,4 +1216,5 @@ gg_num gg_call_fcgi (gg_cli **req, gg_num threads, gg_num *finokay, gg_num *star
     return (totrun == threads && totok == threads) ? GG_OKAY:GG_ERR_FAILED;
 }
 #endif
+
 

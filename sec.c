@@ -19,15 +19,14 @@ typedef const EVP_MD gg_type_dig;
 #endif
 
 // Prototypes
-void gg_sec_err (char *err);
-gg_type_dig *gg_get_digest(char *digest_name);
+static void gg_sec_err (char *err);
+static gg_type_dig *gg_get_digest(char *digest_name);
 
 //
 // Get digest based on digest_name, accounts for various OpenSSL versions
 //
-gg_type_dig *gg_get_digest(char *digest_name)
+static gg_type_dig *gg_get_digest(char *digest_name)
 {
-    GG_TRACE("");
     gg_type_dig *md = NULL;
 #if OPENSSL_VERSION_MAJOR  >= 3
 // in OpenSSL3, only if the implementation of digest exists, it will be non-NULL, while EV_get_digestbyname may return non-NULL
@@ -48,7 +47,6 @@ gg_type_dig *gg_get_digest(char *digest_name)
 //
 char *gg_hmac (char *key, char *data, char *digest_name, bool binary)
 {
-    GG_TRACE("");
     unsigned char hmac[EVP_MAX_MD_SIZE + 1]; // result
 
     // final result, which may be hex, so it would be double size
@@ -58,8 +56,8 @@ char *gg_hmac (char *key, char *data, char *digest_name, bool binary)
     gg_type_dig *md = gg_get_digest(digest_name);
 
     // do hmac
-    int key_len = (int)gg_mem_get_len(gg_mem_get_id( key) );
-    int data_len = (int)gg_mem_get_len(gg_mem_get_id( data) );
+    int key_len = (int)gg_mem_get_len(key);
+    int data_len = (int)gg_mem_get_len(data);
     unsigned int res_len;
     if (HMAC(md, key, key_len, (unsigned char*)data, data_len, binary?(unsigned char*)out:hmac, &res_len) == NULL) gg_sec_err ("Cannot create HMAC");
 
@@ -68,7 +66,7 @@ char *gg_hmac (char *key, char *data, char *digest_name, bool binary)
 #endif
 
     // if binary the output is done, set the output length
-    if (binary) { gg_mem_set_len (gg_mem_get_id(out), (gg_num)res_len+1); return out; }
+    if (binary) { gg_mem_set_len (out, (gg_num)res_len+1); return out; }
 
     char *p = out;
     // This is if not binary, convert hash to out, which is hexstring
@@ -78,7 +76,7 @@ char *gg_hmac (char *key, char *data, char *digest_name, bool binary)
         GG_HEX_FROM_BYTE (p, (unsigned int)hmac[i]);
     }
     *p = 0;
-    gg_mem_set_len (gg_mem_get_id(out), p - out+1); 
+    gg_mem_set_len (out, p - out+1); 
     return out;
 }
 
@@ -88,7 +86,6 @@ char *gg_hmac (char *key, char *data, char *digest_name, bool binary)
 //
 int gg_RAND_bytes(unsigned char *buf, int num) 
 {
-    GG_TRACE("");
     return RAND_bytes (buf, num);
 }
 
@@ -97,7 +94,6 @@ int gg_RAND_bytes(unsigned char *buf, int num)
 //
 void gg_sec_load_algos(void) 
 {
-    GG_TRACE("");
     OpenSSL_add_all_algorithms(); // so algos are available when asked for
 }
 
@@ -106,9 +102,8 @@ void gg_sec_load_algos(void)
 // 'err' is golf messsage, which is supplemented with crypto-provider's message
 // it doesn't return, rather ends with fatal error
 //
-void gg_sec_err (char *err)
+static void gg_sec_err (char *err)
 {
-    GG_TRACE("");
     BIO *bio = BIO_new (BIO_s_mem ()); // this can fail with NULL
     if (bio == NULL) gg_report_error ("%s [could not obtain error message]", err);
     ERR_print_errors (bio); // cannot fail
@@ -129,7 +124,6 @@ void gg_sec_err (char *err)
 //
 char *gg_hash_data( char *val, char *digest_name, bool binary)
 {
-    GG_TRACE("");
     unsigned char hash[EVP_MAX_MD_SIZE + 1];
 
     EVP_MD_CTX *mdctx;
@@ -141,10 +135,9 @@ char *gg_hash_data( char *val, char *digest_name, bool binary)
     EVP_MD_CTX_init(mdctx);
     EVP_DigestInit_ex(mdctx, md, NULL);
 
-    gg_num msg_length = gg_mem_get_len(gg_mem_get_id( val) );
+    gg_num msg_length = gg_mem_get_len(val);
 
     char *out = (char *) gg_malloc( binary ? (EVP_MAX_MD_SIZE + 1) : ((EVP_MAX_MD_SIZE + 1)*2)+ 2) ; // +2 is just in case for null
-    gg_num id = gg_mem_get_id (out);
 
     char *p = out;
     EVP_DigestUpdate(mdctx, val,(unsigned int) msg_length);
@@ -157,7 +150,7 @@ char *gg_hash_data( char *val, char *digest_name, bool binary)
 #endif    
 
     // if binary the output is done, set the output length
-    if (binary) { gg_mem_set_len (id, msg_length+1); return out; }
+    if (binary) { gg_mem_set_len (out, msg_length+1); return out; }
 
     // This is if not binary, convert hash to out, which is hexstring
     gg_num i;
@@ -166,7 +159,7 @@ char *gg_hash_data( char *val, char *digest_name, bool binary)
         GG_HEX_FROM_BYTE (p, (unsigned int)hash[i]);
     }
     *p = 0;
-    gg_mem_set_len (id, p - out+1); 
+    gg_mem_set_len (out, p - out+1); 
     return out;
 }
 
@@ -181,7 +174,6 @@ char *gg_hash_data( char *val, char *digest_name, bool binary)
 //
 char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_count, char *salt, gg_num salt_len, gg_num key_len, bool binary )
 {
-    GG_TRACE("");
     // +1 as 0 is placed after each
     unsigned char *key = gg_malloc (key_len + 1);
 
@@ -192,18 +184,18 @@ char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_c
     if (iter_count == -1) iter_count=1000; 
     if (salt != NULL) 
     {
-        gg_num id = gg_mem_get_id(salt);
-        if (salt_len == 0) salt_len = gg_mem_get_len(id);
-        else if (salt_len > gg_mem_get_len(id))  gg_report_error ("Memory read requested salt of length [%ld] but only [%ld] allocated", salt_len, gg_mem_get_len(id));
+        gg_num lsalt = gg_mem_get_len(salt);
+        if (salt_len == 0) salt_len = lsalt;
+        else if (salt_len > lsalt)  gg_report_error ("Memory read requested salt of length [%ld] but only [%ld] allocated", salt_len, lsalt);
 
     }
     gg_num vl;
-    gg_num id = gg_mem_get_id(val);
+    gg_num lval = gg_mem_get_len(val);
     if (val_len != -1)
     {
-        if (val_len > gg_mem_get_len(id)) gg_report_error ("Memory read requested value of length [%ld] but only [%ld] allocated", val_len, gg_mem_get_len(id));
+        if (val_len > lval) gg_report_error ("Memory read requested value of length [%ld] but only [%ld] allocated", val_len, lval);
         vl = val_len;
-    } else vl = gg_mem_get_len(id); 
+    } else vl = lval;
     if (!PKCS5_PBKDF2_HMAC (val, (size_t)vl, (const unsigned char *)salt, salt_len, iter_count, dgst, key_len, key))
     {
         gg_sec_err ("Cannot generate key");
@@ -220,7 +212,6 @@ char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_c
     else
     {
         char *out = (char *) gg_malloc( sizeof(char) * (((key_len + 1)*2)+1) );
-        gg_num id = gg_mem_get_id (out);
         char *p = out;
         gg_num i;
         for ( i = 0; i < key_len; i++, p += 2 ) 
@@ -228,7 +219,7 @@ char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_c
             GG_HEX_FROM_BYTE (p, (unsigned int)key[i]);
         }
         *p = 0;
-        gg_mem_set_len (id, p - out+1); // set exact memory length
+        gg_mem_set_len (out, p - out+1); // set exact memory length
         gg_free_int (key);
         return out;
     }
@@ -255,7 +246,6 @@ char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_c
 gg_num gg_get_enc_key(char *password, char *salt, gg_num salt_len, gg_num iter_count, EVP_CIPHER_CTX *e_ctx, 
              EVP_CIPHER_CTX *d_ctx, char *cipher_name, char *digest_name)
 {
-    GG_TRACE("");
 
 
     // +1 as 0 is placed after each
@@ -271,20 +261,19 @@ gg_num gg_get_enc_key(char *password, char *salt, gg_num salt_len, gg_num iter_c
     cipher = EVP_get_cipherbyname(cipher_name);
 #endif
     if(!cipher) { 
-        GG_TRACE("Cipher name [%s]", cipher_name);
         gg_sec_err ("Cipher not found");
     }
 
     // get digest
     gg_type_dig *dgst = gg_get_digest(digest_name);
 
-    if (salt != NULL && salt_len == 0) salt_len = gg_mem_get_len(gg_mem_get_id(salt));
+    if (salt != NULL && salt_len == 0) salt_len = gg_mem_get_len(salt);
     if (iter_count == -1) iter_count=1000; 
 
     int key_len = EVP_CIPHER_key_length(cipher);
     int iv_len = EVP_CIPHER_iv_length(cipher);
 
-    if (!PKCS5_PBKDF2_HMAC (password, gg_mem_get_len(gg_mem_get_id(password)), (const unsigned char *)salt, salt_len, iter_count, dgst, key_len + iv_len, key))
+    if (!PKCS5_PBKDF2_HMAC (password, gg_mem_get_len(password), (const unsigned char *)salt, salt_len, iter_count, dgst, key_len + iv_len, key))
     {
         gg_sec_err ("Cannot convert password to keyring");
     }
@@ -340,9 +329,9 @@ gg_num gg_get_enc_key(char *password, char *salt, gg_num salt_len, gg_num iter_c
 //
 char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len, gg_num is_binary, unsigned char *iv)
 {
-    gg_num id = gg_mem_get_id((char*)plaintext);
-    if (*len == -1) *len = gg_mem_get_len(id);
-    else if (*len > gg_mem_get_len(id)) gg_report_error ("Memory used is of length [%ld] but only [%ld] allocated", *len, gg_mem_get_len(id));
+    gg_num lplain = gg_mem_get_len((char*)plaintext);
+    if (*len == -1) *len = lplain;
+    else if (*len > lplain) gg_report_error ("Memory used is of length [%ld] but only [%ld] allocated", *len, lplain);
 
     /* maximum length for encrypted value is *len + BLOCK_SIZE -1 
       and block size depends on cipher with EVP_MAX_IV_LENGTH being the max for all if this ever fails*/
@@ -362,7 +351,7 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
 #else
         int req_ivlen = EVP_CIPHER_CTX_iv_length(e);
 #endif
-        gg_num iv_len = gg_mem_get_len (gg_mem_get_id(iv)); 
+        gg_num iv_len = gg_mem_get_len (iv); 
         if (iv_len < req_ivlen) gg_report_error ("Length of Initialization Vector (IV) must be [%d] but only [%ld] allocated", req_ivlen, iv_len);
     }
 #if OPENSSL_VERSION_MAJOR  >= 3
@@ -386,7 +375,6 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
         // Make encrypted text as hex-string for db storage
         //
         char *hex_ciphertext = gg_malloc(2*(*len)+1); 
-        gg_num id = gg_mem_get_id (hex_ciphertext);
         gg_num i;
         //
         // Update progress by 2 bytes in hex-string mode
@@ -400,7 +388,7 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
         }
 
         hex_ciphertext[*len = tot_len] = 0;
-        gg_mem_set_len (id, tot_len+1);
+        gg_mem_set_len (hex_ciphertext, tot_len+1);
         gg_free_int (ciphertext); // free binary encrypted value
         return hex_ciphertext; // return hex value
     }
@@ -409,9 +397,8 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
         //
         // The encrypted value is binary, not a hex-string, typically for files
         //
-        gg_num id = gg_mem_get_id (ciphertext);
         ciphertext[p_len + f_len] =0; // add 0 at the end
-        gg_mem_set_len (id, p_len+f_len+1);
+        gg_mem_set_len (ciphertext, p_len+f_len+1);
         return (char*)ciphertext;
     }
 
@@ -434,9 +421,9 @@ char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len,
 char *gg_decrypt(EVP_CIPHER_CTX *e, unsigned char *ciphertext, gg_num *len, gg_num is_binary, unsigned char *iv)
 {
    unsigned char *cipher_bin;
-   gg_num id = gg_mem_get_id(ciphertext);
-   if (*len == -1) *len = gg_mem_get_len(id);
-   else if (*len > gg_mem_get_len(id)) gg_report_error ("Memory used is of length [%ld] but only [%ld] allocated", *len, gg_mem_get_len(id));
+   gg_num lcipher = gg_mem_get_len(ciphertext);
+   if (*len == -1) *len = lcipher;
+   else if (*len > lcipher) gg_report_error ("Memory used is of length [%ld] but only [%ld] allocated", *len, lcipher);
    if (is_binary == 0)
    {
        cipher_bin = gg_malloc (*len/2 + 2); // actually needs only *len/2, 1 for odd, 1 for null just in case
@@ -458,7 +445,6 @@ char *gg_decrypt(EVP_CIPHER_CTX *e, unsigned char *ciphertext, gg_num *len, gg_n
    /* plaintext is equal or lesser length than that of cipher_bin*/
    int p_len = *len, f_len = 0;
    unsigned char *plaintext = gg_malloc(p_len);
-   gg_num pid = gg_mem_get_id (plaintext);
            
    // reuse decryption context in case multiple decryptions done with the same context
 #if OPENSSL_VERSION_MAJOR  >= 3
@@ -472,7 +458,7 @@ char *gg_decrypt(EVP_CIPHER_CTX *e, unsigned char *ciphertext, gg_num *len, gg_n
                   
    *len = p_len + f_len;
    plaintext[*len] = 0; 
-   gg_mem_set_len (pid, *len+1);
+   gg_mem_set_len (plaintext, *len+1);
 
    if (is_binary == 0) gg_free_int (cipher_bin); // deallocate binary encrypted if allocated
    return (char*)plaintext;
@@ -490,15 +476,13 @@ char *gg_decrypt(EVP_CIPHER_CTX *e, unsigned char *ciphertext, gg_num *len, gg_n
 //
 void gg_b64_encode(char* in, gg_num in_len, char** out)
 { 
-    GG_TRACE("");
-    gg_num id = gg_mem_get_id(in);
-    if (in_len == -1) in_len = gg_mem_get_len(id);
-    else if (in_len > gg_mem_get_len(id)) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", in_len, gg_mem_get_len(id));
+    gg_num lin = gg_mem_get_len(in);
+    if (in_len == -1) in_len = lin;
+    else if (in_len > lin) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", in_len, lin);
 
     *out = gg_malloc(4*((in_len+2)/3)+2); 
-    gg_num oid = gg_mem_get_id (*out);
     gg_num out_len = EVP_EncodeBlock((unsigned char*)(*out), (unsigned char*)in, in_len);
-    gg_mem_set_len (oid, out_len+1);
+    gg_mem_set_len (*out, out_len+1);
 }
  
 // 
@@ -509,18 +493,16 @@ void gg_b64_encode(char* in, gg_num in_len, char** out)
 //
 void gg_b64_decode (char* in, gg_num ilen, char** out)
 {
-    GG_TRACE("");
-    gg_num id = gg_mem_get_id(in);
-    if (ilen == -1) ilen = gg_mem_get_len(id);
-    else if (ilen > gg_mem_get_len(id)) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", ilen, gg_mem_get_len(id));
+    gg_num lin = gg_mem_get_len(in);
+    if (ilen == -1) ilen = lin;
+    else if (ilen > lin) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", ilen, lin);
 
     *out = gg_malloc(3*ilen/4+4 + 1);
-    gg_num oid = gg_mem_get_id (*out);
     // remove trailing =s because they are added if the original input is not of size multiple of 3
     gg_num final = 0;
     while (in[ilen-1-final] == '=') final++;
     gg_num out_len = EVP_DecodeBlock((unsigned char*)(*out), (unsigned char*)in, ilen);
     (*out)[out_len - final] = 0; // we added +1 in gg_malloc above to account for 0 always at the end (not part of output length)
-    gg_mem_set_len (oid, out_len - final+1);
+    gg_mem_set_len (*out, out_len - final+1);
 }
 

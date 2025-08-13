@@ -78,13 +78,13 @@ Parse the following XML document and display all element names and values from i
                 <population>8000000</population>\\
             </city>\\
             <city id="2">\\
-                <name>C\eu00F3rdoba</name>\\
+                <name>C\\u00F3rdoba</name>\\
                 <population>220000</population>\\
             </city>\\
         </state>\\
         <state id='2'>Sinaloa\\
             <city id="1">\\
-                <name>Culiac\eu00E1n Rosales</name>\\
+                <name>Culiac\\u00E1n Rosales</name>\\
                 <population>3000000</population>\\
             </city>\\
         </state>\\
@@ -147,10 +147,3 @@ Key [countries/country/state/] Value [Sinaloa]
 .EE
 .RE
 
-.SH SEE ALSO
- XML parsing
-
-\fBread-xml\fP  
-\fBxml-doc\fP   
-See all 
-\fBdocumentation\fP

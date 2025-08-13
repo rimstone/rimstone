@@ -36,28 +36,9 @@ Variable "len2" will be 18 - the string has a null character in the middle of it
 .RS 4
 .EX
 
-set-string str2 = "string" "\ex00 after null"
+set-string str2 = "string" "\\x00 after null"
 string-length str2 to len2
 
 .EE
 .RE
 
-.SH SEE ALSO
- Strings
-
-\fBconcatenate-strings\fP  
-\fBcopy-string\fP  
-\fBcount-substring\fP  
-\fBdelete-string\fP  
-\fBlower-string\fP  
-\fBnew-string\fP  
-\fBread-split\fP  
-\fBreplace-string\fP  
-\fBset-string\fP  
-\fBsplit-string\fP  
-\fBstring-length\fP  
-\fBtrim-string\fP  
-\fBupper-string\fP  
-\fBwrite-string\fP   
-See all 
-\fBdocumentation\fP

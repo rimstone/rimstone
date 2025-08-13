@@ -33,14 +33,3 @@ new-fifo nf
 .EE
 .RE
 
-.SH SEE ALSO
- FIFO
-
-\fBdelete-fifo\fP  
-\fBnew-fifo\fP  
-\fBpurge-fifo\fP  
-\fBread-fifo\fP  
-\fBrewind-fifo\fP  
-\fBwrite-fifo\fP   
-See all 
-\fBdocumentation\fP

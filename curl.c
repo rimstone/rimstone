@@ -29,19 +29,18 @@ typedef struct gg_s_url_callback {
     size_t len;
 } gg_url_data;
 
-void gg_init_url_callback(gg_url_data *s);
-void gg_cleanup_curlcall (curlcall *cc);
-void gg_init_curlcall (curlcall *cc, char **error);
-size_t gg_write_url_callback(void *ptr, size_t size, size_t nmemb, void *s);
-gg_num gg_web_set_header (curlcall *cc, gg_num *tries, char *name, char *val);
+static void gg_init_url_callback(gg_url_data *s);
+static void gg_cleanup_curlcall (curlcall *cc);
+static void gg_init_curlcall (curlcall *cc, char **error);
+static size_t gg_write_url_callback(void *ptr, size_t size, size_t nmemb, void *s);
+static gg_num gg_web_set_header (curlcall *cc, gg_num *tries, char *name, char *val);
 
 
 // Initialize URL response (response received in gg_post_url_with_response(), i.e. when
 // calling web service somewhere). 's' is URL response.
 //
-void gg_init_url_callback(gg_url_data *s)
+static void gg_init_url_callback(gg_url_data *s)
 {
-    GG_TRACE("");
     s->len = 0;
     s->ptr = gg_malloc(s->len+1);
     s->ptr[0] = '\0';
@@ -55,9 +54,8 @@ void gg_init_url_callback(gg_url_data *s)
 // Returns the number of bytes "written" into our buffer, and that must match the number of bytes
 // passed to it.
 //
-size_t gg_write_url_callback(void *ptr, size_t size, size_t nmemb, void *s)
+static size_t gg_write_url_callback(void *ptr, size_t size, size_t nmemb, void *s)
 {
-    GG_TRACE("");
     // new len (so far plus what's incoming)
     size_t new_len = ((gg_url_data*)s)->len + size*nmemb;
 
@@ -83,7 +81,7 @@ size_t gg_write_url_callback(void *ptr, size_t size, size_t nmemb, void *s)
 // error is the error returned from web-call, res is the result of curl op, tries is the
 // number of tries for redirecting URL, curl is the handle of the call
 //
-void gg_end_web(char **error, gg_num res, gg_num *tries, curlcall *cc)
+static void gg_end_web(char **error, gg_num res, gg_num *tries, curlcall *cc)
 {
      if (error != NULL) *error = gg_strdup ((char*)curl_easy_strerror(res));
      *tries = 0;
@@ -93,7 +91,7 @@ void gg_end_web(char **error, gg_num res, gg_num *tries, curlcall *cc)
 //
 // Cleanup after a curl web-call, cc is the curl struct
 //
-void gg_cleanup_curlcall (curlcall *cc)
+static void gg_cleanup_curlcall (curlcall *cc)
 {
    if (cc->curl != NULL) curl_easy_cleanup(cc->curl);
    if (cc->form != NULL) curl_mime_free(cc->form);
@@ -103,7 +101,7 @@ void gg_cleanup_curlcall (curlcall *cc)
 //
 // Initialize curl web-call, cc is the curl struct, error is the output back to web-call in case of error
 //
-void gg_init_curlcall (curlcall *cc, char **error)
+static void gg_init_curlcall (curlcall *cc, char **error)
 {
     cc->curl = NULL;
     cc->hlist = NULL; 
@@ -116,9 +114,8 @@ void gg_init_curlcall (curlcall *cc, char **error)
 // is the header
 // returns GG_OKAY or GG_ERR_FAILED.
 //
-gg_num gg_web_set_header (curlcall *cc, gg_num *tries, char *name, char *val)
+static gg_num gg_web_set_header (curlcall *cc, gg_num *tries, char *name, char *val)
 {
-    GG_TRACE("");
     CURLcode res = CURLE_OK;
     struct curl_slist *tmp;
     char opt[1024];
@@ -161,7 +158,6 @@ gg_num gg_web_set_header (curlcall *cc, gg_num *tries, char *name, char *val)
 //
 gg_num gg_post_url_with_response(char *url, char **result, char **head, char **error, char *cert, char *cookiejar, gg_num *resp_code, long timeout, char bodyreq, char *fields[], char *files[], gg_header *vh, char *method, char *payload, gg_num payload_len)
 {
-    GG_TRACE("URL posted [%s]", url);
 
     curlcall cc;
     gg_init_curlcall (&cc, error);
@@ -230,14 +226,8 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
             }
         }
 
-        // trace curl call if tracing is on
-        gg_config *pc = gg_get_config();
-        // trace_level currently only 1
-        if (pc->debug.trace_level > 0 && pc->trace.f != NULL)
-        {
-            // we do not check status of verbose settings, because if it doesn't work, we wouldn't do anything
-            if (curl_easy_setopt(cc.curl, CURLOPT_STDERR, pc->trace.f) == CURLE_OK) curl_easy_setopt(cc.curl, CURLOPT_VERBOSE, 1L);
-        }
+        // we do not check status of verbose settings, because if it doesn't work, we wouldn't do anything
+        //if (curl_easy_setopt(cc.curl, CURLOPT_STDERR, pc->trace.f) == CURLE_OK) curl_easy_setopt(cc.curl, CURLOPT_VERBOSE, 1L);
 
         if ((res = curl_easy_setopt(cc.curl, CURLOPT_URL, url)) != CURLE_OK)
         {
@@ -307,9 +297,9 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
                 }
             } else if (payload != NULL)
             {
-                gg_num id = gg_mem_get_id(payload);
-                if (payload_len == -1) payload_len = gg_mem_get_len(id);
-                else if (payload_len > gg_mem_get_len(id)) gg_report_error ("Memory used for request body content is of length [%ld] but only [%ld] allocated", payload_len, gg_mem_get_len(id));
+                gg_num plen = gg_mem_get_len(payload);
+                if (payload_len == -1) payload_len = plen;
+                else if (payload_len > plen) gg_report_error ("Memory used for request body content is of length [%ld] but only [%ld] allocated", payload_len, plen);
                 // Note: this setting is no longer used:
                 // do NOT set CURLOPT_POSTFIELDSIZE to -1 as docs for curl API suggest, results in sigsegv in curl
                 // this would have been to have curl strlen() the body, but it does it anyways by default
@@ -347,15 +337,13 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
                 /* a redirect implies a 3xx response code , 301/302/308/307 temp and perm*/
                 // this is if NOT a redirection (3xx). The actual result is obtained ONLY from the actual data response and NOT from redirection.
                 *result = sresp.ptr;
-                gg_num id = gg_mem_get_id (*result);
                 len = sresp.len;
-                gg_mem_set_len (id, len+1);
+                gg_mem_set_len (*result, len+1);
                 if (head != NULL)
                 {
                     *head = shead.ptr;
-                    gg_num hid = gg_mem_get_id (*head);
                     lenhead = shead.len;
-                    gg_mem_set_len (hid, lenhead+1);
+                    gg_mem_set_len (*head, lenhead+1);
                 }
             }
             else
@@ -367,7 +355,6 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
                 {
                       /* This is the new absolute URL that you could redirect to, even if
                        *            * the Location: response header may have been a relative URL. */
-                      GG_TRACE("Redirecting to [%s]", location);
                       gg_free_int (sresp.ptr); // free the old result
                       gg_free_int (shead.ptr); // free the old result
                       //
@@ -381,7 +368,6 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
                       gg_num res = gg_post_url_with_response(location, result, head, cc.error, cert, cookiejar, resp_code, timeout, bodyreq, fields, files, vh, method, payload, payload_len);
                       tries = 0;
                       gg_cleanup_curlcall(&cc);
-                      GG_TRACE("Finished redirection");
                       return res;
                 }
                 else
@@ -392,7 +378,6 @@ gg_num gg_post_url_with_response(char *url, char **result, char **head, char **e
         }
 
         gg_cleanup_curlcall(&cc);
-        GG_TRACE("Closed curl connection");
     }
     else
     {

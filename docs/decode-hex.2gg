@@ -37,15 +37,8 @@ The value of "binout" will be binary data equal to this C literal:
 .RS 4
 .EX
 
-"\ex00""A""\ex00""\exF""AB""\ex00""\ex04"
+"\\x00""A""\\x00""\\x0F""AB""\\x00""\\x04"
 
 .EE
 .RE
 
-.SH SEE ALSO
- Hex encoding
-
-\fBdecode-hex\fP  
-\fBencode-hex\fP   
-See all 
-\fBdocumentation\fP

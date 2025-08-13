@@ -64,12 +64,3 @@ Another way to write this is:
 .EE
 .RE
 
-.SH SEE ALSO
- Service processing
-
-\fBafter-handler\fP  
-\fBbefore-handler\fP  
-\fBbegin-handler\fP  
-\fBcall-handler\fP   
-See all 
-\fBdocumentation\fP

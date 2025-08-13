@@ -65,15 +65,3 @@ encode-base64 result to bresult
 .EE
 .RE
 
-.SH SEE ALSO
- Encryption
-
-\fBdecrypt-data\fP  
-\fBderive-key\fP  
-\fBencrypt-data\fP  
-\fBhash-string\fP  
-\fBhmac-string\fP  
-\fBrandom-crypto\fP  
-\fBrandom-string\fP   
-See all 
-\fBdocumentation\fP

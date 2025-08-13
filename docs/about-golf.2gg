@@ -7,9 +7,21 @@ about-golf \- Golf documentation (general)
 .B WHAT IS IT
 .LP
 
-Golf is a memory-safe and high-performance programming language and application server. Golf is a compiled language that creates native executables. It's main purpose is easy and rapid development and deployment of web services and applications on Linux back-end.
+Golf's main purpose is easy and rapid development and deployment of high-performance applications on Linux. It is a memory-safe programming language and application server, that creates native compiled executables. It is declarative, functional and service oriented.
 
 Golf is built with industry-standard Free Open Source libraries, extensible with C programming language, and licensed under \fBApache 2\fP Free Open Source.
+
+.LP
+.B DECLARATIVE AND FUNCTIONAL
+.LP
+
+Golf is both declarative and functional language. For important tasks that real-world applications are made of, you'd specify (typically in a single line) what you need done, like for instance in SQL, with the exception that Golf creates native executables for performance. At the same time, Golf is functional with all the necessary constructs you're used to in most other languages. What's missing is complexity.
+
+.LP
+.B HOW IT WORKS
+.LP
+
+All Golf programs are translated into C programming language, which is considered the \fBfastest and most efficient programming language\fP. Golf's goal is to be easy to work with and quick to produce the functionality you want, yet also to create C code that would be comparable to that of an experienced C programmer. This synergy can produce the best performance with memory safety along with very simple yet powerful language statements.
 
 .LP
 .B SERVICE ORIENTED
@@ -71,13 +83,19 @@ programs written in any language using \fBClient-API\fP,
 
 .RS 4
 \[bu]    
-Golf's own \fBgg\fP utility (see -r option)
+Golf's own \fBgg\fP utility (see -r option), or \fBggcli\fP command-line client.
 
 .RE
 
 .RS 4
 \[bu]    
 another Golf service by means of \fBcall-remote\fP (on secure networks) and \fBcall-web\fP (on the web via SSL/TSL secure connections).
+
+.RE
+
+.RS 4
+\[bu]    
+standard web utilities like \fBcurl\fP.
 .RE
 
 With \fBcall-remote\fP, you can execute remote requests in parallel, and get results, error messages and exit status in a single statement. This makes it easy to distribute and parallelize your application logic and/or build application tiers on a local or any number of remote machines, without having to write any multi-threaded code.
@@ -124,7 +142,7 @@ Golf goes a step further from memory safety. It also enforces status checking fo
 .B TYPES
 .LP
 
-Golf is a strongly-typed language, with only three primitive types (numbers, strings and booleans) and a number of structured types (message, split-string, hash, tree, tree-cursor, fifo, lifo, list, file and service). Golf is a declarative language, with a few lines of code implementing large functionalities. Golf is also very simple - it's near expression-free! That's because it's designed to achieve application goals with less coding.
+Golf is a strongly-typed language, with only three primitive types (numbers, strings and booleans) and a number of structured types (array, message, split-string, hash, tree, tree-cursor, fifo, lifo, list, file and service). Golf is a declarative language, with a few lines of code implementing large functionalities. Golf is also very simple, as it's designed to achieve application goals with less coding.
 
 The number type is a signed 64-bit integer (as a decimal, octal or hexadecimal C notation). The boolean type evaluates to true (non-zero) or false (zero). The string type evaluates to any sequence of bytes (binary or text) that is always trailed with a null character regardless, which is not counted in string's length. All constants follow C rules of formatting.
 
@@ -132,7 +150,7 @@ The number type is a signed 64-bit integer (as a decimal, octal or hexadecimal C
 .B STATEMENTS
 .LP
 
-Golf \fBstatements\fP are designed for safety, ease of use, and ability to write stable code. Most statements typically perform common complex tasks with options to easily customize them; such options are compile-time whenever possible, increasing run-time performance.
+Golf \fBstatements\fP are designed for safety, ease of use, and ability to write stable code. Most statements typically perform common complex tasks with options to easily customize them; such options are processed at compile-time whenever possible, increasing run-time performance.
 
 .LP
 .B VARIABLES, SCOPE
@@ -140,7 +158,7 @@ Golf \fBstatements\fP are designed for safety, ease of use, and ability to write
 
 A variable is created the first time it's encountered in any given scope, and is never created again in the same or inner scopes, which avoids common bugs involving more than one variable with the same name in related scopes. You can still of course create variables with the same name in unrelated scopes. 
 
-Some structured types (hash, tree, list) as well as primitive types (numbers, strings and booleans) can be created with process-scope, meaning their value persists throughout any requests served by the same process. This is useful for making services that allow keeping and fast querying of data (such as caches).
+Some structured types (hash, tree, list) as well as primitive types (numbers, strings and booleans) can be created with process-scope, meaning their value persists throughout any requests served by the same process. This is useful for making data-server services that allow keeping and fast querying of data (such as caches or data services).
 
 Numbers and booleans are assigned by value, while strings are assigned by reference (for obvious reason to avoid unnecessary copying).
 
@@ -154,7 +172,7 @@ Golf includes request-processing and all the necessary infrastructure, such as f
 .B PERFORMANCE
 .LP
 
-Golf is a compiled language. Golf applications are high-performance native executables by design, hence absolutely no byte-code, interpreters and similar. Since Golf is declarative, just a few \fBstatements\fP are needed to implement lots of functionality. These statements are implemented in pure C, and are not slowed down by memory checks as they are safe internally by implementation. Only developer-facing Golf code needs additional logic to enforce memory safety, and that's a very small part of overall run-time cost. This means Golf can truly be memory-safe and high-performance at the same time.
+Golf is a compiled language. Golf applications are native executables by design, hence no byte-code, interpreters and similar. Since Golf is declarative, just a few \fBstatements\fP are needed to implement lots of functionality. These statements are implemented in pure C, and are not slowed down by memory checks as they are safe internally by implementation. Only developer-facing Golf code needs additional logic to enforce memory safety, and that's a very small part of overall run-time cost. 
 
 .LP
 .B DATABASE ACCESS
@@ -176,13 +194,13 @@ protection against SQL injections for safety,
 
 .RS 4
 \[bu]    
-automatic and persistent database connections with unlimited reuse across all SQL queries for high performance,
+automatic and persistent database connections with unlimited reuse across all SQL queries.
 
 .RE
 
 .RS 4
 \[bu]    
-prepared SQL statements for high performance.
+prepared SQL statements.
 .RE
 
 
@@ -190,7 +208,7 @@ prepared SQL statements for high performance.
 .B PROVEN LIBRARIES
 .LP
 
-Golf uses well-known and widely used Free Open Source libraries like cURL, OpenSSL, crypto, FastCGI, standard database-connectivity libraries from MariaDB, PostgreSQL, SQLite etc., for compliance, performance and reliability.
+Golf uses well-known and widely used Free Open Source libraries like cURL, openSSL, crypto, libbacktrace, fastcgi, standard database-connectivity libraries from MariaDB, PostgreSQL, SQLite etc., for compliance, performance and reliability.
 
 .LP
 .B WEB FRAMEWORK FOR C PROGRAMMING LANGUAGE
@@ -205,15 +223,7 @@ In extended mode, Golf is also a \fBweb-framework-for-C-programming-language\fP.
 Do not use object names (such as variables and request names) that start with "_gg_" or "gg_" (including upper-case variations) as those are reserved by Golf.
 
 .LP
-.B HISTORY
+.B AUTHOR
 .LP
 
-Golf programming language (or golf-lang) was created by Sergio Mijatovic, formerly Senior Software Engineer with Oracle server engineering group. Golf was originally known as Vely (since 2018), before being redesigned into Golf in late 2024.
-.SH SEE ALSO
- General
-
-\fBabout-golf\fP  
-\fBdirectories\fP  
-\fBpermissions\fP   
-See all 
-\fBdocumentation\fP
+Golf programming language (or golf-lang) is created and written by Serge Miatovich (team@golf-lang.com). 

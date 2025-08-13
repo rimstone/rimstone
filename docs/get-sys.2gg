@@ -11,7 +11,7 @@ Obtain data that describes the system.
 
 get-sys \\
     environment <var name> \\
-        directory | os-name | os-version \\
+        directory | os-name | os-version | os-user | os-dir \\
     to <variable>
 
 .EE
@@ -45,6 +45,20 @@ get-sys environment "QUERY_STRING" to qstr
 
 .RS 4
 \[bu]    
+"os-user" is the name of Operating System user who is running your application.
+
+
+.RE
+
+.RS 4
+\[bu]    
+"os-dir" is the full path of home directory of Operating System user who is running your application.
+
+
+.RE
+
+.RS 4
+\[bu]    
 "os-name" is the name of Operating System.
 
 
@@ -67,9 +81,3 @@ get-sys os-name to os_name
 .EE
 .RE
 
-.SH SEE ALSO
- System information
-
-\fBget-sys\fP   
-See all 
-\fBdocumentation\fP

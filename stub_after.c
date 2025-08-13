@@ -11,9 +11,7 @@
 #include "golf.h"
 
 
-void after_handler ()  
-{
-    GG_TRACE("");
-}
+// will be optimized out if not defined
+void after_handler ()  {}
 
 

@@ -17,29 +17,56 @@
 #
 #_BETA=""
 
+#enable "extended globs" (such as "parameter expansion" or ${!X}
+shopt -s extglob nullglob globstar
+#display error context if golf has a shell error, source file bash only
+set -eE -o functrace
+trap 'echo "Error: status $?, $(caller), line ${BASH_SOURCE[0]}/${LINENO}"' ERR
+function exit_s() {
+    #remove trap so we don't have a message if we're exiting on purpose
+    trap - ERR
+    exit $1
+}
+#
+#
+#
+#Emitting error messages
+#
+#
+#
+function error() {
+#$1 is message
+    echo -e "** Error: $1" 1>&2
+    exit_s -1
+}
+
+#cannot run as run as it might mess up permissions. 
+if [[ $EUID -eq 0 ]]; then error "You cannot run gg as root or sudo";  fi
+
+
 export GG_USER=$(whoami)
 #make sure HOME is available, some apps wipe it out like apache setenv
 if [ "$HOME" == "" ]; then
     HOME=$(eval echo ~$GG_USER)
 fi
+export HOME
+#location of Golf data
+export GG_DATA="$HOME/.golf"
+#make sure  local directory exists, installation should have created it
+if [ ! -d "$GG_DATA" ]; then
+    mkdir -p $GG_DATA/src
+    if [ ! -d "$GG_DATA" ]; then
+        error "Cannot create directories under $GG_DATA, please make sure it can be created and is writeable"
+    fi
+fi
 
-#enable "extended globs" (such as "parameter expansion" or ${!X}
-shopt -s extglob
-#display error context if golf has a shell error, source file bash only
-set -eE -o functrace
-trap 'echo "Error: status $?, $(caller), line ${BASH_SOURCE[0]}/${LINENO}"' ERR
-
-#cannot run as run as it might mess up permissions. 
-if [[ $EUID -eq 0 ]]; then echo "You cannot run golf as root or sudo"; exit -1; fi
 
 #
 #
 #DO NOT change these values, they are changed here by Makefile per platform when make install is done
-#They will have $GG_ROOT in them
-export GG_LIBRARY_PATH="/usr/lib/golf"
+export GG_LIBRARY_PATH="$GG_DATA/lib"
 . "$GG_LIBRARY_PATH"/sys
 #find out where this script runs from (i.e. where 'gg' actually is, minus /usr/bin)
-export GG_ROOT=""
 #end of DO-NOT-change
 #
 #
@@ -47,19 +74,22 @@ export GG_ROOT=""
 #by default, make is silent (except for messages we emit). For debugging, use -e to see everything that's going on (this shows golf execution too!)
 GG_SHOW_MAKE="-s"
 
-#location of Golf data
-export GG_DATA="$GG_ROOT/var/lib/gg"
+
+#get gcc version
+export GG_C_GCC
+read -r GG_C_GCC < <(gcc --version)
 
 export GG_C_RESTPATH=""
 export GG_C_MAXUPLOAD="25000000"
+export GG_C_CLIENT_TOUT="5"
 export GG_C_CPUS=$(nproc)
 if (( GG_C_CPUS < 1 )); then
     export GG_C_CPUS="1"
 fi
 export GG_C_MAXERRORS="5"
-#plain diagnostics must have value, as it's passed in a script (vdiag) in vmakefile
-export GG_C_PLAINDIAG="0"
-FCGI_INC0="/usr/include/fastcgi"
+export GG_C_DEBUG="0" # not by default
+export GG_C_DEVEL="1" # devel by default
+
 
 #defaults for quick install
 _PROXYPORT="80"
@@ -69,6 +99,8 @@ _PROXYPORT="80"
 #Internal options that may go away:
 #--asan build with ASAN
 #--asan-opt print out ASAN option to prefix the execution with, also works with prefix mgrg for better coverage of SERVICE program
+#--prof build with gprof
+#--debug is internal option that executes the code in a manner that facilitates Golf debugging (it's an add-on to --devel)
 #
 function use_message() {
     echo "Usage: $0  OPTIONS 
@@ -78,8 +110,7 @@ OPTIONS:
 -c       clean make artifacts for a rebuild
 -v       show version
 -s       show detailed execution (script tracing)
--e N     show last N program errors
--t N     show trace files for N most recent processes
+-e N     show last N program backtraces
 -o       show documentation directory
 -l       show library directory
 -m       setup syntax highlighting for Vim
@@ -99,11 +130,11 @@ OPTIONS:
              --db=\"mariadb:<db name>|postgres:<db name> ...\" 
              --lflag=<linker flags> 
              --cflag=<c flags> 
-             --trace 
              --c-lines 
              --posix-regex
-             --debug 
+             --devel | --release
              --maxupload=<max upload size>
+             --client-timeout=<timeout>
              --path=\"/some/path\"
              --max-errors=<max errors>
              --plain-diag
@@ -113,16 +144,19 @@ OPTIONS:
              --single-file
              --exclude-dir=<dir list>
              --ignore-warn
+             --verbose
 -i       display build flags for FastCGI client
              --include
                  displays C compile flags
              --link
                  displays C linking flags
---man    display all Golf man pages available
+--man    display all Golf topic available (--man all)
+             or view a topic (--man <topic>)
 -h       this help
 Type 'man gg' for more information.
 "
 }
+
 
 #process all command-line options
 function main() {
@@ -132,10 +166,10 @@ function main() {
 #list of Golf options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o k:e:t:,q,g,o,l,m,i,h,c,v,s,u,r --long ignore-warn,exclude-dir:,man,single-file,public,parallel:,db:,lflag:,cflag:,trace,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,req:,exec,method:,maxupload:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o k:e:,q,o,l,m,i,h,c,v,s,u,r --long verbose,ignore-warn,exclude-dir:,man:,single-file,public,parallel:,db:,lflag:,cflag:,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,prof,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,devel,release,req:,exec,method:,maxupload:,client-timeout:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
-    exit -1
+    exit_s -1
 fi
 
 #init flags used to emit helpful messages
@@ -146,18 +180,8 @@ _DO_QUICK=0
     eval set -- "$_opts"
     while true; do 
     case "$1" in 
-        --trace  )
-            export GG_C_TRACE="1"
-            _DEVOPT=1
-            shift 
-            ;;
         --c-lines  )
             export GG_C_SKIPLINES="1"
-            _DEVOPT=1
-            shift 
-            ;;
-        --plain-diag  )
-            export GG_C_PLAINDIAG="1"
             _DEVOPT=1
             shift 
             ;;
@@ -172,12 +196,35 @@ _DO_QUICK=0
             shift 
             ;;
         --man  )
-            apropos -s 2gg '.*' | sed 's/(2gg)//g'
-            shift 
+            if [ "$2" == "all" ]; then
+                GGMAN=($GG_DATA/man/man2/*.2gg) 2>/dev/null || true
+                for i in ${GGMAN[*]}; do i=${i##*/};echo ${i%.*}; done | more
+            else
+                if [ ! -f "$GG_DATA/man/man2/$2.2gg" ]; then
+                    error "Man page [$2] does not exist. Use '--man all' to view all pages"
+                fi
+                cat $GG_DATA/man/man2/$2.2gg |preconv|groff -man -T utf8 -P -c|more
+            fi
+            shift 2
             exit 0
+            ;;
+        --verbose  )
+            export GG_C_SHOW="1"
+            _DEVOPT=1
+            shift 
             ;;
         --ignore-warn  )
             export GG_C_IGNORE_WARN="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --release  )
+            export GG_C_DEVEL="0"
+            _DEVOPT=1
+            shift 
+            ;;
+        --devel  )
+            export GG_C_DEVEL="1"
             _DEVOPT=1
             shift 
             ;;
@@ -189,6 +236,11 @@ _DO_QUICK=0
         --asan-opt  )
             echo "ASAN_OPTIONS=log_path=asan:halt_on_error=0"
             exit 0
+            ;;
+        --prof  )
+            export GG_C_PROF="1"
+            _DEVOPT=1
+            shift 
             ;;
         --asan  )
             export GG_C_ASAN="1"
@@ -202,6 +254,11 @@ _DO_QUICK=0
             ;;
         --path  )
             export GG_C_RESTPATH="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --client-timeout  )
+            export GG_C_CLIENT_TOUT="$2"
             _DEVOPT=1
             shift 2
             ;;
@@ -225,20 +282,9 @@ _DO_QUICK=0
             _DEVOPT=1
             shift 2
             ;;
-        -t )
-#display last N trace files (for N most recent processes)
-            _SHOWTRACE="$2"
-            shift 2
-            ;;
         -u )
 #subst env vars from stdin to stdout
             "$GG_LIBRARY_PATH"/v1 -envsub
-            exit 0
-            ;;
-        -g )
-#display Golf root
-            echo "$GG_ROOT"
-            shift 1
             exit 0
             ;;
         -e )
@@ -400,9 +446,18 @@ _DO_QUICK=0
             ;;
         * ) 
             use_message 1>&2
-            exit -1
+            exit_s -1
         esac
     done
+
+    if [ "$GG_C_DEVEL" == "1" ]; then
+        GDEST="devel"
+    else
+        if [ "$GG_C_DEBUG" == "1" ]; then
+            error "Cannot use --debug with release build"
+        fi
+        GDEST="release"
+    fi
 
 #we always first check if application is being created, so then afterwards it can be made etc; thus we don't exit 
     if [ "$_NEWAPP" == "1" ]; then
@@ -410,20 +465,16 @@ _DO_QUICK=0
             error "You must specify application name you wish to create"
         fi
         check_name "$_NAME" "application name"
+        #make ./golf for
         ECODE=0
-        #for local install, we can't use sudo, nor should we
-        if [ "$GG_ROOT" == "" ]; then
-            sudo mgrg -i -u $(whoami) $_NAME || ECODE=$?
-        else
-            mgrg -i -u $(whoami) $_NAME || ECODE=$?
-        fi
+        mgrg -i -u $(whoami) $_NAME || ECODE=$?
         #exit immediately if not successful
         if [ "$ECODE" != "0" ]; then
-            exit $ECODE
+            exit_s $ECODE
         fi
         #otherwise check if we want to do -q too
         if [ "$_DO_QUICK" != "1" ]; then
-            exit $ECODE
+            exit_s $ECODE
         fi
     fi
 
@@ -436,13 +487,9 @@ _DO_QUICK=0
         exit 0
     fi
 
-#ask --debug to be used for tracing
-    if [[ "$GG_C_TRACE" == "1" && "$GG_C_DEBUG" != "1" ]]; then
-        error "In order to use tracing, you must use --debug option"
-    fi
 #internal: Address Sanitizer only with debug
-    if [[ "$GG_C_ASAN" == "1" && "$GG_C_DEBUG" != "1" ]]; then
-        error "In order to use ASAN, you must use --debug option"
+    if [[ "$GG_C_ASAN" == "1" && "$GG_C_DEVEL" != "1" ]]; then
+        error "In order to use ASAN, you must use --devel option"
     fi
 
 #something extra and unexpected, complain about it, probably an error
@@ -470,19 +517,20 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
         #this is special $() which doesn't create subshell, but just reads contents into a variable
         export GG_C_NAME=$(<.vappname)
     else
-        error "Golf application was not created yet. Please use mgrg to create an application first"
+        error "Golf application was not created yet. Please use 'gg- k' to create an application first"
     fi
     check_name "$GG_C_NAME" "application name"
-    export GG_BLD0=$GG_DATA/bld
-    export GG_BLD=$GG_BLD0/$GG_C_NAME
-    export GG_H="$GG_DATA/$GG_C_NAME"
+    export GG_BLD=$GG_DATA/apps/$GG_C_NAME/.bld
+    export GG_BLD0=$GG_BLD/.bld
+    export GG_H="$GG_DATA/apps/$GG_C_NAME"
     export GG_A="$GG_H/app"
 
 #THEN perform any actions
 
 #check for source only if compiling or cleaning up
     if [[ "$_DO_QUICK" == "1" || "$_DO_CLEAN" == "1" ]]; then
-        GLIST_C=$(ls *.golf 2>/dev/null|wc -l)
+        GLIST_L=(*.golf) 2>/dev/null || true
+        GLIST_C=${#GLIST_L[@]}
         if [ "$GLIST_C" == "0" ]; then
             error "No Golf source source code found."
         fi
@@ -507,11 +555,6 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
         fi
         . $GG_BLD/.blds
         show_run_program
-        exit 0
-    fi
-
-    if [ "$_SHOWTRACE" != "" ]; then
-        showtrace $_SHOWTRACE
         exit 0
     fi
 
@@ -543,18 +586,6 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
 #
 #
 
-#
-#
-#
-#Get FastCGI include dir
-#
-#
-#
-function fcgi_inc() {
-    #OpenSUSE has FastCGI in fastcgi directory, check in general if it exists, if it does, use it
-    FCGI_INC=FCGI_INC0;
-    if [ ! -f "$FCGI_INC" ]; then FCGI_INC="" ; else FCGI_INC="-I$FCGI_INC" ; fi
-}
 
 #
 #
@@ -571,13 +602,13 @@ function show_client_bld() {
     fi
 #print the flag asked for, if both, place them on the same line
     if [ "$_DO_CLIENT_INCLUDE" == "1" ]; then
-        fcgi_inc
-        echo -n "-I$GG_INCLUDE_PATH $FCGI_INC "
+        echo -n "-I$HOME/.golf/include "
     fi
     if [ "$_DO_CLIENT_LINK" == "1" ]; then
-        echo -n "-L$GG_LIBRARY_PATH -lgolfcli -Wl,--rpath=$GG_LIBRARY_PATH "
+        echo -n "-L$GG_LIBRARY_PATH/$GDEST -lgolfcli -Wl,--rpath=$GG_LIBRARY_PATH/$GDEST "
     fi
-    echo ""
+    #use LTO for building clients
+    echo "-flto=auto "
 }
 
 #
@@ -590,22 +621,30 @@ function show_client_bld() {
 function setup_highlighting() {
     mkdir -p $HOME/.vim
     mkdir -p $HOME/.vim/syntax
+    mkdir -p $HOME/.vim/indent
     cp $GG_LIBRARY_PATH/golf.vim $HOME/.vim/syntax/golf.vim
+    cp $GG_LIBRARY_PATH/golf_indent.vim $HOME/.vim/indent/golf.vim
 #set .golf file type to use golf.vim above
-    _USEV="autocmd BufRead,BufNewFile *.golf set filetype=golf"
+    _VICOMM="autocmd BufRead,BufNewFile *.golf set filetype=golf"
     if [ ! -f "$HOME/.vimrc" ]; then
-        echo "$_USEV" > $HOME/.vimrc
+        echo "$_VICOMM" > $HOME/.vimrc
     else
-        E=0; grep -F "$_USEV" $HOME/.vimrc >/dev/null || E=$?
+        E=0; grep -F "$_VICOMM" $HOME/.vimrc >/dev/null || E=$?
         if [ "$E" != "0" ]; then
-            echo "$_USEV" >> $HOME/.vimrc
+            echo "$_VICOMM" >> $HOME/.vimrc
         fi
     fi
 #make sure syntax is on
-    _SYNON="syntax on"
-    E=0; grep -F "$_SYNON" $HOME/.vimrc >/dev/null||E=$?
+    _VICOMM="filetype indent on"
+    E=0; grep -F "$_VICOMM" $HOME/.vimrc >/dev/null||E=$?
     if [ "$E" != "0" ]; then
-        echo "$_SYNON" >> $HOME/.vimrc
+        echo "$_VICOMM" >> $HOME/.vimrc
+    fi
+#make sure syntax is on
+    _VICOMM="syntax on"
+    E=0; grep -F "$_VICOMM" $HOME/.vimrc >/dev/null||E=$?
+    if [ "$E" != "0" ]; then
+        echo "$_VICOMM" >> $HOME/.vimrc
     fi
 }
 
@@ -705,15 +744,15 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
             error "Cannot use both --remote and --socket"
         fi
         if [ "$_REQ_IP" != "" ]; then
-            echo "${_CONT}cgi-fcgi -connect \"$_REQ_IP\" $_APATH" >> $_TOEXEC 
+            echo "${_CONT}"$GG_LIBRARY_PATH"/ggcli \"$_REQ_IP\"" >> $_TOEXEC 
         else
             if [ "$_REQ_SOCK" != "" ]; then
                 if [ ! -S "$_REQ_SOCK" ]; then
                     error "Cannot access socket $_REQ_SOCK or is not a socket file"
                 fi
-                echo "${_CONT}cgi-fcgi -connect $_REQ_SOCK $_APATH" >> $_TOEXEC 
+                echo "${_CONT}"$GG_LIBRARY_PATH"/ggcli $_REQ_SOCK" >> $_TOEXEC 
             else
-                echo "${_CONT}cgi-fcgi -connect $GG_ROOT/var/lib/gg/$_ANAME/sock/sock  $_APATH" >> $_TOEXEC 
+                echo "${_CONT}"$GG_LIBRARY_PATH"/ggcli $GG_DATA/apps/$_ANAME/sock/.sock" >> $_TOEXEC 
             fi
         fi
     else
@@ -723,9 +762,16 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
         #add arguments if specified for command-line run
         ADD_ARG=""
         if [ "$_REQ_ARG" != "" ]; then
-            ADD_ARG=" $_REQ_ARG"
+            IFS=' ' read -r -a ADD_ARG <<< "$_REQ_ARG"
         fi
-        echo "${_CONT}$GG_ROOT/var/lib/gg/bld/$_ANAME/$_ANAME$ADD_ARG" >> $_TOEXEC 
+        echo -n "${_CONT}$GG_DATA/apps/$_ANAME/.bld/$_ANAME" >> $_TOEXEC 
+        if [ "$_REQ_ARG" != "" ]; then
+            ARG_LEN=${#ADD_ARG[@]}
+            for (( i=0; i<$ARG_LEN; i++ )); do
+                echo -n " '${ADD_ARG[$i]}'" >> $_TOEXEC
+            done
+        fi
+        echo "" >> $_TOEXEC 
     fi
     if [[ "$_REQ_EXEC" == "1" && "$_REQ_URL" == "" ]]; then
         error "Cannot use --exec without --req"
@@ -735,7 +781,7 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
        RCODE=0
        . $_TOEXEC || RCODE=$?
        if [ "$RCODE" != "0" ]; then
-           exit $RCODE
+           exit_s $RCODE
        fi
     else
         cat $_TOEXEC
@@ -743,17 +789,6 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
 }
 
 
-#
-#
-#
-#Show last $1 trace files
-#
-#
-#
-function showtrace() {
-    ls -aslrt $GG_ROOT/var/lib/gg/$GG_C_NAME/app/trace/trace* |tail -n $1
-    echo "Backtrace: $GG_ROOT/var/lib/gg/$GG_C_NAME/app/trace/backtrace"
-}
 
 #
 #
@@ -763,8 +798,15 @@ function showtrace() {
 #
 #
 function showerr() {
-    grep -a "ERROR:" $GG_ROOT/var/lib/gg/$GG_C_NAME/app/trace/backtrace |tail -n $1
-    echo "Backtrace: $GG_ROOT/var/lib/gg/$GG_C_NAME/app/trace/backtrace"
+    NUMT=$(ls -rt $GG_DATA/apps/$GG_C_NAME/trace/bt* 2>/dev/null||true|wc -l)
+    if [ "$NUMT" != "0" ]; then
+        STRACE=$(ls -rt $GG_DATA/apps/$GG_C_NAME/trace/bt* | tail -n $1)
+        for i in $STRACE; do
+            echo "******* File: $i"
+            cat $i
+            echo ""
+        done
+    fi
 }
 
 #
@@ -803,25 +845,28 @@ function getdbs() {
 #File $GG_BLD/blds is used in vmakefile as a signal to recompile all (if changed)
 #Sole purpose is to know when to recompile, nothing is cached as far as command-line params go.
 #
-#GG_C_MAXERRORS and GG_C_PLAINDIAG do not affect compilation, only the output of errors, so not
+#GG_C_MAXERRORS does not affect compilation, only the output of errors, so not
 #part of mkset.
 #
 #
 function mkset() {
-    echo "GG_C_TRACE='$GG_C_TRACE'
-GG_C_SKIPLINES='$GG_C_SKIPLINES'
+    echo "GG_C_SKIPLINES='$GG_C_SKIPLINES'
 GG_C_ASAN='$GG_C_ASAN'
+GG_C_PROF='$GG_C_PROF'
 GG_C_IGNORE_WARN='$GG_C_IGNORE_WARN'
+GG_C_SHOW='$GG_C_SHOW'
+GG_C_GCC='$GG_C_GCC'
+GG_C_DEVEL='$GG_C_DEVEL'
 GG_C_DEBUG='$GG_C_DEBUG'
 GG_C_PUBLIC='$GG_C_PUBLIC'
 GG_C_SINGLE_FILE='$GG_C_SINGLE_FILE'
 GG_C_MAXUPLOAD='$GG_C_MAXUPLOAD'
+GG_C_CLIENT_TOUT='$GG_C_CLIENT_TOUT'
 GG_C_RESTPATH='$GG_C_RESTPATH'
 GG_C_CFLAGS='$GG_C_CFLAGS'
 GG_C_LFLAGS='$GG_C_LFLAGS'
 GG_C_LFLAGS='$GG_C_LFLAGS'
 GG_C_POSIXREGEX='$GG_C_POSIXREGEX'
-GG_C_MODULES='$GG_C_MODULES'
 GG_C_V1_MOD='$(stat -c "%Y" $GG_LIBRARY_PATH/v1)'
 GG_C_GG_MOD='$(stat -c "%Y" $(which gg))'
 GG_DBS='$_ALLDB'
@@ -846,7 +891,7 @@ GG_DBS='$_ALLDB'
 #
 #
 function docdir() {
-    echo "$GG_ROOT/usr/share/golf"
+    echo "$GG_DATA/golf"
 }
 
 #
@@ -866,223 +911,78 @@ function check_name() {
 
 
 
-#
-#
-#
-#Emitting error messages
-#
-#
-#
-function error() {
-#$1 is message
-    echo -e "** Error: $1" 1>&2
-    exit -1
-}
-
 
 
 
 #
 #
-#if GG_C_MODULES read from .cache file and available, get the usage and set modules
+#Discovery of what's installed and prepare for build to minimize use of includes and libs
 #
 #
 function read_modules() {
-
-#Set _ISMOD_* variables and call set_modules to set variables for building of application. This is for databases only.
-    for _i in $GG_C_MODULES; do
-        if [ "$_i" == "mariadb" ]; then
-            _ISMOD_MARIADB="1"
-        elif [ "$_i" == "postgres" ]; then
-            _ISMOD_POSTGRES="1"
-        elif [ "$_i" == "sqlite" ]; then
-            _ISMOD_SQLITE="1"
-        else
-            error "Unknown module [$_i]"
-        fi
-    done
-
 #
-#begin automatic libs discovery
-#
-#figure out if there's need for these libs
-#these find out if there's mention of these calls. A more native C approach was attempted
-#where during v1 compilation, information was collected and then used later, however that method ended up being either same or 
-#slower than this due to complexities of collecting and manipulating, and having to change (now) simple Makefile rules.
-#Trying to obtain modification times, save and compare later was alone more than double the time of what's below.
-#This gives all files to grep, so avoid slow "for i in $(ls *.golf)", and checks for file that has other than filename:0, so
-#that's where :[1-9] comes from. By far the fastest method.
-#Overall, the slowdown in performance of full recompile with this is only about 0.06% for 67 .golf files and about 8000 lines of code.
-#The limit here is about 100,000 file with names of 20 chars long, so unlikely to have that many source files with that long names
-#This approach also scales the best. For example, adding 10 more libs put it at 0.4%, whereas the approach with grepping
-#each lib separately puts it at 0.74%, or almost double.
-#
-
-#first look for all possible statements
-#there can't be a comment prior to statement, v1.c will prohibit that
-    grep -h -o "^[[:space:]]*\(call-web \|match-regex \|[a-z]\+-tree \|xml-doc \|[a-z]\+-array \|hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \|[a-z]\+-remote \)" *.golf>$GG_BLD/.findmod || true
-#then from occurrances, look for curl
-    E=0;grep -m 1 -o "^[[:space:]]*call-web " $GG_BLD/.findmod >/dev/null||E=$?
-    if [ "$E" == "0" ]; then _ISMOD_CURL="1"; fi
-#then from occurrances, look for array
-    E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-array " $GG_BLD/.findmod > /dev/null||E=$?
-    if [ "$E" == "0" ]; then _ISMOD_ARRAY="1"; fi
-#then from occurrances, look for xml
-    E=0;grep -m 1 -o "^[[:space:]]*xml-doc " $GG_BLD/.findmod > /dev/null||E=$?
-    if [ "$E" == "0" ]; then _ISMOD_XML="1"; fi
-#then from occurrances, look for tree
-    E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-tree " $GG_BLD/.findmod > /dev/null||E=$?
-    if [ "$E" == "0" ]; then _ISMOD_TREE="1"; fi
-#then from occurrances, look for pcre2
-    E=0;grep -m 1 -o "^[[:space:]]*match-regex " $GG_BLD/.findmod > /dev/null||E=$?
-    if [ "$E" == "0" ]; then _ISMOD_PCRE2="1"; fi
-#then from occurrances, look for fcgi
-    E=0;grep -m 1 -o "^[[:space:]]*[a-z]\+-remote " $GG_BLD/.findmod > /dev/null||E=$?
-    if [ "$E" == "0" ]; then _ISMOD_SERVICE="1"; fi
-#then from occurrances, look for crypto
-    E=0;grep -m 1 -o "^[[:space:]]*\(hash-string \|hmac-string \|decrypt-data \|encrypt-data \|decode-base64 \|encode-base64 \|random-crypto \)" $GG_BLD/.findmod > /dev/null||E=$?
-    if [ "$E" == "0" ]; then _ISMOD_CRYPTO="1"; fi
-
-
-#
-#end automatic libs discovery
-#
-
-    GG_MOD_LIBS=
-    GG_MODULES=
-    GG_MODULES_INCLUDE=
-    GG_STUBS=
-    GG_LIST_ALL_MODULES=
-#sqlite module
-    if [ "$_ISMOD_SQLITE" == "1" ]; then
-        GG_SQLITE_USED="-DGG_SQLITE_INCLUDE"
-#sqlite3.h is installed in include directory, so no need to specify
-        #GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE -I /usr/include/sqlite3.h"
-        GG_MODULES="$GG_MODULES -lsqlite3"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolflite"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES sqllite"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_sqlite.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES sqlite"
-    fi
-#postgres module
-    if [ "$_ISMOD_POSTGRES" == "1" ]; then
-        GG_POSTGRES_USED="-DGG_POSTGRES_INCLUDE"
-        GG_C_PGCONF=$(. "$GG_LIBRARY_PATH"/sys pgconf)
-        if [ "$GG_C_PGCONF" == "yes" ]; then
-            GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE -I $(pg_config --includedir)"
-        else
-            GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE $(pkg-config --cflags libpq)"
-        fi
-        GG_MODULES="$GG_MODULES -lpq"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfpg"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES postgres"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_postgres.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES postgres"
-    fi
-#mariadb module
-    if [ "$_ISMOD_MARIADB" == "1" ]; then
-        GG_MARIADB_USED="-DGG_MARIADB_INCLUDE"
-        GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE $(mariadb_config --include)"
-        GG_MODULES="$GG_MODULES $(mariadb_config --libs)"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfmys"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES mariadb"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_mariadb.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES mariadb"
-    fi
-#fcgi module
-    if [ "$_ISMOD_SERVICE" == "1" ]; then
-        GG_SERVICE_USED="-DGG_SERVICE_INCLUDE"
-        #GG_MODULES="$GG_MODULES -lfcgi" - nothing here since fcgi client implemented from scratch
-        fcgi_inc
-        GG_MODULES_INCLUDE="$GG_MODULES_INCLUDE $FCGI_INC"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfscli"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES fcgi"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_srvc.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES curl"
-    fi
-#pcre2 module
-    if [ "$_ISMOD_PCRE2" == "1" ]; then
-        #this is if not using plain posix regex, otherwise nothing to do
-        GG_PCRE2_USED="-DGG_PCRE2_INCLUDE"
-        GG_MODULES="$GG_MODULES $(pcre2-config --libs-posix)"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfpcre2"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_pcre2.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES pcre2"
-    fi
-#array module
-    if [ "$_ISMOD_ARRAY" == "1" ]; then
-        GG_ARRAY_USED="-DGG_ARRAY_INCLUDE"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfarr"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES array"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_arr.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES array"
-    fi
-#xml module
-    if [ "$_ISMOD_XML" == "1" ]; then
-        GG_XML_USED="-DGG_XML_INCLUDE"
-        GG_MODULES="$GG_MODULES -lxml2"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfxml"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES xml"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_xml.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES xml"
-    fi
-#tree module
-    if [ "$_ISMOD_TREE" == "1" ]; then
-        GG_TREE_USED="-DGG_TREE_INCLUDE"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolftree"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES tree"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_tree.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES tree"
-    fi
-#curl module
-    if [ "$_ISMOD_CURL" == "1" ]; then
-        GG_CURL_USED="-DGG_CURL_INCLUDE"
-        GG_MODULES="$GG_MODULES -lcurl"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfcurl"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES curl"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_curl.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES curl"
-    fi
-#crypto module
-    if [ "$_ISMOD_CRYPTO" == "1" ]; then
-        GG_CRYPTO_USED="-DGG_CRYPTO_INCLUDE"
-        GG_MODULES="$GG_MODULES -lssl -lcrypto"
-        GG_MOD_LIBS="$GG_MOD_LIBS -lgolfsec"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES crypto"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_crypto.o"
-        GG_LIST_ALL_MODULES="$GG_LIST_ALL_MODULES crypto"
-    fi
-    if [[ "$_ISMOD_MARIADB" == "1" || "$_ISMOD_POSTGRES" == "1" || "$_ISMOD_SQLITE" == "1"  ]]; then
-        GG_MOD_LIBS="-lgolfdb $GG_MOD_LIBS"
-    else
-        GG_STUBS="$GG_STUBS $GG_LIBRARY_PATH/stub_gendb.o"
-    fi
-
-
-#used in vmakecommon/install to properly link modules at link-time and to substitute stubs for those modules that are not used
-    export GG_MODULES
-    export GG_MODULES_INCLUDE
-    export GG_STUBS
-    export GG_MOD_LIBS
-    export GG_C_MODULES
-    export GG_LIST_ALL_MODULES
-    export GG_MARIADB_USED
-    export GG_SERVICE_USED
-    export GG_CURL_USED
-    export GG_TREE_USED
-    export GG_PCRE2_USED
-    export GG_CRYPTO_USED
+    #begin automatic libs discovery
+    #release name
+    export GG_REL_NAME=
+    #includes
+    export GG_MARIADB_INC=
+    export GG_SQLITE_INC=
+    export GG_CURL_INC=
+    export GG_PCRE2_INC=
+    export GG_CRYPTO_INC=
+    export GG_POSTGRES_INC=
+    export GG_XML_INC=
+    #
+    #do libs exist or not
+    export GG_MARIADB_EX=
+    export GG_SQLITE_EX=
+    export GG_CURL_EX=
+    export GG_PCRE2_EX=
+    export GG_CRYPTO_EX=
+    export GG_POSTGRES_EX=
+    export GG_XML_EX=
+    #golf libs
+    export GG_MARIADB_LIB_S=
+    export GG_SQLITE_LIB_S=
+    export GG_CURL_LIB_S=
+    export GG_PCRE2_LIB_S=
+    export GG_CRYPTO_LIB_S=
+    export GG_POSTGRES_LIB_S=
+    export GG_XML_LIB_S=
+    #install instructions
+    export GG_XML_INSTALL=
+    export GG_MARIADB_INSTALL=
+    export GG_SQLITE_INSTALL=
+    export GG_CURL_INSTALL=
+    export GG_PCRE2_INSTALL=
+    export GG_CRYPTO_INSTALL=
+    export GG_POSTGRES_INSTALL=
+    #package names
+    export GG_XML_PACKAGE=
+    export GG_MARIADB_PACKAGE=
+    export GG_SQLITE_PACKAGE=
+    export GG_CURL_PACKAGE=
+    export GG_PCRE2_PACKAGE=
+    export GG_CRYPTO_PACKAGE=
+    export GG_POSTGRES_PACKAGE=
+    #3rd party libs
+    export GG_XML_LIB=
+    export GG_MARIADB_LIB=
+    export GG_SQLITE_LIB=
+    export GG_CURL_LIB=
+    export GG_PCRE2_LIB=
+    export GG_CRYPTO_LIB=
+    export GG_POSTGRES_LIB=
+    #determine library existance
+    . $GG_BIN_PATH/gglib 
+    #make all include paths available if needed (we only include those actually used so not to waste time processing .h files we don't need)
+    export GG_ALL_INCLUDE="$GG_MARIADB_INC $GG_SQLITE_INC $GG_CURL_INC $GG_PCRE2_INC $GG_CRYPTO_INC $GG_POSTGRES_INC $GG_XML_INC"
+    #delete mod files, set by v1 to determine which libs are actually used by Golf application
+    rm -f $GG_BLD/.mod.*
+    #
+    #end automatic libs discovery
+    #used in vmakecommon/install to properly link modules at link-time and to substitute stubs for those modules that are not used
+    #
 }
 
 #
@@ -1111,6 +1011,7 @@ function copy_if_diff () {
 #
 #
 function gen_src() {
+    [[ "$GG_C_SHOW" == "1" ]] && echo "golf: Analyzing source files."
 
 #
 #Files generated here are $GG_BLD/source.golf,golfapp.h,gg_dispatch_request.c.
@@ -1138,21 +1039,29 @@ function gen_src() {
 #
     _T="source.golf"
 #this is all source files, including C files
-    GG_CLIST=$(ls *.c 2>/dev/null) || true
-    GG_GOLFLIST=$(ls *.golf 2>/dev/null) || true
-    GG_HLIST=$(ls *.h 2>/dev/null) || true
+#
+    GG_CLIST_A=(*.c) 2>/dev/null || true # this is an array
+    GG_CLIST=${GG_CLIST_A[*]} # this is a string
+#
+    GG_GOLFLIST_A=(*.golf) 2>/dev/null || true
+    GG_GOLFLIST=${GG_GOLFLIST_A[*]}
+#
+    GG_HLIST_A=(*.h) 2>/dev/null || true
+    GG_HLIST=${GG_HLIST_A[*]}
+#
 #GG_REQLIST is really a list of requests, which we get from the list of source files
 #GG_GOLFLIST is the list of golf files - note these are "flattened" so that any directory structure works in a flat directory with / substituted for __
     GG_REQLIST=""
+    GG_REQLIST_C=0
     for i in $GG_GOLFLIST; do
 #we can do this since we prohibit line splitting for begin-handler or %%
         RS=$(sed -n 's/^\s*\(%%\|begin\-handler\) \s*\([^ \t]\+\).*/\2/gp' $i)
         for OF in $RS; do #take request paths and turn them into flat files
             OF=${OF/#\//}
             OF=${OF//\//__}
-            OF=${OF//-/_}
             GG_REQLIST="$GG_REQLIST
 $OF"
+            ((GG_REQLIST_C=GG_REQLIST_C+1))
         done
     done
 
@@ -1203,6 +1112,8 @@ $OF"
 #declare all functions, including non-request ones (whether implemented or not)
     for _F in $GG_REQLIST; do
         RN=${_F%.*}
+        #function name cannot have -
+        RN=${RN//-/_}
         #if main, cannot have that, since we have main() already. Must delete $_T.new in order to regenerate, otherwise main would remain
         #NOTE: if updating here, update in v1.c in is_reserved()
         CC_KEYS=" auto break bool case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while main "
@@ -1210,7 +1121,7 @@ $OF"
             rm -f $GG_BLD/$_T.new 
             error "Service handler name cannot be a C reserved word [$RN]"
         fi
-        echo "void ${RN}();" >> $GG_BLD/$_T.new
+        echo "gg_num ${RN}();" >> $GG_BLD/$_T.new
     done
     echo >> $GG_BLD/$_T.new
     echo "#endif" >> $GG_BLD/$_T.new
@@ -1227,12 +1138,10 @@ $OF"
 #
 #Generate gg_dispatch_request.c, the main request handler. Based on the source code names of handler files (.golf files)
 #
-    _T="/.flatsrc/gg_dispatch_request.c"
+    _T=".flatsrc/gg_dispatch_request.c"
 #Generate request files, this is used for a dispatcher
 #and for a dispatcher, only request files matter 
-    _NUMF=$(echo $GG_REQLIST | wc -w)
-
-    if [ "$_NUMF" == "0" ]; then
+    if [ "$GG_REQLIST_C" == "0" ]; then
         error "Application must have at least one .golf file, or no begin-handler (or %%) statements found"
     fi
 
@@ -1248,7 +1157,7 @@ $OF"
 #req_done used to skip before/after execution if no handler used
     echo "    volatile int req_done;" >>$GG_BLD/$_T.new #volatile because of longjmp, so the init below doesn't get optimized
 
-    if [ "$_NUMF" != "0" ]; then
+    if [ "$GG_REQLIST_C" != "0" ]; then
         echo "    char *req=gg_get_config()->ctx.req->name;" >>$GG_BLD/$_T.new
     fi
     #
@@ -1273,20 +1182,23 @@ $OF"
     echo "    req_done = 0;" >>$GG_BLD/$_T.new #must be initialized separately (not as int req_done=0;) because longjmp may return to the same function and won't be initialized again
 #create file with all request names for v1 to process for the main function code. This way all request info is stored as constants to be loaded as program's data, meaning the fastest possible in huge memory blocks, without having to set up each individually
 #first line is the number of lines that follow, to make code generation easier
-    echo $_NUMF > $GG_BLD/.reqlist.new
+    echo $GG_REQLIST_C > $GG_BLD/.reqlist.new
     _F_FIRST=""
     for _F in $GG_REQLIST; do
         RN=${_F%.*}
+        #function name cannot have -
+        RN=${RN//-/_}
         if [ "$_F_FIRST" == "" ]; then _F_FIRST="$RN"; fi
         echo "$RN" >>$GG_BLD/.reqlist.new
     done
     echo "  gg_request_handler _gg_req_handler;" >>$GG_BLD/$_T.new
     echo "  gg_num found = GG_OKAY;" >>$GG_BLD/$_T.new
-    if [ "$_NUMF" == "1" ]; then
+    #if only a single request, speed things up by checking simply if that's the one, and run it (i.e. do not call gg_find_hash)
+    if [ "$GG_REQLIST_C" == "1" ]; then
         echo "    if (!strcmp (req, \"$_F_FIRST\") || req[0] == 0) _gg_req_handler = $_F_FIRST; else found = GG_ERR_EXIST;" >>$GG_BLD/$_T.new
     else
-#get handler function that handles this request from the pre-computed hash
-        echo "    _gg_req_handler = gg_find_hash (&gg_dispatch, req, NULL, 0, &found);" >>$GG_BLD/$_T.new
+#get handler function that handles this request from the pre-computed hash. Both what's in gg_dispatch and req are NOT golf mem, so false for is_golf memory
+        echo "    _gg_req_handler = gg_find_hash (&gg_dispatch, req, 0, &found, false);" >>$GG_BLD/$_T.new
     fi
 #before handler executes only IF req found a handler, that's why it's not in front of if()
     echo "      if (found == GG_OKAY) {" >>$GG_BLD/$_T.new
@@ -1327,23 +1239,23 @@ $OF"
 #
 #
 #
-#Create linkage for before,after and startup events. _weak_ linkage didn't work because Golf should produce
+#Create linkage for before,after events. _weak_ linkage didn't work because Golf should produce
 #a program that links *only* with Golf libs. It means we only distribute a single file, which is a program,
 #that has only the minimal set of code - and this program uses Golf's shared library. Hence, all is shared 
 #(the program between different instance and all the shared libs).
 #GG_EVENT_STUBS is all the stubs used.
-#So, GG_EVENT_STUBS could be "$GG_ROOT/usr/lib/golf/stub_after.o" but then available after vmakefile will be "$GG_BLD/before_handler.o $GG_BLD/startup.o"
+#So, GG_EVENT_STUBS could be "$GG_DEST/golf/stub_after.o" but then available after vmakefile will be "$GG_BLD/before_handler.o"
 #and all three will be present (one empty and two implemented)
 #
 #
 #
 function stub_events() {
     GG_EVENT_STUBS=
-    if [ ! -f "before_handler.golf" ]; then
-        GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/stub_before.o"
+    if [ ! -f "before-handler.golf" ]; then
+        GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/$GDEST/stub_before.o"
     fi
-    if [ ! -f "after_handler.golf" ]; then
-        GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/stub_after.o"
+    if [ ! -f "after-handler.golf" ]; then
+        GG_EVENT_STUBS="$GG_EVENT_STUBS $GG_LIBRARY_PATH/$GDEST/stub_after.o"
     fi
     export GG_EVENT_STUBS
 }
@@ -1364,10 +1276,6 @@ function stub_events() {
 #
 function flatten_source() {
 #directory where we build is .flatsrc
-    if [ ! -d $GG_BLD/.flatsrc ]; then
-        mkdir -p $GG_BLD/.flatsrc
-    fi
-
     if [ "$GG_DIR_EXCLUDE" != "" ]; then
         #make a list of directories we can iterate over, it's decorated as well so we can easily compare with
         #eligible files
@@ -1378,27 +1286,31 @@ function flatten_source() {
 #delete all, b/c what happens when renaming, deleting files - they
 #would still hang in .flatsrc directory, and we can copy without recompiling
 #if no changes, because we use ln -s which preserves timestamps for make
-    rm -f $GG_BLD/.flatsrc/* || true
+    rm -rf $GG_BLD/.flatsrc
+    mkdir -p $GG_BLD/.flatsrc
 
 #use find, with maxdepth of 1 for flat dir
-    AF=$(find . -type f  -name '*' 2>/dev/null)
-
+    F0=(*) 2>/dev/null || true
+    F1=(**/*) 2>/dev/null || true
+    F0+=("${F1[@]}")
+    for i in "${F0[@]}"; do
+        if [ -f "$i" ]; then 
+            i="./$i"
 #for each file remove leading ./, then convert all / to __ and
 #all - to _
-    for i in $AF; do
-        OF=${i/#\.\//}
-        EXCL=0
-        for k in $GG_DIR_EXCLUDE_F; do
-            k="${k}/"
-            if [[ "$OF" == "$k"* ]]; then
-                EXCL=1
-                break
-            fi
-        done
-        if [ "$EXCL" == "1" ]; then continue; fi
-        OF=${OF//\//__}
-        OF=${OF//-/_}
-        ln -s $PWD/$i $GG_BLD/.flatsrc/$OF 2>/dev/null || true
+            OF=${i/#\.\//}
+            EXCL=0
+            for k in $GG_DIR_EXCLUDE_F; do
+                k="${k}/"
+                if [[ "$OF" == "$k"* ]]; then
+                    EXCL=1
+                    break
+                fi
+            done
+            if [ "$EXCL" == "1" ]; then continue; fi
+            OF=${OF//\//__}
+            ln -s $PWD/$i $GG_BLD/.flatsrc/$OF 2>/dev/null || true
+        fi
     done
 #make sure app name is there too, || true is b/c find will find it and it will exist
 #    ln -s .vappname $GG_BLD/.flatsrc || true
@@ -1414,17 +1326,22 @@ function flatten_source() {
 #
 function build_app() {
     if [ ! -d $GG_BLD ]; then
-        error "Application does not exist, use mgrg to create it"
+        error "Application does not exist, use 'gg -k' to create it"
     fi
+    [[ "$GG_C_SHOW" == "1" ]] && echo "golf: Gathering source files."
     flatten_source
 
 #once source is flattened, go there, but in a new shell ()
 #so we can switch to .flatsrc directory, and no matter where this 
 #compilation ends, we end up in current dir after it's done, because
 #were' in subshell
+#save current working directory, it's needed as -srcdir param to v1
+    ECODE=0 #necessary for ECODE to work below (because if there's no error then ECODE=$? never runs and ECODE is undefined
     ( 
+    export GG_CDIR="$PWD"
     cd $GG_BLD/.flatsrc
-    _VFILES=$(ls *.golf 2>/dev/null|wc -l) 
+    _VFILES_A=(*.golf) 2>/dev/null || true
+    _VFILES=${_VFILES_A[*]}
     if [ "$_VFILES" == "0" ]; then error "Your application must have at least one .golf file"; fi
 #set .dbvendors for v1 to pickup
     db_lib
@@ -1432,19 +1349,81 @@ function build_app() {
     read_modules
 #generate needed source code
     gen_src
-#generate stubs (if needed) for events (before, after, startup..)
+#generate stubs (if needed) for events (before, after)
     stub_events
 #create file that tells make to recompile if options changed
     mkset
+#check if any libs installed changed (added or removed). Just upgrade/downgrade doesn't count
+#Note this GGLIBS must match what' recorded in Makefile exactly (order and all)
+    GGLIBS="GG_MARIADB_EX='$GG_MARIADB_EX';GG_SQLITE_EX='$GG_SQLITE_EX';GG_CURL_EX='$GG_CURL_EX';GG_PCRE2_EX='$GG_PCRE2_EX';GG_CRYPTO_EX='$GG_CRYPTO_EX';GG_POSTGRES_EX='$GG_POSTGRES_EX';GG_XML_EX='$GG_XML_EX'"
+    if [ -f "$GG_DATA/golf/.golf.libs" ]; then
+        read -r -d '' GGLIBS_OLD < $GG_DATA/golf/.golf.libs
+    else
+        GGLIBS_OLD=
+    fi
+    if [[ "$GGLIBS_OLD"  != "$GGLIBS" ]]; then
+        echo "Recompiling Golf objects due to change in installed libraries; this happens only when libraries used by Golf are installed or removed. Please wait for it to complete." 
+        CDIR="$PWD"
+        tar xvfz $GG_DATA/golf/golf.tar.gz -C $GG_DATA/golf/src/ >/dev/null
+        cd $GG_DATA/golf/src
+        make clean 
+        make -j $(nproc) 
+        make install DESTDIR=$GG_DATA 
+        echo "$GGLIBS" > $GG_DATA/golf/.golf.libs
+        echo "Golf objects recompiled, continuing."
+        cd $CDIR
+    fi
+#check if gcc version has changed, it means we need to recompile LTO from /golf/src
+#changing gcc version would make project recompile since GG_C_GCC is part of mkset()
+#Note this GG_C_GCC must match what' recorded in Makefile exactly 
+    if [ -f "$GG_DATA/golf/.golf.gcc" ]; then
+        read -r -d '' GG_CHECK_GCC < $GG_DATA/golf/.golf.gcc
+    else
+        GG_CHECK_GCC=
+    fi
+    #if we want release and it's not built yet
+    if [[ "$GG_C_DEVEL" == "0" && "$GG_C_GCC"  != "$GG_CHECK_GCC" ]]; then
+        #
+        #this should NOT run in subshell because we want to exit if there's an error here!
+        #
+        echo "Recompiling Golf LTO objects; this happens only when gcc version changes or the first time release is made. Please wait for it to complete." 
+        CDIR="$PWD"
+        tar xvfz $GG_DATA/golf/golf.tar.gz -C $GG_DATA/golf/src/ >/dev/null
+        cd $GG_DATA/golf/src
+        make clean 
+        make -j $(nproc) REL=1
+        make install DESTDIR=$GG_DATA REL=1
+        echo "$GG_C_GCC" > $GG_DATA/golf/.golf.gcc 
+        echo "Golf LTO objects recompiled, continuing."
+        cd $CDIR
+    fi
+
+
 #make the application (compile and link) in parallel
 #if GG_SHOW_MAKE is not "-s", then it's not silent, and display what it's doing
 #otherwise use -s for silent
-    if [ "$GG_SHOW_MAKE" == "" ]; then
-        make -j$GG_C_CPUS SHELL="bash -x -e" -f "$GG_LIBRARY_PATH"/vmakefile all
+#We ignore return code from vmakefile (and make it exit 0 when we exit), we though check if there's anything in standard error!
+#This makes gnu make quiet, so we don't get useless message that some rule failed; we already know that if there's an error output
+#All output from vmakefile that's relevant to Golf is prefixed with 'golf: ', so we filter out anything else.
+    make -j$GG_C_CPUS $GG_SHOW_MAKE -f "$GG_LIBRARY_PATH"/vmakefile all 2>$GG_BLD/.make.output 
+    ) || ECODE=$? 
+    if [ "$ECODE" == "0" ]; then
+        if [ "$GG_C_SHOW" == "1" ]; then
+            if [ "$GG_C_DEVEL" == "0" ]; then
+                echo "golf: Made RELEASE executables"
+            else
+                echo "golf: Made DEVEL executables"
+                if [ "$GG_C_DEBUG" == "1" ]; then
+                    echo "golf: Added DEBUG code"
+                fi
+            fi
+        fi
     else
-        make -j$GG_C_CPUS $GG_SHOW_MAKE  -f "$GG_LIBRARY_PATH"/vmakefile all
+        #without || true here, our trap (see beginning of gg) will cause ugly (and useless) message
+        cat $GG_BLD/.make.output|grep 'golf: ' | grep -v "^make:" |sed 's/__/\//g' 1>&2 || true
+        echo "There are errors in making your application (complete log at $GG_BLD/.make.output)."
     fi
-    )
+    exit_s $ECODE
 }
 
 #
@@ -1460,8 +1439,7 @@ function gg_version() {
 #of course, for those who compile from source, and don't use the provided deb/dnf packages, it will always be the current year - that is not the intention -
 #in that case, change this manually to the year from the official distribution!!!! That is required under most copyright laws, in which the second year should
 #be the year of the last change by the author.
-    echo "Golf $GG_VERSION$_BETA on $GG_PLATFORM_ID ($GG_PLATFORM_VERSION)"
-    echo "Copyright (c) 2018-$(date '+%Y') Gliim LLC"
+    echo "Golf $GG_VERSION$_BETA on $GG_PLATFORM_ID ($GG_PLATFORM_VERSION). Copyright (c) 2018-$(date '+%Y') Gliim LLC. Golf uses other libraries, including OpenSSL, SQLite, Postgres, MariaDB, PCRE2, Curl, LibXML2, FastCGI, Libbacktrace. See "license" documentation page for acknowledgements and the full list (on the web or 'gg --man license' from command line)."
 
 }
 
@@ -1488,7 +1466,7 @@ function cat0() {
 function autoapp() {
 
     build_app 
-    exit
+    exit 0
 }
 
 
@@ -1515,7 +1493,6 @@ $_DBCONF"
         _DBMAKE="${_DBV[$_i]}"
         if [ "$_DBMAKE" == "sqlite" ]; then
             if [ "$_DONELITE" == "" ]; then
-                export GG_C_MODULES="$GG_C_MODULES $_DBMAKE"
                 _DONELITE="1"
             fi    
 #for v1.c to pick up
@@ -1523,11 +1500,10 @@ $_DBCONF"
             if [ ! -f "$_DBCONF" ]; then
                 error "Database configuration file [$_DBCONF] ($_DBMAKE) not found"
             fi
-            "$GG_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $GG_A/db/"$_DBCONF"
+            "$GG_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $GG_H/db/"$_DBCONF"
         fi
         if [ "$_DBMAKE" == "mariadb" ]; then
             if [ "$_DONEMARIA" == "" ]; then
-                export GG_C_MODULES="$GG_C_MODULES $_DBMAKE"
                 _DONEMARIA="1"
             fi    
 #for v1.c to pick up
@@ -1535,11 +1511,10 @@ $_DBCONF"
             if [ ! -f "$_DBCONF" ]; then
                 error "Database configuration file [$_DBCONF] ($_DBMAKE) not found"
             fi
-            "$GG_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $GG_A/db/"$_DBCONF"
+            "$GG_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $GG_H/db/"$_DBCONF"
         fi
         if [ "$_DBMAKE" == "postgres" ]; then
             if [ "$_DONEPG" == "" ]; then
-                export GG_C_MODULES="$GG_C_MODULES $_DBMAKE"
                 _DONEPG="1"
             fi
 #for v1.c to pick up
@@ -1547,7 +1522,7 @@ $_DBCONF"
             if [ ! -f "$_DBCONF" ]; then
                 error "Database configuration file [$_DBCONF] ($_DBMAKE) not found"
             fi
-            "$GG_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $GG_A/db/"$_DBCONF"
+            "$GG_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $GG_H/db/"$_DBCONF"
         fi
     done
 #check db conf name unique

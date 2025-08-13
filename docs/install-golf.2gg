@@ -1,0 +1,93 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+install-golf \- Golf documentation (install-golf)
+.SH DESCRIPTION
+Golf is installed in a home directory (either in a separate user account or in your own home directory). Minimum permissions (required and set by the installation) for home directory are 711 (allowing access to specific sockets but no read, write or directory listing permissions). The plain text of install script is at \fBhttps://golf-lang.com/gginst.sh\fP.
+
+.LP
+.B GET GOLF SOURCE CODE
+.LP
+
+Get Golf source code from its official GitHub repo (depth is 1 for speed):
+
+.RS 4
+.EX
+
+git clone --depth 1 https://github.com/golf-lang/golf.git
+
+.EE
+.RE
+
+
+.LP
+.B INSTALL GOLF
+.LP
+
+Golf itself does not require sudo as it installs in a local ".golf" folder. You may need sudo privilege to install standard Open Source toolkit libraries (such as MariaDB, SQLite, PostgreSQL, XML, Regex, Curl, OpenSSL etc), base libraries (if not installed already, and they usually are), or SELinux support (if you use it). They are system-wide by nature and require sudo.
+
+The default installation (above) will ask you if you'd like to install the above toolkit packages, You can install them if and when you need them, or you can install them now. To run the default installation:
+
+.RS 4
+.EX
+
+\[char46]/gginst.sh
+
+.EE
+.RE
+
+If you'd like to install all base and toolkit packages automatically now, then use the following:
+
+.RS 4
+.EX
+
+\[char46] ./gginst.sh all
+
+.EE
+.RE
+
+The environment variables (such as PATH) are now set in .bashrc file, and will take effect next time you login. To continue working with Golf in the current shell:
+
+.RS 4
+.EX
+
+\[char46] /.bashrc
+
+.EE
+.RE
+
+
+.LP
+.B TRY GOLF
+.LP
+
+Go to \fB123-hello-world\fP for your Hello World.
+
+.LP
+.B NOTES ABOUT GOLF INSTALLATION
+.LP
+
+
+.B - SELinux
+
+If you have SELinux enabled then you'll need to install SELinux support for Golf. This requires sudo privilege because it involves setting Operating System permissions
+ for Golf. This will be done automatically during the installation.
+
+If you don't want or need SELinux support, you can use permissive mode with:
+
+.RS 4
+.EX
+
+sudo setenforce 0
+
+.EE
+.RE
+
+in which case you won't need to install SELinux support.
+
+.B - Afterwards
+
+The above will install Golf in your local $HOME/.golf directory. It will setup permissions and update your .bashrc as well as your current environment, so you can use Golf right away.
+
+.B - Uninstall Golf
+
+Here's how to \fBuninstall\fP.

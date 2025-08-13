@@ -88,7 +88,7 @@ The following will parse a string containing name/value pairs (such as "name=val
         // Get name and value
         read-split 1 from item_var to name
         read-split 2 from item_var to val
-        print-format "Variable %s has value %s\en", name, val
+        print-format "Variable %s has value %s\\n", name, val
     end-loop
 %%
 
@@ -107,22 +107,3 @@ Variable z has value hello_world
 .EE
 .RE
 
-.SH SEE ALSO
- Strings
-
-\fBconcatenate-strings\fP  
-\fBcopy-string\fP  
-\fBcount-substring\fP  
-\fBdelete-string\fP  
-\fBlower-string\fP  
-\fBnew-string\fP  
-\fBread-split\fP  
-\fBreplace-string\fP  
-\fBset-string\fP  
-\fBsplit-string\fP  
-\fBstring-length\fP  
-\fBtrim-string\fP  
-\fBupper-string\fP  
-\fBwrite-string\fP   
-See all 
-\fBdocumentation\fP

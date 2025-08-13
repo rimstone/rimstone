@@ -53,12 +53,3 @@ silent-header
 .EE
 .RE
 
-.SH SEE ALSO
- Web
-
-\fBcall-web\fP  
-\fBout-header\fP  
-\fBsend-file\fP  
-\fBsilent-header\fP   
-See all 
-\fBdocumentation\fP

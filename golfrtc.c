@@ -14,136 +14,14 @@
 int gg_errno=0;
 
 // Function prototypes
-gg_num gg_core_write_file(FILE *f, gg_num content_len, char *content, char ispos, gg_num pos);
+static gg_num gg_core_write_file(FILE *f, gg_num content_len, char *content, char ispos, gg_num pos);
 
-// 
-// Close trace file 
-// Returns GG_ERR_CLOSE if there is no context or not open, or the same
-// as gg_fclose() if it's open
-//
-gg_num gg_close_trace ()
-{
-    gg_config *pc = gg_get_config();
-
-    if (pc == NULL) return GG_ERR_CLOSE;
-
-    // open trace file, for fcgi, it will not be NULL (from previous request)
-    if (pc->trace.f != NULL)
-    {
-        return gg_fclose(pc->trace.f);    
-    } else return GG_ERR_CLOSE;
-}
-
-
-
-// 
-// Open trace file and write begin-trace message
-// Returns 0 if opened, -1 if not
-// Any memory alloc here MUST be malloc since it survives fcgi requests and continues
-// over many such requests.
-//
-gg_num gg_open_trace ()
-{
-    gg_config *pc = gg_get_config();
-
-    if (pc == NULL) return -1;
-
-    // open trace file, for fcgi, it will not be NULL (from previous request)
-    if (pc->trace.f != NULL)
-    {
-        return 0; // reuse tracing for the same process
-    }
-
-
-    if (pc->debug.trace_level > 0)
-    {
-        // timestamp, as PIDs can recycle
-        gg_current_time (pc->trace.time, sizeof(pc->trace.time)-1);
-        // append if file exists, otherwise open anew
-        snprintf(pc->trace.fname, sizeof(pc->trace.fname), "%s/trace-%ld-%s", pc->app.trace_dir, gg_getpid(), pc->trace.time);
-        pc->trace.f = gg_fopen (pc->trace.fname, "a+");
-        if (pc->trace.f == NULL) 
-        {
-            pc->trace.f = gg_fopen (pc->trace.fname, "w+");
-            if (pc->trace.f == NULL)
-            {
-                return -1; 
-            }
-        }
-    }
-    return 0;
-}
-
-
-
-// 
-// Trace execution. This is called from GG_TRACE. 
-// 'trace_level' is currently always 1. It is compared with the trace parameter in debug file, which is currently
-// 0 or 1 (no tracing for 0 and tracing for 1). In the future, there may be more trace levels, with trace level 1
-// including all tracing, trace level 2 including levels 2,3.. in trace file, etc.
-// 'from_file' is the file name this trace is coming from.
-// 'from_line' is the source line number, 'from_fun' is the function name.
-// The rest (format,...) is printf-like data, the actual trace content.
-// The trace also includes current time and PID.
-//
-// Trace can be called from memory function like gg_realloc. 
-// If trace is called from anywhere else other than gg_* functions, it will  work the same way except there is no double calling of gg_check_memory.
-//
-void _gg_trace(gg_num trace_level, const char *from_file, gg_num from_line, const char *from_fun, char *format, ...)
-{
-    gg_config *pc = gg_get_config();
-    if (pc == NULL) return; // do nothing if no config
-
-
-    // THIS FUNCTON MUST NEVER USE ANY FORM OF MALLOC OR GG_MALLOC
-    // or it may fail when memory is out or not available (such as in gg_malloc)
-
-
-    // control which tracing will be done
-    if (pc->debug.trace_level < trace_level) return;
-
-    char trc[GG_TRACE_LEN + 1];
-
-    // if this tracing came from this very function, ignore
-    if (pc->trace.in_trace == 1) return;
-    pc->trace.in_trace = 1;
-
-    if (pc->trace.f == NULL) 
-    {
-        gg_open_trace(); // trace gets opened during fatal error, so open if not enabled
-        if (pc->trace.f == NULL)  // if couldn't open, do not trace
-        {
-            pc->trace.in_trace = 0;
-            return;
-        }
-    }
-
-    va_list args;
-    va_start (args, format);
-    vsnprintf (trc, sizeof(trc) , format, args);
-    va_end (args);
-
-    // write time, code and message out
-    // do NOT use pc->trace.time - this MUST stay constant during the request because it is
-    // used in save_HTML to make sure name generated from this value is the same even if this name
-    // is generated multiple times.
-    // We do not specify PID as it is embedded in file name.
-    char curr_time[200];
-    gg_current_time (curr_time, sizeof(curr_time)-1);
-    fprintf (pc->trace.f, "%s (%s:%ld)| %s %s\n", curr_time, from_file, from_line, from_fun, trc);
-    //
-    // We do not fflush() here - this is done either at the end of request (gg_shut()) or
-    // when program crashes (gg_report_error())
-    //
-    pc->trace.in_trace = 0;
-}
 
 // 
 // Get PID
 //
 gg_num gg_getpid ()
 {
-    GG_TRACE ("");
     return (gg_num) getpid();
 }
 
@@ -156,7 +34,6 @@ gg_num gg_getpid ()
 //
 void gg_current_time (char *outstr, gg_num out_str_len)
 {
-    GG_TRACE("");
     time_t t;
     struct tm *tmp;
 
@@ -209,33 +86,22 @@ gg_config *gg_alloc_config()
     {
         GG_FATAL ("Cannot allocate program context");
     }
-    gg_init_config (gg_pc);
+    // pc->* are set to 0 or NULL - set here only what's not zero
+    gg_pc->app.max_upload_size = 5000000;
+    gg_reset_config (gg_pc);
     return gg_pc;
 }
 
 
 // 
-// Initialize program context. This is called only once for the
-// life of the process. pc is program context.
-//
-void gg_init_config(gg_config *pc)
-{
-    // pc->* are set to 0 or NULL - set here only what's not zero
-    pc->app.max_upload_size = 5000000;
-
-    gg_reset_config (pc);
-}
-
-// 
 // Reset program context. This is called for each new web request
 //
-void gg_reset_config(gg_config *pc)
+GG_ALWAYS_INLINE inline  void gg_reset_config(gg_config *pc)
 {
     // these need to reset with each request
     // DO NOT RESET debug structure - should stay as it is for all request during the life of process!
     pc->ctx.req = NULL;
     pc->ctx.gg_report_error_is_in_report = 0;
-    pc->debug.trace_level = gg_is_trace; // reset tracing, as it is set to 1 during report-error
 }
 
 //
@@ -253,12 +119,11 @@ void gg_reset_config(gg_config *pc)
 //
 gg_num gg_count_substring (char *str, char *find, gg_num len_find, gg_num case_sensitive)
 {
-    GG_TRACE("");
     gg_num count = 0;
     if (find == NULL || find[0] == 0) return 0;
     // here not empty or NULL
     gg_num len;
-    if (len_find != 0) len = len_find; else len = gg_mem_get_len(gg_mem_get_id(find));
+    if (len_find != 0) len = len_find; else len = gg_mem_get_len(find);
     char *tmp = str;
     while((tmp = (case_sensitive == 1 ? strstr(tmp, find) : strcasestr(tmp, find))) != NULL)
     {
@@ -280,7 +145,6 @@ gg_num gg_count_substring (char *str, char *find, gg_num len_find, gg_num case_s
 //
 gg_num gg_replace_string (char *str, gg_num strsize, char *find, char *subst, gg_num all, char **last, gg_num case_sensitive)
 {
-    GG_TRACE("");
 
     gg_num len = strlen (str);
     gg_num lenf = strlen (find);
@@ -335,7 +199,6 @@ gg_num gg_replace_string (char *str, gg_num strsize, char *find, char *subst, gg
 //
 void gg_trim (char *str, gg_num *len, bool alloc)
 {
-    GG_TRACE("");
     
     gg_num i = 0;
     // clear leading spaces
@@ -352,7 +215,7 @@ void gg_trim (char *str, gg_num *len, bool alloc)
     str[i + 1] = 0;
     // update length of string
     *len = i + 1;
-    if (alloc) gg_mem_set_len (gg_mem_get_id(str), *len+1);
+    if (alloc) gg_mem_set_len (str, *len+1);
 }
 
 //
@@ -364,7 +227,6 @@ void gg_trim (char *str, gg_num *len, bool alloc)
 //
 char *gg_trim_ptr (char *str, gg_num *len)
 {
-    GG_TRACE("");
 
     char *res = str;
     
@@ -382,8 +244,8 @@ char *gg_trim_ptr (char *str, gg_num *len)
     // find the last non-space char
     gg_num j = 0;
     while (e>=s && isspace (str[e])) { e--; j++;}
-    // make the end of string there
-    str[e + 1] = 0;
+    // make the end of string there, check first in case str is a constant, which will cause sigsegv if we try to write here
+    if (str[e+1] != 0) str[e + 1] = 0;
 
     // update length of string
     *len = *len - j;
@@ -397,11 +259,9 @@ char *gg_trim_ptr (char *str, gg_num *len)
 //
 gg_num gg_get_file_pos(FILE *f, gg_num *pos)
 {
-    GG_TRACE("");
     long p = ftell (f);
     if (p == -1) {
         GG_ERR;
-        GG_TRACE("Cannot get position in file, errno [%d]", errno);
         return GG_ERR_POSITION;
     }
     *pos = p;
@@ -415,7 +275,6 @@ gg_num gg_get_file_pos(FILE *f, gg_num *pos)
 //
 gg_num gg_set_file_pos(FILE *f, gg_num pos)
 {
-    GG_TRACE("");
     if (f==NULL)
     {
         GG_ERR;
@@ -423,7 +282,6 @@ gg_num gg_set_file_pos(FILE *f, gg_num pos)
     }
     if (fseek (f,pos,SEEK_SET) != 0) {
         GG_ERR;
-        GG_TRACE("Cannot position in file to [%ld], errno [%d]", pos, errno);
         return GG_ERR_POSITION;
     }
     return GG_OKAY;
@@ -436,7 +294,6 @@ gg_num gg_set_file_pos(FILE *f, gg_num pos)
 //
 gg_num gg_get_open_file_size(FILE *f)
 {
-    GG_TRACE("");
     long ppos = ftell(f);
     fseek(f, 0L, SEEK_END);
     long size=ftell(f);
@@ -451,7 +308,6 @@ gg_num gg_get_open_file_size(FILE *f)
 //
 void gg_file_stat (char *dir, gg_num *type, gg_num *size, gg_num *mode)
 {
-    GG_TRACE("");
     struct stat sb;
     if (stat(dir, &sb) == 0)
     {
@@ -482,7 +338,6 @@ void gg_file_stat (char *dir, gg_num *type, gg_num *size, gg_num *mode)
 //
 gg_num gg_is_valid_param_name (char *name, bool hyphen, bool conv_hyphen)
 {
-    GG_TRACE ("");
 
     gg_num i = 1; // we already check the first byte before entering while loop
     if (!isalpha(name[0])) return 0;
@@ -510,7 +365,6 @@ gg_num gg_is_valid_param_name (char *name, bool hyphen, bool conv_hyphen)
 //
 void gg_store_init (gg_fifo **fdata_ptr)
 {
-    GG_TRACE ("");
     *fdata_ptr = (gg_fifo*)gg_malloc (sizeof(gg_fifo));
     gg_fifo *fdata = *fdata_ptr;
 
@@ -527,14 +381,13 @@ void gg_store_init (gg_fifo **fdata_ptr)
 //
 void gg_store_l (gg_fifo *fdata, char *name, void *data)
 {
-    GG_TRACE ("");
     gg_fifo_item *np = gg_malloc (sizeof (gg_fifo_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    gg_mem_set_process (GG_EMPTY_STRING, data, false, true); 
+    gg_mem_add_ref (data, gg_mem_process);
     np->data = data;
     //
-    gg_mem_set_process (GG_EMPTY_STRING, name, false, true); 
+    gg_mem_add_ref (name, gg_mem_process);
     np->name = name;
     //
     np->next = NULL;
@@ -560,14 +413,13 @@ void gg_store_l (gg_fifo *fdata, char *name, void *data)
 //
 void gg_store (gg_fifo *fdata, char *name, void *data)
 {
-    GG_TRACE ("");
     gg_fifo_item *np = gg_malloc (sizeof (gg_fifo_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    gg_mem_set_process (GG_EMPTY_STRING, data, false, true); 
+    gg_mem_add_ref (data, gg_mem_process);
     np->data = data;
     //
-    gg_mem_set_process (GG_EMPTY_STRING, name, false, true); 
+    gg_mem_add_ref (name, gg_mem_process);
     np->name = name;
     //
     np->next = NULL;
@@ -592,7 +444,6 @@ void gg_store (gg_fifo *fdata, char *name, void *data)
 //
 gg_num gg_retrieve (gg_fifo *fdata, char **name, void **data)
 {
-    GG_TRACE ("");
 
     if (fdata->retrieve_ptr == NULL)
     {
@@ -601,12 +452,10 @@ gg_num gg_retrieve (gg_fifo *fdata, char **name, void **data)
     if (data != NULL) 
     {
         *data = fdata->retrieve_ptr->data;
-        gg_mem_add_ref(*data);
     }
     if (name != NULL) 
     {
         *name = fdata->retrieve_ptr->name;
-        gg_mem_add_ref(*name);
     }
     fdata->retrieve_ptr = fdata->retrieve_ptr->next;
     return GG_OKAY;
@@ -617,7 +466,6 @@ gg_num gg_retrieve (gg_fifo *fdata, char **name, void **data)
 // starts from the items first put in.
 void gg_rewind (gg_fifo *fdata)
 {
-    GG_TRACE ("");
     fdata->retrieve_ptr = fdata->first_ptr;
 }
 
@@ -627,7 +475,6 @@ void gg_rewind (gg_fifo *fdata)
 //
 void gg_fifo_delete (gg_fifo *fdata)
 {
-    GG_TRACE ("");
     if (fdata->first_ptr == NULL) return;
     
     while (fdata->first_ptr != fdata->retrieve_ptr)
@@ -635,9 +482,9 @@ void gg_fifo_delete (gg_fifo *fdata)
         gg_fifo_item *temp = fdata->first_ptr;
         if (temp == fdata->last_ptr) fdata->last_ptr = fdata->first_ptr = fdata->retrieve_ptr = NULL;
         else fdata->first_ptr = temp->next;
-        gg_free (temp->data);
-        gg_free (temp->name);
-        gg_free (temp);
+        gg_mem_dec_process (temp->data);
+        gg_mem_dec_process (temp->name);
+        gg_mem_dec_process (temp);
         fdata->num_of--;
     }
 }
@@ -648,11 +495,10 @@ void gg_fifo_delete (gg_fifo *fdata)
 //
 void gg_purge (gg_fifo **fdata_p)
 {
-    GG_TRACE ("");
     gg_fifo *fdata = *fdata_p;
     fdata->retrieve_ptr = NULL; // delete up to the end, i.e. all of them
     gg_fifo_delete (fdata);
-    gg_free(fdata);
+    gg_mem_dec_process(fdata);
     gg_store_init (fdata_p); // okay fdata_p since fdata_p!=NULL
 }
 
@@ -661,9 +507,8 @@ void gg_purge (gg_fifo **fdata_p)
 // fdata is storage data variable.
 // process is true if this list is process-scoped
 //
-void gg_list_init (gg_list **fdata_ptr, bool process)
+void gg_list_init (gg_list **fdata_ptr, unsigned char process)
 {
-    GG_TRACE ("");
     *fdata_ptr = (gg_list*)gg_malloc (sizeof(gg_list));
     gg_list *fdata = *fdata_ptr;
 
@@ -682,14 +527,13 @@ void gg_list_init (gg_list **fdata_ptr, bool process)
 //
 void gg_list_store (gg_list *fdata, char *name, void *data, bool append)
 {
-    GG_TRACE ("");
     gg_list_item *np = gg_malloc (sizeof (gg_list_item));
     // No need to check if np->name/data equal to name/data because np is just created here, has nothing to begin with
     //
-    gg_mem_set_process (GG_EMPTY_STRING, data, false, true); 
+    gg_mem_add_ref (data, gg_mem_process);
     np->data = data;
     //
-    gg_mem_set_process (GG_EMPTY_STRING, name, false, true); 
+    gg_mem_add_ref (name, gg_mem_process);
     np->name = name;
     //
     np->next = NULL;
@@ -736,7 +580,6 @@ void gg_list_store (gg_list *fdata, char *name, void *data, bool append)
 //
 void gg_list_retrieve (gg_list *fdata, char **name, void **data)
 {
-    GG_TRACE ("");
 
     if (fdata->curr == NULL)
     {
@@ -752,11 +595,10 @@ void gg_list_retrieve (gg_list *fdata, char **name, void **data)
 //
 gg_num gg_list_delete (gg_list *fdata)
 {
-    GG_TRACE ("");
     gg_list_item *temp = fdata->curr;
     if (temp == NULL) return GG_ERR_EXIST;
-    gg_free (temp->data);
-    gg_free (temp->name);
+    gg_mem_dec_process (temp->name);
+    gg_mem_dec_process (temp->data);
     // no gg_mem_delete_and_return since value is not returned here
     if (temp->next != NULL) {
         temp->next->prev = temp->prev; 
@@ -772,7 +614,7 @@ gg_num gg_list_delete (gg_list *fdata)
         fdata->first = temp->next;
         fdata->curr = temp->next;
     }
-    gg_free (temp);
+    gg_mem_dec_process (temp);
     fdata->num_of--;
     return GG_OKAY;
 }
@@ -783,15 +625,14 @@ gg_num gg_list_delete (gg_list *fdata)
 //
 void gg_list_purge (gg_list **fdata_p)
 {
-    GG_TRACE ("");
     gg_list *fdata = *fdata_p;
-    bool p = (*fdata_p)->process;
+    unsigned char p = (*fdata_p)->process;
     while (fdata->num_of > 0)
     {
         fdata->curr = fdata->first;
         gg_list_delete (fdata);
     }
-    gg_free(fdata);
+    gg_mem_dec_process(fdata);
     gg_list_init (fdata_p, p); // okay fdata_p since fdata_p!=NULL
 }
 
@@ -802,7 +643,6 @@ void gg_list_purge (gg_list **fdata_p)
 //
 gg_num gg_strncpy(char *dest, char *src, gg_num max_len)
 {
-    GG_TRACE("");
     gg_num len = strlen (src);
     if (len < max_len) 
     {
@@ -822,7 +662,6 @@ gg_num gg_strncpy(char *dest, char *src, gg_num max_len)
 //
 char *gg_init_string(char *s)
 {
-    GG_TRACE("");
     if (s == NULL) return NULL;
     gg_num l = strlen (s);
     char *res = gg_malloc (l+1);
@@ -873,7 +712,6 @@ char * gg_get_tz ()
 //
 gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len, bool *eof)
 {
-    GG_TRACE ("");
 
     if (pos < 0) {GG_ERR0; return GG_ERR_POSITION;} // len is negative
     if (len < 0) {GG_ERR0; return GG_ERR_READ;} // pos is negative
@@ -896,14 +734,12 @@ gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len, bool *eof)
     {
         if (fseek (f,pos,SEEK_SET) != 0) { 
             GG_ERR;
-            GG_TRACE("File [%s], cannot position to [%ld], errno [%d]", name, pos, errno);
             fclose (f);
             *data = GG_EMPTY_STRING;
             return GG_ERR_POSITION;
         }
     }
     *data = gg_malloc (sz + 1);
-    gg_num id = gg_mem_get_id (*data);
     gg_num rd;
     rd = fread_unlocked (*data, 1, sz, f);
     if (rd != sz) 
@@ -931,7 +767,7 @@ gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len, bool *eof)
                           // otherwise it's FEOF and less bytes are read
     } else { if (eof) *eof = false; } // no feof if all bytes read
     (*data)[rd] = 0;
-    gg_mem_set_len (id, rd+1);
+    gg_mem_set_len (*data, rd+1);
     fclose(f);
     return rd;
 }
@@ -951,7 +787,6 @@ gg_num gg_read_file (char *name, char **data, gg_num pos, gg_num len, bool *eof)
 //
 gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos, bool *eof)
 {
-    GG_TRACE ("");
 
     if (ispos && pos < 0) {GG_ERR0; return GG_ERR_POSITION;} // len is negative
     if (len < 0) {GG_ERR0; return GG_ERR_READ;} // len is negative
@@ -981,7 +816,6 @@ gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos
     {
         if (fseek (f,pos,SEEK_SET) != 0) { 
             GG_ERR;
-            GG_TRACE("File cannot position to [%ld], errno [%d]", pos, errno);
             return GG_ERR_POSITION;
         }
     }
@@ -1031,20 +865,17 @@ gg_num gg_read_file_id (FILE *f, char **data, gg_num pos, gg_num len, bool ispos
 //
 gg_num gg_encode (gg_num enc_type, char *v, gg_num vlen, char **res, bool alloc)
 {
-    GG_TRACE("");
     gg_num mlen;
-    gg_num id;
-    if (alloc) id = gg_mem_get_id(v);
     if (vlen < 0)
     {
-        if (alloc) mlen = gg_mem_get_len(id); // this is used by Golf code written by user
+        if (alloc) mlen = gg_mem_get_len(v); // this is used by Golf code written by user
         else mlen = strlen (v); // this is when used internally by Golf
     }
     else
     {
         if (alloc)
         {
-            if (vlen > (mlen=gg_mem_get_len(id))) gg_report_error ("Cannot encode [%ld] bytes of a string with length [%ld]", vlen, mlen);
+            if (vlen > (mlen=gg_mem_get_len(v))) gg_report_error ("Cannot encode [%ld] bytes of a string with length [%ld]", vlen, mlen);
             mlen = vlen;
         } else mlen = vlen; // this is internal use by golf
     }
@@ -1087,7 +918,6 @@ bool cmp_type (gg_num t1, gg_num t2)
 //
 gg_num gg_encode_base (gg_num enc_type, char *v, gg_num vLen, char **res, gg_num allocate_new)
 {
-    GG_TRACE("");
 
     if (allocate_new==1)
     {
@@ -1138,7 +968,7 @@ gg_num gg_encode_base (gg_num enc_type, char *v, gg_num vLen, char **res, gg_num
     if (allocate_new==1)
     {
         *res = (char*)gg_realloc (gg_mem_get_id(*res), j+1); // reduce memory usage
-        gg_mem_set_len (gg_mem_get_id(*res), j+1);
+        gg_mem_set_len (*res, j+1);
     }
     return j;
 }
@@ -1148,17 +978,16 @@ gg_num gg_encode_base (gg_num enc_type, char *v, gg_num vLen, char **res, gg_num
 // as string and calculate length). Write to file 'f'.
 // Return # of bytes written or error. The caller can close the file if needed, it's not closed here.
 //
-gg_num gg_core_write_file(FILE *f, gg_num content_len, char *content, char ispos, gg_num pos)
+static gg_num gg_core_write_file(FILE *f, gg_num content_len, char *content, char ispos, gg_num pos)
 {
-    gg_num id = gg_mem_get_id(content);
-    if (content_len == 0) content_len = gg_mem_get_len(id);
-    else if (content_len > gg_mem_get_len(id)) gg_report_error ("Memory used to write file is of length [%ld] but only [%ld] allocated", content_len, gg_mem_get_len(id));
+    gg_num lcontent = gg_mem_get_len(content);
+    if (content_len == 0) content_len = lcontent;
+    else if (content_len > lcontent) gg_report_error ("Memory used to write file is of length [%ld] but only [%ld] allocated", content_len, lcontent);
 
     if (ispos == 1)  // positioning beyond the end of file is allowed. The gap will be filled with \0
     {
         if (fseek (f,pos,SEEK_SET) != 0) {
             GG_ERR;
-            GG_TRACE("File writing, cannot position to [%ld], errno [%d]", pos, errno);
             return GG_ERR_POSITION;
         }
     }
@@ -1167,7 +996,6 @@ gg_num gg_core_write_file(FILE *f, gg_num content_len, char *content, char ispos
     if (fwrite_unlocked(content, 1, (size_t)content_len, f) != (size_t) content_len)
     {
         GG_ERR;
-        GG_TRACE("Cannot write file, errno [%d]", errno);
         return GG_ERR_WRITE;
     }
     return content_len;
@@ -1186,7 +1014,6 @@ gg_num gg_core_write_file(FILE *f, gg_num content_len, char *content, char ispos
 //
 gg_num gg_write_file (char *file_name, char *content, gg_num content_len, char append, gg_num pos, char ispos)
 {
-    GG_TRACE("");
 
     if (ispos ==1 && pos < 0)  // any position that is not 0 or positive is an error
     {
@@ -1222,7 +1049,6 @@ gg_num gg_write_file (char *file_name, char *content, gg_num content_len, char a
 //
 gg_num gg_write_file_id (FILE *f, char *content, gg_num content_len, char append, gg_num pos, char ispos)
 {
-    GG_TRACE("");
 
     if (f==NULL)
     {
@@ -1240,7 +1066,6 @@ gg_num gg_write_file_id (FILE *f, char *content, gg_num content_len, char append
         gg_num ef =  gg_get_open_file_size(f);
         if (fseek (f,ef,SEEK_SET) != 0) {
             GG_ERR;
-            GG_TRACE("File writing, cannot position to [%ld], errno [%d]", ef, errno);
             return GG_ERR_POSITION;
         }
     }
@@ -1256,7 +1081,6 @@ gg_num gg_write_file_id (FILE *f, char *content, gg_num content_len, char append
 //
 gg_num gg_reg_file(FILE **f)
 {
-    GG_TRACE("");
     gg_num ind = gg_add_mem (f); // add pointer to file pointer so it can be closed if programmer doesn't do it
                                      // thus preventing file descriptor leakage
     // no need to setup head for memory, it's not used for FILE
@@ -1271,7 +1095,6 @@ gg_num gg_reg_file(FILE **f)
 //
 int gg_fclose (FILE *f)
 {
-    GG_TRACE ("");
     if (f == NULL) { GG_ERR0; return GG_ERR_CLOSE; }
     int res= fclose (f);
     if (res == EOF) {
@@ -1288,7 +1111,6 @@ int gg_fclose (FILE *f)
 //
 FILE *gg_fopen (char *file_name, char *mode)
 {
-    GG_TRACE ("");
     FILE *f = fopen (file_name, mode);
     // check if file opened
     if (f != NULL)
@@ -1333,16 +1155,26 @@ char * gg_os_version() {return GG_OS_VERSION;}
 // If paren is 0, then () is not looked at, only quoting matters for finding keyword (this is for break-string)
 // Since a keyword may be contained in another (such as url and url-path in get-req), we also check that keyword
 // is followed by a space or a null (unless has_spaces is 0).
+// Any single-byte keyword that is surrounded by '' is ignored, such as '{' for example - we don't want to confuse it
+// with the actual code opening.
 //
 char *gg_find_keyword0(char *str, char *find, gg_num has_spaces, gg_num paren)
 {
     char *beg = str;
     char *f;
+    int l = strlen (find);
     while (1)
     {
         if (find[0] == 0) f = beg + strlen (beg); else f = strstr (beg, find);
         if (f != NULL)
         {
+            // check that single quote is not surrounding find, which must be a single character
+            // if so, skip this, it's just a character. For instance, we don't want to find '{' character
+            // and this it's the actual code blog begining.
+            if (l == 1 && f != beg && *(f-1) == '\'')
+            {
+                if (*(f+1) == '\'')  { beg = f+2; continue;} // skip 'x'
+            }
             // check that previous char is empty or space
             // unless we found keyword as the very first char
             // this does not apply if we look for end-of-string
@@ -1358,7 +1190,6 @@ char *gg_find_keyword0(char *str, char *find, gg_num has_spaces, gg_num paren)
                                                  // this is not an issue if has_spaces is 0, where there may be no space 
                                                  // before or after
             {
-                int l = strlen (find);
                 if (f[l-1] != ' ' && f[l] != 0 && f[l] != ' ') 
                 {
                     beg =f+1;
@@ -1393,11 +1224,11 @@ char *gg_find_keyword0(char *str, char *find, gg_num has_spaces, gg_num paren)
                 // if quoted or () not balanced. Rather, error out. Otherwise, return pointer to end-of-string.
                 if (within_string == 1)
                 {
-                    _gg_report_error( "Unterminated string");
+                    gg_report_error( "Unterminated string");
                 }
                 if (left_par != right_par)
                 {
-                    _gg_report_error( "Unbalanced left and right parenthesis () in statement");
+                    gg_report_error( "Unbalanced left and right parenthesis () in statement");
                 }
                 return (char*)f;
             }
@@ -1432,7 +1263,6 @@ char *gg_find_keyword0(char *str, char *find, gg_num has_spaces, gg_num paren)
 //
 char gg_decorate_path (char *reqname, gg_num reqname_len, char **p, gg_num p_len)
 {
-    GG_TRACE("");
 
     // Even if *p doesn't have any / in it (or just as a first char), it may still have hyphens in it that need converting
     char *use_p;
@@ -1485,7 +1315,7 @@ char gg_decorate_path (char *reqname, gg_num reqname_len, char **p, gg_num p_len
 // Convert str to resulting number (return value) in base 'base', with *st being status (GG_OKAY if okay).
 // st can be NULL. If base is 0, automatic base discovery (see docs).
 //
-gg_num gg_str2num (char *str, int base, gg_num *st)
+GG_ALWAYS_INLINE inline  gg_num gg_str2num (char *str, int base, gg_num *st)
 {
     char *numend;
     gg_num val;
@@ -1528,7 +1358,6 @@ gg_num gg_str2num (char *str, int base, gg_num *st)
 //
 char *gg_basename (char *path)
 {   
-    GG_TRACE("");
     char *pcopy = gg_strdup(path);
     char *res = gg_strdup(basename (pcopy)); // res has exact length set with strdup
     gg_free_int (pcopy);     
@@ -1540,37 +1369,99 @@ char *gg_basename (char *path)
 
 //
 // Return type name based on type
+// This specifically doesn't have "process-scope" designation, as set-param/get-param processing depends on this 
+// (i.e. string and process-scope string must be the same for parameter purposes)
 //
 char *typename (gg_num type)
 {
     if (type == GG_DEFSTRING) return GG_KEY_T_STRING;
-    else if (type == GG_DEFSTRINGSTATIC) return "process-scope " GG_KEY_T_STRING;
+    else if (type == GG_DEFSTRINGSTATIC) return GG_KEY_T_STRING;
     else if (type == GG_DEFNUMBER) return GG_KEY_T_NUMBER;
-    else if (type == GG_DEFNUMBERSTATIC) return "process-scope " GG_KEY_T_NUMBER;
+    else if (type == GG_DEFNUMBERSTATIC) return GG_KEY_T_NUMBER;
     else if (type == GG_DEFMSG) return GG_KEY_T_MESSAGE;
     else if (type == GG_DEFBROKEN) return GG_KEY_T_SPLITSTRING;
     else if (type == GG_DEFHASH) return GG_KEY_T_HASH;
     else if (type == GG_DEFARRAYSTRING) return GG_KEY_T_ARRAYSTRING;
     else if (type == GG_DEFARRAYNUMBER) return GG_KEY_T_ARRAYNUMBER;
     else if (type == GG_DEFARRAYBOOL) return GG_KEY_T_ARRAYBOOL;
-    else if (type == GG_DEFHASHSTATIC) return "process-scope " GG_KEY_T_HASH;
-    else if (type == GG_DEFARRAYSTRINGSTATIC) return "process-scope " GG_KEY_T_ARRAYSTRING;
-    else if (type == GG_DEFARRAYNUMBERSTATIC) return "process-scope " GG_KEY_T_ARRAYNUMBER;
-    else if (type == GG_DEFARRAYBOOLSTATIC) return "process-scope " GG_KEY_T_ARRAYBOOL;
+    else if (type == GG_DEFHASHSTATIC) return GG_KEY_T_HASH;
+    else if (type == GG_DEFARRAYSTRINGSTATIC) return GG_KEY_T_ARRAYSTRING;
+    else if (type == GG_DEFARRAYNUMBERSTATIC) return GG_KEY_T_ARRAYNUMBER;
+    else if (type == GG_DEFARRAYBOOLSTATIC) return GG_KEY_T_ARRAYBOOL;
     else if (type == GG_DEFJSON) return GG_KEY_T_JSON;
     else if (type == GG_DEFXML) return GG_KEY_T_XML;
     else if (type == GG_DEFTREE) return GG_KEY_T_TREE;
-    else if (type == GG_DEFTREESTATIC) return "process-scope " GG_KEY_T_TREE;
+    else if (type == GG_DEFTREESTATIC) return GG_KEY_T_TREE;
     else if (type == GG_DEFTREECURSOR) return GG_KEY_T_TREECURSOR;
     else if (type == GG_DEFFIFO) return GG_KEY_T_FIFO;
     else if (type == GG_DEFLIFO) return GG_KEY_T_LIFO;
     else if (type == GG_DEFLIST) return GG_KEY_T_LIST;
-    else if (type == GG_DEFLISTSTATIC) return "process-scope " GG_KEY_T_LIST;
+    else if (type == GG_DEFLISTSTATIC) return GG_KEY_T_LIST;
     else if (type == GG_DEFENCRYPT) return GG_KEY_T_ENCRYPT;
     else if (type == GG_DEFFILE) return GG_KEY_T_FILE;
     else if (type == GG_DEFSERVICE) return GG_KEY_T_SERVICE;
     else if (type == GG_DEFBOOL) return GG_KEY_T_BOOL;
+    else if (type == GG_DEFBOOLSTATIC) return GG_KEY_T_BOOL;
     else gg_report_error ("Unknown type [%ld]", type);
 }
 
+
+//
+// Convert number al to string. A new string is allocated and returned.
+// base is the base of a number (2-36). 
+// *res_len is the length of the result. 
+// Also, if base is not between 2 and 36 (inclusive), NULL is returned and res_len is set to 0.
+// NOTE: For this (and others like it) function to be the fastest, it would have  to be in a header, i.e.
+// compiled with the source as static. If done so, the 100,000,000 executions of this functions take
+// only 2.5 secs, whereas as a library it takes nearly 7 seconds. This is just because gcc can optimize
+// the code using it as an inline. It has nothing to do with static/shared libraries, signals, before/after
+// events, dispatcher or anything else. This is the reason std:to_string (for instance) is so fast - it's a header function.
+// Of course, this makes code bigger, and in a large application made of many modules, it starts to
+// show. Thus, the performance taken at such face value may not be pertinent to real world applications.
+// This particular function is the new algorithm I wrote, that in my tests is faster than any other implementation
+// I tried. It also has the most (or equal) functionality.
+//
+GG_ALWAYS_INLINE inline char *gg_num2str (gg_num al, gg_num *res_len, int base)
+{
+    if (base < 2 || base > 36) { if (res_len != NULL) *res_len = 0; return NULL;}
+    gg_num len; // length of result
+    char *res; // result
+    gg_num a; // temp number
+    // for negative numbers start with length of 1, for "-"
+    // make temp number abs() of al
+    if (al < 0) { a=-al; len = 1; } else { a=al;len = 0;}
+    // mods is the array of moduos derived from temp number, in the reverse order
+    int mods[GG_NUMBER_LENGTH]; // largest 64 bit is 64 digits in binary base
+    int k;
+    // get the length of the rest of the number (as a string), calculate mods array
+    if (al == 0) len = 1; else { for (k = 0; a != 0; mods[k++] = (a%base), a/=base){} len += k; }
+    res = gg_malloc(len + 1); // if the result is to be allocated, do so
+    res[len] = 0; // place null at the end of string that's about to be built
+    if (al == 0) { res[0] = '0'; if (res_len != NULL) *res_len = 1; gg_mem_set_len(res, 1+1); return res; } // for zero, make it '0' and return
+    gg_num wlen = len; // wlen is the length of actual digits, so for negatives, it's one less due to '-'
+    if (al < 0) { res[0] = '-'; al = -al; wlen--;} // place '-' for negatives
+    char *p = res + len - 1; // start filling in from the end; remember our mods are calculated
+                             // in reverse, so they fit in.
+    for (k = 0; k < wlen; k++) // go in reverse, and fill in string in a single pass
+    {
+        // fill in characters for bases 2-36 (10 digits + 26 chars)
+        *p-- = "0123456789abcdefghijklmnopqrstuvwxyz"[mods[k]];
+    }
+    if (res_len != NULL) *res_len = len;
+    gg_mem_set_len (res, len+1);
+    return res; // result out
+}
+
+//
+// Calculate base b to the power of p, both integer, return b^p
+//              
+gg_num gg_topower(gg_num b,gg_num p)
+{
+    gg_num i;
+    gg_num res = 1;
+  
+    for (i = 0; i < p; i++) res *= b;
+                    
+    return res;     
+} 
 

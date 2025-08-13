@@ -67,24 +67,4 @@ sudo pacman -R golf
 .B APPLICATION FILES
 .LP
 
-Note that /var/lib/gg directory is not removed, as it generally contains application files. You may move such files or delete them as you see fit.
-.SH SEE ALSO
- Install golf
-
-\fBinstall-arch-manjaro\fP  
-\fBinstall-debian\fP  
-\fBinstall-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
-\fBinstall-from-source-arch-manjaro\fP  
-\fBinstall-from-source-debian-ubuntu-raspbian\fP  
-\fBinstall-from-source-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
-\fBinstall-from-source-opensuse\fP  
-\fBinstall-in-any-folder-arch-manjaro\fP  
-\fBinstall-in-any-folder-debian-ubuntu-raspbian\fP  
-\fBinstall-in-any-folder-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
-\fBinstall-in-any-folder-opensuse\fP  
-\fBinstall-opensuse\fP  
-\fBinstall-raspbian\fP  
-\fBinstall-ubuntu\fP  
-\fBuninstall\fP   
-See all 
-\fBdocumentation\fP
+Note that $HOME/.golf directory will not be removed, since it may contain application files; you may delete it if there's no data there you care about, or you backed it up.

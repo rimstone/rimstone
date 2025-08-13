@@ -30,13 +30,3 @@ write-message msg key "key1" value "value1"
 .EE
 .RE
 
-.SH SEE ALSO
- Messages
-
-\fBget-message\fP  
-\fBnew-message\fP  
-\fBread-message\fP  
-\fBSEMI\fP  
-\fBwrite-message\fP   
-See all 
-\fBdocumentation\fP

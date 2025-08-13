@@ -9,7 +9,7 @@ Set value of a string variable.
 .RS 4
 .EX
 
-set-string <variable> [ unquoted ] [ process-scope ] [ = <string> ] 
+set-string <variable> [ unquoted ] [ = <string> ] [ process-scope ]
 
 set-string <variable> [ <index> ] = <number>
 
@@ -19,18 +19,30 @@ set-string <variable> length <length>
 .RE
 
 .SH DESCRIPTION
-String variable <variable> will be assigned a value of <string> if clause "=" is present; otherwise <variable> is assigned an empty string.
+String variable <variable> will be assigned a value of <string> if clause "=" is present; otherwise <variable> is assigned an empty string. If "process-scope" clause is used, then <string> is assigned only the first time set-string executes.
 
-If "process-scope" clause is used, then <variable> will be of process scope, meaning its value will persist from one \fBrequest\fP to another for the life of the process; this clause can only be used if <variable> did not already exist.
+.LP
+.B WITH PROCESS-SCOPE CLAUSE
+.LP
+
+If "process-scope" clause is used, then <variable> keeps its value across requests, i.e. for the life of the process. Note that a process-scoped string variable can only be assigned in set-string. However, it can be used as a regular string in any other statement.
+
+.LP
+.B WITH LENGTH CLAUSE
+.LP
 
 If "length" clause is used, then the length of string <variable> is set to <length>. Just like with all other string statements, you can only set the new length of the string between zero and the current string length. This is useful mostly when manipulating string's individual bytes, and generally not in other cases (see \fBnew-string\fP).
+
+.LP
+.B WITH UNQUOTED CLAUSE
+.LP
 
 If "unquoted" clause is used, then <string> literal is unquoted, and everything from equal clause ("=") to the rest of the line is a <string>; in this case there is no need to escape double quotes or backslashes. Note that in this case, "unquoted" and any other clause must appear prior to equal clause ("=") and after variable, because they wouldn't otherwise be recognized. For instance:
 
 .RS 4
 .EX
 
-set-string my_string unquoted = this is "some" string where there escape characters like \en do "not work"
+set-string my_string unquoted = this is "some" string where escape characters like \\n do "not work"
 
 .EE
 .RE
@@ -40,7 +52,7 @@ This is the same as:
 .RS 4
 .EX
 
-set-string my_string = "this is \[char92]"some\[char92]" string where there escape characters like \en do \[char92]"not work\[char92]""
+set-string my_string = "this is \[char92]"some\[char92]" string where escape characters like \\n do \[char92]"not work\[char92]""
 
 .EE
 .RE
@@ -50,8 +62,8 @@ set-string my_string = "this is \[char92]"some\[char92]" string where there esca
 .RS 4
 .EX
 
-set-string unq1 unquoted =This is one line\\\
-        second line and\\\
+set-string unq1 unquoted =This is one line\\
+        second line and\\
         third!
 
 .EE
@@ -69,6 +81,11 @@ third!
 .EE
 .RE
 
+
+.LP
+.B CONCATENATING STRING LITERALS
+.LP
+
 A string can be represented as a concatenation of string literals; this is useful when you want to preserve spaces, for instance:
 
 .RS 4
@@ -81,6 +98,11 @@ set-string a="something is " \\
 
 .EE
 .RE
+
+
+.LP
+.B SET A BYTE IN A STRING
+.LP
 
 You can also use set-string to set a byte in it; in this case <index> byte in <variable> string is set to <number>. <index> starts with 0 for the first byte. For instance, the resulting "str" will be "Aome string" since 65 is a number representation of 'A':
 
@@ -117,22 +139,3 @@ set-string my_string = "abc"
 .EE
 .RE
 
-.SH SEE ALSO
- Strings
-
-\fBconcatenate-strings\fP  
-\fBcopy-string\fP  
-\fBcount-substring\fP  
-\fBdelete-string\fP  
-\fBlower-string\fP  
-\fBnew-string\fP  
-\fBread-split\fP  
-\fBreplace-string\fP  
-\fBset-string\fP  
-\fBsplit-string\fP  
-\fBstring-length\fP  
-\fBtrim-string\fP  
-\fBupper-string\fP  
-\fBwrite-string\fP   
-See all 
-\fBdocumentation\fP

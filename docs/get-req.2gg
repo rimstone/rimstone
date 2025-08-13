@@ -13,7 +13,7 @@ get-req \\
         errno | error | cookie-count | cookie <cookie index> \\
         | arg-count | arg-value <arg index> \\
         | header <header> | referring-url | method \\
-        | content-type | trace-file | process-id | name \\
+        | content-type | process-id | name \\
         | external-call | directory | source-file
     to <variable>
 
@@ -54,7 +54,7 @@ Information related to an input request can be obtained with get-req statement a
 get-req cookie-count to cookie_c
 start-loop repeat cookie_c use i
     get-req cookie i to cookie_val
-    print-format "cookie %s\en", cookie_val web-encode
+    print-format "cookie %s\\n", cookie_val web-encode
     @<br/>
 end-loop
 
@@ -84,7 +84,7 @@ get-req arg-count to ac
 print-format "Total args [%ld]", ac
 start-loop repeat ac use i
     get-req arg-value i to av
-    print-format "%s\en", av
+    print-format "%s\\n", av
 end-loop
 
 .EE
@@ -142,13 +142,6 @@ Note that not all HTTP request headers are set by the caller. For example, SERVE
 
 .RS 4
 \[bu]    
-"trace-file" is the full path of the trace file for this request (if enabled, see \fBtrace-run\fP).
-
-
-.RE
-
-.RS 4
-\[bu]    
 "process-id" is the "PID" (process ID) number of the currently executing process, as a number.
 
 
@@ -175,19 +168,13 @@ Note that not all HTTP request headers are set by the caller. For example, SERVE
 
 
 .SH EXAMPLES
-Get the name of current trace file:
+Get the process ID:
 
 .RS 4
 .EX
 
-get-req trace-file to trace_file
+get-req process-id to pid
 
 .EE
 .RE
 
-.SH SEE ALSO
- Request information
-
-\fBget-req\fP   
-See all 
-\fBdocumentation\fP

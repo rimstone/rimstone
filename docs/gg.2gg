@@ -24,14 +24,14 @@ gg <options>
 .RS 4
 \[bu]    
 -k <app name>
-Create Golf application <app name> with default settings (see \fBmgrg\fP with "-i" option on creating applications with non-default settings). The default settings mean that your application is owned by the currently-logged on Operating System user (see "-u" option in mgrg), and that a Unix socket connecting to your application server isn't restricted by any group (see "-r" option in mgrg). You must have sudo privilege to create an application (this is the only option that requires it). This option does nothing if the application already exists. You can combine this option with "-q" to create and then build an application in the same step.
+Create Golf application <app name> with default settings (see \fBmgrg\fP with "-i" option on creating applications with non-default settings). The default settings mean that your application is owned by the currently-logged on Operating System user (see "-u" option in mgrg), and that a Unix socket connecting to your application server isn't restricted by any group (see "-r" option in mgrg). You must have sudo privilege to create an application. This option does nothing if the application already exists. You can combine this option with "-q" to create and then build an application in the same step.
 
 
 .RE
 
 .RS 4
 \[bu]    
--q Build Golf application from source code in the current directory. \fBmgrg\fP must run first in this directory with "-i" option to create the application. You must have at least one Golf source file (.golf file), with each such file implementing a single \fBrequest\fP handler. All application source files must be contained in a flat directory; however, each request handler can handle any hierarchical path, so your API can be fully hierarchical.
+-q Build Golf application from source code in the current directory. \fBmgrg\fP must run first in this directory with "-i" option to create the application. You must have at least one Golf source file (.golf file), with each such file implementing a single \fBrequest\fP handler. All application source files must be contained in a flat directory; however, each request handler can handle any hierarchical path, so your API can be fully hierarchical. On rare occassions when C compiler version changes, you'll need sudo privileges to recompile and install Golf's LTO objects.
 
 The following options can be used when building an application:
 
@@ -64,14 +64,6 @@ If you wish to add any additional C compiler (gcc) flags, specify them quoted un
 
 .RS 4
 \[bu]    
---trace
-If specified, tracing information code will be generated (without it, tracing is not available and \fBtrace-run\fP statement is ignored). Tracing only works when debugging mode is enabled, so --debug option must be used as well.
-
-
-.RE
-
-.RS 4
-\[bu]    
 --path=<application path>
 This option lets you specify the \fBapplication path\fP for your request URLs. It is a leading path of a URL prior to request name and any parameters. If empty, the default is the application name preceded by a forward slash:
 
@@ -91,6 +83,17 @@ This option lets you specify the \fBapplication path\fP for your request URLs. I
 Specify maximum upload size for a file (in bytes). The default is approximately 25MB. 
 
 
+.EE
+.RE
+
+.RE
+
+.RS 4
+\[bu]    
+--client-timeout=<timeout>
+Specify number of seconds that Golf server will wait for first data to arrive from a client after it connected. If the client doesn't send any data within <timeout> seconds after establishing the connection to Golf server, it will be disconnected.
+
+
 .RE
 
 .RS 4
@@ -103,8 +106,16 @@ During building of C code precompiled from .golf source code, gcc will emit a ma
 
 .RS 4
 \[bu]    
---debug
-Debugging information is always included in Golf executables, even if in separate .dbg (or .debug) files. "--debug" flag is only necessary if tracing is used (see \fBtrace-run\fP), as well as to include additional run-time checks. Do not use "--debug" unless you are a Golf upstream developer or maintainer, because it may significantly lower the run-time performance.
+--devel
+"--devel" will not use all of the compile-time optimizations and will not use any link-time optimizations (LTO). This is the default when developing applications. Use "--release" option when you want to create release executables, which typically exhibit considerably higher performance (thus always use "--release" when testing performance or for release). Note that compiler debugging information is always included, though with this option more of it is present.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--release
+This will include all optimizations, including LTO. Use when you wish to build release executables, for performance testing etc. Applications made with "--release" typically exibit better performance, sometimes 2 times faster or more. Note that compiler debugging information is still included regardless, because it enables basic debugging even for release executables and does not affect run-time performance. Making an application with "--release" can be considerably slower; because of that, during the development you'd probably not use this option.
 
 
 .RE
@@ -112,7 +123,7 @@ Debugging information is always included in Golf executables, even if in separat
 .RS 4
 \[bu]    
 --c-lines
-Skip generating line information when compiling .golf files. By default line information is included, which allows errors to be reported with line numbers in .golf files. If you want only generated C code line numbers to be used, use this option. This output will omit certain color-coded and other details that are normally present without this option.
+Skip generating line information when compiling .golf files. By default line information is included, which allows errors to be reported with line numbers in .golf files. If you want only generated C code line numbers to be used, use this option. This is mostly useful if you think you found a bug in Golf in order to pinpoint the issue.
 
 
 .RE
@@ -151,6 +162,14 @@ Do not display any warnings during compilation of a Golf application.
 
 .RS 4
 \[bu]    
+--verbose
+Display more detailed information about the making of your application.
+
+
+.RE
+
+.RS 4
+\[bu]    
 --parallel=<threads>
 Use <threads> number of threads to compile application. By default, the number of threads is equal to the number of CPUs (including virtual), allowing each CPU to compile one source files at a time; this is usually the fastest way. You can serialize compilation with "--parallel=1"; or you can set <threads> to any number between 1 and three time the number of CPUs in order to reach your performance and CPU utilization goals.
 
@@ -161,14 +180,6 @@ Use <threads> number of threads to compile application. By default, the number o
 \[bu]    
 --posix-regex
 Use ERE (Extended Regular Expression) POSIX regex library built into Linux instead of default PCRE2, see \fBmatch-regex\fP. While the two are largely compatible, you can use either one depending on your needs.
-
-
-.RE
-
-.RS 4
-\[bu]    
---plain-diag
-Do not use color-coded and more detailed Golf diagnostic output. While rare, you may need this option in cases when there may be a Golf or underlying compiler bug, or for some other reason.
 
 
 .RE
@@ -211,16 +222,9 @@ Trace the execution of gg utility and display all the steps in making your appli
 
 .RS 4
 \[bu]    
--e <num of errors>
-Show the last <num of errors> from the backtrace file, which receives error message and stack trace when program crashes or \fBreport-error\fP is issued. Also display the path to backtrace file which contains the stack details.
+-e <number of stack traces>
+Display the last <number of stack traces>, i.e. the most recent stack trace files, which receive stack traces when program errors out, such as for instance due to your program attempting to access memory outside of it (but not for \fBreport-error\fP statement). See \fBerror-handling\fP.
 
-
-.RE
-
-.RS 4
-\[bu]    
--t <num of trace files>
-Show the last <num of trace files> most recent trace files for the application. This is useful when tracing (see \fBtrace-run\fP) to quickly find the trace files where Golf writes to. Also display the path to backtrace file which contains the stack details.
 
 
 .RE
@@ -297,7 +301,7 @@ If not specified, the default method is "GET".
 
 If "--service" is not used, then \fBcommand-line\fP program will execute and you can specify program arguments with "--arg" option, in which case "<arguments>" is a string (double or single quoted) that contains any number of program arguments. To specify arguments for a service see "-a" option in \fBmgrg\fP.
 
-If "--service" is used, then application server will be contacted to execute a service; in this case if "--remote" is not specified, a local Unix socket is used to contact the server; otherwise "server:port" specified in "--remote" is the IP/name and port of the server to call, separated by a colon (":"). In case of a local Unix socket, the socket path is by default "/var/lib/gg/<app name>/sock/sock", where "/<app name>" is given by the last path segment in "--app" option, or if not specified it is derived from the name of a Golf application built in the current directory; otherwise the socket path is given by "--socket" option.
+If "--service" is used, then application server will be contacted to execute a service; in this case if "--remote" is not specified, a local Unix socket is used to contact the server; otherwise "server:port" specified in "--remote" is the IP/name and port of the server to call, separated by a colon (":"). In case of a local Unix socket, for the default location of the socket path see "socket-file" clause in \fBget-app\fP; otherwise the socket path is given by "--socket" option. 
 
 By default, the output in any case will have the HTTP headers. If you don't want those to appear, use "--silent-header" option.
 
@@ -346,34 +350,15 @@ export CONTENT_LENGTH=
 unset GG_SILENT_HEADER
 export GG_SILENT_HEADER
 export REQUEST_METHOD=GET
-export SCRIPT_NAME="/enc"
-export PATH_INFO="/encrypt/data/somedata"
-export QUERY_STRING="method=aes256"
-/var/lib/gg/bld/enc/enc
+export SCRIPT_NAME="/app_name"
+export PATH_INFO="/json/act=perf"
+export QUERY_STRING=""
+/usr/lib/golf/ggcli "192.168.0.21:2301"
 
 .EE
 .RE
 
 If you copy the above and paste into bash shell, it will execute the command line program which handles the request specified (which gg would do when "--exec" is specified, but not as fast). Note that SCRIPT_NAME will be set to whatever application path you use (i.e. the default or if set with "--path" option when making the application; or with "--app" option here), see \fBrequest\fP. 
-
-If you need to have run-time parameter(s) to "gg -r", escape them when displaying the direct bash code and run with "eval", for instance:
-
-.RS 4
-.EX
-
-COMM=$(gg -r --req="/func_test/update-data/key=\e$i/value=d_\e$i" --service --remote="127.0.0.1:2301")
-\[char46]..
-for i in {1..1000}; do
-    ...
-    RES=$(eval "$COMM")
-    ...
-    echo "Result is $RES"
-done
-
-.EE
-.RE
-
-In this example, the code with "$i" variable is created, and then evaluated in a bash loop of 1000 iterations, with each execution of your service using dynamic run-time input parameter "$i", but without executing "gg -r" 1000 times.
 
 .RE
 
@@ -395,8 +380,8 @@ Add Golf syntax and keyword highlighting rules for files with .golf extension to
 
 .RS 4
 \[bu]    
---man
-Display list of all man pages for Golf, along with the section that each belongs to (i.e. "string", "web", "program-flow" etc).
+--man <topic|all>
+Display list of all man pages for Golf (if '--man all' is used), or display manual page for a particular topic (for instance '--man read-file'). If man program is available on your system, you can als use 'man <topic>' directly to get help.
 
 
 .RE
@@ -415,12 +400,12 @@ Display help.
 
 .RS 4
 \[bu]    
-Make application (-q), use three databases (--db) named mdb (MariaDB database), pdb (PostgreSQL) and sdb (SQLite), produce debugging information (--debug), produce tracing information (--trace):
+Make application (-q), use three databases (--db) named mdb (MariaDB database), pdb (PostgreSQL) and sdb (SQLite):
 
 .RS 4
 .EX
 
-gg -q --db="mariadb:mdb postgres:pdb sqlite:sdb" --debug --trace 
+gg -q --db="mariadb:mdb postgres:pdb sqlite:sdb" 
 
 .EE
 .RE
@@ -457,9 +442,3 @@ gg -q
 
 .RE
 
-.SH SEE ALSO
- Golf compiler and utility
-
-\fBgg\fP   
-See all 
-\fBdocumentation\fP

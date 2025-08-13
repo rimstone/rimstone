@@ -9,10 +9,7 @@ Get usage specifics for a hash.
 .RS 4
 .EX
 
-get-hash  <hash > \\
-    ( length <length> ) \\
-    | ( hash-size <hash size> ) \\
-    | ( average-reads <reads> )
+get-hash  <hash > [ length <length> ] [ hash-size <hash size> ] [ average-reads <reads> ]
 
 .EE
 .RE
@@ -36,14 +33,3 @@ get-hash h length l hash-size s average-reads r
 .EE
 .RE
 
-.SH SEE ALSO
- Hash
-
-\fBget-hash\fP  
-\fBnew-hash\fP  
-\fBpurge-hash\fP  
-\fBread-hash\fP  
-\fBresize-hash\fP  
-\fBwrite-hash\fP   
-See all 
-\fBdocumentation\fP

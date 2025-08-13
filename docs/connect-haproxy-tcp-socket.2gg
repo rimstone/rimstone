@@ -32,12 +32,12 @@ defaults
 frontend front_server
     mode http
     bind *:90
-    use_backend backend_servers if { path_reg -i ^.*\e/<your golf app name>\e/.*$ } 
+    use_backend backend_servers if { path_reg -i ^.*\\/<your golf app name>\\/.*$ } 
     option forwardfor
 
 fcgi-app golf-fcgi
     log-stderr global
-    docroot /var/lib/gg/<your golf app name>/app
+    docroot <user home dir>/.golf/apps/<your golf app name>/app
     path-info ^.+(/<your golf app name>)(/.+)$ 
 
 backend backend_servers                                                                                                                     
@@ -74,13 +74,3 @@ mgrg -p 3000 <your golf app name>
 .RE
 
 Now you should be able to connect and load-balance your Golf application servers directly from HAProxy (which in this example listens on port 90, so you'd refer to it with https://your-web-server:90/<your golf app name>/...).
-.SH SEE ALSO
- Web servers
-
-\fBconnect-apache-tcp-socket\fP  
-\fBconnect-apache-unix-socket\fP  
-\fBconnect-haproxy-tcp-socket\fP  
-\fBconnect-nginx-tcp-socket\fP  
-\fBconnect-nginx-unix-socket\fP   
-See all 
-\fBdocumentation\fP

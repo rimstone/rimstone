@@ -19,18 +19,17 @@ gg_tree_cursor *gg_cursor; // internal cursor for the current tree operation
 // Function prototypes for the implementation
 static inline void gg_tree_rotate_left (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
 static inline void gg_tree_rotate_right (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
-void gg_tree_insert(gg_tree_node *parent_tree, int dir, gg_tree_node *tree, void *data);
+static void gg_tree_insert(gg_tree_node *parent_tree, int dir, gg_tree_node *tree, void *data);
 static inline int gg_tree_compare(char *k2);
-void gg_tree_search (gg_tree_node *tree);
+static void gg_tree_search (gg_tree_node *tree);
 static inline void gg_tree_height (gg_tree_node *tree, gg_num *factor);
-void gg_tree_show (gg_tree_node *tree, gg_num ident);
 static inline void gg_tree_balance (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
-void gg_tree_delete (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
-void gg_tree_find_leaf_del (gg_tree_node *parent_tree, int dir, gg_tree_node *tree_greater_node, gg_tree_node *found);
-void gg_tree_search_lesser_equal (gg_tree_node *tree, bool equal);
-void gg_tree_search_greater_equal (gg_tree_node *tree, bool equal);
-gg_tree_node *gg_tree_node_create(char sorted);
-void gg_tree_node_delete(gg_tree_node *tree);
+static void gg_tree_delete (gg_tree_node *parent_tree, int dir, gg_tree_node *tree);
+static void gg_tree_find_leaf_del (gg_tree_node *parent_tree, int dir, gg_tree_node *tree_greater_node, gg_tree_node *found);
+static void gg_tree_search_lesser_equal (gg_tree_node *tree, bool equal);
+static void gg_tree_search_greater_equal (gg_tree_node *tree, bool equal);
+static gg_tree_node *gg_tree_node_create(char sorted);
+static void gg_tree_node_delete(gg_tree_node *tree);
 
 // measuring tree hops (i.e. the cost to search), only for debug build
 #ifdef DEBUG
@@ -48,13 +47,12 @@ void gg_tree_node_delete(gg_tree_node *tree);
 // gg_cursor holds the key and key_len members, which are precomputed. k2 is the tree node key.
 static inline int gg_tree_compare(char *k2)
 {
-    GG_TRACE("");
     if (gg_cursor->root->key_type == GG_TREE_TYPE_NUM)
     {
         // key-as positive-integer, compare as numbers written as strings, much faster than atol()
         // works in any base
         gg_num l1 = gg_cursor->key_len;
-        gg_num l2 = gg_mem_get_len(gg_mem_get_id(k2));
+        gg_num l2 = gg_mem_get_len(k2);
         if (l1<l2) return -1;
         if (l1>l2) return 1;
         return memcmp(gg_cursor->key,k2,l1);
@@ -63,7 +61,7 @@ static inline int gg_tree_compare(char *k2)
     {
         // compare as classic strings, C collation
         gg_num l1 = gg_cursor->key_len;
-        gg_num l2 = gg_mem_get_len(gg_mem_get_id(k2));
+        gg_num l2 = gg_mem_get_len(k2);
         gg_num l = MIN(l1, l2)+1;
         return memcmp (gg_cursor->key,k2, l);
     }
@@ -72,21 +70,19 @@ static inline int gg_tree_compare(char *k2)
 //
 // Delete tree node. Actual key and data must be obtained prior and deleted if needed. tree is the node to delete.
 //
-void gg_tree_node_delete(gg_tree_node *tree)
+static void gg_tree_node_delete(gg_tree_node *tree)
 {
-    GG_TRACE("");
     // tree node deletion is always based on the exact key, meaning you can't say delete the node 'greater than X', you must first
     // have the exact key being deleted. Since the key being deleted is already known, there's no point in keeping the key, so we delete it.
-    gg_free (tree->key);
-    gg_free (tree);
+    gg_mem_dec_process (tree->key); 
+    gg_mem_dec_process (tree);
 }
 
 //
 // Create tree node. Allocated pointers for linked list if sorted is 1. Returns the node.
 //
-gg_tree_node *gg_tree_node_create(char sorted)
+static gg_tree_node *gg_tree_node_create(char sorted)
 {
-    GG_TRACE("");
     gg_tree_node *res;
     res = gg_calloc (1, sizeof(gg_tree_node) + (sorted==1 ? 2*sizeof (gg_tree_node *):0));
     return res;
@@ -99,7 +95,6 @@ gg_tree_node *gg_tree_node_create(char sorted)
 //
 void gg_tree_create_root (gg_tree *res, bool sorted) 
 {
-    GG_TRACE("");
     res->root_node = gg_tree_node_create(sorted?1:0); // never used directly, only reference as tree->lesser, this is the actual tree root
     res->tree->lesser_node = res->root_node; // GG_TREE_LESSER must always be used with root reference because of this assignment
 }
@@ -108,9 +103,8 @@ void gg_tree_create_root (gg_tree *res, bool sorted)
 // Create the tree itself. key_type is for default eval function (number comparison)
 // sorted is true if there's linked list for fast range access. Returns the tree.
 //
-gg_tree *gg_tree_create(char key_type, bool sorted, bool process)
+gg_tree *gg_tree_create(char key_type, bool sorted, unsigned char process)
 {
-    GG_TRACE("");
     gg_tree *res = gg_calloc (1, sizeof(gg_tree) + (sorted?2*sizeof (gg_tree_node *):0));
     res->process = process;
     res->sorted = sorted; // must be set before gg_tree_node_create() below
@@ -129,7 +123,6 @@ gg_tree *gg_tree_create(char key_type, bool sorted, bool process)
 //
 static inline void gg_tree_height (gg_tree_node *tree, gg_num *factor)
 {
-    GG_TRACE("");
     gg_num left_height;
     gg_num right_height;
     if (tree->lesser_node == NULL) left_height = 0; else left_height = tree->lesser_node->height;
@@ -196,7 +189,6 @@ static inline void gg_tree_rotate_left (gg_tree_node *parent_tree, int dir, gg_t
 //
 static inline void gg_tree_balance (gg_tree_node *parent_tree, int dir, gg_tree_node *tree)
 {
-    GG_TRACE("");
     // get the balance factor of the node to balance
     gg_num bal_factor;
     gg_tree_height (tree, &bal_factor);
@@ -238,9 +230,8 @@ static inline void gg_tree_balance (gg_tree_node *parent_tree, int dir, gg_tree_
 // its parent and the direction to reach tree (lesser/greater).
 // gg_cursor->current/status set.
 //
-void gg_tree_insert(gg_tree_node *parent_tree, int dir, gg_tree_node *tree, void *data)
+static void gg_tree_insert(gg_tree_node *parent_tree, int dir, gg_tree_node *tree, void *data)
 {
-    GG_TRACE("");
     GG_UNUSED(dir);
     if (tree->key_present  == 0)
     {
@@ -250,7 +241,7 @@ void gg_tree_insert(gg_tree_node *parent_tree, int dir, gg_tree_node *tree, void
         // There is no checking if existing data is the same as new data because in a tree
         // it's always new, there's no updating of data like say in lists
         //
-        gg_mem_set_process (GG_EMPTY_STRING, data, false, true); // empty string because with tree, it's inserting brand new value, there's no old value to compare it to
+        gg_mem_add_ref (data, gg_mem_process);
         tree->data = data;
         //
         tree->height = 1;
@@ -337,9 +328,8 @@ void gg_tree_insert(gg_tree_node *parent_tree, int dir, gg_tree_node *tree, void
 // Find lesser or equal key to that of gg_cursor->key. If 'equal' is true, then search for equal as well.
 // gg_cursor->current/status set.
 //
-void gg_tree_search_lesser_equal (gg_tree_node *tree, bool equal)
+static void gg_tree_search_lesser_equal (gg_tree_node *tree, bool equal)
 {
-    GG_TRACE("");
     gg_tree_node *prev_lesser = NULL;
     // Start from node 'tree' which is usually given as top root
     // go down the tree until found, if there's no key (empty tree), just declare not found below since prev_lesser is NULL
@@ -391,9 +381,8 @@ void gg_tree_search_lesser_equal (gg_tree_node *tree, bool equal)
 // Find greater or equal key to that of gg_cursor->key. If 'equal' is true, then search for equal as well.
 // gg_cursor->current/status set.
 //
-void gg_tree_search_greater_equal (gg_tree_node *tree, bool equal)
+static void gg_tree_search_greater_equal (gg_tree_node *tree, bool equal)
 {
-    GG_TRACE("");
     gg_tree_node *prev_greater = NULL;
     // start from the top
     // go down the tree until found, if there's no key (empty tree), just declare not found below since prev_greater is NULL
@@ -440,9 +429,8 @@ void gg_tree_search_greater_equal (gg_tree_node *tree, bool equal)
 // Search for the exact gg_cursor->key 
 // gg_cursor->current/status set.
 //
-void gg_tree_search (gg_tree_node *tree)
+static void gg_tree_search (gg_tree_node *tree)
 {
-    GG_TRACE("");
     // go down the tree until found, if there's no key (empty tree), just declare not found below
     if (tree && tree->key_present != 0) { 
         while (tree) 
@@ -470,7 +458,6 @@ void gg_tree_search (gg_tree_node *tree)
 //
 void gg_tree_min_f (gg_tree_cursor *lcurs, gg_tree *orig_tree)
 {
-    GG_TRACE("");
     gg_cursor = lcurs;
     gg_cursor->root = orig_tree;
     if (orig_tree->sorted)
@@ -499,7 +486,6 @@ void gg_tree_min_f (gg_tree_cursor *lcurs, gg_tree *orig_tree)
 //
 void gg_tree_max_f (gg_tree_cursor *lcurs, gg_tree *orig_tree)
 {
-    GG_TRACE("");
     gg_cursor = lcurs;
     gg_cursor->root = orig_tree;
     if (orig_tree->sorted)
@@ -527,9 +513,8 @@ void gg_tree_max_f (gg_tree_cursor *lcurs, gg_tree *orig_tree)
 // easy since it's always a leaf. 'tree_greater_node' is being looked at and we arrived to it from parent tree going in 'dir' direction.
 // found is the actual node with found key (gg_cursor->key)
 //
-void gg_tree_find_leaf_del (gg_tree_node *parent_tree, int dir, gg_tree_node *tree_greater_node, gg_tree_node *found)
+static void gg_tree_find_leaf_del (gg_tree_node *parent_tree, int dir, gg_tree_node *tree_greater_node, gg_tree_node *found)
 {
-    GG_TRACE("");
     // Here we go to the lowest key in this branch of the tree
     if (tree_greater_node->lesser_node == NULL)
     {
@@ -553,7 +538,7 @@ void gg_tree_find_leaf_del (gg_tree_node *parent_tree, int dir, gg_tree_node *tr
         // and no need to change reference of ->data because it's deleted here and then assigned to variable (in which case it's refcount
         // remains the same), or it's deleted in v1.c (in delete-index) and that removes it
         // so just overwrite found node's data with the leaf node's data
-        gg_mem_delete_and_return (found->data); // see comment in the other instance of this function
+        gg_mem_dec_process (found->data);
         found->data = tree_greater_node->data;
         //
         // make sure leaf node's parent is connected property
@@ -579,9 +564,8 @@ void gg_tree_find_leaf_del (gg_tree_node *parent_tree, int dir, gg_tree_node *tr
 // Delete a node with gg_cursor->key key. tree is the node looked at, and we arrived at it by going in
 // 'dir' direction from parent_tree (so dir is either lesser or greater).
 //
-void gg_tree_delete (gg_tree_node *parent_tree,  int dir, gg_tree_node *tree)
+static void gg_tree_delete (gg_tree_node *parent_tree,  int dir, gg_tree_node *tree)
 {
-    GG_TRACE("");
     void *res = NULL;
     // compare fixed key with tree->key 
     int cmp = GG_TREE_EVAL(tree->key);
@@ -600,7 +584,7 @@ void gg_tree_delete (gg_tree_node *parent_tree,  int dir, gg_tree_node *tree)
                 if (tree->dlist[GG_TREE_GREATER_LIST]) tree->dlist[GG_TREE_GREATER_LIST]->dlist[GG_TREE_LESSER_LIST] = tree->dlist[GG_TREE_LESSER_LIST]; else gg_cursor->root->max = tree->dlist[GG_TREE_LESSER_LIST];
             }
             // delete the node, free it up
-            gg_mem_delete_and_return (tree->data); // make sure value, if process-scoped, will be un-process-ed if ref was just 1
+            gg_mem_dec_process (tree->data);// make sure value, if process-scoped, will be un-process-ed if ref was just 1
                                                    // since if we're assigning this value to a variable, this variable must not be process-scoped
                                                    // or otherwise this would be a leak and memory would grow as this memory would never
                                                    // be released
@@ -654,7 +638,6 @@ void gg_tree_delete (gg_tree_node *parent_tree,  int dir, gg_tree_node *tree)
 //
 gg_num gg_tree_bal (gg_tree_node *tree)
 {
-    GG_TRACE("");
     gg_num res = 0;
     if (tree->lesser_node) res += gg_tree_bal(tree->lesser_node);
     if (tree->greater_node) res += gg_tree_bal (tree->greater_node); 
@@ -672,7 +655,6 @@ gg_num gg_tree_bal (gg_tree_node *tree)
 //
 void gg_tree_purge_f (gg_tree *orig_tree)
 {
-    GG_TRACE("");
     // first delete all nodes
     // static here is to avoid dangling pointer error - this is a local cursor, and then we find the miniminum in
     // the tree, and delete all, so in reality there is cursor beyond this function. But gcc doesn't know that.
@@ -682,7 +664,7 @@ void gg_tree_purge_f (gg_tree *orig_tree)
         gg_tree_min_f (&tcurs, orig_tree);
         if (gg_cursor->status == GG_OKAY) 
         {
-            gg_free (gg_cursor->current->data); // this must come before gg_tree_delete_f because the last one in this while loop
+            gg_mem_dec_process (gg_cursor->current->data); // this must come before gg_tree_delete_f because the last one in this while loop
                                                    // will not be the valid node
             gg_tree_delete_f (&tcurs, orig_tree, gg_cursor->current->key);
         }
@@ -691,8 +673,8 @@ void gg_tree_purge_f (gg_tree *orig_tree)
     // then delete all structure, which we don't do
     //if (orig_tree->count != 0) gg_report_error ("Cannot purge non-empty tree. Delete all nodes first.");
     //if (orig_tree->tree->lesser_node != NULL) gg_tree_node_delete (orig_tree->tree->lesser_node); 
-    //gg_free (orig_tree->tree); 
-    //gg_free(orig_tree);
+    //gg_mem_dec_process (orig_tree->tree); 
+    //gg_mem_dec_process(orig_tree);
 }
 
 //
@@ -702,13 +684,12 @@ void gg_tree_purge_f (gg_tree *orig_tree)
 //
 void gg_tree_search_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_num key_len)
 {
-    GG_TRACE("");
     gg_cursor = lcurs;
     gg_cursor->root = orig_tree;
 #ifdef DEBUG
     gg_cursor->root->hops=0;
 #endif
-    if (key_len == -1) gg_cursor->key_len = gg_mem_get_len(gg_mem_get_id(key)); else gg_cursor->key_len = key_len;
+    if (key_len == -1) gg_cursor->key_len = gg_mem_get_len(key); else gg_cursor->key_len = key_len;
     gg_cursor->key = key; 
     gg_tree_search (orig_tree->tree->lesser_node);
 }
@@ -719,13 +700,12 @@ void gg_tree_search_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_
 //
 void gg_tree_delete_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key)
 {
-    GG_TRACE("");
     gg_cursor = lcurs;
     gg_cursor->root = orig_tree;
 #ifdef DEBUG
     gg_cursor->root->hops=0;
 #endif
-    gg_cursor->key_len = gg_mem_get_len(gg_mem_get_id(key));
+    gg_cursor->key_len = gg_mem_get_len(key);
     gg_cursor->key = key; 
     if (orig_tree->tree->lesser_node && orig_tree->tree->lesser_node->key_present != 0) 
     {
@@ -745,7 +725,6 @@ void gg_tree_delete_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key)
 //
 void gg_tree_insert_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_num key_len, void *data)
 {
-    GG_TRACE("");
     gg_cursor = lcurs;
     gg_cursor->root = orig_tree;
 #ifdef DEBUG
@@ -755,9 +734,9 @@ void gg_tree_insert_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_
     // There is no checking if existing key is the same as new key because in a tree
     // it's always new, there's no updating of key like say in lists
     //
-    gg_mem_set_process (GG_EMPTY_STRING, key, false, true); // empty string because with tree, it's inserting brand new value, there's no old value to compare it to
+    gg_mem_add_ref (key, gg_mem_process);
     gg_cursor->key = key;
-    if (key_len == -1) gg_cursor->key_len = gg_mem_get_len(gg_mem_get_id(key)); else gg_cursor->key_len = key_len;
+    if (key_len == -1) gg_cursor->key_len = gg_mem_get_len(key); else gg_cursor->key_len = key_len;
     //
     gg_tree_insert (orig_tree->tree, GG_TREE_LESSER, orig_tree->tree->lesser_node ,data);
 }
@@ -769,13 +748,12 @@ void gg_tree_insert_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_
 //
 void gg_tree_search_lesser_equal_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, bool equal, char *key, gg_num key_len)
 {
-    GG_TRACE("");
     gg_cursor = lcurs;
     gg_cursor->root = orig_tree;
 #ifdef DEBUG
     gg_cursor->root->hops=0;
 #endif
-    if (key_len == -1) gg_cursor->key_len = gg_mem_get_len(gg_mem_get_id(key)); else gg_cursor->key_len = key_len;
+    if (key_len == -1) gg_cursor->key_len = gg_mem_get_len(key); else gg_cursor->key_len = key_len;
     gg_cursor->key = key; 
     gg_tree_search_lesser_equal (orig_tree->tree->lesser_node, equal);
 }
@@ -787,13 +765,12 @@ void gg_tree_search_lesser_equal_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, b
 //
 void gg_tree_search_greater_equal_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, bool equal, char *key, gg_num key_len)
 {
-    GG_TRACE("");
     gg_cursor = lcurs;
     gg_cursor->root = orig_tree;
 #ifdef DEBUG
         gg_cursor->root->hops=0;
 #endif
-    if (key_len == -1) gg_cursor->key_len = gg_mem_get_len(gg_mem_get_id(key)); else gg_cursor->key_len = key_len;
+    if (key_len == -1) gg_cursor->key_len = gg_mem_get_len(key); else gg_cursor->key_len = key_len;
     gg_cursor->key = key;
     gg_tree_search_greater_equal (orig_tree->tree->lesser_node, equal);
 }

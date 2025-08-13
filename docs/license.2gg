@@ -9,13 +9,21 @@ license \- Golf documentation (license)
 
 Golf is Free Open Source software licensed under \fBApache License 2\fP. 
 
-Golf is copyright (c) 2019-now Gliim LLC. 
-
 .LP
 .B DISCUSSION
 .LP
 
 The following discussion is not legal advice. 
+
+.LP
+.B COPYRIGHT
+.LP
+
+Golf is copyright (c) 2019-2025 Gliim LLC. Golf uses the following Free Open Source libraries; their licenses are stated below and they are copyright by their respective owners. 
+
+.LP
+.B DYNAMICALLY LINKED LIBRARIES
+.LP
 
 Golf makes use of the following dynamically-linked libraries (with copyright by their respective owners), and only if your application actually uses them:
 
@@ -51,29 +59,43 @@ Golf makes use of the following dynamically-linked libraries (with copyright by 
 
 .RS 4
 \[bu]    
-\fBMIT-licensed\fP libxml2 library (\fBhttps://gitlab.gnome.org/GNOME/libxml2\fP),
+\fBMIT-licensed\fP libXML2 library (\fBhttps://gitlab.gnome.org/GNOME/libxml2\fP),
 
 .RE
 
 .RS 4
 \[bu]    
-\fBOpenSSL-licensed\fP SSL/crypto library (\fBhttps://www.openssl.org/\fP).
+\fBOpenSSL-licensed\fP OpenSSL/crypto library (\fBhttps://www.openssl.org/\fP).
+.RE
+
+You would install these libraries yourself (they are not distributed with Golf) as dependencies for compiling the source code. 
+
+.LP
+.B INCLUDED LIBRARIES
+.LP
+
+Golf incorporates the source code of the following libraries:
+
+.RS 4
+\[bu]    
+\fBBSD 3 Clause Licensed\fP libbacktrace (\fBhttps://github.com/ianlancetaylor/libbacktrace/\fP). Copyright (C) 2012-2016 Free Software Foundation, Inc. See btrace subdirectory for its LICENSE file with the copyright notice.
 
 .RE
 
 .RS 4
 \[bu]    
-\fBOpen Market Licensed\fP FastCGI library (\fBhttps://fastcgi-archives.github.io/FastCGI_Developers_Kit_FastCGI.html\fP).
+\fBOpen Market Licensed\fP FastCGI library (\fBhttps://fastcgi-archives.github.io/FastCGI_Developers_Kit_FastCGI.html\fP). See fcgi subdirectory for its LICENSE file with the copyright notice.
 .RE
 
-You would install these libraries yourself (they are not distributed with Golf) as dependencies for compiling the source code. Golf does not link to any outside static libraries. 
+
+.LP
+.B ALGORITHMS
+.LP
 
 Golf uses FNV-1a hash function, which is released in the public domain (see \fBwikipedia page\fP) and is not patented (see \fBLandon Noll's\fP web page).
 
-Golf source code uses \fBSPDX\fP, an open ISO standard for communicating software bill of material information (such as licenses), to improve on open source licensing compliance for companies and communities.
-.SH SEE ALSO
- License
+.LP
+.B COPYRIGHT IN GOLF SOURCE CODE
+.LP
 
-\fBlicense\fP   
-See all 
-\fBdocumentation\fP
+Golf source code uses \fBSPDX\fP, an open ISO standard for communicating software bill of material information (such as licenses), to improve on open source licensing compliance for companies and communities.

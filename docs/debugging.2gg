@@ -4,10 +4,16 @@ debugging \- Golf documentation (debugging)
 .SH DESCRIPTION
 
 .LP
-.B TRACING AND BACKTRACE FILE
+.B STACK TRACES
 .LP
 
-To see any errors reported by Golf, use -e option of \fBgg\fP and check backtrace file. For example, to see the last 3 error messages:
+If there is an error in a Golf program (such as trying to access invalid memory, negative status that hasn't been checked etc.), or if there's an internal issue (such as a bug in Golf), a stack trace is created in trace directory (see \fBdirectories\fP). A single stack trace file is created for each such incident, containing the description of the issue and the file names, function names and line numbers in your source code that led to it. The file names are based on the process-ID of the affected process. There is a limit on how many stack frames Golf will show this way (from the bottom up) - currently it's 150.
+
+.LP
+.B VIEW STACK TRACES
+.LP
+
+To see errors reported by Golf (such as trying to access invalid memory, or crashes; but not those from \fBreport-error\fP), use -e option of \fBgg\fP to check the stack trace files, which contain the stack along with file names, function names and line numbers. For example, to see the last 3 errors reported:
 
 .RS 4
 .EX
@@ -17,34 +23,33 @@ gg -e 3
 .EE
 .RE
 
-You can use \fBtrace-run\fP statement to create run-time traces (see \fBdirectories\fP for directory location). To quickly find the location of recently written-to trace files, use -t option of \fBgg\fP, for example for 5 most recently used trace files:
+Note that function names are decorated; meaning if a request name has a hyphen ("-"), then it is substituted with an underscore ("_") in a function name; if it has a forward slash ("/"), then it is substituted with a double underscore ("__"). For instance, request "request/sub-request" will be internally represented as function "request__sub_request" and will show up like that in a stack trace.
+
+.LP
+.B OUTPUT FROM GOLF SERVICE WITHOUT A WEB SERVER
+.LP
+
+Use \fBgg\fP (see -r option) to send a request from command line, and receive reply from your \fBservice\fPs. This is useful in debugging issues and automating tests. For instance, the following will issue a request and receive a reply from your service:
 
 .RS 4
 .EX
 
-gg -t 5
+gg -r --req="/my-service" --service --exec
 
 .EE
 .RE
 
-Use \fBget-req\fP to get the trace file location at run-time from your application.
-
-.LP
-.B OUTPUT FROM GOLF APPLICATION WITHOUT WEB SERVER
-.LP
-
-Use \fBgg\fP (see -r option) to send a request from command line, and receive reply from your \fBservice\fPs. This is useful in debugging issues and automating tests.
 
 .LP
 .B ISSUES IN STARTING MGRG
 .LP
 
-\fBmgrg\fP starts your web application, running as \fBservice\fP processes. If you're having issues with mgrg, check out its log. Assuming your application name is "app_name", the log file is:
+\fBmgrg\fP starts your \fBservice\fP process(es). If you're having issues with mgrg, check out its log. Assuming your application name is "app-name", the log file is:
 
 .RS 4
 .EX
 
-/var/lib/gg/app_name/mgrglog/log
+$HOME/.golf/app-name/mgrglog/log
 
 .EE
 .RE
@@ -72,12 +77,12 @@ If you are using a web server as a reverse proxy, check its error log, which wou
 
 In order to use gdb debugger, you don't need to do anything special. Golf itself as well as applications created with Golf already come with debugging information.
 
-Ultimately, you can attach a debugger to a running Golf process. If your application name is "app_name", first find the PID (process ID) of its process(es):
+Ultimately, you can attach a debugger to a running Golf process. If your application name is "app-name", first find the PID (process ID) of its process(es):
 
 .RS 4
 .EX
 
-ps -ef|grep app_name.srvc
+ps -ef|grep app-name.srvc
 
 .EE
 .RE
@@ -89,7 +94,7 @@ Use gdb to load your program:
 .RS 4
 .EX
 
-sudo gdb /var/lib/gg/bld/app_name/app_name.srvc
+sudo gdb $HOME/.golf/apps/app-name/.bld/app-name.srvc
 
 .EE
 .RE
@@ -124,15 +129,8 @@ br gg_dispatch_request
 .EE
 .RE
 
-which would handle any request to your application.
+which would handle any request to your application. Request names are decorated to become function names (see above).
 
 Note that by default, gdb will show Golf code and you can step through it as you've written it, which is easy to follow and understand. 
 
-However, if you wish to step through the underlying C libraries, use "--c-lines" option in \fBgg\fP when making your application. In addition, you can use "--plain-diag" option to see diagnostics for underlying C code alone. These options should be used only if you're trying to debug issues with Golf itself, or to find and report a bug in Golf.
-.SH SEE ALSO
- Debugging
-
-\fBdebugging\fP  
-\fBtrace-run\fP   
-See all 
-\fBdocumentation\fP
+However, if you wish to step through the underlying C libraries, use "--c-lines" option in \fBgg\fP when making your application. 

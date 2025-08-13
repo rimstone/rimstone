@@ -9,28 +9,19 @@ Set value of a boolean variable.
 .RS 4
 .EX
 
-set-bool <var> [ = <boolean> ] [ process-scope ]
-
-set-bool <var> from-condition <condition>
+set-bool <variable> [ = <boolean expression> | <comparison> ] [ process-scope ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
+If equal sign (=) is not used, the boolean variable <variable> is assign "false".
 
-.LP
-.B WITHOUT "FROM-CONDITION" CLAUSE
-.LP
+If <boolean expression> is specified (see \fBboolean-expressions\fP), then <variable> is assigned its computed value.
 
-If "from-condition" clause is not used, boolean variable <var> is either assigned value <boolean> with "=" clause, or it is assigned "false" if equal clause ("=") is omitted.
+If <comparison> is specified (see "comparison" definition in \fBif-true\fP), then <variable> is assigned true if <comparison> evaluates to "true" and false if it evaluates to "false".
 
-If "process-scope" clause is used, then boolean is of process scope, meaning its value will persist from one request to another for the life of the process. 
-
-.LP
-.B WITH "FROM-CONDITION" CLAUSE
-.LP
-
-If "from-condition" clause is not used, then <condition> is evaluated, and if true, then "true" value is assigned to <var>, otherwise "false" is assigned. See \fBif-true\fP for more on <condition>.
+If "process-scope" clause is used, then boolean is of process scope, meaning its value will persist from one request to another for the life of the process; in the statement where <variable> is created, the assignment will take place only once. This clause can only be used if <variable> did not already exist.
 
 .SH EXAMPLES
 Assign "true" value to boolean variable "my_bool":
@@ -43,21 +34,14 @@ set-bool my_bool = true
 .EE
 .RE
 
-Assign boolean value based on condition:
+Assign boolean value based on comparison:
 
 .RS 4
 .EX
 
 \[char46]..
-set-bool my_bool from-condition num1 equal num2 or str1 not-equal str2
+set-bool my_bool = num1 equal num2 or str1 not-equal str2
 
 .EE
 .RE
 
-.SH SEE ALSO
- Booleans
-
-\fBboolean-expressions\fP  
-\fBset-bool\fP   
-See all 
-\fBdocumentation\fP

@@ -70,16 +70,15 @@ static gg_num depth = 0; // depth of recursion
 // this accounts for any arrays
 // returns NULL if issue in converting UTF8
 //
-char *gg_json_fullname (json_node *list, gg_num list_c)
+static char *gg_json_fullname (json_node *list, gg_num list_c)
 {
-    GG_TRACE("");
 
 
     if (list_c == 0) 
     { 
         char *fulln = gg_malloc (3); //  2 for "" + null 
         strcpy (fulln, "\"\""); 
-        gg_mem_set_len (gg_mem_get_id(fulln), 3);
+        gg_mem_set_len (fulln, 3);
         return fulln; 
     } // in case json doc is just a string or gg_number and nothing else, so list_c is 0
 
@@ -137,7 +136,7 @@ char *gg_json_fullname (json_node *list, gg_num list_c)
         }
     }
     fulln[fullnc] = 0;
-    gg_mem_set_len (gg_mem_get_id(fulln), fullnc+1);
+    gg_mem_set_len (fulln, fullnc+1);
     return fulln;
 }
 
@@ -148,13 +147,12 @@ char *gg_json_fullname (json_node *list, gg_num list_c)
 //
 void gg_set_json (gg_json **j, bool noenum, char *data)
 {
-    GG_TRACE("");
     // get json object
     *j = (gg_json*)gg_malloc (sizeof(gg_json));
 
     jloc = *j; // set local processing object
     jloc->noenum = noenum;
-    jloc->data = gg_strdupl(data, 0, gg_mem_get_len(gg_mem_get_id(data)));
+    jloc->data = gg_strdupl(data, 0, gg_mem_get_len(data));
 
 }
 
@@ -163,7 +161,6 @@ void gg_set_json (gg_json **j, bool noenum, char *data)
 //
 void gg_del_json (gg_json **j)
 {
-    GG_TRACE("");
     gg_num i;
     for (i = 0; i < (*j)->node_c; i++)
     {
@@ -185,9 +182,8 @@ void gg_del_json (gg_json **j)
 // Make sure json nodes always have room allocated for new elements
 // As more elements are added, double the storage, up until 4K blocks
 //
-void gg_add_json ()
+static void gg_add_json ()
 {
-    GG_TRACE("");
     static gg_num incby;
     
     if (node_tot == 0) incby = GG_JSON_NODES/2; // must start with half, so that initial block below is GG_JSON_NODES, since 
@@ -228,7 +224,6 @@ char *gg_json_err()
 //
 gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec, gg_num *errc, gg_num *errl)
 {
-    GG_TRACE("");
 
     char root_call = 0; // 1 if this is top call in recursive processing
     gg_num c;
@@ -280,7 +275,7 @@ gg_num gg_json_new (char *val, gg_num *curr, gg_num len, char dec, gg_num *errc,
     // JSON text is the same as value. So just "123" is a valid JSON text
     // A JSON value MUST be an object, array, number, or string, or one of the following three literal names: false null true
     //
-    gg_num vlen = gg_mem_get_len(gg_mem_get_id( val) );
+    gg_num vlen = gg_mem_get_len(val);
     if (len == -1) len = vlen; // len is -1 only in root invocation
     else if (len > vlen) gg_report_error ("Memory used is of length [%ld] but only [%ld] allocated", len, vlen);
 
@@ -555,9 +550,8 @@ endj:
 // rv is return value: 0 for number, 1 for double, 2 if bad
 // returns pointer to first byte after number or NULL if failed. Sets errm.
 //
-char *gg_json_num(char *val, gg_num *rv)
+static char *gg_json_num(char *val, gg_num *rv)
 {
-    GG_TRACE("");
     gg_num i = 0;
     char isdbl = 0;
     

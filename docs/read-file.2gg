@@ -65,7 +65,7 @@ read-file "/home/user/some_file" to file_content status st
 if-true st greater-than 0
     @Read:
     @<hr/>
-    p-web file_content
+    print-out file_content web-encode
     @<hr/>
 else-if
     @Could not read (<<print-format "%ld", st>>)
@@ -85,25 +85,3 @@ read-file "/home/user/some_file" to file_content position 20 length 10
 .RE
 
 See \fBopen-file\fP for an example with "file-id" clause.
-.SH SEE ALSO
- Files
-
-\fBchange-mode\fP  
-\fBclose-file\fP  
-\fBcopy-file\fP  
-\fBdelete-file\fP  
-\fBfile-position\fP  
-\fBfile-storage\fP  
-\fBfile-uploading\fP  
-\fBlock-file\fP  
-\fBopen-file\fP  
-\fBread-file\fP  
-\fBread-line\fP  
-\fBrename-file\fP  
-\fBstat-file\fP  
-\fBtemporary-file\fP  
-\fBuniq-file\fP  
-\fBunlock-file\fP  
-\fBwrite-file\fP   
-See all 
-\fBdocumentation\fP

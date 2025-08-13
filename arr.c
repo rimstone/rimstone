@@ -7,18 +7,28 @@
 // Array implementation
 //
 
-
 #include "golf.h"
+
 
 // function prototypes
 #ifdef GG_ARR_STRING
-static void gg_init_array (gg_arraystring *arr, gg_num max_elem, bool process);
+static void gg_init_array (gg_arraystring *arr, gg_num max_elem, unsigned char process);
 #endif
 #ifdef GG_ARR_NUMBER
-static void gg_init_array (gg_arraynumber *arr, gg_num max_elem, bool process);
+static void gg_init_array (gg_arraynumber *arr, gg_num max_elem, unsigned char process);
+static inline void gg_set_num (gg_num *arr, gg_num tot, gg_num val)
+{
+    gg_num i;
+    for (i = 0; i < tot; i++) arr[i] = val;
+}
 #endif
 #ifdef GG_ARR_BOOL
-static void gg_init_array (gg_arraybool *arr, gg_num max_elem, bool process);
+static void gg_init_array (gg_arraybool *arr, gg_num max_elem, unsigned char process);
+static inline void gg_set_bool (char *arr, gg_num tot, char val)
+{
+    gg_num i;
+    for (i = 0; i < tot; i++) arr[i] = val;
+}
 #endif
 
 
@@ -28,16 +38,15 @@ static void gg_init_array (gg_arraybool *arr, gg_num max_elem, bool process);
 // process is true if this is process-scoped array
 //
 #ifdef GG_ARR_STRING
-static void gg_init_array (gg_arraystring *arr, gg_num max_elem, bool process)
+static void gg_init_array (gg_arraystring *arr, gg_num max_elem, unsigned char process)
 #endif
 #ifdef GG_ARR_NUMBER
-static void gg_init_array (gg_arraynumber *arr, gg_num max_elem, bool process)
+static void gg_init_array (gg_arraynumber *arr, gg_num max_elem, unsigned char process)
 #endif
 #ifdef GG_ARR_BOOL
-static void gg_init_array (gg_arraybool *arr, gg_num max_elem, bool process)
+static void gg_init_array (gg_arraybool *arr, gg_num max_elem, unsigned char process)
 #endif
 {
-    GG_TRACE("");
     // make top array
     if (max_elem < 0) gg_report_error ("Maximum number of elements in array cannot be negative");
     if (max_elem == 0) max_elem = 1000000;
@@ -46,13 +55,15 @@ static void gg_init_array (gg_arraybool *arr, gg_num max_elem, bool process)
     arr->process = process;
     // make initial array
 #ifdef GG_ARR_STRING
-    arr->str = gg_calloc (arr->alloc_elem = GG_ARRAY_INC, sizeof(char*)); // all values NULL
+    arr->str = gg_calloc (arr->alloc_elem = GG_ARRAY_INC, sizeof(char*)); // all values NULL, i.e. GG_STRING_NONE
 #endif
 #ifdef GG_ARR_NUMBER
-    arr->num = gg_calloc (arr->alloc_elem = GG_ARRAY_INC, sizeof(gg_num)); // all values 0
+    arr->num = gg_malloc ((arr->alloc_elem = GG_ARRAY_INC)*sizeof(gg_num));
+    gg_set_num (arr->num, arr->alloc_elem, GG_NUMBER_NONE);
 #endif
 #ifdef GG_ARR_BOOL
-    arr->logic = gg_calloc (arr->alloc_elem = GG_ARRAY_INC, sizeof(bool)); // all values false
+    arr->logic = gg_malloc ((arr->alloc_elem = GG_ARRAY_INC)*sizeof(char));
+    gg_set_bool (arr->logic, arr->alloc_elem, GG_BOOL_NONE);
 #endif
 }
 
@@ -62,16 +73,15 @@ static void gg_init_array (gg_arraybool *arr, gg_num max_elem, bool process)
 // process is true if this is process-scoped array
 //
 #ifdef GG_ARR_STRING
-gg_arraystring *gg_new_arraystring (gg_num max_elem, bool process)
+gg_arraystring *gg_new_arraystring (gg_num max_elem, unsigned char process)
 #endif
 #ifdef GG_ARR_NUMBER
-gg_arraynumber *gg_new_arraynumber (gg_num max_elem, bool process)
+gg_arraynumber *gg_new_arraynumber (gg_num max_elem, unsigned char process)
 #endif
 #ifdef GG_ARR_BOOL
-gg_arraybool *gg_new_arraybool (gg_num max_elem, bool process)
+gg_arraybool *gg_new_arraybool (gg_num max_elem, unsigned char process)
 #endif
 {
-    GG_TRACE("");
 #ifdef GG_ARR_STRING
     gg_arraystring *arr = gg_malloc (sizeof(gg_arraystring));
 #endif
@@ -100,20 +110,19 @@ void gg_purge_arraynumber (gg_arraynumber *arr)
 void gg_purge_arraybool (gg_arraybool *arr)
 #endif
 {
-    GG_TRACE("");
 #ifdef GG_ARR_STRING
     gg_num i;
     for (i = 0; i < arr->alloc_elem; i++) 
     {
-        if (arr->str[i] != NULL) gg_free (arr->str[i]);
+        if (arr->str[i] != NULL) gg_mem_dec_process (arr->str[i]);
     }
-    gg_free (arr->str);
+    gg_mem_dec_process (arr->str);
 #endif
 #ifdef GG_ARR_BOOL
-    gg_free (arr->logic);
+    gg_mem_dec_process (arr->logic);
 #endif
 #ifdef GG_ARR_NUMBER
-    gg_free (arr->num);
+    gg_mem_dec_process (arr->num);
 #endif
     gg_init_array (arr, arr->max_elem, arr->process);
     
@@ -125,18 +134,17 @@ void gg_purge_arraybool (gg_arraybool *arr)
 // The actual value is written in v1.c in code generated there to allow old value to be used in expression for new value
 //
 #ifdef GG_ARR_STRING
-void gg_write_arraystring (gg_arraystring *arr, gg_num key, char **old_val)
+GG_ALWAYS_INLINE inline char *gg_write_arraystring (gg_arraystring *arr, gg_num key, char **old_val)
 #endif
 #ifdef GG_ARR_NUMBER
-void gg_write_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *old_val)
+GG_ALWAYS_INLINE inline void gg_write_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *old_val)
 #endif
 #ifdef GG_ARR_BOOL
-void gg_write_arraybool (gg_arraybool *arr, gg_num key, bool *old_val)
+GG_ALWAYS_INLINE inline void gg_write_arraybool (gg_arraybool *arr, gg_num key, bool *old_val)
 #endif
 {
-    GG_TRACE("");
     if (key < 0) gg_report_error ("Index to array is negative [%ld]", key);
-    if (key >= arr->max_elem) gg_report_error ("Index to array is too large for array sizing [%ld], maximum allowed is set to [%ld]", key, arr->max_elem);
+    if (key >= arr->max_elem) gg_report_error ("Index to array is too large for array sizing [%ld], maximum allowed is currently set to [%ld] (see max-size clause in new-array)", key, arr->max_elem);
     if (key >= arr->alloc_elem)
     {
         gg_num old_alloc = arr->alloc_elem;
@@ -149,28 +157,30 @@ void gg_write_arraybool (gg_arraybool *arr, gg_num key, bool *old_val)
 #endif
 #ifdef GG_ARR_NUMBER
         arr->num = gg_realloc (gg_mem_get_id(arr->num), arr->alloc_elem * sizeof (gg_num));
-        memset (&(arr->num[old_alloc]),0, sizeof(gg_num)*(arr->alloc_elem - old_alloc));
+        gg_set_num (&(arr->num[old_alloc]), arr->alloc_elem - old_alloc, GG_NUMBER_NONE);
 #endif
 #ifdef GG_ARR_BOOL
         arr->logic = gg_realloc (gg_mem_get_id(arr->logic), arr->alloc_elem * sizeof (bool));
-        memset (&(arr->logic[old_alloc]),0, sizeof(bool)*(arr->alloc_elem - old_alloc));
+        gg_set_bool (&(arr->logic[old_alloc]), arr->alloc_elem - old_alloc, GG_BOOL_NONE);
 #endif
     }
 
     if (old_val != NULL) 
     {
 #ifdef GG_ARR_STRING
-        *old_val = arr->str[key]==NULL?GG_EMPTY_STRING:arr->str[key]; 
+        char *cstr = arr->str[key]==GG_STRING_NONE?GG_EMPTY_STRING:arr->str[key];
+        *old_val = cstr;
+        return cstr;
 #endif
 #ifdef GG_ARR_NUMBER
-        *old_val = arr->num[key]; 
+        *old_val = arr->num[key]==GG_NUMBER_NONE?0:arr->num[key];
 #endif
 #ifdef GG_ARR_BOOL
-        *old_val = arr->logic[key]; 
+        *old_val = arr->logic[key]==GG_BOOL_NONE?false:(arr->logic[key]);
 #endif
     }
 #ifdef GG_ARR_STRING
-    else gg_free (arr->str[key]);
+    else return arr->str[key]==GG_STRING_NONE?GG_EMPTY_STRING:arr->str[key];
 #endif
 
     // 
@@ -181,21 +191,21 @@ void gg_write_arraybool (gg_arraybool *arr, gg_num key, bool *old_val)
 
 //
 // Read array from arr, using key number. Delete if del true, and status st is GG_OKAY if read, GG_ERR_EXIST if key is not existing
+// s is status, always available (never NULL)
 // Returns the value in the array. 
 //
 #ifdef GG_ARR_STRING
-char *gg_read_arraystring (gg_arraystring *arr, gg_num key, bool del)
+GG_ALWAYS_INLINE inline char *gg_read_arraystring (gg_arraystring *arr, gg_num key, gg_num *st)
 #endif
 #ifdef GG_ARR_NUMBER
-gg_num gg_read_arraynumber (gg_arraynumber *arr, gg_num key, bool del)
+GG_ALWAYS_INLINE inline gg_num gg_read_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *st)
 #endif
 #ifdef GG_ARR_BOOL
-bool gg_read_arraybool (gg_arraybool *arr, gg_num key, bool del)
+GG_ALWAYS_INLINE inline bool gg_read_arraybool (gg_arraybool *arr, gg_num key, gg_num *st)
 #endif
 {
-    GG_TRACE("");
-    if (key >= arr->max_elem || key < 0) gg_report_error ("Index [%ld] to array is negative or is beyond maximum allowable size", key);
-    if (key >= arr->alloc_elem) {
+    if (__builtin_expect(key >= arr->max_elem || key < 0,0)) gg_report_error ("Index [%ld] to array is negative or is beyond maximum allowable size", key);
+    if (__builtin_expect(key >= arr->alloc_elem,0)) {
         return 
 #ifdef GG_ARR_STRING
         GG_EMPTY_STRING;
@@ -208,28 +218,41 @@ bool gg_read_arraybool (gg_arraybool *arr, gg_num key, bool del)
 #endif
     }
 #ifdef GG_ARR_STRING
-    char *rval = arr->str[key]==NULL?GG_EMPTY_STRING:arr->str[key];
-#endif
-#ifdef GG_ARR_NUMBER
-    gg_num rval = arr->num[key];
-#endif
-#ifdef GG_ARR_BOOL
-    bool rval = (bool)(arr->logic[key]);
-#endif
-    if (del)  
+    if (__builtin_expect (arr->str[key]==GG_STRING_NONE, 0))
     {
-#ifdef GG_ARR_STRING
-        arr->str[key] = GG_EMPTY_STRING;
-        gg_mem_delete_and_return (rval);
+        *st=GG_ERR_EXIST;
+        return GG_EMPTY_STRING;
+    }
+    else
+    {
+        *st=GG_OKAY;
+        return arr->str[key];
+    }
 #endif
 #ifdef GG_ARR_NUMBER
-        arr->num[key] = 0;
+    if (__builtin_expect (arr->num[key]==GG_NUMBER_NONE, 0))
+    {
+        *st=GG_ERR_EXIST;
+        return 0;
+    }
+    else
+    {
+        *st=GG_OKAY;
+        return arr->num[key];
+    }
 #endif
 #ifdef GG_ARR_BOOL
-        arr->logic[key] = false;
-#endif
+    if (__builtin_expect (arr->logic[key]==GG_BOOL_NONE, 0))
+    {
+        *st=GG_ERR_EXIST;
+        return false;
     }
-    return rval;
+    else
+    {
+        *st=GG_OKAY;
+        return arr->logic[key];
+    }
+#endif
 }
 
 

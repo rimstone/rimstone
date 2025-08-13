@@ -17,18 +17,3 @@ user=myuser password=mypwd dbname=mydb
 .RE
 
 The above file has parameters "user" (Postgres user), "password" (the password for Postgres user), "dbname" (the Postgres database name). If you use peer-authenticated (i.e. passwordless) login, then omit "password" - this is when the Postgres user name is the same as your Operating System user name and where local unix domain socket is used for authentication.
-.SH SEE ALSO
- Database
-
-\fBbegin-transaction\fP  
-\fBcommit-transaction\fP  
-\fBcurrent-row\fP  
-\fBdatabase-config-file\fP  
-\fBdb-error\fP  
-\fBmariadb-database\fP  
-\fBpostgresql-database\fP  
-\fBrollback-transaction\fP  
-\fBrun-query\fP  
-\fBsqlite-database\fP   
-See all 
-\fBdocumentation\fP

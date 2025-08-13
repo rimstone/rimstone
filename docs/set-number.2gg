@@ -9,15 +9,15 @@ Set value of a number variable.
 .RS 4
 .EX
 
-set-number <var> [ = <number> ]  [ process-scope ]
+set-number <variable> [ = <number> ]  [ process-scope ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
-Number variable <var> is either assigned value <number> with "=" clause, or it is assigned 0 if equal clause ("=") is omitted.
+Number variable <variable> is either assigned value <number> with "=" clause, or it is assigned 0 if equal clause ("=") is omitted. A number is a signed 64-bit integer betwen LLONG_MIN+1 and LLONG_MAX-1 inclusive (i.e. between -9,223,372,036,854,775,807 and 9,223,372,036,854,775,806)
 
-If "process-scope" clause is used, then number is of process scope, meaning its value will persist from one request to another for the life of the process. 
+If "process-scope" clause is used, then number is of process scope, meaning its value will persist from one request to another for the life of the proces; in the statement where <variable> is created, the assignment will take place only once. This clause can only be used if <variable> did not already exist.
 
 Note that <number> can also be a string character produced by using "[" and "]" to specify the index within a string (with 0 being the first character), as in:
 
@@ -73,13 +73,3 @@ set-number my_num = (some_num*3+1)%5
 .EE
 .RE
 
-.SH SEE ALSO
- Numbers
-
-\fBabs-number\fP  
-\fBnumber-expressions\fP  
-\fBnumber-string\fP  
-\fBset-number\fP  
-\fBstring-number\fP   
-See all 
-\fBdocumentation\fP

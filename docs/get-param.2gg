@@ -126,11 +126,3 @@ http://<web address>/<app name>/<request name>?par=val1&par=val2
 .RE
 
 the value of input parameter "par" is undefined. Do not specify multiple input parameters with the same name.
-.SH SEE ALSO
- Request data
-
-\fBget-param\fP  
-\fBrequest-body\fP  
-\fBset-param\fP   
-See all 
-\fBdocumentation\fP

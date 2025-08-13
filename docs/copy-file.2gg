@@ -29,25 +29,3 @@ copy-file "/home/user/source_file" to "/home/user/target_file" status st
 .EE
 .RE
 
-.SH SEE ALSO
- Files
-
-\fBchange-mode\fP  
-\fBclose-file\fP  
-\fBcopy-file\fP  
-\fBdelete-file\fP  
-\fBfile-position\fP  
-\fBfile-storage\fP  
-\fBfile-uploading\fP  
-\fBlock-file\fP  
-\fBopen-file\fP  
-\fBread-file\fP  
-\fBread-line\fP  
-\fBrename-file\fP  
-\fBstat-file\fP  
-\fBtemporary-file\fP  
-\fBuniq-file\fP  
-\fBunlock-file\fP  
-\fBwrite-file\fP   
-See all 
-\fBdocumentation\fP

@@ -5,77 +5,57 @@ directories)
 .SH DESCRIPTION
 
 .LP
-.B ROOT DIRECTORY
-.LP
-
-Root directory is a directory where Golf is installed. All directory paths described below are appended to the root directory.
-
-When Golf is installed with a system installer (such as apt, dnf, zypper, pacman etc.), then root directory is an empty string (""). When Golf is installed locally, into a specific directory, this directory is the root (for example, if you installed Golf into your user's home directory, it might be "$HOME/.app/golf"). 
-
-If you are using any of the paths below in the absolute form (which in most cases you don't need to since your applications current working directory is the application home directory below), you should first get your root directory (even if empty):
-
-.RS 4
-.EX
-
-get-app root-directory to root
-read-file root + "/var/lib/gg/<app name>/app/my-file" to contents
-
-.EE
-.RE
-
-
-.LP
 .B APPLICATION DIRECTORY STRUCTURE
 .LP
 
-\fBmgrg\fP will create a Golf directory structure (see "-i" option) when you create your application. While you can keep and compile Golf source files in any directory, the directories used by Golf are always under /var/lib/gg directory.
+\fBmgrg\fP will create a Golf directory structure (see "-i" option) when you create your application. While you can keep and compile Golf source files in any directory, the directories used by Golf are always under "$HOME/.golf" directory ("user directory"). This user directory is also available in your environment as $GG_ROOT.
 
-A Golf application is always owned by a single Operating System user (see "-u" option in mgrg), while different applications can be owned by different users. This is the directory structure:
+This is the directory structure:
 
 .RS 4
 \[bu]    
-/var/lib/gg/bld/<app name>
-Build directory is where your application executables are built, with name <app name>.srvc for a \fBservice\fP and <app name> for a \fBcommand-line\fP program. This is a scratch-pad directory, so do not alter files in it, or use for anything else. It is created with 755 privileges.
+$HOME/.golf/apps/<app name>/.bld
+Build directory is where your application executables are built, with name <app name>.srvc for a \fBservice\fP and <app name> for a \fBcommand-line\fP program. This is a scratch-pad directory, thus do not alter files in it, or use for anything else. It is created with 700 privileges.
 
 
 .RE
 
 .RS 4
 \[bu]    
-/var/lib/gg/<app name>
-Application directory. All application data, including internals such as sockets, are kept here. It is created with 755 privileges, while each subdirectory within (see below) is with 700 privileges in order to prevent other users (even from the same group) from accessing its files. 
+$HOME/.golf/apps/<app name>
+Application directory. All application data is kept here. It is created with 711 privileges.
 
 
 .RE
 
 .RS 4
 \[bu]    
-/var/lib/gg/<app name>/app
-Application home directory. This is the current working directory when your application runs. Copy/move here any files and directories your application needs.
+$HOME/.golf/apps/<app name>/app
+Application home directory. This is the current working directory when your application runs. Copy/move here any files and directories your application needs. It is created with 700 privileges.
 
 
 .RE
 
 .RS 4
 \[bu]    
-/var/lib/gg/<app name>/app/file
-This is \fBfile-storage\fP used for uploads and new document creation. Do not write there directly; Golf does that for you, such as with \fBuniq-file\fP for instance, or when uploading files.
+$HOME/.golf/apps/<app name>/file
+This is \fBfile-storage\fP used for uploads and new document creation. Do not write there directly; Golf does that for you, such as with \fBuniq-file\fP for instance, or when uploading files. It is created with 700 privileges.
 
 
 .RE
 
 .RS 4
 \[bu]    
-/var/lib/gg/<app name>/app/trace
-Process tracing is written in per-process files if "--trace" option is used (see \fBgg\fP). Note that a special file "backtrace" is appended to when program crashes (or \fBreport-error\fP statement is used), and this file shows a full source backtrace, allowing for easier debugging. You can use "--c-lines" in order to show the source code lines of the generated C code, instead of Golf code.
+$HOME/.golf/apps/<app name>/trace
+This is a trace directory that contains files describing fatal issues with your program(s); information contained in them can help you diagnose the issues and fix them. See \fBdebugging\fP. It is created with 700 privileges.
 
 
 .RE
 
 .RS 4
 \[bu]    
-/var/lib/gg/<app name>/app/db
-Database configuration directory contains the \fBdatabase-config-file\fPs used by Golf to connect to databases; this directory is maintained by Golf and you should not use it.
+$HOME/.golf/apps/<app name>/db
+Database configuration directory contains the \fBdatabase-config-file\fPs used by Golf to connect to databases; this directory is maintained by Golf and you should not use it. It is created with 700 privileges.
 .RE
 
 While Golf directories are fixed, you can effectively change their location by creating a soft link. This way, your directories and files can be elsewhere, even on a different disk. For example, to house your file storage on a different disk:
@@ -83,23 +63,8 @@ While Golf directories are fixed, you can effectively change their location by c
 .RS 4
 .EX
 
-ln -s /home/disk0/file /var/lib/gg/<app name>/app/file
+ln -s /home/disk0/file $HOME/.golf/apps/<app name>/file
 
 .EE
 .RE
 
-.SH SEE ALSO
- Directories
-
-\fBchange-dir\fP  
-\fBchange-mode\fP  
-\fBdelete-dir\fP  
-\fBdirectories\fP  
-\fBnew-dir\fP   
- General
-
-\fBabout-golf\fP  
-\fBdirectories\fP  
-\fBpermissions\fP   
-See all 
-\fBdocumentation\fP

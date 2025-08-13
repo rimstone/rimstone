@@ -15,18 +15,20 @@ report-error <format>, <variable> [ , ... ]
 .RE
 
 .SH DESCRIPTION
-report-error will report a fatal error. It will format an error message according to the <format> string and a list of <variable>s and then  write it in the trace file (see \fBdirectories\fP); this happens regardless of whether tracing is enabled or not.
+report-error will report a fatal error. It will format an error message according to the <format> string and a list of <variable>s and then  write it to the standard error output; no HTTP header is output specifically for report-error. 
+
+In general, before issuing report-error, you would provide an output for the client that is appropriate. report-error's purpose is only to output a message to the standard error output, stop the processing of the current request, and move on to the next one for the \fBservice\fP or exit if this is a \fBcommand-line\fP program; it is your responsibility to provide any meaningful output to the client prior to that.
 
 See \fBerror-handling\fP when report-error is called.
 
-<format> string must be present and there must be at least one <variable> (it means if you want to trace a simple string literal you still have to use "%s" as format). The reason for this is to avoid formatting errors, and to use formatting in a consistent fashion.
+<format> string must be present and there must be at least one <variable> (it means if you want to output a simple string literal you still have to use "%s" as format). The reason for this is to avoid formatting errors, and to use formatting in a consistent fashion.
 
 
 .LP
 .B FORMAT
 .LP
 
-<format> string must be a literal. Variables must follow <format> separated by commas in the same order as placeholders. If you use any placeholders other than specified below, or the type of variables you use do not match the type of a corresponding placeholder in <format>, your program will \fBerror out\fP. You can use the following placeholders in <format> (see \fBtrace-run\fP for an example of usage):
+<format> string must be a literal. Variables must follow <format> separated by commas in the same order as placeholders. If you use any placeholders other than specified below, or the type of variables you use do not match the type of a corresponding placeholder in <format>, your program will \fBerror out\fP. You can use the following placeholders in <format>:
 
 .RS 4
 \[bu]    
@@ -48,13 +50,39 @@ See \fBerror-handling\fP when report-error is called.
 
 .RS 4
 \[bu]    
-%ld for a number (use "lo" for displaying in octal notation and "lx" for hexadecimal notation).
+%ld for a 64-bit signed number. Use "lo" for displaying in octal notation and "lx" for hexadecimal notation.
 
 .RE
 
 .RS 4
 \[bu]    
-%<number>ld for a number output with a width of at least <number> (any excess filled with spaces to the left). Use "lo" for displaying in octal notation and "lx" for hexadecimal notation.
+%<number>ld for a 64-bit signed number output with a width of at least <number> (any excess filled with spaces to the left). Use "lo" for displaying in octal notation and "lx" for hexadecimal notation.
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+%hd for a 32-bit signed number. Use "hu" for displaying as unsigned number, "ho" for displaying in octal notation and "hx" for hexadecimal notation.
+
+.RE
+
+.RS 4
+\[bu]    
+%<number>hd for a 32-bit signed number output with a width of at least <number> (any excess filled with spaces to the left). Use "ho" for displaying as unsigned number, "ho" for displaying in octal notation and "hx" for hexadecimal notation.
+
+.RE
+
+.RS 4
+\[bu]    
+%hhd for a signed 8-bit number. Use "hhu" for displaying as unsigned number, "hho" for displaying in octal notation and "hhx" for hexadecimal notation.
+
+.RE
+
+.RS 4
+\[bu]    
+%<number>hhd for a number output with a width of at least <number> (any excess filled with spaces to the left). Use "hhu" for displaying as unsigned number, "hho" for displaying in octal notation and "hhx" for hexadecimal notation.
 .RE
 
 
@@ -68,12 +96,3 @@ report-error "Too many input parameters for %s, encountered total of [%ld]", "cu
 .EE
 .RE
 
-.SH SEE ALSO
- Error handling
-
-\fBdb-error\fP  
-\fBerror-code\fP  
-\fBerror-handling\fP  
-\fBreport-error\fP   
-See all 
-\fBdocumentation\fP

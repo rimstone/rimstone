@@ -65,20 +65,10 @@ gg_num gg_call_fcgi (gg_cli **req, gg_num threads, gg_num *finokay, gg_num *star
 }
 #endif
 
-#ifdef GG_CURL
-void curl_global_cleanup(void) {}
-
-CURLcode curl_global_init(long flags)
-{
-    GG_UNUSED(flags);
-    return 0;
-}
-#endif
-
 #ifdef GG_TREE
 gg_num gg_tree_bal (gg_tree_node *tree) { GG_UNUSED(tree); return 1; }
 void gg_tree_create_root (gg_tree *res, bool sorted) { GG_UNUSED(res); GG_UNUSED(sorted); }
-gg_tree *gg_tree_create(char key_type, bool sorted, bool process) { GG_UNUSED(key_type); GG_UNUSED(sorted); GG_UNUSED(process); return NULL;}
+gg_tree *gg_tree_create(char key_type, bool sorted, unsigned char process) { GG_UNUSED(key_type); GG_UNUSED(sorted); GG_UNUSED(process); return NULL;}
 void gg_tree_insert_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_num key_len, void *data) {GG_UNUSED(lcurs);GG_UNUSED(orig_tree);GG_UNUSED(key);GG_UNUSED(key_len);GG_UNUSED(data);}
 void gg_tree_search_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_num key_len) {GG_UNUSED(lcurs);GG_UNUSED(orig_tree);GG_UNUSED(key);GG_UNUSED(key_len);}
 void gg_tree_delete_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key) {GG_UNUSED(lcurs);GG_UNUSED(orig_tree);GG_UNUSED(key);}

@@ -10,32 +10,30 @@
 
 LIBDIR="$1"
 SELINUXDIR="$2"
-ROOTDIR="$3"
+GOLFDIR="$3"
 
 cd $LIBDIR
 mkdir -p $LIBDIR/tmp
 cp -f gg.te golf.te $LIBDIR/tmp/
 cd $LIBDIR/tmp
 make -f /usr/share/selinux/devel/Makefile gg.pp 
-install -D -m 0600 gg.pp -t $SELINUXDIR/selinux/packages/ 
+install -D -m 0600 gg.pp -t $SELINUXDIR/selinux/packages/golf/ 
 checkmodule -M -m -o golf.mod golf.te 
 semodule_package -o golf.pp -m golf.mod 
-install -D -m 0600 golf.pp -t $SELINUXDIR/selinux/packages/ ;
+install -D -m 0600 golf.pp -t $SELINUXDIR/selinux/packages/golf/ 
 
 if (( $EUID == 0 )); then
-    semodule -n -i "$SELINUXDIR/selinux/packages/gg.pp"
-    semodule -n -i "$SELINUXDIR/selinux/packages/golf.pp"
+    semodule -n -i "$SELINUXDIR/selinux/packages/golf/gg.pp"
+    semodule -n -i "$SELINUXDIR/selinux/packages/golf/golf.pp"
 fi
 
-if [ -d "$ROOTDIR/var/lib/gg" ]; then 
+if [ -d "$GOLFDIR" ]; then 
     if /usr/sbin/selinuxenabled ; then 
         if (( $EUID == 0 )); then
             load_policy
             #set file types here, .fc setting won't work
-            sudo semanage fcontext -a -t ggfile_t "$ROOTDIR/var/lib/gg(/.*)?"
-            restorecon -R $ROOTDIR/var/lib/gg
-            sudo semanage fcontext -a -t ggfile_t "$ROOTDIR/usr/bin/mgrg"
-            restorecon  $ROOTDIR/usr/bin/mgrg
+            sudo semanage fcontext -a -t ggfile_t "$GOLFDIR(/.*)?"
+            restorecon -R $GOLFDIR
         fi
     fi
 fi

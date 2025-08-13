@@ -26,7 +26,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/file.h>
-#include <sys/shm.h>
+#include <sys/mman.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <time.h>
@@ -35,61 +35,64 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <sys/prctl.h>
+#include <stdatomic.h>
+#include "ggcommon.h"
 
-// must update this if updating in golf.h
-typedef long gg_num; 
 
+// POSIX shared memory used by server
+#define GG_SHMEM "/golfmem"
 
 // actions for processes and manager
 #define GG_STOP 1
 #define GG_QUIT 2
 #define GG_STOPONE 3
+
 // display error
 #define GG_FERR (errno == 0 ? "" : strerror(errno))
+
 // assert not null (used for malloc)
 #define GG_ANN(x) ((x) == NULL ? exit_error("Cannot allocate memory [%s]", GG_FERR) : 0)
-#define GG_MAX_CLI_WAIT 10 // max second client will wait
+
+#define GG_MAX_CLI_WAIT 10 // max second client will wait to hear back from server
+
 #define GG_MAX_ARGS 64 // max args to mgrg in -a
+
 #define GG_MAX_FILELEN 200 // max path+file length
-// directories used by initialization -i
-#define GG_RUNDIR GG_ROOT "/var/lib/gg"
-#define GG_RUNNAME GG_RUNDIR "/%s"
-#define GG_APPDIR GG_RUNDIR "/%s/app"
-#define GG_FILEDIR GG_APPDIR "/file"
-#define GG_TMPFILEDIR GG_FILEDIR "/t"
-#define GG_TRACEDIR GG_APPDIR "/trace"
-#define GG_DBDIR GG_APPDIR "/db"
-#define GG_BLDDIR GG_RUNDIR "/bld"
-#define GG_BLDAPPDIR GG_RUNDIR "/bld/%s"
-#define GG_SHNAME GG_RUNNAME "/mem"
-#define GG_SOCKDIR GG_RUNNAME "/sock"
-#define GG_VFLOGDIR GG_RUNNAME "/mgrglog"
-#define GG_SOCKNAME GG_SOCKDIR "/sock"
-#define GG_LOCKNAME GG_RUNNAME "/lock"
+
 // client commands to server and back
 #define GG_COMMAND 1
 #define GG_DONE 2
 #define GG_DONEBAD 3
 #define GG_DONESTARTUP 4
 #define GG_DONESTARTUP0 5
+
 // locks for checking server the only one running for an app
-#define GG_LOCK 1
-#define GG_CHECKLOCK 2
+#define GG_LOCK 1 // lock it
+#define GG_CHECKLOCK 2 // make a lock and then release it if okay, the effect of checking if we can
+
 //
 // now that we know the server is (most likely) running, do the handshake so we get the confirmation the job is done
 // number of tries correlate to the sleep interval. Total time to wait is (GG_MAX_CLI_WAIT * 1000), and since we're checking
-// every mslp , total of (GG_MAX_CLI_WAIT*1000)/mslp checks. We do +1 to get at least one try in case the total is 0.
+// every mslp (400 millisecs) , total of (GG_MAX_CLI_WAIT*1000)/mslp checks. We do +1 to get at least one try in case the total is 0.
 #define GG_TRIES ((gg_num)((GG_MAX_CLI_WAIT*1000)/mslp)+1)
+
 //
 // logging stuff
+// both output to stdout, while log_msg is for resident process, and out_msg outputs to whatever is connected to stdout
 #define GG_MOUT 0
 #define GG_MLOG 1
-#define out_msg(...) log_msg0(GG_MOUT, __VA_ARGS__)
+#define out_msg(...) log_msg0(GG_MOUT, __VA_ARGS__) 
 #define log_msg(...) log_msg0(GG_MLOG, __VA_ARGS__)
 
-// Command from client to server
+// Command from client to server, all updates to command are atomic.
+// Only the 'command' number needs to be atomic; this is because in the process that writes, we always set data1 *before* setting 'command';
+// and in the process that reads, we always retrieve data1 *after* getting 'command'. Since "atomic" operation (see in the code atomic_load..
+// and atomic_store...) present a memory barrier, this assures that string data1 will not be "re-ordered" out; meaning what happened before write
+// of atomic number is properly set for another process, and what happens after read of atomic number will have such data guaranteed correct.
+// This is the fastest way to synchronize reads and writes without using semaphores, mutexes etc. It's like there's a memory barrier at atomic write
+// that assures all that is written before it will be properly available after the barrier at atomic read. A neat C11 feature.
 typedef struct s_shbuf {
-    gg_num command;
+    volatile _Atomic gg_num command;
     char data1[100];
 } shbuf;
 
@@ -132,6 +135,7 @@ static pid_t *plist; // list of process IDs started by mgrg instance
 static gg_num sockfd; // socket passed down to forked child
 static gg_num num_process; // abs max # of processes, plist is sized on it
 static FILE *logfile = NULL; // this is mgrg.log
+static FILE *logfile1 = NULL; // this is mgrg1.log
 static pid_t sid = 0; // session id of the child group
 static char *golfapp = ""; // app name
 static gg_num num_to_start_min = 5; // min-worker
@@ -145,7 +149,7 @@ static char *proxy_grp = ""; // group of reverse proxy
 static uid_t run_user_id = -1; // running user id
 static gid_t proxy_grp_id = -1; // reverse proxy group id
 static gid_t run_user_grp_id = -1; // running user group id
-static shbuf *shm; // shared memory for communication btw client and server
+static shbuf *golfmem; // shared memory for communication btw client and server
 static char *client_msg = "";  // message from client -m
 static gg_num temp_no_restart = 0;  // by default, process stopped is restarted. 
                                  // if temp_no_restart is 1, then it won't be, if 0, it will be.
@@ -168,7 +172,7 @@ static pid_t whatisprocess(pid_t p);
 static void log_msg0(gg_num dest, char *format, ...);
 static void exit_error(char *format, ...);
 static void getshm();
-static void checkshm();
+static void checkshm(bool canquit);
 static void cli_getshm(char *comm, gg_num byserver);
 static void usage(int ec);
 static void start_child (char *command, gg_num pcount);
@@ -176,6 +180,7 @@ static void processup(char addone);
 static void tokarg();
 static void handlestop(gg_num sig);
 static void sleepabit(gg_num milli);
+static void unlockfile (gg_num lf);
 static gg_num lockfile (char *fname, gg_num *lf);
 static gg_num srvhere(gg_num op);
 static void runasuser();
@@ -240,16 +245,9 @@ static void initfile (char *ipath, gg_num mode, uid_t uid, gid_t guid) {
     struct stat sbuff;
     if (stat(ipath, &sbuff) != 0) return;
     // We check if this isn't local install; if so, we will try chown;
-    // If local install, we'll check if current user/group matches what we want to change to, and if not, emit error; otherwise continue since
+    // We'll check if current user/group matches what we want to change to, and if not, emit error; otherwise continue since
     // nothing's changing
-    if (GG_ROOT[0] == 0)
-    {
-        if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
-    }
-    else
-    {
-        if (uid != run_user_id && guid != run_user_grp_id) exit_error ("Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
-    }
+    if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
     if (chmod(ipath, mode) != 0) exit_error ("Cannot set permissions for file [%s]", GG_FERR);
 }
 
@@ -261,16 +259,9 @@ static void initdir (char *ipath, gg_num mode, uid_t uid, gid_t guid) {
     log_msg ("Creating directory [%s]", ipath);
     if (mkdir (ipath, mode) != 0) if (errno != EEXIST) exit_error ("Cannot create directory [%s], [%s]", ipath, GG_FERR); 
     // We check if this isn't local install; if so, we will try chown;
-    // If local install, we'll check if current user/group matches what we want to change to, and if not, emit error; otherwise continue since
+    // We'll check if current user/group matches what we want to change to, and if not, emit error; otherwise continue since
     // nothing's changing
-    if (GG_ROOT[0] == 0)
-    {
-        if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of directory [%s], [%s]", ipath, GG_FERR);
-    }
-    else
-    {
-        if (uid != run_user_id && guid != run_user_grp_id) exit_error ("Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
-    }
+    if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of directory [%s], [%s]", ipath, GG_FERR);
     if (chmod(ipath, mode) != 0) exit_error ("Cannot set permissions for directory [%s]", GG_FERR);
 }
 
@@ -304,8 +295,8 @@ static void runasuser() {
     // It will never run as root, bug or no bug.
     if (setuid(0) == 0 || seteuid(0) == 0) exit_error ("Program can never run as root");
 
-    char ipath[GG_MAX_FILELEN];
-    snprintf (ipath, sizeof(ipath), GG_RUNNAME "/app", golfapp);
+    char ipath[GG_MAX_OS_UDIR_LEN];
+    gg_dir (GG_DIR_APP, ipath, sizeof(ipath), golfapp, NULL);
     if (chdir(ipath) != 0) exit_error ("Cannot set current directory to [%s], [%s]", ipath, GG_FERR);
 }
 
@@ -316,14 +307,14 @@ static void runasuser() {
 // A file is locked to achieve one-app-one-server. Return 0 if can lock, 1 otherwise.
 //
 static gg_num srvhere(gg_num op) {
-    char lpath[GG_MAX_FILELEN];
+    char lpath[GG_MAX_OS_UDIR_LEN];
     if (lfd != -1) return 1; // this is when calling srvhere again in the same process like in sending okay_started/okay_running
-    snprintf (lpath, sizeof(lpath), GG_LOCKNAME, golfapp);
+    gg_dir (GG_DIR_LOCK, lpath, sizeof(lpath), golfapp, NULL);
     if (lockfile (lpath, &lfd) == 0) {
         log_msg("Another server is running, lock file failed");
         return 1;
     }
-    if (op == GG_CHECKLOCK) {close (lfd); lfd = -1;}
+    if (op == GG_CHECKLOCK) {unlockfile(lfd); close (lfd); lfd = -1;}
     return 0;
 }
 
@@ -335,6 +326,21 @@ static void sleepabit(gg_num milli) {
    slp.tv_sec = milli / 1000;
    slp.tv_nsec = (milli % 1000) * 1000000;
    nanosleep(&slp, NULL);
+}
+
+//
+// UnLock a file id lf. We don't really check for return here, it is what it is, as it's a best effor endeavour.
+//
+static void unlockfile (gg_num lf) {
+    struct flock lock;
+    //
+    lock.l_type = F_UNLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    //
+    int unl = fcntl(lf, F_SETLK, &lock);
+    log_msg("UnLock file result [%d], [%s]", unl, GG_FERR);
 }
 
 //
@@ -400,6 +406,7 @@ static void tokarg() {
 //
 // Log message in printf-style to stdout, which can be redirected by caller. 
 // If dest is GG_MLOG, then if showinfo is 1, messages still go through even if logging is off.
+// islogging is turned on *only* in resident mgrg process.
 //
 static void log_msg0(gg_num dest, char *format, ...) {
     time_t t;
@@ -491,8 +498,13 @@ static void handlestop(gg_num sig) {
         //sleep(1);
     }
     if (sig == GG_QUIT) { // kill self if term signal
-        log_msg ("Terminating process manager (me)");
+        munmap(golfmem, sizeof(shbuf));
+        // We do not unlink shared memory as there's really no need for it, and in edge cases of timing, it can cause issues
+        //shm_unlink (GG_SHMEM);
+        if (lfd != -1) { unlockfile(lfd); close (lfd); }
         close (sockfd);
+        log_msg ("Terminating process manager (me)");
+        exit(0);
     }
 }
 
@@ -500,57 +512,62 @@ static void handlestop(gg_num sig) {
 // Get shared memory for this app, and attach to it. Client-server communication.
 //
 static void getshm() {
-    char kname[100];
-    key_t shmkey;
-    int shmid;
-    snprintf (kname, sizeof(kname), GG_SHNAME, golfapp);
+    int ggmemid;
     // The shared memory segment is created and never destroyed, since daemons can come and go
-    if ((shmkey = ftok (kname, 'V')) == (key_t)-1) exit_error ("Cannot create ID for shmem [%s]", GG_FERR);
-    shmid = shmget (shmkey, sizeof(shbuf), IPC_CREAT | 0600);
-    if (shmid < 0) exit_error ("Cannot create shared memory [%s]", GG_FERR);
-    shm = (shbuf*) shmat (shmid, NULL, 0);
-    if (shm == (void*)-1) exit_error ("Cannot get shared memory [%s]", GG_FERR);
-    shm->command = GG_DONE;
+    char shmem[NAME_MAX];
+    snprintf (shmem, sizeof(shmem), "%s_%s", GG_SHMEM, golfapp);
+    ggmemid = shm_open (shmem, O_CREAT|O_RDWR, 0600);
+    if (ggmemid == -1) exit_error ("Cannot create shared memory [%s]", GG_FERR);
+    if (ftruncate (ggmemid, sizeof (shbuf)) == -1) exit_error ("Cannot set shared memory size [%s]", GG_FERR);
+    golfmem = mmap (NULL, sizeof(shbuf), PROT_READ|PROT_WRITE, MAP_SHARED, ggmemid, 0);
+    if (golfmem == MAP_FAILED) exit_error ("Cannot get shared memory [%s]", GG_FERR);
+    atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
 }
 
 //
 // Check in server if there's client command.
+// canquit is true if we can quit the resident process here; that's true only in the resident process itself (which is what
+// canquit conveys).
 //
-static void checkshm() {
-    if (shm->command == GG_COMMAND) {
-        log_msg ("Received command [%s]", shm->data1);
+static void checkshm(bool canquit) {
+    gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+    if (command == GG_COMMAND) {
+        log_msg ("Received command [%s]", golfmem->data1);
         // we don't send a response, just make sure we don't do it again
-        if (!strcmp (shm->data1, "restart")) {
+        if (!strcmp (golfmem->data1, "restart")) {
             // restart stops, then immediately restarts
             temp_no_restart = 0;
             handlestop (GG_STOP);            
+            log_msg ("Before process up restart");
             processup(0);
-            shm->command = GG_DONE;
-        } else if (!strcmp (shm->data1, "start")) {
+            log_msg ("After process up restart");
+            atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
+        } else if (!strcmp (golfmem->data1, "start")) {
             temp_no_restart = 0;
+            log_msg ("Before process up");
             processup(0);
-            shm->command = GG_DONE;
-        } else if (!strcmp (shm->data1, "status")) {
-            strcpy (shm->data1, "okay");
-            shm->command = GG_DONE;
-        } else if (!strcmp (shm->data1, "okay_started")) {
-            shm->command = GG_DONESTARTUP;
-        } else if (!strcmp (shm->data1, "okay_running")) {
-            shm->command = GG_DONESTARTUP0;
-        } else if (!strcmp (shm->data1, "stop")) {
+            log_msg ("After process up");
+            atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
+        } else if (!strcmp (golfmem->data1, "status")) {
+            strcpy (golfmem->data1, "okay");
+            atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
+        } else if (!strcmp (golfmem->data1, "okay_started")) {
+            atomic_store_explicit (&(golfmem->command) , GG_DONESTARTUP, memory_order_seq_cst);
+        } else if (!strcmp (golfmem->data1, "okay_running")) {
+            atomic_store_explicit (&(golfmem->command) , GG_DONESTARTUP0, memory_order_seq_cst);
+        } else if (!strcmp (golfmem->data1, "stop")) {
             handlestop (GG_STOP);            
             temp_no_restart = 1;
-            shm->command = GG_DONE;
-        } else if (!strcmp (shm->data1, "quit")) {
-            handlestop (GG_QUIT);            
-            shm->command = GG_DONE;
-            exit(0);
+            atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
+        } else if (canquit && !strcmp (golfmem->data1, "quit")) {
+            atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst); // this must come BEFORE handling quit as that will delete memory!
+            handlestop (GG_QUIT); // exits, no return
         }
         else
         {
             // bad command
-            log_msg ("Unknown command [%s]", shm->data1);
-            shm->command = GG_DONEBAD;
+            log_msg ("Unknown command [%s]", golfmem->data1);
+            atomic_store_explicit (&(golfmem->command) , GG_DONEBAD, memory_order_seq_cst);
         }
     }
 }
@@ -560,33 +577,36 @@ static void checkshm() {
 // This is called by client to see if server has a response.
 // Also called by server to let the client know it has started (okay_started as comm) or running (okay_running).
 // If called by server, then byserver is 1, otherwise 0
+// There is another process by server after it forks(), those two communicate like "client" and "server"
 //
 static void cli_getshm(char *comm, gg_num byserver) {
-    char kname[GG_MAX_FILELEN];
-    key_t shmkey;
-    int shmid;
 
     // okay_started/okay_running is internal command, not for the message list
     if (strcmp(comm, "start") && strcmp(comm, "stop") && strcmp(comm, "restart") && strcmp(comm, "quit") && strcmp(comm, "status") && strcmp(comm, "okay_started") && strcmp(comm, "okay_running")) {
         exit_error ("Unrecognized command [%s]. Available commands are start, stop, restart and quit", comm);
     }
 
-    snprintf (kname, sizeof(kname), GG_SHNAME, golfapp);
-    if ((shmkey = ftok (kname, 'V')) == (key_t)-1) exit_error ("Cannot create ID for shmem [%s]", GG_FERR);
-    shmid = shmget (shmkey, sizeof(shbuf), 0600);
-    // don't display error message if the intention was to quit
-    if (shmid < 0) {
-        if (strcmp (comm, "quit")) exit_error ("There is no active mgrg server named [%s]", golfapp);
-        else exit(0); // quit achieved without error message
+    if (byserver == 0)
+    {
+        int ggmemid;
+        char shmem[NAME_MAX];
+        snprintf (shmem, sizeof(shmem), "%s_%s", GG_SHMEM, golfapp);
+        ggmemid = shm_open (shmem, O_RDWR, 0600);
+        if (ggmemid == -1) 
+        {
+            if (strcmp (comm, "quit")) exit_error ("There is no active mgrg server named [%s]", golfapp);
+            else exit(0); // quit achieved without error message
+        }
+        golfmem = mmap (NULL, sizeof(shbuf), PROT_READ|PROT_WRITE, MAP_SHARED, ggmemid, 0);
+        if (golfmem == MAP_FAILED) exit_error ("Cannot get shared memory [%s]", GG_FERR);
     }
-    shm = (shbuf*) shmat (shmid, NULL, 0);
-    if (shm == (void*)-1) exit_error ("Cannot get shared memory [%s]", GG_FERR);
 
-    // check if server here - if only one processes attached to shared memory (this one, so no server) if the file lock not done
-    struct shmid_ds shmstat;
-    shmctl (shmid, IPC_STAT, &shmstat);
-    if (shmstat.shm_nattch == 1 || srvhere(GG_CHECKLOCK) == 0) {
-        if (strcmp (comm, "quit")) exit_error ("Server is not running [%ld]", shmstat.shm_nattch);
+
+
+
+    // check if server here 
+    if (srvhere(GG_CHECKLOCK) == 0) {
+        if (strcmp (comm, "quit")) exit_error ("Server is not running");
         else exit(0); // quit achieved without error message
     }
 
@@ -594,34 +614,42 @@ static void cli_getshm(char *comm, gg_num byserver) {
     gg_num tries = GG_TRIES;
     // no need to check if server is processing something else if this is server
     if (byserver == 0) {
+        log_msg ("Waiting for server before [%s]", comm);
         // check to see if server processing previous command. This is obviousy prone to race conditions.
         // but mgrg client is an administrative one; there is not supposed to be more than one person doing this. It is
         // not an end-user tool. If someone is issuing many calls simultaneously logged as the same OS user, you may have bigger problems.
         tries = GG_TRIES;
         while (tries-- >= 0) {
-            if (shm->command == GG_COMMAND) {
+            gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+            if (command == GG_COMMAND) {
                 sleepabit (mslp); // normally not GG_COMMAND, so null virtually always
             } else break;
         }
-        if (shm->command == GG_COMMAND) exit_error ("Cannot contact server: %s", servererr);
+        gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+        if (command == GG_COMMAND) exit_error ("Cannot contact server: %s", servererr);
     }
     // Now issue the actual command, know the server is in a good state (most likely)
-    snprintf (shm->data1, sizeof (shm->data1), "%s", comm);
-    shm->command = GG_COMMAND;
+    snprintf (golfmem->data1, sizeof (golfmem->data1), "%s", comm);
+    atomic_store_explicit (&(golfmem->command) , GG_COMMAND, memory_order_seq_cst);
+    log_msg ("Sent command [%s], by server [%ld]", comm, byserver);
     tries = GG_TRIES;
+    gg_num command;
     while (tries-- >= 0) {
-        if (shm->command != GG_COMMAND) {
-            if (shm->command == GG_DONEBAD) exit_error ("Unknown command [%s]", comm);
+        command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+        if (command != GG_COMMAND) {
+            if (command == GG_DONEBAD) exit_error ("Unknown command [%s]", comm);
             // if asked for status, print what server responded. Use stdout, as no dup2 took place.
-            if (!strcmp (comm, "status")) out_msg ("%s\n", shm->data1);
+            if (!strcmp (comm, "status")) out_msg ("%s\n", golfmem->data1);
+            log_msg ("Got server response on [%s], by server [%ld] command [%ld]", comm, byserver, command);
             return;
-        }
+        } 
         sleepabit (mslp);
     }
+    log_msg ("Couldn't get reply from sending to server the command [%s], shared memory status command [%ld], by server [%ld]", comm, command, byserver);
     
     // this is now failure, we got nothing from server, either it died, or was never there
-    gg_num ccom = shm->command;
-    shm->command = GG_DONE; // always reset so that previous command doesn't stay in memory if previous server went away
+    gg_num ccom = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+    atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst); // always reset so that previous command doesn't stay in memory if previous server went away
                             // for example if previous server didn't exist or timed out, GG_COMMAND may stay and confuse the
                             // following client
 
@@ -900,6 +928,12 @@ int main(int argc, char **argv)
                 break;
             case 'r':
                 GG_ANN (proxy_grp = strdup (optarg));
+                struct group *grp;
+                if ((grp = getgrnam(proxy_grp)) == NULL) 
+                {
+                    exit_error ("Unknown group [%s], [%s]", proxy_grp, GG_FERR);
+                }
+                proxy_grp_id = grp->gr_gid;
                 break;
             case 't':
                 tspike = atol (optarg);
@@ -983,7 +1017,7 @@ int main(int argc, char **argv)
     if (!isalpha(golfapp[0])) exit_error ("Application name must start with alphabetic character, found [%s]", golfapp);
 
     // Command line checks
-    char ipath[GG_MAX_FILELEN];
+    char ipath[GG_MAX_OS_UDIR_LEN];
     if (optind != argc) exit_error ("Extra unwanted arguments on the command line [%s]", argv[optind]);
     if (unix_sock == 1 && port != 0) exit_error ("Cannot use both unix socket and TCP socket. Use one or the other");
 
@@ -1010,100 +1044,90 @@ int main(int argc, char **argv)
     if (initit == 1) {
         //
         // BEGIN ROOT - this section is the only time mgrg is allowed as root
-        // This is mgrg -i setup, the only time we need root privs.
-        // NOTE: if GG_ROOT is not "", this is a local install, and there's no root involved! (even if sudo is used we won't switch to seteuid!!)
-        //
-        if (GG_ROOT[0] == 0)
-        {
-            if (seteuid (0) != 0) exit_error ("To perform this operation, you must run as root");
-        }
+        // This is mgrg -i setup, the only time we may need root privs. Most of the time we don't
+        // This is for when we need to set socket privs to be a group of another user
+        //if (seteuid (0) == 0) exit_error ("You cannot run as root");
 
         // create ID file for application that states application name. Used by gg to work
         // without having to specify application name
-        snprintf (ipath, sizeof(ipath), ".vappname");
-        FILE *f = fopen (ipath, "w+");
+        char *vfile = ".vappname";
+        FILE *f = fopen (vfile, "w+");
         if (f != NULL) {
             fprintf(f, "%s", golfapp);
             fclose(f);
-            initfile (ipath, 0700, run_user_id, run_user_grp_id);
+            initfile (vfile, 0700, run_user_id, run_user_grp_id);
         } // don't do anything if can't write (no error), just specify name in gg
 
         //
-        // create /var/lib/gg/bld is created by install (in Makefile)
-        // create /var/lib/gg/bld/<appname>
+        // NOTE all gg_dir has run_user as the last argument, if not, all dirs would be /root when we run sudo mgrg
+        // and we do that when we need to set socket to group ID of some other user (like apache GUID etc)
         //
-        snprintf (ipath, sizeof(ipath), GG_BLDAPPDIR, golfapp);
+        //
+        // create .golf/apps dir, 711 so socket can pass through
+        //
+        gg_dir (GG_DIR_APPS, ipath, sizeof(ipath), NULL, run_user);
+        initdir (ipath, 0711, run_user_id, run_user_grp_id);
+        //
+        // create .golf/apps/<app>
+        //
+        gg_dir (GG_DIR_APPNAME, ipath, sizeof(ipath), golfapp, run_user);
         owned (ipath, run_user_id); // make sure no one else already took this
-        initdir (ipath, 02700, run_user_id, run_user_grp_id);
-
+        initdir (ipath, 0711, run_user_id, run_user_grp_id);
         //
-        // create /var/lib/gg/<appname> - this is also created by Golf in setup_hello() - MUST MATCH IT!!
-        // reason being that depending on what is done first (i.e. mgrg used alone without without Golf, or Golf using mgrg)
+        // create .golf/apps/<app>/app dir
         //
-        snprintf (ipath, sizeof(ipath), GG_RUNNAME, golfapp);
+        gg_dir (GG_DIR_APP, ipath, sizeof(ipath), golfapp, run_user);
         owned (ipath, run_user_id); // make sure no one else already took this
-        initdir (ipath, 0755, run_user_id, run_user_grp_id);
-        //
-        // create /var/lib/gg/<appname>/mgrglog
-        //
-        snprintf (ipath, sizeof(ipath), GG_VFLOGDIR, golfapp);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
-        // create /var/lib/gg/<appname>/app 
+        // create ./golf/apps/<app>/.bld dir
         //
-        snprintf (ipath, sizeof(ipath), GG_APPDIR, golfapp);
+        gg_dir (GG_DIR_BLD, ipath, sizeof(ipath), golfapp, run_user);
+        owned (ipath, run_user_id); // make sure no one else already took this
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
-        // create /var/lib/gg/<appname>/app/file
+        // create .golf/apps/<app>/file
         //
-        snprintf (ipath, sizeof(ipath), GG_FILEDIR, golfapp);
+        gg_dir (GG_DIR_FILE, ipath, sizeof(ipath), golfapp, run_user);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
-        // create /var/lib/gg/<appname>/app/file/t
+        // create .golf/apps/<app>/file/t
         //
-        snprintf (ipath, sizeof(ipath), GG_TMPFILEDIR, golfapp);
+        gg_dir (GG_DIR_TMP, ipath, sizeof(ipath), golfapp, run_user);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
-        // create /var/lib/gg/<appname>/app/trace 
+        // create .golf/apps/<app>/trace
         //
-        snprintf (ipath, sizeof(ipath), GG_TRACEDIR, golfapp);
+        gg_dir (GG_DIR_TRACE, ipath, sizeof(ipath), golfapp, run_user);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
-        // create /var/lib/gg/<appname>/app/db
+        // create .golf/apps/<app>/db
         //
-        snprintf (ipath, sizeof(ipath), GG_DBDIR, golfapp);
+        gg_dir (GG_DIR_DB, ipath, sizeof(ipath), golfapp, run_user);
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
         //
-        // create /var/lib/gg/<appname>/sock (with group ownership of reverse proxy)
+        // create .golf/apps/<app>/.sock (with group ownership of reverse proxy)
         //
-        // get proxy group id. If specified make group sticky bit on sock directory so socket
-        // is always created with it. Based on this, when socket is created, we will set perms to 0660,
-        // otherwise 0666, we reset here even if they already exist in case we change mode (say we allowed
-        // socket to everyone, now just to group)
+        // socket directory with sticky bit (01) so no one can delete or rename socket inside, even if they have write privileges
+        // also SETGUID bit (02) so the privileges of this directory are passed down to socket when it's actually created in bind()
+        // so this is them 01+02=03
+        // when we create dir, we use 5 and not 6, so no one else can create files here, but when we bind() socket, we set to 6 (so it can be written by
+        // remote process). Very precise to balance security vs utility.
         if (proxy_grp[0] != 0) {
             struct group *grp;
             if ((grp = getgrnam(proxy_grp)) == NULL) exit_error ("Unknown group [%s], [%s]", proxy_grp, GG_FERR);
             proxy_grp_id = grp->gr_gid;
-            snprintf (ipath, sizeof(ipath), GG_SOCKDIR, golfapp);
-            initdir (ipath, 02750, run_user_id, proxy_grp_id);
-            snprintf (ipath, sizeof(ipath), GG_SOCKNAME, golfapp);
-            initfile (ipath, 02660, run_user_id, proxy_grp_id);
+            //
+            gg_dir (GG_DIR_SOCK, ipath, sizeof(ipath), golfapp, run_user);
+            // 03760 = stick+setguid+all for user+rx for group+none for other
+            initdir (ipath, 03750, run_user_id, proxy_grp_id);
         } else {
             // allow anyone to create connection
-            snprintf (ipath, sizeof(ipath), GG_SOCKDIR, golfapp);
-            initdir (ipath, 02755, run_user_id, run_user_id);
-            snprintf (ipath, sizeof(ipath), GG_SOCKNAME, golfapp);
-            initfile (ipath, 02666, run_user_id, run_user_id);
+            gg_dir (GG_DIR_SOCK, ipath, sizeof(ipath), golfapp, run_user);
+            // 03755 = stick+setguid+all for user+rx for group+rx for other
+            initdir (ipath, 03755, run_user_id, proxy_grp_id);
         }
-        //
-        //
-        // end of golf setup_hello() match
-        //
-        //
-        //
-        // END ROOT
-        //
-        snprintf (ipath, sizeof(ipath), GG_SHNAME, golfapp);
+        gg_dir (GG_DIR_MEM, ipath, sizeof(ipath), golfapp, run_user);
         // do not recreate file, as that leaves current server's memory in a limbo - will never receive anything
         if (stat(ipath, &sbuff) != 0) {
             gg_num f;
@@ -1113,6 +1137,9 @@ int main(int argc, char **argv)
         if (chmod(ipath, 0700) != 0) exit_error ("Cannot set permissions for shmem key file [%s]", GG_FERR);
         exit (0);
         //
+        // END of what may be ROOT
+        //
+        //
         // End of init
         //
     }
@@ -1120,15 +1147,16 @@ int main(int argc, char **argv)
     runasuser(); // make sure mgrg application NEVER runs as root
 
     // check if this app initialized
-    snprintf (ipath, sizeof(ipath), GG_APPDIR, golfapp);
+    gg_dir (GG_DIR_APP, ipath, sizeof(ipath), golfapp, NULL);
     if (stat(ipath, &sbuff) != 0) exit_error ("Directory [%s] does not exist or cannot be accessed", ipath); 
-    snprintf (ipath, sizeof(ipath), GG_RUNNAME "/mem", golfapp);
-    if (stat(ipath, &sbuff) != 0) exit_error ("Directory [%s] does not exist or cannot be accessed", ipath); 
+    gg_dir (GG_DIR_MEM, ipath, sizeof(ipath), golfapp, NULL);
+    if (stat(ipath, &sbuff) != 0) exit_error ("File [%s] does not exist or cannot be accessed", ipath); 
 
     // This is if there is -m <command>, run mgrg as client, and exit right away
     // this does not require root privilege
     if (client_msg[0] != 0) {
         cli_getshm (client_msg, 0);
+        munmap(golfmem, sizeof(shbuf));
         exit(0);
     }
 
@@ -1143,18 +1171,19 @@ int main(int argc, char **argv)
         usage(-1);
     }
 
+    gg_dir (GG_DIR_BLD, ipath, sizeof(ipath), golfapp, NULL);
     // use ./command for something in current directory or a full path
     if (command[0] == 0) {
         // if no command, assume standard Golf format - in golf's bld directory
-        GG_ANN (command = (char*)malloc (GG_MAX_FILELEN));
-        snprintf (command, GG_MAX_FILELEN, GG_BLDAPPDIR "/%s.srvc", golfapp, golfapp);
+        GG_ANN (command = (char*)malloc (GG_MAX_FILELEN+10)); // +10 for gcc to not complain about below snprintf
+        snprintf (command, GG_MAX_FILELEN+10,  "%s/%s.srvc", ipath, golfapp);
     } else {
         char *s = strchr (command, '/');
         if (s == NULL) {
             // if command without path, place the file in golf's bld directory
             char *nc;
-            GG_ANN (nc = (char*)malloc (GG_MAX_FILELEN));
-            snprintf (nc, GG_MAX_FILELEN, GG_BLDAPPDIR "/%s", golfapp, command);
+            GG_ANN (nc = (char*)malloc (GG_MAX_FILELEN + 10)); // +10 for gcc about below snprintf
+            snprintf (nc, GG_MAX_FILELEN+10, "%s/%s", ipath,  command);
             command = nc; // old command is lost, but no big deal; freeing would work but any change in logic might cause sigseg later
         }
     }
@@ -1175,9 +1204,17 @@ int main(int argc, char **argv)
     init_start = num_to_start_min; // min srvc processes to start
 
     // log file defined outside fork as it must be visible to parent AND child
-    char logn[GG_MAX_FILELEN];
-    snprintf (logn, sizeof(logn), GG_VFLOGDIR "/log", golfapp);
+    char logn[GG_MAX_OS_UDIR_LEN];
+    gg_dir (GG_DIR_MGRG, logn, sizeof(logn), golfapp, NULL);
+    char logn1[GG_MAX_OS_UDIR_LEN];
+    gg_dir (GG_DIR_MGRG1, logn1, sizeof(logn1), golfapp, NULL);
+    logfile1 = fopen (logn1, "a+");
+    if (logfile1 == NULL) exit_error ("Cannot open log file1 [%s]", GG_FERR);
+
+    atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst); // always reset so that previous command doesn't stay in memory if previous server went away
     
+    static gg_num opid;
+    opid =(gg_num)getpid();
     gg_num deadres; // used for first round of forking, which isn't relevant
     // if foreground mode, do not fork
     if (fg == 0) deadres=fork(); else deadres = 0;
@@ -1210,6 +1247,7 @@ int main(int argc, char **argv)
             if (dup (fileno(logfile)) != 2) {
                 exit_error ("Cannot dup logfile to 2 [%s]", GG_FERR);
             }
+            initfile (logn, 0700, run_user_id, proxy_grp_id);
         }
         islogging=1;
 
@@ -1241,21 +1279,26 @@ int main(int argc, char **argv)
         }
 
         gg_num rv;
+        log_msg ("Before binding socket");
         if (unix_sock == 1) {
             struct sockaddr_un servaddr;
             memset(&servaddr, 0, sizeof(struct sockaddr_un));
             servaddr.sun_family = AF_UNIX; 
-            snprintf (servaddr.sun_path, sizeof (servaddr.sun_path), GG_SOCKNAME, golfapp);
+            // get sock file path, put it into structure to bind socket from
+            char ipath[GG_MAX_OS_UDIR_LEN];
+            gg_dir (GG_DIR_SOCKFILE, ipath, sizeof(ipath), golfapp, NULL);
+            strncpy (servaddr.sun_path, ipath, sizeof(servaddr.sun_path)); 
+            servaddr.sun_path[sizeof(servaddr.sun_path)-1] = 0;
+            //
             if (unlink(servaddr.sun_path) != 0) if (errno != ENOENT) exit_error ("Cannot unlink unix domain socket file [%s]", GG_FERR);
             if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) != 0) exit_error ("Cannot bind unix domain socket [%s], [%s]", servaddr.sun_path, GG_FERR);
-            struct stat sbuff;
-            snprintf (ipath, sizeof(ipath), GG_SOCKDIR, golfapp);
-            if (stat(ipath, &sbuff) != 0) exit_error("Socket directory not found [%s], [%s]", ipath, GG_FERR);
-            // check if directory perms are 0750, if so make it 0660 for the socket. If 0755, make it 0666
-            if ((sbuff.st_mode & 05) == 05 ) {
-                if (chmod(servaddr.sun_path, 0666) != 0) exit_error ("Cannot set permissions for unix domain socket [%s]", GG_FERR);
+            if (proxy_grp[0] != 0) {
+                // create .golf/apps/<app>/.sock
+                initfile (servaddr.sun_path, 0660, run_user_id, proxy_grp_id);
             } else {
-                if (chmod(servaddr.sun_path, 0660) != 0) exit_error ("Cannot set permissions for unix domain socket [%s]", GG_FERR);
+                // allow anyone to create connection
+                // create .golf/apps/<app>/.sock
+                initfile (servaddr.sun_path, 0666, run_user_id, proxy_grp_id);
             }
         } else {
             struct sockaddr_in servaddr;
@@ -1265,6 +1308,7 @@ int main(int argc, char **argv)
             servaddr.sin_port = htons(port);
             if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) != 0) exit_error("Cannot bind socket [%s]", GG_FERR);
         }
+        log_msg ("After binding socket [%ld]", opid);
         
         if ((rv = listen(sockfd, maxblog)) != 0) {
             exit_error("Cannot listen on socket [%s]", GG_FERR);
@@ -1275,6 +1319,7 @@ int main(int argc, char **argv)
     } else if (deadres == -1) {
         exit_error ("Could not start Golf Service Manager for [%s], [%s]", golfapp, GG_FERR);
     } else {
+        fprintf (logfile1, "Starting other process [%ld]\n", opid);
         // ORIGINAL PARENT FROM COMMAND LINE OR A SCRIPT, deadres is the PID of the child process (the resident process)
         // get success message from child (our resident process)
         // THIS NEVER HAPPENS IN FOREGROUND MODE, as there is no fork (parent and child), but only one process
@@ -1283,12 +1328,18 @@ int main(int argc, char **argv)
             // DO NOT check if child process has died, because if the server is already running, it will exit, i.e. die
             // and before it dies, it will send okay_started message
 
-            // check for client commands
-            checkshm(); 
-            if (shm->command == GG_DONESTARTUP) {out_msg ("Golf Service Manager [%s] for [%s] successfully started", GG_PKGVERSION, golfapp); exit(0);}
-            else if (shm->command == GG_DONESTARTUP0) {out_msg ("Golf Service Manager [%s] for [%s] is already running. If you want to restart it, stop it first (-m quit), then start it", GG_PKGVERSION, golfapp); exit(1);}
+            // check for client commands (client being the other process created in fork above)
+            gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+            fprintf (logfile1, "Reading messages, command [%ld], data [%s], [%ld]\n", command, golfmem->data1, opid);
+            checkshm(false); 
+            fprintf (logfile1, "After checkshm, command [%ld], data [%s], [%ld]\n", command, golfmem->data1, opid);
+            if (command == GG_DONESTARTUP) {out_msg ("Golf Service Manager [%s] for [%s] successfully started", GG_PKGVERSION, golfapp); exit(0);}
+            else if (command == GG_DONESTARTUP0) {out_msg ("Golf Service Manager [%s] for [%s] is already running. If you want to restart it, stop it first (-m quit), then start it", GG_PKGVERSION, golfapp); exit(1);}
             sleepabit (mslp);
+            fprintf (logfile1, "Done Reading messages, command [%ld], data [%s] [%ld]\n", command, golfmem->data1, opid);
         }
+        gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+        fprintf (logfile1, "End Reading messages, command [%ld], data [%s] [%ld]\n", command, golfmem->data1, opid);
         exit_error ("Could not start Golf Service Manager for [%s],[%ld],[1], log file [%s]", golfapp, tries, logn);
     }
     gg_num pcount = 0;
@@ -1349,7 +1400,7 @@ int main(int argc, char **argv)
             processup(0);
         }
         // check for client commands
-        checkshm(); 
+        checkshm(true); 
     }
 
     // never gets here

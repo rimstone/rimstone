@@ -26,6 +26,12 @@ You can obtain a <return value> from the called handler <request path> by using 
 
 call-handler uses the same high-performance hash table used by a \fBrequest\fP to route requests by name; if <request path> is a constant string, then a hash table lookup is performed only once for the life of the process and all subsequent calls use a cached address of the request handler.
 
+.LP
+.B CALL DEPTH
+.LP
+
+There is a limit on the call depth, including recursion in order to prevent application and system stability issues. See \fBget-app\fP and \fBset-app\fP with "stack-depth" clause for details and on how to change the defaults.
+
 .SH EXAMPLES
 The following example demonstrate calling a call-handler twice, and also using its output inline in the caller. An input parameter is passed to it, and an output obtained:
 
@@ -112,25 +118,3 @@ Output: This is sub! with output [got input: new string]
 .EE
 .RE
 
-.SH SEE ALSO
- Program flow
-
-\fBbreak-loop\fP  
-\fBcall-handler\fP  
-\fBcode-blocks\fP  
-\fBcontinue-loop\fP  
-\fBdo-once\fP  
-\fBexit-handler\fP  
-\fBif-defined\fP  
-\fBif-true\fP  
-\fBquit-process\fP  
-\fBreturn-handler\fP  
-\fBstart-loop\fP   
- Service processing
-
-\fBafter-handler\fP  
-\fBbefore-handler\fP  
-\fBbegin-handler\fP  
-\fBcall-handler\fP   
-See all 
-\fBdocumentation\fP

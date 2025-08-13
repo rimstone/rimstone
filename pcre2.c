@@ -40,7 +40,6 @@ void gg_regfree(regex_t *preg)
 //
 gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_num utf, gg_num case_insensitive, gg_num single_match, regex_t **cached)
 {
-    GG_TRACE("");
     gg_num reg_ret=0;
     regex_t *reg;
     regex_t lreg; // local compiled regex_t used when cache is not used
@@ -93,7 +92,6 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
     {
         reg = &lreg;
         reg_ret = gg_pcre2_regcomp(reg, find_this, rflags);
-        GG_TRACE("No regex caching");
     }
     // make compiled regex and cache it
     else if (cached != NULL && *cached == NULL)
@@ -102,17 +100,15 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
         // Allocating cached regex CANNOT be gg_malloc as it MUST survive cross-request caching!
         // It is only released when the program ends
         //
-        reg = (regex_t*) malloc (sizeof(regex_t));
+        reg = (regex_t*) gg_malloc0 (sizeof(regex_t));
         reg_ret = gg_pcre2_regcomp(reg, find_this, rflags);
         *cached = reg;
-        GG_TRACE("Creating new regex for future caching");
     }
     // this is using cached compiled regex, no need to do anything other than use it
     else if (cached != NULL && *cached != NULL)
     {
         reg_ret = 0;
         reg = *cached;
-        GG_TRACE("Using cached regex");
     }
 
     // see if regex 'compiled' structure can be done
@@ -307,8 +303,7 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
             GG_ALLOC_REPLACE(len_of_reminder = strlen(last_look_here));
             memcpy(replace_res+replace_res_len, last_look_here, len_of_reminder+1); // +1 in memcpy is to copy null-char
                                                                                     // which we don't count in string length
-            gg_num id = gg_mem_get_id (*res);
-            gg_mem_set_len (id, replace_res_len+len_of_reminder+1);
+            gg_mem_set_len (*res, replace_res_len+len_of_reminder+1);
         }
 
         // DONE with replacement

@@ -1,6 +1,7 @@
 .TH GOLF 2gg $VERSION $DATE Development Tools
 .SH NAME
-match-regex \-  (regex)
+match-regex \-  (regex
+strings)
 .SH PURPOSE
 Find, or find and replace patterns in strings using regex (regular expressions).
 
@@ -62,7 +63,7 @@ set-bool cl_c
 if-true q equal 0
     set-bool cl_c = true 
 end-if
-match-regex ps in look_in replace-with "Yes it is \\e1!" result res cache clear-cache cl_c
+match-regex ps in look_in replace-with "Yes it is \\\\1!" result res cache clear-cache cl_c
 
 .EE
 .RE
@@ -75,24 +76,24 @@ While every pattern is different, when using cache, even a relatively small patt
 .B SUBEXPRESSIONS AND BACK-REFERENCING
 .LP
 
-Subexpressions are referenced via a backslash followed by a number. Because in strings a backslash followed by a number is an octal number, you must use double backslash (\\e). For example:
+Subexpressions are referenced via a backslash followed by a number. Because in strings a backslash followed by a number is an octal number, you must use double backslash (\\\\). For example:
 
 .RS 4
 .EX
 
 match-regex "(good).*(day)" \\
     in "Hello, good day!" \\
-    replace-with "\\e2 \\e1" \\
+    replace-with "\\\\2 \\\\1" \\
     result res
 
 .EE
 .RE
 
-will produce string "Hello, day good!" as a result in "res" variable. Each subexpression is within () parenthesis, so for instance "day" in the above pattern is the 2nd subexpression, and is back-referenced as \\e2 in replacement.
+will produce string "Hello, day good!" as a result in "res" variable. Each subexpression is within () parenthesis, so for instance "day" in the above pattern is the 2nd subexpression, and is back-referenced as \\\\2 in replacement.
 
 There can be a maximum of 23 subexpressions. 
 
-Note that backreferences to non-existing subexpressions are ignored - for example \\e4 when there are only 3 subexpressions. Golf is "smart" about using two digits and differentiating between \\e1 and \\e10 for instance - it takes into account the actual number of subexpressions and their validity, and selects a proper subexpression even when two digits are used in a backreference.
+Note that backreferences to non-existing subexpressions are ignored - for example \\\\4 when there are only 3 subexpressions. Golf is "smart" about using two digits and differentiating between \\\\1 and \\\\10 for instance - it takes into account the actual number of subexpressions and their validity, and selects a proper subexpression even when two digits are used in a backreference.
 
 .LP
 .B LOOKAHEADS AND LOOKBEHINDS
@@ -103,7 +104,7 @@ match-regex supports syntax for lookaheads (i.e. "(?=...)" and "(?!...)") and lo
 .RS 4
 .EX
 
-match-regex "\\ew*(?<=foo)bar" in "foobar" status st single-match
+match-regex "\\\\w*(?<=foo)bar" in "foobar" status st single-match
 
 .EE
 .RE
@@ -113,7 +114,7 @@ and the following matches "foo" if followed by "bar":
 .RS 4
 .EX
 
-match-regex "\\ew*foo(?=bar)" in "foofoo" status st single-match
+match-regex "\\\\w*foo(?=bar)" in "foofoo" status st single-match
 
 .EE
 .RE
@@ -145,7 +146,7 @@ Search for patterns and replace them by using replace-with clause, for example:
 .RS 4
 .EX
 
-match-regex "SOME (.*) IS ([^ ]+)" in "WOW SOME THING IS GOOD HERE FOR SURE" replace-with "THINGS ARE \\e2 YES!" result res status st
+match-regex "SOME (.*) IS ([^ ]+)" in "WOW SOME THING IS GOOD HERE FOR SURE" replace-with "THINGS ARE \\\\2 YES!" result res status st
 
 .EE
 .RE
@@ -160,7 +161,7 @@ WOW THINGS ARE GOOD YES! HERE FOR SURE
 .EE
 .RE
 
-The above demonstrates a typical use of subexpressions in regex (meaning "()" statements) and their referencing with "\\e1", "\\e2" etc. in the order in which they appear. Consult regex documentation for more information.  Status variable specified with status clause ("st" in this example) will contain the number of patterns matched and replaced. 
+The above demonstrates a typical use of subexpressions in regex (meaning "()" statements) and their referencing with "\\\\1", "\\\\2" etc. in the order in which they appear. Consult regex documentation for more information.  Status variable specified with status clause ("st" in this example) will contain the number of patterns matched and replaced. 
 
 Matching is by default case sensitive. Use "case-insensitive" clause to change it to case insensitive, for instance:
 
@@ -185,9 +186,3 @@ match-regex "SOME ([^ ]+) IS ([^ ]+)" in "WOW SOME THING IS GOOD HERE AND SOME S
 .RE
 
 In this case there would be two matches by default ("SOME THING IS GOOD" and "SOME STUFF IS GOOD") but only the first would be found. This clause works the same for replacing as well - only the first occurrence would be replaced.
-.SH SEE ALSO
- Regex
-
-\fBmatch-regex\fP   
-See all 
-\fBdocumentation\fP

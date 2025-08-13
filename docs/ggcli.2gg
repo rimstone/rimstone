@@ -1,0 +1,28 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+ggcli \-  (FastCGI-client)
+.SH PURPOSE
+FastCGI client utility.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+ggcli <address:port> | <Unix socket>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+ggcli will contact FastCGI server running on TCP/IP machine specified by <address:port>, where address can be an IP of the machine or its address, and port is the port number. For local sockets, use <Unix socket>, which is a file name of a socket used by the server; note you need to have proper permissions to access this socket file.
+
+ggcli will send a request to the server, receive a reply and display it to standard output. Any errors are displayed to standard error stream.
+
+Use standard environment variables in order to specify the details of the request. The environment variables recognized by ggcli are CONTENT_TYPE, CONTENT_LENGTH, REQUEST_METHOD, SCRIPT_NAME, PATH_INFO, QUERY_STRING (which are all standard HTTP CGI variables), as well as Golf's variable GG_SILENT_HEADER which is used to suppress header output (value of "yes" will do that).
+
+The above variables are not explained here; you can find much about them in many other sources. Please note that if CONTENT_LENGTH is specified, then ggcli expect content data to be provided to its standard input.
+
+You can see the examples of setting the above environment variables and the usage of ggcli if you use "-r" option of \fBgg\fP; if you skip "--exec" option, gg will display the settings and the usage of ggcli utility.
+
+Note that you should be able to use ggcli when talking to any FastCGI server (such as PHP), not just Golf.

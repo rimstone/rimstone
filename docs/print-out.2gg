@@ -102,11 +102,9 @@ print-out "We use <hr/> markup" web-encode
 .EE
 .RE
 
-.RE
-
 If "length" clause is used, then only <length> leading bytes of <string> are output. 
 
-If "new-line" clause is used, then a new line ("\en") is output after <string>.
+If "new-line" clause is used, then a new line ("\\n") is output after <string>.
 
 Note that all bytes of <string> are output, even if <string> contains null-bytes.
 
@@ -125,7 +123,7 @@ print-out <number> [ new-line ]
 .EE
 .RE
 
-If "new-line" clause is used, then a new line ("\en") is output after <number>.
+If "new-line" clause is used, then a new line ("\\n") is output after <number>.
 
 To output a number to a client:
 
@@ -134,6 +132,34 @@ To output a number to a client:
 
 set-number x = 100
 print-out x
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+Outputs a boolean, given by <bool>:
+
+.RS 4
+.EX
+
+print-out <bool> [ new-line ]
+
+.EE
+.RE
+
+If "new-line" clause is used, then a new line ("\\n") is output after <bool>. The value of <bool> is output as 1 if true, and 0 if false.
+
+To output a boolean to a client (outputs 1):
+
+.RS 4
+.EX
+
+set-bool b = true
+print-out b
 
 .EE
 .RE
@@ -155,7 +181,7 @@ print-out source-file [ new-line ]
 
 This outputs the file name (relative to the source code directory) of the source file where the statement is located; this is often used for debugging.
 
-If "new-line" clause is used, then a new line ("\en") is output afterwards.
+If "new-line" clause is used, then a new line ("\\n") is output afterwards.
 
 .RS 4
 .EX
@@ -182,7 +208,7 @@ print-out source-line [ new-line ]
 
 This outputs the line number in the source file where the statement is located. It is often used for debugging purposes.
 
-If "new-line" clause is used, then a new line ("\en") is output afterwards.
+If "new-line" clause is used, then a new line ("\\n") is output afterwards.
 
 .RS 4
 .EX
@@ -194,14 +220,3 @@ If "new-line" clause is used, then a new line ("\en") is output afterwards.
 
 .RE
 
-.SH SEE ALSO
- Output
-
-\fBfinish-output\fP  
-\fBflush-output\fP  
-\fBoutput-statement\fP  
-\fBprint-format\fP  
-\fBprint-out\fP  
-\fBprint-path\fP   
-See all 
-\fBdocumentation\fP

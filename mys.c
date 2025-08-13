@@ -13,7 +13,6 @@
 #include "golf.h"
 static gg_num gg_maria_stmt_exec();
 static int gg_maria_stmt_rows (char ***row, unsigned long **lens);
-static gg_num gg_maria_stmt_exec();
 static void gg_maria_add_input(gg_num i, char *arg);
 static void gg_maria_bind_input ();
 static int gg_maria_prep_stmt(void **prep, char *stmt, gg_num num_of_args);
@@ -23,13 +22,11 @@ static char *cerror = NULL;
 
 gg_num gg_maria_checkc()
 {
-    GG_TRACE("");
     return (mysql_ping (GG_CURR_DB.dbc->maria.con) == 0 ? 1 : 0);
 }
 
 char *gg_maria_errm(char *errm, gg_num errmsize, char *s, char *sname, gg_num lnum, char *er, char is_prep)
 {
-    GG_TRACE("");
     if (is_prep == 0)
     {
         snprintf(errm,errmsize,"Error during query [%s], additional [%s] file [%s], line [%ld] : [%s]%s", s, cerror==NULL?"":cerror, sname, lnum, er ,atol(er) == ER_PARSE_ERROR ?  "Problem with parsing SQL statement" : mysql_error(GG_CURR_DB.dbc->maria.con));
@@ -45,20 +42,17 @@ char *gg_maria_errm(char *errm, gg_num errmsize, char *s, char *sname, gg_num ln
 
 char *gg_maria_error(char *s, char is_prep)
 {
-    GG_TRACE("");
     GG_UNUSED(s); // used in tracing only
     if (is_prep == 0)
     {
         static char errv[30];
         snprintf (errv, sizeof(errv), "%d", mysql_errno(GG_CURR_DB.dbc->maria.con));
-        GG_TRACE ("Error in %s: %s error %s state %s", s, mysql_error(GG_CURR_DB.dbc->maria.con), errv, mysql_sqlstate(GG_CURR_DB.dbc->maria.con));
         return errv;
     }
     else
     {
         static char errv[30];
         snprintf (errv, sizeof(errv), "%d", mysql_stmt_errno(GG_CURR_DB.dbc->maria.stmt));
-        GG_TRACE ("Error in %s: %s error %s state %s", s, mysql_stmt_error(GG_CURR_DB.dbc->maria.stmt), errv, mysql_stmt_sqlstate(GG_CURR_DB.dbc->maria.stmt));
         return errv;
     }
 }
@@ -66,7 +60,6 @@ char *gg_maria_error(char *s, char is_prep)
 
 int gg_maria_rows (char ***row, unsigned long **lens, char is_prep)
 {
-    GG_TRACE("");
     if (is_prep == 0)
     {
         GG_CURR_DB.need_copy = 1;
@@ -91,9 +84,8 @@ int gg_maria_rows (char ***row, unsigned long **lens, char is_prep)
 // Get a row when tuples returned. *row[] is an array of strings which represent fields (columns) and *lens is the
 // array of lengths of those fields.
 //
-int gg_maria_stmt_rows (char ***row, unsigned long **lens)
+static int gg_maria_stmt_rows (char ***row, unsigned long **lens)
 {
-    GG_TRACE("");
     char *sname = "";
     gg_num lnum = 0;
     // get which file and line number is this going on at
@@ -190,7 +182,6 @@ int gg_maria_stmt_rows (char ***row, unsigned long **lens)
 
 gg_num gg_maria_nrows(char is_prep)
 {
-    GG_TRACE("");
     if (is_prep == 0)
     {
         // works since we use buffered (store) method to get results
@@ -204,26 +195,22 @@ gg_num gg_maria_nrows(char is_prep)
 
 void gg_maria_free()
 {
-    GG_TRACE("");
     if (GG_CURR_DB.dbc->maria.res != NULL) mysql_free_result(GG_CURR_DB.dbc->maria.res);
     GG_CURR_DB.dbc->maria.res = NULL;
 }
 
 char *gg_maria_fieldname()
 {
-    GG_TRACE("");
     return mysql_fetch_field(GG_CURR_DB.dbc->maria.res)->name;
 }
 
 gg_num gg_maria_nfield()
 {
-    GG_TRACE("");
     return mysql_num_fields(GG_CURR_DB.dbc->maria.res);
 }
 
 int gg_maria_use(char is_prep)
 {
-    GG_TRACE("");
     if (is_prep == 0)
     {
         GG_CURR_DB.dbc->maria.res = mysql_use_result(GG_CURR_DB.dbc->maria.con);
@@ -247,7 +234,6 @@ int gg_maria_use(char is_prep)
 
 int gg_maria_store(char is_prep)
 {
-    GG_TRACE("");
     if (is_prep == 0)
     {
         GG_CURR_DB.dbc->maria.res = mysql_store_result(GG_CURR_DB.dbc->maria.con);
@@ -276,14 +262,12 @@ int gg_maria_store(char is_prep)
 
 void gg_maria_close ()
 {
-    GG_TRACE("");
     mysql_close (GG_CURR_DB.dbc->maria.con);
 }
 
 
 gg_dbc *gg_maria_connect (gg_num abort_if_bad)
 {
-    GG_TRACE("");
     // reset all prepared statements
     gg_db_prep (NULL);
 
@@ -292,7 +276,7 @@ gg_dbc *gg_maria_connect (gg_num abort_if_bad)
     // This must be malloc and NOT gg_malloc since we want to reuse connection across connections.
     // Otherwise gg_malloc would be automatically freed when the request is done, and the next 
     // request would use an invalid pointer. Also must use free to free it, not gg_free.
-    if ((GG_CURR_DB.dbc = malloc (sizeof (gg_dbc))) == NULL) GG_FATAL ("Cannot allocate memory for database connection [%m]");
+    if ((GG_CURR_DB.dbc = gg_malloc0 (sizeof (gg_dbc))) == NULL) GG_FATAL ("Cannot allocate memory for database connection [%m]");
 
     GG_CURR_DB.dbc->maria.con = mysql_init(NULL);
     GG_CURR_DB.dbc->maria.res = NULL;
@@ -302,7 +286,6 @@ gg_dbc *gg_maria_connect (gg_num abort_if_bad)
     if (GG_CURR_DB.dbc->maria.con == NULL) 
     {
         char *em = "Cannot initialize database connection";
-        GG_TRACE ("%s", em);
         if (abort_if_bad == 1) gg_report_error ("%s", em);
         gg_end_connection (0);
         return NULL; 
@@ -310,16 +293,13 @@ gg_dbc *gg_maria_connect (gg_num abort_if_bad)
 
     char db_config_name[150];
     snprintf (db_config_name, sizeof(db_config_name), "%s/%s", gg_get_config()->app.dbconf_dir, GG_CURR_DB.db_name);
-    GG_TRACE ("Using db config file [%s]", db_config_name);
     mysql_optionsv (GG_CURR_DB.dbc->maria.con, MYSQL_READ_DEFAULT_FILE, db_config_name);
 
-    GG_TRACE ("Logging in to database, config [%s]", db_config_name);
     if (mysql_real_connect(GG_CURR_DB.dbc->maria.con, NULL, NULL, NULL, 
                    NULL, 0, NULL, 0) == NULL) 
     {
         char em[300];
         snprintf (em, sizeof(em), "Error in logging in to database: error [%s], using config file [%s]", mysql_error(GG_CURR_DB.dbc->maria.con), db_config_name);
-        GG_TRACE ("%s", em);
         if (abort_if_bad == 1) gg_report_error ("%s",em);
         gg_end_connection (0);
         return NULL;
@@ -335,7 +315,6 @@ gg_dbc *gg_maria_connect (gg_num abort_if_bad)
     /*if (mysql_set_character_set(GG_CURR_DB.dbc->maria.con, "utf8mb4"))
     {
         char *em = "Cannot set character set to utf8mb4";
-        GG_TRACE ("%s", em);
         gg_end_connection (1);
         if (abort_if_bad == 1) gg_report_error ("%s", em);
         return NULL;
@@ -344,7 +323,6 @@ gg_dbc *gg_maria_connect (gg_num abort_if_bad)
     if (mysql_query(GG_CURR_DB.dbc->maria.con, "set session sql_mode=ansi_quotes")) 
     {
         char *em = "Cannot set sql_mode to ansi_quotes";
-        GG_TRACE ("%s", em);
         gg_end_connection (1);
         if (abort_if_bad == 1) gg_report_error ("%s", em);
         return NULL;
@@ -354,7 +332,6 @@ gg_dbc *gg_maria_connect (gg_num abort_if_bad)
 
 gg_num gg_maria_exec(char *s, char is_prep, void **prep, gg_num paramcount, char **params)
 {   
-    GG_TRACE("");
     gg_stmt_cached = 0;
     if (is_prep == 0)
     {
@@ -379,7 +356,6 @@ gg_num gg_maria_exec(char *s, char is_prep, void **prep, gg_num paramcount, char
 //
 void gg_maria_close_stmt (void *st)
 {
-    GG_TRACE("");
     if (st == NULL) return; // statement has not been prepared yet, so cannot deallocate
     if (GG_CURR_DB.dbc != NULL) 
     {
@@ -396,9 +372,8 @@ void gg_maria_close_stmt (void *st)
 // actually would decrease performance), however prep is set to NULL when connection is 
 // reestablished (typically if db server recycles), which is generally rare.
 //
-int gg_maria_prep_stmt(void **prep, char *stmt, gg_num num_of_args)
+static int gg_maria_prep_stmt(void **prep, char *stmt, gg_num num_of_args)
 {
-    GG_TRACE("");
     char *sname = "";
     gg_num lnum = 0;
     gg_location (&sname, &lnum, 0);
@@ -407,12 +382,10 @@ int gg_maria_prep_stmt(void **prep, char *stmt, gg_num num_of_args)
     if (*prep != NULL) 
     {
         gg_stmt_cached = 1;
-        GG_TRACE ("reusing prepared statement");
         GG_CURR_DB.dbc->maria.stmt = (MYSQL_STMT*)*prep;
     }
     else
     {
-        GG_TRACE ("creating prepared statement");
         // if prep is NULL, create prepared statement
         char *origs = stmt; // original stmt
         stmt = gg_db_prep_text(stmt); // make ? instead of '%s'
@@ -455,9 +428,8 @@ int gg_maria_prep_stmt(void **prep, char *stmt, gg_num num_of_args)
 // Add input parameter to SQL about to be executed. 'i' is the index of parameter
 // (which must be 0,1,2.. for each invocation), arg is the argument.
 //
-void gg_maria_add_input(gg_num i, char *arg)
+static void gg_maria_add_input(gg_num i, char *arg)
 {
-    GG_TRACE("");
     // all inputs are converted to string
     GG_CURR_DB.dbc->maria.bind[i].buffer_type = MYSQL_TYPE_STRING;
     // if null, it's empty
@@ -471,9 +443,8 @@ void gg_maria_add_input(gg_num i, char *arg)
 //
 // Statement that has been prepared and input params specified, is now bound
 //
-void gg_maria_bind_input ()
+static void gg_maria_bind_input ()
 {
-    GG_TRACE("");
     if (GG_CURR_DB.num_inp != 0) 
     {
         mysql_stmt_bind_param (GG_CURR_DB.dbc->maria.stmt, GG_CURR_DB.dbc->maria.bind);
@@ -485,7 +456,6 @@ void gg_maria_bind_input ()
 
 gg_num gg_maria_affected(char is_prep) 
 {
-    GG_TRACE("");
     if (is_prep == 0)
     {
         return (gg_num) mysql_affected_rows (GG_CURR_DB.dbc->maria.con);
@@ -500,9 +470,8 @@ gg_num gg_maria_affected(char is_prep)
 //
 // Execute statement that's prepared. Input binding is removed.
 //
-gg_num gg_maria_stmt_exec()
+static gg_num gg_maria_stmt_exec()
 {
-    GG_TRACE("");
     gg_num res = mysql_stmt_execute (GG_CURR_DB.dbc->maria.stmt);
     // freeing bind struct must be here and not gg_maria_free because gg_maria_free is not
     // called for non-tuple queries (such as INSERT), but this one is always called. If not like this,
@@ -523,7 +492,6 @@ gg_num gg_maria_stmt_exec()
 //
 int gg_maria_escape(char *from, char *to, gg_num *len)
 {
-    GG_TRACE("");
     *len = (gg_num)mysql_real_escape_string(GG_CURR_DB.dbc->maria.con, to, from, (unsigned long) *len);
     if ((unsigned long)*len == (unsigned long) -1) return 1;
     return 0;

@@ -1,7 +1,0 @@
-#!/usr/bin/make -f
-#SPDX-License-Identifier: Apache-2.0
-#Copyright 2018-2025 Gliim LLC.
-
-%:
-	GG_DEBIAN_BUILD=1 dh $@
-

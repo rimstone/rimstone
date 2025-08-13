@@ -19,7 +19,7 @@ end-write-string [ notrim ]
 .RE
 
 .SH DESCRIPTION
-Output of any Golf code can be written into <string> with write-string. In between write-string and end-write-string you can write <any Golf code>. For instance you can use database queries, conditional statements etc., just as you would for any other Golf code. 
+Output of any Golf code can be written into <string> with write-string. In between write-string and end-write-string you can write <any Golf code>. For instance you can use database queries, comparison statements etc., just as you would for any other Golf code. 
 
 .LP
 .B SHORTCUT CODE
@@ -120,7 +120,7 @@ Hello world (and have a nice day too!)
 
 .B - Using code inside
 
-Here is using Golf code inside write-string, including database query and conditional statements to produce different strings at run-time:
+Here is using Golf code inside write-string, including database query and comparison statements to produce different strings at run-time:
 
 .RS 4
 .EX
@@ -281,22 +281,3 @@ Hi Again!
 .EE
 .RE
 
-.SH SEE ALSO
- Strings
-
-\fBconcatenate-strings\fP  
-\fBcopy-string\fP  
-\fBcount-substring\fP  
-\fBdelete-string\fP  
-\fBlower-string\fP  
-\fBnew-string\fP  
-\fBread-split\fP  
-\fBreplace-string\fP  
-\fBset-string\fP  
-\fBsplit-string\fP  
-\fBstring-length\fP  
-\fBtrim-string\fP  
-\fBupper-string\fP  
-\fBwrite-string\fP   
-See all 
-\fBdocumentation\fP

@@ -42,6 +42,26 @@ You can also delete an element from the hash by using "delete" clause - the <val
 
 If no <key> was found in the hash, <status> number (in "status" clause) is GG_ERR_EXIST and <value> is unchanged, otherwise <status> is GG_OKAY. 
 
+
+.B - Subscription shortcut
+
+You can also get the value of a <hash> element by using subscription operator ([]), for instance here you'd reference the element "one" of hash 'vals' in the comparison statement:
+
+.RS 4
+.EX
+
+new-hash sub
+write-hash sub key "three" value "some value"
+\[char46]..
+if-true sub["three"] equal "some value"
+    @Found element
+end-if
+
+.EE
+.RE
+
+You can use the subscriptive form of <hash>[<index>] in any expression, where <index> is a string value that matches the hash key. Note that if element <hash>[<index>] does not exist, the value returned is an empty string (""); use read-hash form to check status or delete an element.
+
 .LP
 .B WITH "TRAVERSE" CLAUSE
 .LP
@@ -88,20 +108,9 @@ start-loop
     if-true f equal GG_ERR_EXIST
         break;
     end-if
-    print-format "Key [%s] data [%s]\en", k, r
+    print-format "Key [%s] data [%s]\\n", k, r
 end-loop
 
 .EE
 .RE
 
-.SH SEE ALSO
- Hash
-
-\fBget-hash\fP  
-\fBnew-hash\fP  
-\fBpurge-hash\fP  
-\fBread-hash\fP  
-\fBresize-hash\fP  
-\fBwrite-hash\fP   
-See all 
-\fBdocumentation\fP

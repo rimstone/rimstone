@@ -27,6 +27,8 @@ get-tree provides information about <tree> (created by \fBnew-tree\fP):
 .RS 4
 \[bu]    
 <hops> (in "hops" clause) provides the number of nodes accessed to find a key in the last tree statement executed prior to get-tree. Note that <hops> is available only in debug Golf build (see \fBinstalling from source\fP); otherwise it is always zero.
+.RE
+
 
 .SH EXAMPLES
 Get the number of nodes (keys) in a tree:
@@ -41,15 +43,3 @@ get-tree mytree count c
 .EE
 .RE
 
-.SH SEE ALSO
- Tree
-
-\fBdelete-tree\fP  
-\fBget-tree\fP  
-\fBnew-tree\fP  
-\fBpurge-tree\fP  
-\fBread-tree\fP  
-\fBuse-cursor\fP  
-\fBwrite-tree\fP   
-See all 
-\fBdocumentation\fP

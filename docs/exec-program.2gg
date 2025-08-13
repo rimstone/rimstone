@@ -56,7 +56,7 @@ Run "grep" program using a string as its standard input in order to remove a lin
 .RS 4
 .EX
 
-exec-program "grep" args "-v", "bad line" "config" input "line 1\enline 2\enbad line\enline 3" output ovar 
+exec-program "grep" args "-v", "bad line" "config" input "line 1\\nline 2\\nbad line\\nline 3" output ovar 
 print-out ovar
 
 .EE
@@ -95,10 +95,3 @@ print-out ovar
 .EE
 .RE
 
-.SH SEE ALSO
- Program execution
-
-\fBexec-program\fP  
-\fBexit-status\fP   
-See all 
-\fBdocumentation\fP

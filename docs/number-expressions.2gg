@@ -2,7 +2,7 @@
 .SH NAME
 number-expressions \- Golf documentation (numbers)
 .SH DESCRIPTION
-A number expression uses operators plus (+), minus (-), multiply (*), divide (/) and modulus (%), as well as parenthesis (). For example:
+A number expression uses operators plus (+), minus (-), multiply (*), divide (/), modulus (%), bitwise operators (& for and, | for or, ^ for xor and ~ for negation)  as well as parenthesis (). For example:
 
 .RS 4
 .EX
@@ -36,13 +36,38 @@ set-number num = str[0] + 2
 .RE
 
 Other than decimals and character constants, you can also use hexadecimal numbers (such as 0xffaa), and octal numbers (such as 0710).
-.SH SEE ALSO
- Numbers
 
-\fBabs-number\fP  
-\fBnumber-expressions\fP  
-\fBnumber-string\fP  
-\fBset-number\fP  
-\fBstring-number\fP   
-See all 
-\fBdocumentation\fP
+.LP
+.B STRING SUBSCRIPTION
+.LP
+
+You can access each byte of a string as an unsigned 8-bit number:
+
+.RS 4
+.EX
+
+set-string str = "GOAT"
+set-string num = 10+str[2]
+
+.EE
+.RE
+
+Variable num will have a value of 75 (10+'A' or 10+65).
+
+.LP
+.B SUBSCRIPTION SHORTCUT
+.LP
+
+You can reference number arrays elements (see \fBnew-array\fP) by using subscription operator ([]), for instance:
+
+.RS 4
+.EX
+
+new-array narr type number
+write-array narr key 0 value 10
+write-array narr key 1 value narr[0]
+set-number n = 1 + narr[1] * 2
+
+.EE
+.RE
+

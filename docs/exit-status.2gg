@@ -15,13 +15,11 @@ exit-status <request status>
 .RE
 
 .SH DESCRIPTION
-exit-status specifies <request status>, which must be a number.
+exit-status specifies <request status>, which must be a number; this is the status that is passed out of the request to the external caller (see \fBrequest\fP and \fBexit-handler\fP).
 
-<request status> can be obtained with "exit-status" clause in \fBread-remote\fP in the service caller.
+<request status> can be obtained with "exit-status" clause in \fBread-remote\fP in the service caller; when the program runs as \fBcommand-line\fP, <request status> is program's exit code. 
 
-When the program runs as \fBcommand-line\fP, <request status> is program's exit code.
-
-exit-status can be specified anywhere in the code, and does not mean exiting the \fBrequest\fP's processing; to do that, either use \fBexit-handler\fP or simply allow the handler to reach its end.
+exit-status can be specified anywhere in the code, and does not mean exiting the \fBrequest\fP's processing; to do that, either use \fBexit-handler\fP or simply allow the handler to reach its end. If your program encounters difficulties and \fBerrors out\fP, then the <request status> is always a fixed reserved value of 107, regardless of you setting it with exit-status.
 
 When exit-status is not used, the default exit code is 0. When multiple exit-status statements run in a sequence, the request status is that of the last one that executes.
 
@@ -40,10 +38,3 @@ exit-handler
 .EE
 .RE
 
-.SH SEE ALSO
- Program execution
-
-\fBexec-program\fP  
-\fBexit-status\fP   
-See all 
-\fBdocumentation\fP

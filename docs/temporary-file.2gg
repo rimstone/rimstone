@@ -7,7 +7,7 @@ To create a temporary file, use \fBuniq-file\fP with a "temporary" clause. Tempo
 .RS 4
 .EX
 
-/var/lib/gg/<app_name>/app/file/t
+$HOME/.golf/<app_name>/app/file/t
 
 .EE
 .RE
@@ -17,25 +17,3 @@ A temporary file is not automatically deleted - you can remove it with \fBdelete
 The reason for storing temporary files in a separate directory is to gain a separation of temporary files (which likely at some point can be freely deleted) from other files.
 
 See \fBuniq-file\fP for an example of creating a temporary file.
-.SH SEE ALSO
- Files
-
-\fBchange-mode\fP  
-\fBclose-file\fP  
-\fBcopy-file\fP  
-\fBdelete-file\fP  
-\fBfile-position\fP  
-\fBfile-storage\fP  
-\fBfile-uploading\fP  
-\fBlock-file\fP  
-\fBopen-file\fP  
-\fBread-file\fP  
-\fBread-line\fP  
-\fBrename-file\fP  
-\fBstat-file\fP  
-\fBtemporary-file\fP  
-\fBuniq-file\fP  
-\fBunlock-file\fP  
-\fBwrite-file\fP   
-See all 
-\fBdocumentation\fP

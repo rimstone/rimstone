@@ -242,6 +242,7 @@ end-handler
 .EE
 .RE
 
+Note that each parameter name must be unique; your program will \fBerror out\fP if you have duplicate parameter names.
 
 .LP
 .B MAXIMUM LENGTH
@@ -271,7 +272,7 @@ For a \fBservice\fP application, there can be any number of processes running. A
 
 .B - Processing a request
 
-To handle a request, a process first calls a Golf dispatcher, which is automatically generated. It uses a request name to call the appropriate request handler, as explained above. 
+To handle a request, Golf dispatcher (which is automatically generated) is called first. It uses a request name to call the appropriate request handler, as explained above. 
 
 You can implement two hooks into request handling: one that executes before each request (\fBbefore-handler\fP) and one that executes afterwards (\fBafter-handler\fP). 
 
@@ -304,9 +305,3 @@ no request handler will execute,
 and a "Request not found" error will be reported via \fBreport-error\fP.
 .RE
 
-.SH SEE ALSO
- Requests
-
-\fBrequest\fP   
-See all 
-\fBdocumentation\fP

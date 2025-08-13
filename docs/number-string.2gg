@@ -23,7 +23,50 @@ Note that any letters in <string> (depending on the <base>) are always lower-cas
 
 If there is an error, such as if <base> is incorrect, then <status> number (in "status" clause) is GG_ERR_FAILED, otherwise it's GG_OKAY.
 
-Use of number-string (and \fBprint-out\fP which is based on it) for converting and outputting numbers is high-performance and recommended if your application needs to do that often. If number-string prints out a number (i.e. "to" clause is omitted), and this is within \fBwrite-string\fP, then <number> is output into the buffer that builds a new string.
+If number-string prints out a number (i.e. "to" clause is omitted), and this is within \fBwrite-string\fP, then <number> is output into the buffer that builds a new string.
+
+.LP
+.B SHORTCUT
+.LP
+
+For convenience, you can use a shortcut for converting a string to a number, by prepending a "$" sign to the variable name, for example:
+
+.RS 4
+.EX
+
+set-number n = -10
+set-string s = "This is number " + $n
+
+.EE
+.RE
+
+The above is the same as:
+
+.RS 4
+.EX
+
+set-number n = -10
+number-string n to sval
+set-string s = "This is number " + sval
+
+.EE
+.RE
+
+Effectively, $ in front of a number variable is the same as number-string that converts it to a string with the base of 10. If a string cannot be converted to a number, your program will error out. To check values with a status, or to use different bases, use number-string.
+
+You can use $ for an expression, in which case the expression must be within parenthesis:
+
+.RS 4
+.EX
+
+set-number n1 = -10
+set-number n2 = 15
+set-string s = "This is number " + $(n1+n2)
+
+.EE
+.RE
+
+In this case number "s" will have value of "This is number 5", because numbers -10 and 15 are added to produce 5, which is then converted to a string and finally added to the first string.
 
 .SH EXAMPLES
 The following will allocate memory for string "x" to be "801":
@@ -59,13 +102,3 @@ number-string x
 .EE
 .RE
 
-.SH SEE ALSO
- Numbers
-
-\fBabs-number\fP  
-\fBnumber-expressions\fP  
-\fBnumber-string\fP  
-\fBset-number\fP  
-\fBstring-number\fP   
-See all 
-\fBdocumentation\fP

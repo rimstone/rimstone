@@ -110,7 +110,7 @@ The following members of "gg_cli" type must be supplied in order to make a call 
 
 .RS 4
 \[bu]    
-for a Unix socket, a fully qualified name to a Unix socket file used to communicate with the service (for a Golf service, it's "/var/lib/gg/<app name>/sock/sock", where <app name> is the application name), or
+for a Unix socket, a fully qualified name to a Unix socket file used to communicate with the service (use gg_dir() function to obtain it for any Golf application, see below), or
 
 .RE
 
@@ -138,6 +138,32 @@ for a TCP socket, a host name and port name in the form of "<host name>:<port nu
 \[bu]    
 "req" is a request path, i.e. a request name preceded by a forward slash, as in "/<request name>" (see \fBrequest\fP).
 .RE
+
+
+.B - Get Unix socket file
+
+To get Unix socket file path, use gg_dir() function, where "type" is the type of Golf's file or directory, "dir" is the string buffer for the path, "dir_size" is its size, "app" is the application name, and "user" is Operating System user name who owns the application (NULL if your own):
+
+.RS 4
+.EX
+
+size_t gg_dir (int type, char *dir, size_t dir_size, char *app, char *user);
+
+.EE
+.RE
+
+Specifically to get the Unix socket file path, use GG_DIR_SOCKFILE for "type" parameter, and with "app-name" being the application name owned by you:
+
+.RS 4
+.EX
+
+char dir[GG_MAX_OS_UDIR_LEN];
+gg_dir (GG_DIR_SOCKFILE, dir, sizeof(dir), "app-name", NULL);
+
+.EE
+.RE
+
+Note that you can use GG_DIR_USER to get user base directory (where all Golf files are for a given user), GG_DIR_APPS to get the directory under which all applications are, GG_DIR_APP to get the directory under which all application files are, GG_DIR_FILE to get the file directory, GG_DIR_TRACE to get the directory where stack trace files are, and GG_DIR_BLD to get the directory where Golf application executables are (see \fBdirectories\fP). 
 
 
 .B - URL parameters
@@ -456,7 +482,7 @@ void get_err(char *d, int l, gg_cli *req)
 // Completion hook
 void get_complete(char *data, int data_len, char *err, int err_len, gg_cli *req)
 {
-    printf("Got data [%.*s] of length [%d] and error of [%.*s] of length [%d], status [%d], thread [%d]\en", data_len, data, data_len, err_len, err, err_len, req->req_status, req->thread_id);
+    printf("Got data [%.*s] of length [%d] and error of [%.*s] of length [%d], status [%d], thread [%d]\\n", data_len, data, data_len, err_len, err, err_len, req->req_status, req->thread_id);
 }
 
 \[char46]..
@@ -483,48 +509,7 @@ The Golf client is MT-safe, meaning you can use it both in single-threaded and m
 .B USAGE
 .LP
 
-Do not use this API directly with Golf - use \fBcall-remote\fP instead which is made specifically for use in .golf files. Otherwise, you can use this API with any program.
-
-.LP
-.B USING API WITHOUT GOLF
-.LP
-
-You can use API without installing Golf. To do that:
-
-.RS 4
-\[bu]    
-get the Golf source code,
-
-.RE
-
-.RS 4
-\[bu]    
-copy source files "gcli.c" and "gcli.h" to where you need to build your program,
-
-.RE
-
-.RS 4
-\[bu]    
-add the content of Golf's "LICENSE" file to your own in order to include the license for these source files,
-
-.RE
-
-.RS 4
-\[bu]    
-then make your application:
-
-.RS 4
-.EX
-
-gcc -o cli cli.c gcli.c
-
-.EE
-.RE
-
-
-.RE
-
-Note that you do not need to install any other dependencies, as API is entirely contained in the aforementioned source files.
+Do not use this API directly with Golf - use \fBcall-remote\fP instead which is made specifically for use in .golf files. Otherwise, you can use this API with any client program.
 
 .SH EXAMPLES
 
@@ -544,7 +529,11 @@ void main ()
     // Request type gg_cli - create a request variable and zero it out
     gg_cli req = {0};
 
-    req.server = "/var/lib/gg/helloworld/sock/sock"; // Unix socket
+    // get socket file to communicate with server
+    char dir[GG_MAX_OS_UDIR_LEN];
+    gg_dir (GG_DIR_SOCKFILE, dir, sizeof(dir), "helloworld", NULL);
+    req.server = dir;
+
     req.req_method = "GET"; // GET HTTP method
     req.app_path = "/helloworld"; // application path
     req.req = "/hello-simple"; // request name
@@ -554,7 +543,7 @@ void main ()
 
     // Check return status, and if there's an error, display error code and the
     // corresponding error message. Otherwise, print out service response.
-    if (res != GG_OKAY) printf("Request failed [%d] [%s]\en", res, req.errm);
+    if (res != GG_OKAY) printf("Request failed [%d] [%s]\\n", res, req.errm);
     else printf("%s", gg_cli_data(&req));
 
     // Free up resources so there are no memory leaks
@@ -642,7 +631,7 @@ void main ()
     memset (&req, 0, sizeof(req));
 
     // Add 3 environment variables (in the form of name, value, name, value, ... , NULL)
-    char *env[] = { "REMOTE_USER", "John", "SOME_VAR", "SOME\enVALUE", "NEW_VAR", "1000", NULL };
+    char *env[] = { "REMOTE_USER", "John", "SOME_VAR", "SOME\\nVALUE", "NEW_VAR", "1000", NULL };
 
     // Create a request
     // Environment variables to pass to service request
@@ -671,19 +660,19 @@ void main ()
 
     // Check return status, and if there's an error, display error code and the
     // corresponding error message
-    if (res != GG_OKAY) printf("Request failed [%d] [%s]\en", res, req.errm);
+    if (res != GG_OKAY) printf("Request failed [%d] [%s]\\n", res, req.errm);
     else {
        // If successful, display request results
        // Exit code from the service processing
-       printf("Server status %d\en", req.req_status);
+       printf("Server status %d\\n", req.req_status);
        // Length of reply from service
-       printf("Len of data %d\en", req.data_len);
+       printf("Len of data %d\\n", req.data_len);
        // Length of any error from service
-       printf("Len of error %d\en", req.error_len);
+       printf("Len of error %d\\n", req.error_len);
        // Reply from service
-       printf("Data [%s]\en", gg_cli_data(&req));
+       printf("Data [%s]\\n", gg_cli_data(&req));
        // Any error message from service
-       printf("Error [%s]\en", gg_cli_error(&req));
+       printf("Error [%s]\\n", gg_cli_error(&req));
     }
 
     // Free up resources so there are no memory leaks
@@ -754,7 +743,7 @@ begin-handler /hello public
     start-loop repeat 8000 use i start-with 0
         @Output line #<<print-out i>>
         if-true i equal 1419
-            print-format "Line %ld has an error\en", i to-error
+            print-format "Line %ld has an error\\n", i to-error
         end-if
         if-true i equal 4419
             // Exit code of the service execution
@@ -826,10 +815,3 @@ Some error!
 .RE
 
 The output shows service exit code (82, see \fBexit-status\fP in the Golf code above), length of data output, and other information which includes environment variables passed to the service from the client, the PID of server process, the request body from the client, and then the error output. Note that the data output (stdout) and the error output (stderr) are separated, since the protocol does use separate streams over the same connection. This makes working with the output easy, while the data transfer is fast at the same time.
-.SH SEE ALSO
- API
-
-\fBClient-API\fP  
-\fBServer-API\fP   
-See all 
-\fBdocumentation\fP

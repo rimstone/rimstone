@@ -21,11 +21,11 @@
 #define _GG_LOOK_S "'%s'"
 
 // function prototypes
-gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, char is_prep, char erract);
+static gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, char is_prep, char erract);
 void gg_end_connection(gg_num close_db);
-gg_num gg_retry_db();
-gg_num gg_firstword(char *w, char *s);
-void gg_arows(gg_num *arows, char is_prep);
+static gg_num gg_retry_db();
+static gg_num gg_firstword(char *w, char *s);
+static void gg_arows(gg_num *arows, char is_prep);
 
 int gg_stmt_cached = 0;
 
@@ -36,7 +36,6 @@ int gg_stmt_cached = 0;
 // place, the connection doesn't exist, so closing it is questionable.
 // We NEVER close connection in our code, EXCEPT on shutdown of command line program.
 void gg_end_connection(gg_num close_db) {
-    GG_TRACE("");
     if (GG_CURR_DB.dbc != NULL) 
     {
         if (close_db == 1) 
@@ -69,7 +68,6 @@ void gg_end_connection(gg_num close_db) {
 // 
 gg_dbc *gg_get_db_connection (gg_num abort_if_bad)
 {
-    GG_TRACE("");
 
     // this index is used in GG_CURR_DB
     if (gg_get_config()->ctx.db->ind_current_db == -1) 
@@ -85,7 +83,6 @@ gg_dbc *gg_get_db_connection (gg_num abort_if_bad)
 
     if (GG_CURR_DB.dbc != NULL) 
     {
-        GG_TRACE ("using cached db connection");
         return GG_CURR_DB.dbc; 
             // already connected
     }
@@ -152,7 +149,6 @@ gg_dbc *gg_get_db_connection (gg_num abort_if_bad)
 //
 gg_num gg_begin_transaction(char *t, char erract, char **err, char **errt)
 {
-    GG_TRACE("");
 
     char *er;
     gg_num rows;
@@ -183,7 +179,6 @@ gg_num gg_begin_transaction(char *t, char erract, char **err, char **errt)
 //
 void gg_end_all_db()
 {
-    GG_TRACE("");
     gg_num i;
     for (i = 0; i < gg_get_config()->ctx.tot_dbs; i++)
     {
@@ -199,7 +194,6 @@ void gg_end_all_db()
 //
 void gg_check_transaction(gg_num check_mode)
 {
-    GG_TRACE("");
     gg_num savedb = gg_get_config()->ctx.db->ind_current_db;
     gg_num i;
     gg_num err = 0;
@@ -208,7 +202,6 @@ void gg_check_transaction(gg_num check_mode)
     {
         if (gg_get_config()->ctx.db->conn[i].is_begin_transaction == 1) 
         {
-            GG_TRACE("Transaction rollbacked (check mode %ld)", check_mode);
             errdb = i;
             gg_get_config()->ctx.db->ind_current_db = i;
             gg_rollback("", GG_OKAY, NULL, NULL);
@@ -231,7 +224,6 @@ void gg_check_transaction(gg_num check_mode)
 //
 gg_num gg_commit(char *t, char erract, char **err, char **errt)
 {
-    GG_TRACE("");
 
     GG_CURR_DB.is_begin_transaction = 0;
 
@@ -259,7 +251,6 @@ gg_num gg_commit(char *t, char erract, char **err, char **errt)
 //
 gg_num gg_rollback(char *t, char erract, char **err, char **errt)
 {
-    GG_TRACE("");
 
     GG_CURR_DB.is_begin_transaction = 0;
 
@@ -282,9 +273,8 @@ gg_num gg_rollback(char *t, char erract, char **err, char **errt)
 // Return 1 if the first word of 's' is 'w', otherwise 0. If 's' is quoted, ignore quotes.
 // Also, ignore leading spaces.
 //
-gg_num gg_firstword(char *w, char *s)
+static gg_num gg_firstword(char *w, char *s)
 {
-    GG_TRACE("");
     gg_num l = strlen (w);
     char *mbeg = s;
     // avoid spaces and quotes in the beginning (could be spaces, quote, spaces again)
@@ -295,9 +285,8 @@ gg_num gg_firstword(char *w, char *s)
 //
 // Get the number of rows affected in arows
 //
-void gg_arows(gg_num *arows, char is_prep)
+static void gg_arows(gg_num *arows, char is_prep)
 {
-    GG_TRACE("");
     if (arows!= NULL)
     {
         if (GG_CURR_DB.db_type == GG_DB_POSTGRES)
@@ -332,7 +321,6 @@ void gg_arows(gg_num *arows, char is_prep)
 //
 gg_dbc *gg_execute_SQL (char *s,  gg_num *arows, char **er, char **err_message, gg_num returns_tuple, gg_num user_check, char is_prep, void **prep, gg_num paramcount, char **params, char erract)
 {
-    GG_TRACE("");
 
     // get location in source code (if set, GOLF automatically does this)
     char *sname = "";
@@ -359,7 +347,6 @@ gg_dbc *gg_execute_SQL (char *s,  gg_num *arows, char **er, char **err_message, 
 
     gg_dbc *dbc = gg_get_db_connection (1);
     
-    GG_TRACE ("Query executing: [%s]", s);
 
     // init error code/message
     char *oker =  gg_strdup("0"); // success for error in query-result#...,error...
@@ -452,7 +439,6 @@ gg_dbc *gg_execute_SQL (char *s,  gg_num *arows, char **er, char **err_message, 
                     // 
                     // SQL statement executed correctly after reconnecting. Just proceed
                     //
-                    GG_TRACE("SQL statement executed OKAY after reconnecting to database.");
                     *er = oker; // clear previous error, make it okay
                 }
             }
@@ -474,16 +460,14 @@ gg_dbc *gg_execute_SQL (char *s,  gg_num *arows, char **er, char **err_message, 
     // Getting rows-affected Not done here for SELECT (see gg_select_table)
     //
     gg_arows(arows, is_prep);
-    GG_TRACE("Query OK, affected rows [%ld] - incorrect for SELECT, see further for that.", arows==NULL?0:*arows);
 
     return dbc;
 }
 
 // when error is encountered, retry to connect (assuming we're not in a transaction, which is checked in the caller) 
 // if ok then return 1, otherwise return 0. 
-gg_num gg_retry_db()
+static gg_num gg_retry_db()
 {
-    GG_TRACE("");
     //
     // Retry connection
     //
@@ -501,12 +485,10 @@ gg_num gg_retry_db()
         //
         // Retry was instructed and successful
         //
-        GG_TRACE("Reconnecting to database OKAY");
         return 1;
     }
     else
     {
-        GG_TRACE("Could not reconnect to database");
         return 0;
     }
 }
@@ -522,9 +504,8 @@ gg_num gg_retry_db()
 // Returns 1 if reconnect was successful (meaning retry had to be 1 for this to happen), 0 in any other case.
 // If on-error is set to exit, then stop program in any case but successfull reconnection.
 //
-gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, char is_prep, char erract)
+static gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, char is_prep, char erract)
 {
-    GG_TRACE("");
     // This static is fine - it is used only within a single request, i.e. it doesn't span multiple request.
     // Errm is set HERE and used right after it - it doesn't go beyond a request.
     static char errm[8192];
@@ -585,7 +566,7 @@ gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, ch
         // So -1/lost connection, really never happens. If we cannot reconnect, golf will error out the request.
         *er = gg_strdup ("-1"); // connection lost
         char * lostm = "Database connection lost or cannot be (re)established";
-        if (err_message!=NULL) *err_message=gg_strdup(lostm); else GG_TRACE ("%s", lostm);
+        if (err_message!=NULL) *err_message=gg_strdup(lostm); 
     }
     else 
     {
@@ -594,23 +575,19 @@ gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, ch
         if (GG_CURR_DB.db_type == GG_DB_POSTGRES)
         {
             if (err_message!=NULL) *err_message=gg_strdup(gg_pg_errm(errm, sizeof(errm), s, sname, lnum, *er));
-            else GG_TRACE("%s", errm);
         }
         else if (GG_CURR_DB.db_type == GG_DB_MARIADB)
         {
             if (err_message!=NULL) *err_message=gg_strdup(gg_maria_errm(errm, sizeof(errm), s, sname, lnum, *er, is_prep));
-            else GG_TRACE("%s", errm);
         }
         else if (GG_CURR_DB.db_type == GG_DB_SQLITE)
         {
             if (err_message!=NULL) *err_message=gg_strdup(gg_lite_errm(errm, sizeof(errm), s, sname, lnum, *er, is_prep));
-            else GG_TRACE("%s", errm);
         }
         else
         {
             gg_report_error ("Unknown database type [%ld]", GG_CURR_DB.db_type); 
         }
-        GG_TRACE("%s", errm);
     }
 
     // regardless of what went wrong, report error if on-error set to exit, or return 0 for application to handle
@@ -633,7 +610,6 @@ gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num retry, ch
 //
 void gg_location (char **fname, gg_num *lnum, gg_num set)
 {
-    GG_TRACE("");
     // this static variables are fine, they are used only within a single request. 
     // Before SQL is executed, gg_location is called, and if there is an error, we would
     // return that value - meaning these values are ALWAYS set in the process and THEN used
@@ -689,7 +665,6 @@ void gg_select_table (char *s,
                   char erract)
                   
 {
-    GG_TRACE("");
 
     char *sname = "";
     gg_num lnum = 0;
@@ -707,7 +682,6 @@ void gg_select_table (char *s,
     if (gg_execute_SQL (s, NULL, er, errm, 1, 1, is_prep, prep, paramcount, params, erract) == NULL)
     {
         *nrow = 0;
-        GG_TRACE ("Cannot perform select, error [%s], error summary: [%s], line [%ld], file [%s]", *er, *errm, lnum,sname);
         return;
     }
                 
@@ -719,7 +693,6 @@ void gg_select_table (char *s,
             if (gg_maria_store(is_prep))
             {
                 gg_handle_error (s, er, errm, 0, is_prep, erract);
-                GG_TRACE ("Cannot store select results, error [%s], error summary: [%s], line [%ld], file [%s]", *er, *errm, lnum,sname);
                 return;
             }
         }
@@ -729,7 +702,6 @@ void gg_select_table (char *s,
             if (gg_maria_use(is_prep))
             {
                 gg_handle_error (s, er, errm, 0, is_prep, erract);
-                GG_TRACE ("Cannot use select results, error [%s], error summary: [%s], line [%ld], file [%s]", *er, *errm, lnum,sname);
                 return;
             }
         }
@@ -846,7 +818,6 @@ void gg_select_table (char *s,
             if (gg_maria_rows(&row, &lens, is_prep ))
             {
                 gg_handle_error (s, er, errm, 0, is_prep, erract);
-                GG_TRACE ("Cannot get result rows, error [%s], error summary: [%s], line [%ld], file [%s]", *er, *errm, lnum,sname);
                 return;
             }
         }
@@ -859,7 +830,6 @@ void gg_select_table (char *s,
             if (gg_lite_rows(&row, &lens) != 0)
             {
                 gg_handle_error (s, er, errm, 0, is_prep, erract);
-                GG_TRACE ("Cannot get result rows, error [%s], error summary: [%s], line [%ld], file [%s]", *er, *errm, lnum,sname);
                 return;
             }
         }
@@ -910,7 +880,6 @@ void gg_select_table (char *s,
         }
     }
 
-    GG_TRACE("SELECT retrieved [%ld] rows", *nrow);
 }
 
 
@@ -924,7 +893,6 @@ void gg_select_table (char *s,
 //
 void gg_db_prep(void **prep)
 {
-    GG_TRACE("");
 // list of prepared statement pointers. Must keep it to reset them when connection resets
 // as prepared statements are session-only
     typedef struct s_spreps 
@@ -948,7 +916,6 @@ void gg_db_prep(void **prep)
         {
             if (allpreps[i].db == GG_CURR_DB.db_type) // reset all for the current type of db
             {
-                GG_TRACE ("closing prepared statement");
                 if (GG_CURR_DB.db_type == GG_DB_MARIADB) 
                 {
                     gg_maria_close_stmt (*(allpreps[i].p));
@@ -971,7 +938,7 @@ void gg_db_prep(void **prep)
         return;
     }
 
-    if (allpreps == NULL) allpreps = (spreps*)malloc (sizeof(spreps)*(totpreps=GG_ADD_PREPS)); // first allocating
+    if (allpreps == NULL) allpreps = (spreps*)gg_malloc0 (sizeof(spreps)*(totpreps=GG_ADD_PREPS)); // first allocating
     else
     {
         if (curpreps >= totpreps) // if not enough, allocate more
@@ -979,10 +946,6 @@ void gg_db_prep(void **prep)
             totpreps += GG_ADD_PREPS;
             allpreps = (spreps*)realloc (allpreps, sizeof(spreps)*totpreps);
         }
-    }
-    if (allpreps == NULL)
-    {
-        gg_report_error ("Out of memory for prepared statement list, line [%ld], file [%s]", lnum, sname);
     }
     // add prepared statement of given type
     allpreps[curpreps].p = prep;
@@ -997,7 +960,6 @@ void gg_db_prep(void **prep)
 //
 char *gg_db_prep_text(char *t)
 {
-    GG_TRACE("");
     char *f;
 
     gg_num tot = gg_count_substring (t, _GG_LOOK_S, sizeof(_GG_LOOK_S)-1, 0);
@@ -1049,7 +1011,6 @@ char *gg_db_prep_text(char *t)
 //
 int gg_db_escape(char *from, char *to, gg_num *len)
 {
-    GG_TRACE("");
     // must get connection b/c escaping requires it
     if (GG_CURR_DB.dbc == NULL) gg_get_db_connection (1);
     if (GG_CURR_DB.dbc == NULL) gg_report_error ("Cannot get database connection");
@@ -1079,7 +1040,6 @@ int gg_db_escape(char *from, char *to, gg_num *len)
 //
 void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...) 
 {
-    GG_TRACE("");
     
     // Double quotes are allowed in format because ANSI_QUOTES  is set at the session's beginning.
     // So double quotes can NOT be used for string literals, ONLY single quotes.
@@ -1100,7 +1060,7 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
     }
 
     // Format must be smaller than the destination size to begin with
-    gg_num flen = gg_mem_get_len (gg_mem_get_id(format));
+    gg_num flen = gg_mem_get_len (format);
 
     // All %s must be quoted, otherwise in select ... where id=%s, it could be made to be
     // select ... where id=2;drop table x; if input parameters is id=2;drop table x;
@@ -1126,7 +1086,7 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
     {
         curr_input = va_arg (vl, char *);
         gg_num alen;
-        max_inlen += 2*(alen=gg_mem_get_len (gg_mem_get_id(curr_input))); // twice for worst case of each character escaped
+        max_inlen += 2*(alen=gg_mem_get_len (curr_input)); // twice for worst case of each character escaped
         if (alen >= max_arglen) max_arglen = alen;
     }
     max_arglen = 2*max_arglen + 1; // to allow for maximum 
@@ -1161,7 +1121,7 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
         {
             gg_report_error ("Too many input parameters in input parameter list for SQL statement [%s], expected [%ld] input parameters", format, count_percents);
         }
-        gg_num l_curr_input = gg_mem_get_len (gg_mem_get_id(curr_input));
+        gg_num l_curr_input = gg_mem_get_len (curr_input);
 
         // Escape: single quote and escape backslash in an single quote string
         // Some parameters might not be quoted, and we will catch that as an error
@@ -1208,7 +1168,7 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
     *curr = 0; // make sure null terminated, this is the end of *dest
     done_len = curr - *dest; // done_len here is final length of *dest
     *dest = gg_realloc (gg_mem_get_id (*dest), done_len+1); // realloc mem so we don't use more than needed
-    gg_mem_set_len (gg_mem_get_id (*dest), done_len+1); // set length to be correct
+    gg_mem_set_len (*dest, done_len+1); // set length to be correct
 
     if (curr_sql_arg != sarg) gg_free_int (curr_sql_arg); // free up argument if we actually alloc'd it
 
@@ -1221,7 +1181,6 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
     }
 
     va_end (vl);
-    GG_TRACE ("final statement:[%s]", *dest);
 }
 
 
@@ -1231,7 +1190,6 @@ void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...)
 //
 void gg_db_free_result (char is_prep)
 {
-    GG_TRACE("");
     if (GG_CURR_DB.db_type == GG_DB_POSTGRES)
     {
         gg_pg_free();

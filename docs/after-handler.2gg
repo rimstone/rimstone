@@ -34,12 +34,3 @@ end-after-handler
 .EE
 .RE
 
-.SH SEE ALSO
- Service processing
-
-\fBafter-handler\fP  
-\fBbefore-handler\fP  
-\fBbegin-handler\fP  
-\fBcall-handler\fP   
-See all 
-\fBdocumentation\fP

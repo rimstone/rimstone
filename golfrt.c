@@ -13,26 +13,23 @@
 
 
 //  functions (local)
-size_t gg_write_url_response(void *ptr, size_t size, size_t nmemb, void *s);
-void gg_init_output_buffer ();
-gg_num gg_validate_output ();
-void gg_set_arg0 (char *program, char **arg0);
-void gg_gen_set_content_type(char *v);
-void gg_gen_add_header (char *n, char *v);
-void gg_gen_set_status (gg_num st, char *line);
-void gg_send_header(gg_input_req *iu);
-gg_num gg_gen_util_read (char *content, gg_num len);
-void gg_gen_set_content_length(char *v);
-void gg_server_error ();
-gg_num gg_header_err(gg_config *pc);
-void gg_cant_find_file ();
-char *gg_gen_get_env(char *n);
-gg_num gg_gen_write (bool is_error, char *s, gg_num nbyte);
-void gg_flush_trace();
-void gg_write_ereport(char *errtext, gg_config *pc);
-void gg_read_child (int ofd, char **out_buf);
-void gg_gen_header_end ();
-void gg_check_set_cookie (char *name, char *val, char *secure, char *samesite, char *httponly, char *safety_clause, size_t safety_clause_len);
+static gg_num gg_validate_output ();
+static void gg_set_arg0 (char *program, char **arg0);
+static void gg_gen_set_content_type(char *v);
+static void gg_gen_add_header (char *n, char *v);
+static void gg_gen_set_status (gg_num st, char *line);
+static void gg_send_header(gg_input_req *iu);
+static gg_num gg_gen_util_read (char *content, gg_num len);
+static void gg_gen_set_content_length(char *v);
+static void gg_server_error ();
+static gg_num gg_header_err(gg_config *pc);
+static void gg_cant_find_file ();
+#ifndef GG_COMMAND
+static char *gg_gen_get_env(char *n);
+#endif
+static void gg_read_child (int ofd, char **out_buf);
+static void gg_gen_header_end ();
+static void gg_check_set_cookie (char *name, char *val, char *secure, char *samesite, char *httponly, char *safety_clause, size_t safety_clause_len);
 gg_num gg_find_par (char *n); 
 static inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num nbyte);
 // write-string macros
@@ -50,29 +47,44 @@ static inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, 
 #define GG_WRSTR_ADD_MAX 8192 // max memory to add to write-string
 #define GG_WRSTR_ADJMEM(x) ((x) = ((x) < GG_WRSTR_ADD_MAX ? 2*(x):(x)))
 
+//hash size for uploaded files
+#define GG_HASH_UPLOAD_SIZE 128
+
 #ifndef GG_COMMAND
-#include "fcgi_config.h"
-#include "fcgiapp.h"
+#include "fcgi/fcgiapp.h"
 static FCGX_Stream *gg_fcgi_in = NULL, *gg_fcgi_out = NULL, *gg_fcgi_err = NULL;
 static FCGX_ParamArray gg_fcgi_envp;
 #endif
-static char finished_output = 0;
+char gg_finished_output = 0;
 
 extern gg_num gg_end_program;
-extern int _gg_sprm_run_tot;
+extern gg_num _gg_sprm_run_tot;
 extern gg_ipar _gg_sprm_par[];
-extern gg_num _gg_run_version;
+
+
 
 //
 //
-//Find the index in global set-params for name n. Return -1 if not found.
+//Find the index in global set-params for name n and return it. Error out if param set/never used, or duplicated.
+//This is for URL input params only!!
 //
 //
 gg_num gg_find_par (char *n)
 {
     gg_num found;
-    gg_num *i = gg_find_hash (&gg_paramhash, n, NULL, 0, &found);
-    if (found != GG_OKAY) return -1;
+    gg_num *i = gg_find_hash (&gg_paramhash, n, 0, &found, false); // gg_paramhash is not golf memory
+    if (found != GG_OKAY)  // this is if set by URL but not used in the application
+    {
+        gg_bad_request();
+        gg_report_error ("Parameter [%s] was set by the request URL, but is never used by the application", n);
+        return -1; // never reaches
+    }
+    if (_gg_sprm_par[*i].set) // this is set more than once in URL
+    {
+        gg_bad_request();
+        gg_report_error ("Parameter [%s] was set more than once by the request URL", n);
+        return -1; // never reaches
+    }
     return *i;
 }
 
@@ -84,7 +96,6 @@ gg_num gg_find_par (char *n)
 //
 void gg_init_input_req (gg_input_req *req)
 {
-    GG_TRACE("");
     gg_num i;
     for (i=0; i < GG_MAX_NESTED_WRITE_STRING; i++)
     {
@@ -110,8 +121,9 @@ void gg_init_input_req (gg_input_req *req)
     req->name = GG_EMPTY_STRING;
     req->body_len = 0;
     req->method = GG_OKAY;
-    req->sub = false;
-    finished_output = 0; // reset finish-output indicator
+    req->sub_depth = 1;
+    req->upload = NULL; // no uploaded files to begin with
+    gg_finished_output = 0; // reset finish-output indicator
 }
 
 //
@@ -119,7 +131,6 @@ void gg_init_input_req (gg_input_req *req)
 //
 void gg_write_to_string_notrim ()
 {
-    GG_TRACE("");
     // must be (GG_WRSTR_CUR < GG_MAX_NESTED_WRITE_STRING); // see comment in gg_write_to_string_length ()
     GG_WRSTR.notrim = 1;
 }
@@ -130,7 +141,6 @@ void gg_write_to_string_notrim ()
 //
 gg_num gg_write_to_string_length ()
 {
-    GG_TRACE ("");
     gg_input_req *req = gg_get_config()->ctx.req;
     // it must be GG_WRSTR_CUR < GG_MAX_NESTED_WRITE_STRING); // overflow if asking within the last level 
                 // because the level above it does not exist. We always show the length of previous write-string
@@ -148,7 +158,6 @@ gg_num gg_write_to_string_length ()
 //
 void gg_write_to_string (char **str)
 {
-    GG_TRACE ("");
     if (str == NULL)
     {
         // stop writing to string
@@ -166,7 +175,7 @@ void gg_write_to_string (char **str)
             GG_WRSTR_BUF[GG_WRSTR_POS] = 0;
         }
         GG_WRSTR_BUF = gg_realloc (gg_mem_get_id(GG_WRSTR_BUF), GG_WRSTR_POS+1); // resize memory to just what's needed
-        gg_mem_set_len (gg_mem_get_id(GG_WRSTR_BUF), GG_WRSTR_POS+1); // exact length of result
+        gg_mem_set_len (GG_WRSTR_BUF, GG_WRSTR_POS+1); // exact length of result
                                                                      // this is the exact length of written string that's allocated
         *(GG_WRSTR.user_string) =  GG_WRSTR_BUF;
         // Do NOT set GG_WRSTR_POS = 0 because then function gg_write_to_string_length()
@@ -211,22 +220,18 @@ void gg_write_to_string (char **str)
 //
 void gg_output_http_header(gg_input_req *req)
 {
-    GG_TRACE("");
     if (req->sent_header == 1) 
     {
-        GG_TRACE("Header already sent, attempted to send it again");
         return;
     }
-    GG_TRACE ("sent header: [%ld]", req->sent_header);
     if (gg_get_config()->ctx.req->disable_output == 1) return;
     req->sent_header = 1; 
                 // complain that header hasn't been sent yet! and cause fatal error at that.
     gg_send_header(req);
 }
 
-void gg_check_set_cookie (char *name, char *val, char *secure, char *samesite, char *httponly, char *safety_clause, size_t safety_clause_len)
+static void gg_check_set_cookie (char *name, char *val, char *secure, char *samesite, char *httponly, char *safety_clause, size_t safety_clause_len)
 {
-    GG_TRACE("");
     char *chk = name;
     // Per rfc6265, cookie name must adhere to this and be present
     while (*chk != 0)
@@ -281,8 +286,6 @@ void gg_check_set_cookie (char *name, char *val, char *secure, char *samesite, c
 //
 void gg_set_cookie (gg_input_req *req, char *cookie_name, char *cookie_value, char *path, char *expires, char *samesite, char *httponly, char *secure)
 {
-    GG_TRACE ("cookie path [%s] expires [%s]", path==NULL ? "NULL":path, expires==NULL ? "NULL":expires);
-
     if (req->data_was_output == 1) 
     {
         gg_report_error ("Cookie can only be set before any data is output, and either before or after header is output.");
@@ -313,12 +316,10 @@ void gg_set_cookie (gg_input_req *req, char *cookie_name, char *cookie_value, ch
         if (path == NULL || path[0] == 0)
         {
             snprintf (cookie_temp, sizeof(cookie_temp), "%s=%s%s", cookie_name, cookie_value, safety_clause);
-            GG_TRACE("cookie[1] is [%s]", cookie_temp);
         }
         else
         {
             snprintf (cookie_temp, sizeof(cookie_temp), "%s=%s; Path=%s%s", cookie_name, cookie_value, path, safety_clause);
-            GG_TRACE("cookie[2] is [%s]", cookie_temp);
         }
     }
     else
@@ -326,17 +327,14 @@ void gg_set_cookie (gg_input_req *req, char *cookie_name, char *cookie_value, ch
         if (path == NULL || path[0] == 0)
         {
             snprintf (cookie_temp, sizeof(cookie_temp), "%s=%s; Expires=%s%s", cookie_name, cookie_value, expires, safety_clause);
-            GG_TRACE("cookie[3] is [%s]", cookie_temp);
         }
         else
         {
             snprintf (cookie_temp, sizeof(cookie_temp), "%s=%s; Path=%s; Expires=%s%s", cookie_name, cookie_value, path, expires, safety_clause);
-            GG_TRACE("cookie[4] is [%s]", cookie_temp);
         }
     }
     req->cookies[ind].data = gg_strdup (cookie_temp);
     req->cookies[ind].is_set_by_program = 1;
-    GG_TRACE("cookie [%ld] is [%s]", ind,req->cookies[ind].data);
 }
 
 // 
@@ -348,13 +346,11 @@ void gg_set_cookie (gg_input_req *req, char *cookie_name, char *cookie_value, ch
 //
 char *gg_find_cookie (gg_input_req *req, char *cookie_name, gg_num *ind, char **path, char **exp)
 {
-    GG_TRACE ("");
 
     gg_num ci;
     gg_num name_len = strlen (cookie_name);
     for (ci = 0; ci < req->num_of_cookies; ci++)
     {
-        GG_TRACE("Checking cookie [%s] against [%s]", req->cookies[ci].data, cookie_name);
         // Cookie (trimmed) must start with name=value. After that, other options may be in any order
         // But it is always ; Path=   ; Expires=  etc. - we set those in this exact format. We don't get any of 
         // those from the server - we set them, so we can search easily.
@@ -421,7 +417,6 @@ char *gg_find_cookie (gg_input_req *req, char *cookie_name, gg_num *ind, char **
 // you mix different paths, such as via different reverse proxies
 gg_num gg_delete_cookie (gg_input_req *req, char *cookie_name, char *path, char *secure)
 {
-    GG_TRACE ("");
 
     gg_num ci;
     char *rpath = NULL;
@@ -470,9 +465,8 @@ gg_num gg_delete_cookie (gg_input_req *req, char *cookie_name, char *path, char 
 // If req->header is not-NULL (ctype, cache_control, status_id, status_text or control/value), then
 // custom headers are sent out. This way any kind of header can be sent.
 //
-void gg_send_header(gg_input_req *req)
+static void gg_send_header(gg_input_req *req)
 {
-    GG_TRACE("");
 
     gg_header *header = req->header;
 
@@ -482,7 +476,6 @@ void gg_send_header(gg_input_req *req)
         //
         // Set custom content type if available
         //
-        GG_TRACE("Setting custom content type for HTTP header (%s)", header->ctype);
         gg_gen_set_content_type(header->ctype);
     }
     else
@@ -496,7 +489,6 @@ void gg_send_header(gg_input_req *req)
         //
         // Set custom cache control if available
         //
-        GG_TRACE("Setting custom cache for HTTP header (%s)", header->cache_control);
         gg_gen_add_header ("Cache-Control", header->cache_control);
     }
     else
@@ -504,7 +496,6 @@ void gg_send_header(gg_input_req *req)
         // this is for output from GOLF files only! for files, we cache-forever by default
         gg_gen_add_header ("Cache-Control", "max-age=0, no-cache");
         gg_gen_add_header ("Pragma", "no-cache");
-        GG_TRACE("Setting no cache for HTTP header (1)");
         // the moment first actual data is sent, this is immediately flushed by fcgi?
     }
 
@@ -536,98 +527,19 @@ void gg_send_header(gg_input_req *req)
     }
 }
 
-//
-// Flush trace.
-//
-void gg_flush_trace()
-{
-    //
-    // Do Not Trace this call, as it's trace internal workings
-    //
-    //
-    // Make sure tracing is copied over to system buffers, such as before proceeding with error handling, 
-    // just in case things go bad
-    //
-    gg_config *pc = gg_get_config();
-    if (pc != NULL && pc->trace.f != NULL)
-    {
-        fflush (pc->trace.f);
-    }
-} 
-
-//
-// Write error report when fatal error happens. errtext is the error text.
-// Guard against request being NULL. pc must NOT be NULL (the exec context)
-//
-void gg_write_ereport(char *errtext, gg_config *pc)
-{
-    //
-    //
-    // !!
-    // req can be NULL here so must guard for it
-    // !!
-    // This is to display the request itself that is associated with the error
-    //
-    //
-
-    // Static variables are fine (for keeping the stack reserved), but
-    // ONLY if they do not initialize! If they do, next time around (for 
-    // the next request in fastcgi), they will NOT initialize, and they should.
-    static char log_file[300];
-    static char time[GG_TIME_LEN + 1];
-    static FILE *fout;
-    // End of OK static
-
-
-    gg_current_time (time, sizeof(time)-1);
-    snprintf (log_file, sizeof (log_file),  "%s/backtrace", pc->app.trace_dir);
-
-
-    GG_TRACE ("Error has occurred, trying to open backtrace log [%s]", log_file);
-    fout = gg_fopen (log_file, "a+");
-    if (fout == NULL) 
-    {
-        fout = gg_fopen (log_file, "w+");
-        if (fout == NULL)
-        {
-            GG_TRACE ("Cannot open report file, error [%s]", strerror(errno));
-            GG_FATAL ("Cannot open report file, error [%m]");
-        }
-    }
-    GG_TRACE ("Writing to backtrace log");
-    fseek (fout, 0, SEEK_END);
-    fprintf (fout, "%ld: %s: -------- BEGIN REPORT -------- \n", gg_getpid(), time);
-    GG_TRACE ("Writing PID");
-    fprintf (fout, "%ld: %s: URL: [%s][%s][%s]\n", gg_getpid(), time, gg_getenv("SCRIPT_NAME"), gg_getenv("PATH_INFO"), gg_getenv("QUERY_STRING"));
-    GG_TRACE ("Writing error information");
-    fprintf (fout, "%ld: %s: The trace of where the problem occurred:\n", gg_getpid(), time);
-    fclose (fout); // close because we will be writing to backtrace (which is fout) in gg_get_stack
-    GG_TRACE ("Getting stack");
-    gg_get_stack (log_file);
-    GG_TRACE ("Opening report file");
-    fout = gg_fopen (log_file, "a+"); // continue to write to backtrace
-    if (fout == NULL) 
-    {
-        GG_TRACE ("Cannot open report file, error [%s]", strerror(errno));
-        GG_FATAL ("Cannot open report file, error [%m]");
-    }
-    fprintf (fout, "PID [%ld] TIME [%s] TRACE FILE [%s] ERROR: ***** %s *****\n", gg_getpid(), time, gg_get_config()->trace.fname, errtext);
-    fprintf (fout, "%ld: %s: -------- END REPORT -------- \n", gg_getpid(), time);
-    fclose (fout);
-
-    GG_TRACE ("Before skipping request");
-    gg_flush_trace();
-} 
 
 // 
 // This is called when fatal error happens in program. Catches all errors, from program's report-error to SIGSEGV.
-// Report an error in program. printf-like function that outputs error to trace file
-// (if enabled). Backtrace files is also written. Exit code (for command line) is set to 99.
+// Report an error in program. printf-like function that outputs error to stderr
 // After this, we don't exit, we jump to the end of request, so it will process the next request for SERVICE
+// NOTE: the two functional elements here:
+// 1. gg_check_transaction() to rollback db transactions,
+// 2. gg_error_request() to jump to the next request
+// The above must be present in do_printf() under rep_error check.
+//
 //
 void _gg_report_error (char *format, ...) 
 {
-    GG_TRACE("");
 
     // THIS FUNCTION MUST NOT USE GG_MALLOC NOR MALLOC
     // as it can be used to report out of memory errors
@@ -647,21 +559,11 @@ void _gg_report_error (char *format, ...)
         GG_FATAL ("Program context is empty, error [%s]", errtext);
     }
 
-    // when reporting error, any information traced here must go to the trace file, regardless
-    // of whether we trace or not. We reset tracelevel at the beginning of each request so it doesn't stay in tracing.
-    // trace the message - never needs to trace message just before report-error
-    pc->debug.trace_level = 1;
-
-    GG_TRACE ("Error: %s", errtext);
-    gg_flush_trace(); // flush because if things go bad, no trace (literally) is left to examine (same for below calls)
-
 
     // Never error out more than once, if we do, say we did and move on to the next request
     // UnLikely to happen but still
     if (pc->ctx.gg_report_error_is_in_report == 1) 
     {
-        GG_TRACE ("Leaving error handling because an error happened during error handling [%s]", errtext);
-        gg_flush_trace();
         // Reason for exiting: if rollback fails (in gg_check_transaction below)
         // , then we would proceed to next request, and this can continue
         // previous request's transaction, leading to corrupt data
@@ -674,18 +576,28 @@ void _gg_report_error (char *format, ...)
     // rather than risk complications
     gg_check_transaction (1);
 
-    gg_write_ereport (errtext, pc);
-    gg_flush_trace();
 
 
     // send to stderr (for web client, goes to web server error log, for standalone to stderr)
 
     // we will try to make 500 Server Error here, but if the header has already been output, it won't come out
     // for example gg_bad_request() may have been done prior to this, or just out-header
+    // We output generic error message to standard output, so no details. The details of the error are **always** in the error stream.
+    // New line is important at the end of it so if you're looking in terminal, this message may be invisible as it gets overwritten visually
     gg_server_error();
+#define GG_GENERR "Your request has produced an error. Please check error log for more details.\n"
+    gg_gen_write (false, GG_GENERR, sizeof (GG_GENERR)-1);
+
+    // Output error stack trace before the actual error, so it's easy to see the error at the bottom
+    gg_get_stack(errtext);
+    //
     // write to stderror (server log)
+    // The message is last, also so it is picked up by Apache log (which may split it into multiple lines so it gets hard to see where it was)
+    // and especially hard to parse out in test
+    gg_gen_write (true, "--- ", 4);
     gg_gen_write (true, errtext, err_len);
     gg_gen_write (true, "\n", 1);
+
 
 
     //
@@ -694,6 +606,7 @@ void _gg_report_error (char *format, ...)
     // Otherwise, close this request, release resources and process the next one (for SERVICE).
     //
     //
+    pc->ctx.req->ec = GG_DISTRESS_STATUS; // this is the value for abnormal termination, if exit status is still 0
     gg_error_request(1);// go to process the next request
 }
 
@@ -709,15 +622,12 @@ void _gg_report_error (char *format, ...)
 //
 gg_num gg_decode (gg_num enc_type, char *v, gg_num inlen, bool alloc, gg_num *status)
 {
-    GG_TRACE("");
-
-    gg_num sid=0;
-    if (alloc) sid = gg_mem_get_id (v);
 
     if (alloc)
     {
-        if (inlen < 0) inlen = gg_mem_get_len(sid);
-        else if (inlen > gg_mem_get_len(sid)) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", inlen, gg_mem_get_len(sid));
+        gg_num vlen= gg_mem_get_len (v);
+        if (inlen < 0) inlen = vlen;
+        else if (inlen > vlen) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", inlen, vlen);
     }
     else
     {
@@ -807,7 +717,7 @@ gg_num gg_decode (gg_num enc_type, char *v, gg_num inlen, bool alloc, gg_num *st
     // and the old one would become a dangling one, leading to a need to change the input pointer and to keep track of pointer assignments,
     // so that any other memory pointing there is now changed. We don't do this to keep memory management super high performance.
     //
-    if (alloc) gg_mem_set_len (sid, j+1);
+    if (alloc) gg_mem_set_len (v, j+1);
     return j;
 }
 
@@ -820,7 +730,6 @@ gg_num gg_decode (gg_num enc_type, char *v, gg_num inlen, bool alloc, gg_num *st
 //
 gg_num gg_lockfile(char *filepath, gg_num *lock_fd)
 {
-    GG_TRACE ("");
     struct flock lock;
     gg_num fd;
 
@@ -861,42 +770,6 @@ gg_num gg_lockfile(char *filepath, gg_num *lock_fd)
 }
 
 
-//
-//Implements sub-service, s is service name
-//'s' can be /request/path and is resolved at run time so
-//it can be a variable. Extremely fast as it used built-in
-//linker-loaded bare-bone set-to-resolution-in-1-lookup function hash.
-//call_handler is a cached (previously computed) pointer to function. If call_handler is NULL
-//then there's no cache (not a constant call). If not NULL, then if *call_handler is NULL it hasn't 
-//been computed yet, if not-NULL, it's been computed and use it.
-//req->sub is true if this is not top-level call, or false if it is
-//
-void gg_subs(char *s, void ** call_handler)
-{
-    GG_TRACE("");
-    // save call-handler status, call call-handler, restore status
-    gg_input_req *req = gg_get_config()->ctx.req;
-    bool c_sub = req->sub;
-    req->sub = true;
-    if (call_handler == NULL || *call_handler == NULL)
-    {
-        gg_request_handler gg_req_handler;
-        char reqname[GG_MAX_REQ_NAME_LEN];
-        char decres = gg_decorate_path (reqname, sizeof(reqname), &s, gg_mem_get_len (gg_mem_get_id(s)));
-        // 1 means good hierarchical path, reqname is it; or 3 means no /, so reqname is a copy of mtext
-        if (decres != 1) gg_report_error( "Request path [%s] is not a valid name",s);
-        gg_num found;
-        gg_req_handler = gg_find_hash (&gg_dispatch, reqname, NULL, 0, &found);
-        if (found != GG_OKAY) gg_report_error( "Request handler not found [%s]", s);
-        if (call_handler != NULL) *call_handler = gg_req_handler;
-        gg_req_handler();
-    }
-    else
-    {
-        ((gg_request_handler)*call_handler)();
-    }
-    req->sub = c_sub;
-}
 
 // 
 // Get input parameters from web input in the form of
@@ -924,7 +797,6 @@ void gg_subs(char *s, void ** call_handler)
 //
 gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 {
-    GG_TRACE("");
 
     gg_config *pc = gg_get_config();
     char *req_method = NULL;
@@ -935,15 +807,13 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     char *content = NULL;
     char *cookie = NULL;
 
-    _gg_run_version++; //current version of request, used to determine if value in parameters (_gg_sprm_par[]) is actually set in this request
-                       //because otherwise we'd have to set .type of each unset to GG_DEFNONE, which is difficult. Rather, we set 'version' in gg_ipar
-                       //to _gg_run_version. Any variable that doesn't match it, isn't set here and is empty. If we don't do this, then we don't know
-                       //what param is set and what is not, resulting is random value that are left over from previous request execution.
+    // so now all strings are NULL (and other types), numbers 0, boolean false
+    gg_num ap;
+    for (ap = 0; ap < _gg_sprm_run_tot; ap++) _gg_sprm_par[ap].set = false;
 
     // some env vars are obtained right away, other are rarely used
     // and are obtaineable from $$ variables
     GG_STRDUP (req->referring_url, gg_getenv ("HTTP_REFERER"));
-    GG_TRACE ("Referer is [%s]", req->referring_url);
     // when there is a redirection to home page, referring url is empty
 
     char *sil = gg_getenv ("GG_SILENT_HEADER");
@@ -958,7 +828,6 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     if (nm[0] != 0)
     {
         GG_STRDUP (req->if_none_match, nm);
-        GG_TRACE("IfNoneMatch received [%s]", nm);
     }
 
     // this function is often called in "simulation" of a request. ONLY the first request gets cookies
@@ -974,7 +843,6 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
         req->cookies = cookies;
         if (cookie[0] != 0)
         {
-            GG_TRACE ("Cookie [%s]", cookie);
             gg_num tot_cookies = 0;
             char *semi;
             while (1)
@@ -994,7 +862,6 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                 } else semi = NULL;
                 req->cookies[tot_cookies].data = gg_strdup (cookie);
                 if (semi != NULL) *semi = ';'; // make sure environment memory is unchanged!
-                GG_TRACE("Cookie [%s]",req->cookies[tot_cookies].data);
                 tot_cookies++;
                 if (ew == NULL) break;
                 cookie = ew;
@@ -1042,7 +909,6 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     }
     gg_num qry_len = (gg_num)strlen (qry); // length of query string
 
-    GG_TRACE ("Request Method: %s", req_method);
     // content type is generally not specified for GET or DELETE, but it may be
     // so this is generic processing with a few constraints
     cont_type = gg_getenv ("CONTENT_TYPE");
@@ -1057,24 +923,9 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     } else cont_len_byte = 0;
 
 
-    static bool one_inp = false;
-    static char *inp_body = NULL;
-    static char *inp_url = NULL;
-    if (!one_inp)
-    {
-        gg_mem_process = true;
-        inp_body = gg_malloc (GG_MAX_SIZE_OF_BODY);
-        inp_url = gg_malloc (GG_MAX_SIZE_OF_URL);
-        gg_mem_process = false;
-        // these are indestructible, cannot be deleted no matter one
-        gg_mem_set_const (inp_body);
-        gg_mem_set_const (inp_url);
-        one_inp = true;
-    }
-
-    char *new_url = inp_url;
+    char *new_url = gg_inp_url;
     char *new_body;
-    if (cont_len_byte + 32 < GG_MAX_SIZE_OF_BODY) new_body = inp_body; else new_body = (char*)gg_malloc (cont_len_byte + 32);
+    if (cont_len_byte + 32 < GG_MAX_SIZE_OF_BODY) new_body = gg_inp_body; else new_body = (char*)gg_malloc (cont_len_byte + 32);
 
     gg_num new_url_ptr = 0;
     gg_num would_write;
@@ -1146,8 +997,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
             // Here we check if body of message is not multipart
             req->body = content;                
             req->body_len = cont_len_byte;
-            gg_num id = gg_mem_get_id (req->body);
-            gg_mem_set_len(id, cont_len_byte+1);
+            gg_mem_set_len(req->body, cont_len_byte+1);
         }
     }
     else
@@ -1282,15 +1132,14 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                     char char_end = *element_end;
                     *element_end = 0;
                     name = el;
-                    gg_num name_len = strlen (name);
+                    // copy string to golf mem, and get rid of quotes if there
+                    gg_num name_len = element_end - el;
                     name = gg_trim_ptr (name, &name_len);
-                    GG_STRDUP (name, name);
-                    if (name[0] == '"') 
-                    { 
-                        name[name_len - 1] = 0; 
-                        name++;
-                        name_len -= 2;
-                    }
+                    if (name[0] == '"') { name++; name_len --;}
+                    if (name_len>0 && name[name_len-1] == '"') name_len--;
+                    name = gg_strdupl (name, 0, name_len);
+                    name[name_len] = 0;
+                    //
                     *element_end = char_end; // restore char
 
                     // find file name, this one is optional
@@ -1308,15 +1157,14 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                         char char_end = *element_end;
                         *element_end = 0;
                         file_name = el;
-                        filename_len = strlen (file_name);
+                        filename_len = element_end - el;
                         file_name = gg_trim_ptr (file_name, &filename_len);
-                        GG_STRDUP (file_name, file_name);
-                        if (file_name[0] == '"') 
-                        { 
-                            file_name[filename_len - 1] = 0;
-                            file_name++;
-                            filename_len -= 2; // removed surrounding quotes
-                        }
+                        // copy string to golf mem, and get rid of quotes if there
+                        if (file_name[0] == '"') { file_name++; filename_len --;}
+                        if (filename_len>0 && file_name[filename_len-1] == '"') filename_len--;
+                        file_name = gg_strdupl (file_name, 0, filename_len);
+                        file_name[filename_len] = 0;
+                        //
                         *element_end = char_end;
                     }
                     else 
@@ -1384,21 +1232,12 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                         gg_bad_request();
                         gg_report_error ("Web input larger than the limit of [%d] bytes (2)", GG_MAX_SIZE_OF_URL);
                     }
+                    
+
+                    //
                     new_url_ptr += would_write;
-                    if (file_name[0] != 0)
-                    {
-                        // provide original (client) file name
-                        enc = NULL;
-                        gg_encode (GG_URL, file_name, filename_len, &enc, false);
-                        gg_num would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_filename=%s&", name, enc);
-                        gg_free_int (enc);
-                        if (would_write  >= avail)
-                        {
-                            gg_bad_request();
-                            gg_report_error ("Web input larger than the limit of [%d] bytes (3)", GG_MAX_SIZE_OF_URL);
-                        }
-                        new_url_ptr += would_write;
-                    }
+
+
                     // write file
                     // generate unique number for file and directory, create dir if it doesn't exist
                     // as well as file. We can only tell that file name was not uploaded if file name is
@@ -1408,10 +1247,26 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 
                     if (multi_ctype != NULL)
                     {
+                        //
+                        if (req->upload == NULL) gg_create_hash (&(req->upload), GG_HASH_UPLOAD_SIZE, NULL, 0);  
+                        // Create uploaded object for this file so it can be accessed with get-upload
+                        // The hash for it in the request is created the first time it's needed (released automatically at the end of request).
+                        gg_upload *gup = gg_malloc (sizeof(gg_upload));
+                        // add hash element  right away, even if filename empty. We will just change the contents of what's in gup
+                        // but the pointer to it will *not* change
+                        gg_num st;
+                        gg_add_hash (req->upload, name, gup, NULL, &st); // key/value here *are* Golf memory
+                        if (st != GG_OKAY) 
+                        { // this really shouldn't happen since we check for duplicate params in URL
+                            gg_bad_request();
+                            gg_report_error ("Duplicate file upload [%s]", name);
+                        }
+                        //
                         if (file_name[0] != 0)
                         {
+                            gup->fname = file_name; // already strdup-ed above
                             // get extension of filename
-                            gg_num flen = strlen (file_name);
+                            gg_num flen = filename_len;
                             gg_num j = flen - 1;
                             char *ext = "";
                             while (j > 0 && file_name[j] != '.') j--;
@@ -1437,47 +1292,19 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                             }
                             fclose (f);
 
-                            // provide location where file is actually stored on server
-                            enc = NULL;
-                            gg_encode (GG_URL, write_dir, -1, &enc, true); // write_dir is an allocated memory with length, so -1 here is fine
-                            gg_num would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_location=%s&", name, enc);
-                            gg_free_int (enc);
-                            if (would_write  >= avail)
-                            {
-                                gg_bad_request();
-                                gg_report_error ("Web input larger than the limit of [%d] bytes (4)", GG_MAX_SIZE_OF_URL);
-                            }
-                            new_url_ptr += would_write;
+                            gup->loc = write_dir;
 
-                            // provide extension of the file
-                            would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_ext=%s&", name, ext);
-                            if (would_write  >= avail)
-                            {
-                                gg_bad_request();
-                                gg_report_error ("Web input larger than the limit of [%d] bytes (5)", GG_MAX_SIZE_OF_URL);
-                            }
-                            new_url_ptr += would_write;
+                            gup->ext = ext;
 
-                            // provide size in bytes of the file
-                            would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_size=%ld&", name, multi_ctype_len);
-                            if (would_write  >= avail)
-                            {
-                                gg_bad_request();
-                                gg_report_error ("Web input larger than the limit of [%d] bytes (6)", GG_MAX_SIZE_OF_URL);
-                            }
-                            new_url_ptr += would_write;
+                            gup->size = multi_ctype_len;
 
                         }
                         else
                         {
-                            // no file uploaded, just empty filename as an indicator
-                            gg_num would_write = snprintf (new_url + new_url_ptr, avail = GG_MAX_SIZE_OF_URL - new_url_ptr - 2, "%s_filename=&", name);
-                            if (would_write >= avail)
-                            {
-                                gg_bad_request();
-                                gg_report_error ("Web input larger than the limit of [%d] bytes (8)", GG_MAX_SIZE_OF_URL);
-                            }
-                            new_url_ptr += would_write;
+                            gup->fname = GG_EMPTY_STRING;
+                            gup->size = 0;
+                            gup->loc = GG_EMPTY_STRING;
+                            gup->ext = GG_EMPTY_STRING;
                         }
                     }
 
@@ -1552,7 +1379,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 
     // Convert URL format to a number of zero-delimited chunks
     // in form of name-value-name-value...
-    // if name, convert - to _ so URL can use parameters like do-something or customer-id
+    // if name, convert - to _ so URL can use parameters like do-something or customer-id (because C variables can't have -)
     gg_num j;
     gg_num i;
     gg_num had_equal = 0;
@@ -1610,17 +1437,21 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
         value_len = strlen (v = content + j); 
         j += value_len+1;
 
+        // we ignore parameters that are set in request URL but are never retrieved
         if (par_ind != -1)
         {
-            _gg_sprm_par[par_ind].version = _gg_run_version;
             gg_num trimmed_len = value_len;
             _gg_sprm_par[par_ind].tval.value = gg_trim_ptr (v, &trimmed_len);// trim the input parameter for whitespaces (both left and right)
             // add as partial, parent is always  non-delete, so no need to set it
-            _gg_sprm_par[par_ind].type = GG_DEFSTRING;
+            if (_gg_sprm_par[par_ind].type != GG_DEFSTRING)
+            {
+                gg_bad_request();
+                gg_report_error ("Parameter [%s] is not of string type, but request URL tries to set its value to a string", n);
+            }
             _gg_sprm_par[par_ind].alloc = false;
-        }
+            _gg_sprm_par[par_ind].set = true;
+        } 
 
-        GG_TRACE ("Index: %ld, Name: %s", i, _gg_sprm_par[par_ind].name);
     }
 
     // 
@@ -1755,11 +1586,11 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
             if (par_ind != -1)
             {
                 // this name/value must be added
-                _gg_sprm_par[par_ind].version = _gg_run_version;
                 gg_num trimmed_len = val_len;
                 _gg_sprm_par[par_ind].tval.value = gg_trim_ptr (value, &trimmed_len);// trim the input parameter for whitespaces (both left and right)
                 _gg_sprm_par[par_ind].type = GG_DEFSTRING;
                 _gg_sprm_par[par_ind].alloc = false;
+                _gg_sprm_par[par_ind].set = true;
             }
         }
     }
@@ -1773,6 +1604,8 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
     return 1;
 }
 
+
+
 // 
 // In URL list of inputs, set value for input name to val.
 // req is the request structure.
@@ -1780,40 +1613,22 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
 // Value is set, and no copy of it is made. Use copy-string to make a copy if needed.
 // type is the type of val
 //
-gg_num gg_set_input (gg_num name_id, void *val, gg_num type)
+GG_ALWAYS_INLINE inline gg_num gg_set_input (gg_num name_id, void *val, gg_num type)
 {
-    GG_TRACE("");
 
-    if (_gg_sprm_par[name_id].version == _gg_run_version)
-    {
-        GG_TRACE ("Found input [%s] at [%ld]", _gg_sprm_par[name_id].name, name_id);
-        // set-input can be assigned any type (tree, boolean, string etc)
-        // If it is string, it is always assigned allocated memory, so we must increase its refcount (unless it's already there)
-        // in that way, params are like a tree , array or a list
-        // check if they are equal first of course, then assign (or they'd be equal always)
-        //
-        // If string, if current param is alloc'd, delete reference to it because the existing value (that comes from outside caller) may not be allocated
-        if (cmp_type (type, GG_DEFSTRING)) gg_mem_add_ref (val);
-        if (cmp_type (type, GG_DEFNUMBER)) _gg_sprm_par[name_id].tval.numval = *(gg_num*)val;
-        else _gg_sprm_par[name_id].tval.value = val;
-        // The end result here is if val and _gg_sprm_par[name_id].tval.value are equal, then no refcount change as it should be
-        //
-        _gg_sprm_par[name_id].type = type;
-        _gg_sprm_par[name_id].alloc = true;
-    }
-    else
-    {
-        GG_TRACE ("Did not find input, create new one");
-        // assign special for number b/c number loses scope after set-param leaves the code block
-        if (cmp_type (type, GG_DEFNUMBER)) _gg_sprm_par[name_id].tval.numval = *(gg_num*)val;
-        else _gg_sprm_par[name_id].tval.value = val;
-        //
-        if (cmp_type (type, GG_DEFSTRING)) gg_mem_add_ref (val);
-        _gg_sprm_par[name_id].version = _gg_run_version;
-        _gg_sprm_par[name_id].type = type;
-        _gg_sprm_par[name_id].alloc = true;
-    }
-    _gg_sprm_par[name_id].version = _gg_run_version;
+    // set-input can be assigned any type (tree, boolean, string etc)
+    // If it is string, it is always assigned allocated memory, so we must increase its refcount (unless it's already there)
+    // in that way, params are like a tree , array or a list
+    // check if they are equal first of course, then assign (or they'd be equal always)
+    //
+    if (cmp_type (type, GG_DEFSTRING)) gg_mem_add_ref (val, 0);
+    //
+    _gg_sprm_par[name_id].tval.value = val;
+    // The end result here is if val and _gg_sprm_par[name_id].tval.value are equal, then no refcount change as it should be
+    //
+    _gg_sprm_par[name_id].type = type;
+    _gg_sprm_par[name_id].alloc = true;
+    _gg_sprm_par[name_id].set = true;
     return name_id;
 }
 
@@ -1827,55 +1642,43 @@ gg_num gg_set_input (gg_num name_id, void *val, gg_num type)
 // GG_DEFUNKN is used to just obtain the index of a parameter - this is the ONLY time GG_DEFUNKN should be used - 
 // we MUST always know the type of what we're requesting!
 //
-void *gg_get_input_param (gg_num name_id, gg_num type)
+GG_ALWAYS_INLINE inline void *gg_get_input_param (gg_num name_id, gg_num type, char *defval)
 {
-    GG_TRACE("");
 
-    if (_gg_sprm_par[name_id].version != _gg_run_version)
+    // We check at compile time that set-param and get-param types for each parameters match. For those parameters which are set from outside,
+    // we check in gg_get_input() that their type is string, or if they are never used; in either case we error out if not a correct match.
+    // For all other cases, set-param and get-param must match due to compile time check, so at run-time we can only check if parameter set or not.
+
+    if (!_gg_sprm_par[name_id].set)
     {
-        GG_TRACE ("Did not find input");
-        // other than strings, if we're getting some other type and not found, that cannot be handled, it must be there
-        // also check if not GG_DEFUNKN, this is if called from gg_set_input() and index not found
-        if (type != GG_DEFUNKN && type != GG_DEFSTRING) gg_report_error ("Parameter [%s] of type [%s] is not found", _gg_sprm_par[name_id].name, typename(type));
-        return GG_EMPTY_STRING;
+        if (type != GG_DEFSTRING) gg_report_error ("Trying to get the value of parameter [%s], but it was not set", _gg_sprm_par[name_id].name);
+        else
+        {
+            if (defval != NULL) return defval;
+            else gg_report_error ("Trying to get the value of parameter [%s], but it was not set", _gg_sprm_par[name_id].name);
+        }
     }
-
+    //
+    // So at this point, a param does have value set within a request (either from outside or from inside in code)
+    //
     char *v = (char*)(_gg_sprm_par[name_id].tval.value);
-    if (type != GG_DEFUNKN) 
+    if (type == GG_DEFSTRING)
     {
-        gg_num act = _gg_sprm_par[name_id].type; // act is the actual type of data, 'type' is type we're asked to provide
-        if (act == GG_DEFSTRING)
+        if (!_gg_sprm_par[name_id].alloc ) 
         {
-            if (cmp_type (GG_DEFBOOL, type))
-            {
-                if (!strcmp (v, "true")) return &gg_true;
-                if (!strcmp (v, "false")) return &gg_false;
-            }
-            else if (cmp_type (GG_DEFNUMBER, type))
-            {
-                gg_num st;
-                static gg_num retnum;
-                retnum = gg_str2num (v, 0, &st);
-                if (st == GG_OKAY) return &retnum;
-            }
-        }
-        if (!cmp_type (type, act)) gg_report_error ("Parameter [%s] is supposed to be of type [%s], but the value is of type [%s]", _gg_sprm_par[name_id].name, typename(type), typename(_gg_sprm_par[name_id].type));
-        if (cmp_type (GG_DEFSTRING, type)) 
-        {
-            if (!_gg_sprm_par[name_id].alloc ) 
-            {
-                v = _gg_sprm_par[name_id].tval.value = gg_strdup (v); 
-                _gg_sprm_par[name_id].alloc = true; // so it's strdup'd only once even if requested many times
-            } 
-            // note that deletion of reference of target is done in v1.c, as well as adding reference to variable assigned to it.
-            return v;
-        } else 
-        {
-            // number is a special case, we have a value for it.
-            if (cmp_type (GG_DEFNUMBER, type)) return (void*)&(_gg_sprm_par[name_id].tval.numval);
-            else return v; // otherwise it's just a pointer
-        }
-    } else { return GG_EMPTY_STRING; }  // we found index of param via GG_DEFUNKN, return
+            v = _gg_sprm_par[name_id].tval.value = gg_strdup (v); 
+            _gg_sprm_par[name_id].alloc = true; // so it's strdup'd only once even if requested many times
+        } 
+        // note that deletion of reference of target is done in v1.c, as well as adding reference to variable assigned to it.
+        return v;
+    } else 
+    {
+        // number is a special case, we have a value for it.
+        // For parameters other than number, bool or string (say tree), if it's NULL then it's not set in this request; we set all parameters to 
+        // init values at the beginning of the request; all objects other than basic types (like tree) have a life span of the request, so it can
+        // never happen that say a tree param could have invalid value.
+        if (v == NULL) gg_report_error("Parameter [%s] is not set", _gg_sprm_par[name_id].name); else return v; // otherwise it's just a pointer
+    }
 }
 
 
@@ -1887,7 +1690,6 @@ void *gg_get_input_param (gg_num name_id, gg_num type)
 //
 gg_num gg_copy_data_at_offset (char **data, gg_num off, char *value)
 {
-    GG_TRACE ("");
 
     if (*data == NULL) 
     {
@@ -1918,7 +1720,6 @@ gg_num gg_copy_data_at_offset (char **data, gg_num off, char *value)
 //
 gg_num gg_copy_data (char **data, char *value)
 {
-    GG_TRACE ("");
     return gg_copy_data_at_offset(data, 0, value);
 }
 
@@ -1932,7 +1733,6 @@ gg_num gg_copy_data (char **data, char *value)
 //
 gg_num gg_is_number (char *s, gg_num *prec, gg_num *scale, gg_num *positive)
 {
-    GG_TRACE("");
     gg_num i = 0;
     if (prec != NULL ) *prec = 0;
     if (scale != NULL) *scale = 0;
@@ -2007,7 +1807,6 @@ gg_num gg_is_number (char *s, gg_num *prec, gg_num *scale, gg_num *positive)
 //
 gg_num gg_is_positive_num (char *s)
 {
-    GG_TRACE("");
     gg_num i = 0;
     while (s[i] != 0) 
     {
@@ -2025,9 +1824,8 @@ gg_num gg_is_positive_num (char *s)
 // but sometimes it is necessary for the executing program not to crash. 'program' is the full
 // path of the executable. So if 'program' is '/a/b/c/d', then arg0 is 'd'
 //
-void gg_set_arg0 (char *program, char **arg0)
+static void gg_set_arg0 (char *program, char **arg0)
 {
-    GG_TRACE("");
     gg_num i =strlen(program) - 1;
     while (i >= 0)
     {
@@ -2038,7 +1836,6 @@ void gg_set_arg0 (char *program, char **arg0)
         i--;
     }
     *arg0 = program+i+1;
-    GG_TRACE("Program name for execution is [%s]", *arg0);
 }
 
 
@@ -2047,7 +1844,7 @@ void gg_set_arg0 (char *program, char **arg0)
 // and if out_buf!=NULL, put length there. The buffer starts very small and grows to 4K as needed,
 // with block read of max 4K. Useful for reading a stream.
 //
-void gg_read_child (int ofd, char **out_buf)
+static void gg_read_child (int ofd, char **out_buf)
 {
     lseek (ofd, SEEK_SET, 0);
     // minimum allocation for dmalloc
@@ -2075,8 +1872,8 @@ void gg_read_child (int ofd, char **out_buf)
     }
     (*out_buf)[curr] = 0;
     *out_buf = (char*) gg_realloc (gg_mem_get_id(*out_buf), curr+1);  // set to exact memory needed, sets length
-    gg_num id = gg_mem_get_id (*out_buf); // *out_buf is new, so cannot use id for realloc above
-    gg_mem_set_len (id, curr+1);
+    // *out_buf is new, so cannot use id for realloc above
+    gg_mem_set_len (*out_buf, curr+1);
 }
 
 
@@ -2105,7 +1902,6 @@ void gg_read_child (int ofd, char **out_buf)
 //
 gg_num gg_exec_program (char *prg, char *argv[], gg_num num_args, FILE *fin, FILE **fout, FILE **ferr, char *inp, gg_num inp_len, char **out_buf, char **err_buf)
 {
-    GG_TRACE("");
 
     if (argv[num_args] != NULL)
     {
@@ -2220,9 +2016,9 @@ gg_num gg_exec_program (char *prg, char *argv[], gg_num num_args, FILE *fin, FIL
         if (inp!=NULL && inp[0]!=0)
         {
             // Send string (or binary) to child input, this is the write end of that pipe, the child reads from pipe2child[0]
-            gg_num id = gg_mem_get_id(inp);
-            if (inp_len == 0) inp_len = gg_mem_get_len (id);
-            else if (inp_len > gg_mem_get_len(id)) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", inp_len, gg_mem_get_len(id));
+            gg_num linp = gg_mem_get_len(inp);
+            if (inp_len == 0) inp_len = linp;
+            else if (inp_len > linp) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", inp_len, linp);
 
             if (write(pipe2child[1], inp, inp_len) != inp_len) 
             {
@@ -2267,7 +2063,6 @@ gg_num gg_exec_program (char *prg, char *argv[], gg_num num_args, FILE *fin, FIL
 //
 void gg_disable_output()
 {
-    GG_TRACE ("");
     gg_get_config()->ctx.req->disable_output = 1;
 }
 
@@ -2288,7 +2083,6 @@ void gg_disable_output()
 //
 gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
 {
-    GG_TRACE ("");
 
     if (gg_validate_output()!=1) gg_report_error ("Cannot send file because output is disabled, or file already output");
 
@@ -2299,12 +2093,12 @@ gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
     gg_num vLen;
     if (alloc)
     { // this is golf alloc'd
-        gg_num id = gg_mem_get_id(s);
+        gg_num ls = gg_mem_get_len(s);
         if (len != 0)
         {
             vLen = len; 
-            if (vLen > gg_mem_get_len(id)) gg_report_error ("String output requested of length [%ld] but only [%ld] allocated", vLen, gg_mem_get_len(id));
-        } else vLen = gg_mem_get_len(id);
+            if (vLen > ls) gg_report_error ("String output requested of length [%ld] but only [%ld] allocated", vLen, ls);
+        } else vLen = ls;
     } 
     else 
     { // this is non-golf alloc'd, i.e. internal
@@ -2316,8 +2110,6 @@ gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
         if (GG_WRSTR_CUR == -1) // this is to the web
         {
             gg_num res = gg_write_web (false, pc, s, vLen);
-            if (res < 0) GG_TRACE ("Error in writing direct, error [%s]", strerror(errno));
-            else GG_TRACE("Wrote direct [%ld] bytes", res);
             return res;
         } 
         else 
@@ -2334,8 +2126,6 @@ gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
         gg_num total_written = gg_encode_base (enc_type, s, vLen, &(write_to), 0);
         res = gg_write_web (false, pc, write_to, total_written);
         gg_free_int (write_to);
-        if (res < 0) GG_TRACE ("Error in writing direct (puts) of length [%ld], error [%s]", total_written, strerror(errno));
-        else GG_TRACE("Wrote direct (puts) [%ld] bytes", res);
         return res;
     }
     //
@@ -2361,7 +2151,6 @@ gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
         }
         break;
     }
-    GG_TRACE ("HTML>> [%s]", GG_WRSTR_BUF+ buf_pos_start);
     return res;
 }
 
@@ -2370,9 +2159,8 @@ gg_num gg_puts (gg_num enc_type, char *s, gg_num len, bool alloc)
 // Check if output can happen, if it can, make sure output buffer is present
 // and if it needs flushing, flush it.
 //
-gg_num gg_validate_output ()
+static gg_num gg_validate_output ()
 {
-    GG_TRACE("");
 
     // if output is disabled, do NOT waste time printing to the bufer!!
     // UNLESS this is a write to a string, in which case write it!!
@@ -2395,7 +2183,6 @@ gg_num gg_validate_output ()
 //
 gg_num gg_printf (bool iserr, gg_num enc_type, char *format, ...)
 {
-    GG_TRACE ("");
     
     if (gg_validate_output()!=1) gg_report_error ("Cannot send file because output is disabled, or file already output");
     gg_config *pc = gg_get_config();
@@ -2407,32 +2194,27 @@ gg_num gg_printf (bool iserr, gg_num enc_type, char *format, ...)
     if (GG_WRSTR_CUR == -1)
     {
 #ifdef DEBUG
-        gg_num ebuf_size=256;
+        char ibuf[2];
 #else
-        gg_num ebuf_size=1024;
+        char ibuf[4096];
 #endif
-        char *ebuf = (char*)gg_malloc (ebuf_size);
-        while (1)
+        // Try first with a stack buffer, faster than malloc; most of the time it will succeed, saving time
+        tot_written = vsnprintf (ibuf, sizeof(ibuf), format, args);
+        char *ebuf;
+        if (tot_written >= (gg_num)sizeof(ibuf))
         {
-            tot_written = vsnprintf (ebuf, ebuf_size, format, args);
-            if (tot_written >= ebuf_size)
-            {
-                ebuf_size += tot_written + 256; // add 256 so we don't realloc too often
-                ebuf = gg_realloc (gg_mem_get_id(ebuf), ebuf_size);
-                va_end (args); // must restart the va_list before retrying!
-                va_start (args, format);
-                continue;
-            }
-            else 
-            {
-                break;
-            }
-        }
+            va_end (args); // must restart the va_list before retrying!
+            va_start (args, format);
+            ebuf = (char*)gg_malloc0 (tot_written+2); // +1 will suffice
+            tot_written = vsnprintf (ebuf, tot_written+2, format, args);
+        } else ebuf = ibuf;
         va_end (args);
         if (enc_type == GG_WEB || enc_type == GG_URL)
         {
             char *final_out = NULL;
             // here final_out is allocated in gg_encode, and so is free 3 lines down
+            // we can use MALLOC/REALLOC here because of 'false' last arg below - it says we're providing ebuf and tot_written
+            // as unmanaged memory
             gg_num final_len = gg_encode (enc_type, ebuf, tot_written, &final_out, false); // must state total_written, since we haven't set exact length for ebuf
             tot_written = gg_write_web (iserr, pc, final_out, final_len);
             gg_free_int (final_out);
@@ -2441,9 +2223,7 @@ gg_num gg_printf (bool iserr, gg_num enc_type, char *format, ...)
         {
             tot_written = gg_write_web (iserr, pc, ebuf, tot_written);
         }
-        gg_free_int (ebuf); // so there is no leak when unmanaged memory
-        if (tot_written < 0) GG_TRACE ("Error in writing direct, error [%s]", strerror(errno));
-        else GG_TRACE("Wrote direct [%ld] bytes", tot_written);
+        if (ebuf != ibuf) free (ebuf); // so there is no leak when unmanaged memory
         return tot_written;
     }
 
@@ -2514,7 +2294,6 @@ gg_num gg_printf (bool iserr, gg_num enc_type, char *format, ...)
 //
 gg_num gg_puts_to_string (char *final_out, gg_num final_len)
 {
-    GG_TRACE("");
 
 
     // This is writing to string.
@@ -2544,7 +2323,6 @@ gg_num gg_puts_to_string (char *final_out, gg_num final_len)
         break;
     }
     if (res == 0) return 0; // return number of bytes written, minus null at the end
-    GG_TRACE ("HTML>> [%s]", GG_WRSTR_BUF+ buf_pos_start);
     return res;
 }
 
@@ -2566,7 +2344,6 @@ void gg_shut(gg_input_req *giu)
     // if program ended before header could have been finished, finish the header
     if (giu != NULL && giu->sent_header ==1 && giu->data_was_output == 0) gg_gen_header_end (); // send cookies and \r\n divider
 
-    GG_TRACE("Shutting down");
     if (giu == NULL)
     {
         GG_FATAL ("Shutting down, but request handler is NULL");
@@ -2591,7 +2368,6 @@ void gg_shut(gg_input_req *giu)
 //
 void gg_init_header (gg_header *header, gg_num init_type, char is_request)
 {
-    GG_TRACE("");
     char const *errinit = "Unknown initialization type argument";
     if (init_type == GG_HEADER_FILE)
     {
@@ -2650,14 +2426,12 @@ void gg_init_header (gg_header *header, gg_num init_type, char is_request)
 //
 FILE *gg_make_document (char **write_dir, gg_num is_temp)
 {
-    GG_TRACE("");
 
     gg_config *pc = gg_get_config();
 
     char path[180];
     gg_num file_size = 200;
     char *ufile = (char*)gg_malloc (file_size);
-    gg_num id = gg_mem_get_id (ufile);
     char *rnd;
     gg_make_random (&rnd, 6, GG_RANDOM_NUM, false); // random of size 5 as maximum is GG_MAX_UPLOAD_DIR (40000), max 5 digits
 
@@ -2670,7 +2444,7 @@ FILE *gg_make_document (char **write_dir, gg_num is_temp)
         snprintf (path, sizeof(path), "%s/t/%ld", pc->app.file_dir, atol(rnd)%GG_MAX_UPLOAD_DIR);
     }
     gg_num wb = snprintf (ufile, file_size, "%s/%ldXXXXXX", path, (gg_num)getpid());
-    gg_mem_set_len (id, wb+1);
+    gg_mem_set_len (ufile, wb+1);
     gg_free_int (rnd);
     //
     // CANNOT USE RND BEYOND THIS POINT
@@ -2680,18 +2454,13 @@ FILE *gg_make_document (char **write_dir, gg_num is_temp)
     // make directory based on random number
     // even if mkdir fails, maybe mkstemp will not, so do not error out
     //
-    if (mkdir (path, 06770) != 0)
-    {
-        GG_TRACE ("mkdir [%s] errored with [%s], trying to create a file anyway", path, strerror (errno));
-
-    }
+    mkdir (path, 06770);
 
     gg_num fd;
     if ((fd = mkstemp (ufile)) == -1)
     {
         gg_report_error ("Cannot create unique file, error [%s]", strerror(errno));
     }
-    GG_TRACE("Creating file [%s]", ufile);
     FILE *f = fdopen (fd, "w");
     if (f == NULL)
     {
@@ -2708,7 +2477,6 @@ FILE *gg_make_document (char **write_dir, gg_num is_temp)
 //
 char *gg_upper(char *s)
 {
-    GG_TRACE("");
     gg_num l = 0;
     while (s[l] != 0) {s[l] = toupper(s[l]); l++;}
     return s;
@@ -2720,7 +2488,6 @@ char *gg_upper(char *s)
 //
 char *gg_lower(char *s)
 {
-    GG_TRACE("");
     gg_num l = 0;
     while (s[l] != 0) {s[l] = tolower(s[l]); l++;}
     return s;
@@ -2734,19 +2501,16 @@ char *gg_lower(char *s)
 //
 gg_num gg_copy_file (char *src, char *dst)
 {
-    GG_TRACE("");
 
     gg_num f_src = open(src, O_RDONLY);
     if (f_src < 0) {
         GG_ERR; 
-        GG_TRACE ("Cannot open [%s] for reading, error [%s]", src, strerror(errno));
         return GG_ERR_OPEN;
     }
     gg_num f_dst = open(dst, O_WRONLY|O_CREAT, S_IRWXU);
     if (f_dst < 0) 
     {
         GG_ERR;
-        GG_TRACE ("Cannot open [%s] for writing, error [%s]", dst, strerror(errno));
         close (f_src);
         return GG_ERR_CREATE;
     }
@@ -2756,7 +2520,6 @@ gg_num gg_copy_file (char *src, char *dst)
     if (ftruncate64 (f_dst, 0) != 0) 
     {
         GG_ERR;
-        GG_TRACE ("Cannot read [%s], error [%s]", src, strerror(errno));
         close (f_src);
         close (f_dst);
         return GG_ERR_WRITE;
@@ -2770,7 +2533,6 @@ gg_num gg_copy_file (char *src, char *dst)
         if (res < 0) 
         {
             GG_ERR;
-            GG_TRACE ("Cannot read [%s], error [%s]", src, strerror(errno));
             close (f_src);
             close (f_dst);
             return GG_ERR_READ;
@@ -2779,7 +2541,6 @@ gg_num gg_copy_file (char *src, char *dst)
         if (rwrite != res) 
         {
             GG_ERR;
-            GG_TRACE ("Cannot write [%s], error [%s]", dst, strerror(errno));
             close(f_src);
             close(f_dst);
             return GG_ERR_WRITE;
@@ -2792,34 +2553,12 @@ gg_num gg_copy_file (char *src, char *dst)
 
 
 
-// 
-// Get base name of URL. If protocol is missing (such as http://), returns empty string.
-// For example, for http://myserver.com/go.service?..., the base name is myserver.com
-// Returns base name of 'url'.
-//
-char *gg_web_name(char *url)
-{
-    GG_TRACE("");
-    char *prot = strstr(url,"://");
-    if (prot==NULL) 
-    {
-        return GG_EMPTY_STRING;
-    }
-    char *web_name=gg_strdup(prot+3);
-    char *end = strchr (web_name,'/');
-    if (end!=NULL)
-    {
-        *end = 0;
-    }
-    return web_name;
-}
 
 //
 // Release split-string resources given by broken_ptr
 //
 void gg_delete_break_down (gg_split_str **broken_ptr)
 {
-    GG_TRACE("");
     gg_num i;
     // delete data, any referenced will stay
     for (i = 0; i < (*broken_ptr)->num_pieces; i++) gg_free ((*broken_ptr)->pieces[i]);
@@ -2839,7 +2578,6 @@ void gg_delete_break_down (gg_split_str **broken_ptr)
 // 'pieces[]' array that holds this number of pieces.
 void gg_break_down (char *value, char *delim, gg_split_str **broken_ptr)
 {
-    GG_TRACE("");
 
     // get object for parsing
     *(broken_ptr) = (gg_split_str*)gg_malloc (sizeof (gg_split_str));
@@ -2949,7 +2687,6 @@ void gg_break_down (char *value, char *delim, gg_split_str **broken_ptr)
 //
 char *gg_time (time_t curr, char *timezone, char *format, gg_num year, gg_num month, gg_num day, gg_num hour, gg_num min, gg_num sec)
 {
-    GG_TRACE ("");
 
     char set_gm[200];
     
@@ -2993,20 +2730,18 @@ char *gg_time (time_t curr, char *timezone, char *format, gg_num year, gg_num mo
     // cookies ONLY or for anything that needs GMT time in this format)
 #define GMT_BUFFER_SIZE 50
     char *buffer=(char*)gg_malloc(GMT_BUFFER_SIZE);
-    gg_num id = gg_mem_get_id (buffer);
     size_t time_succ = strftime(buffer,GMT_BUFFER_SIZE-1, format==NULL ? "%a, %d %b %Y %H:%M:%S %Z":format, &future);
     if (time_succ == 0)
     {
         gg_report_error ("Error in storing time to buffer, buffer is too small [%d]", GMT_BUFFER_SIZE);
     }
-    gg_mem_set_len (id, time_succ+1);
+    gg_mem_set_len (buffer, time_succ+1);
     
     // go back to default timezone. See above about casting gg_get_tz()
     // to (char*)
     putenv((char*)gg_get_tz());
     tzset();
 
-    GG_TRACE("Time is [%s]", buffer);
     return buffer;
 }
 
@@ -3018,7 +2753,6 @@ char *gg_time (time_t curr, char *timezone, char *format, gg_num year, gg_num mo
 //
 gg_num gg_copy_data_from_num (char **data, gg_num val)
 {
-    GG_TRACE ("");
     char n[30];
     snprintf (n, sizeof (n), "%ld", val);
     return gg_copy_data (data, n);
@@ -3032,7 +2766,6 @@ gg_num gg_copy_data_from_num (char **data, gg_num val)
 //
 void gg_set_env(char *arg)
 {
-    GG_TRACE("");
     putenv ("REQUEST_METHOD=GET");
     
     char req[4096];
@@ -3047,7 +2780,6 @@ void gg_set_env(char *arg)
 //
 char *gg_getenv_os (char *var)
 {
-    GG_TRACE("");
     char *v = secure_getenv (var);
     if (v == NULL) return GG_EMPTY_STRING; else return v;
 }
@@ -3059,7 +2791,6 @@ char *gg_getenv_os (char *var)
 //
 char *gg_getenv (char *var)
 {
-    GG_TRACE("");
 #ifndef GG_COMMAND
     return gg_gen_get_env(var);
 #else
@@ -3070,22 +2801,20 @@ char *gg_getenv (char *var)
 
 static inline gg_num gg_write_after_header (bool iserr, gg_config *pc, char *s, gg_num nbyte)
 {
-    GG_TRACE("");
     // gg_gen_header_end() will set data_was_output to 1
     if (pc->ctx.req->data_was_output == 0) gg_gen_header_end (); // send cookies and \r\n divider
     return gg_gen_write (iserr, s, nbyte);  // send actual data
 }
 
 //
-// Write web output. However, if header not sent, error out or output trace warning that header/data MAY NOT be output. 
-// The worst that happens is that headers and/or data are not output (but we trace this). We also document this.
+// Write web output. However, if header not sent, error out that header/data MAY NOT be output. 
+// The worst that happens is that headers and/or data are not output. We also document this.
 // pc is golf configuration. The rest the same as gg_gen_write().
 // iserr is true if output goes to stderr, otherwise stdout - this is for web output only.
 // Returns the same as gg_gen_write()
 //
 gg_num gg_write_web (bool iserr, gg_config *pc, char *s, gg_num nbyte)
 {
-    GG_TRACE("");
     if (pc->ctx.req->sent_header == 1) 
     {
         return gg_write_after_header (iserr, pc, s, nbyte);
@@ -3103,7 +2832,6 @@ gg_num gg_write_web (bool iserr, gg_config *pc, char *s, gg_num nbyte)
             // No need to try and output header because if pc->ctx.gg_report_error_is_in_report != 0, then in gg_report_error()
             // we will call gg_server_error() which will output 500 error, so it's better not to try
             // this allows to send to stderr even if header not output
-            GG_TRACE ("WARNING: writing to web even though header was not sent");
             return gg_gen_write (iserr, s, nbyte);
         }
         return 0; // just to satisfy the compiler, since we're never coming here
@@ -3131,8 +2859,7 @@ gg_num gg_write_web (bool iserr, gg_config *pc, char *s, gg_num nbyte)
 //
 gg_num gg_gen_write (bool is_error, char *s, gg_num nbyte)
 {
-    GG_TRACE("");
-    if (finished_output == 0) 
+    if (gg_finished_output == 0) 
     {
 #ifndef GG_COMMAND
         // when gg_fcgi_out is not NULL, neither are others like gg_fcgi_err
@@ -3147,15 +2874,15 @@ gg_num gg_gen_write (bool is_error, char *s, gg_num nbyte)
 }
 
 
+#ifndef GG_COMMAND
 //
 // Get environment variable 
 // n is the name of environment variable. Returns "" if not found.
 //
-char *gg_gen_get_env (char *n)
+static char *gg_gen_get_env (char *n)
 {
-    GG_TRACE("");
     char *v;
-    if (finished_output == 0) 
+    if (gg_finished_output == 0) 
     {
 #ifndef GG_COMMAND
         v = FCGX_GetParam (n, gg_fcgi_envp);
@@ -3165,16 +2892,16 @@ char *gg_gen_get_env (char *n)
         if (v == NULL) return GG_EMPTY_STRING; else return v;
     } else return GG_EMPTY_STRING;
 }
+#endif
 
 
 
 //
 // Set content length for web output
 //
-void gg_gen_set_content_length(char *v)
+static void gg_gen_set_content_length(char *v)
 {
-    GG_TRACE("");
-    if (finished_output == 0 && gg_get_config()->ctx.req != NULL && gg_get_config()->ctx.req->silent == 0) 
+    if (gg_finished_output == 0 && gg_get_config()->ctx.req != NULL && gg_get_config()->ctx.req->silent == 0) 
 #ifndef GG_COMMAND
         if (gg_fcgi_out != NULL) FCGX_FPrintF (gg_fcgi_out, "Content-length: %s\r\n", v);
 #else
@@ -3189,10 +2916,9 @@ void gg_gen_set_content_length(char *v)
 // content is the data buffer where reading is done into; it must be allocated with at least
 // len+1 bytes. len is the length to read. Returns 1 if okay, 0 if not.
 //
-gg_num gg_gen_util_read (char *content, gg_num len)
+static gg_num gg_gen_util_read (char *content, gg_num len)
 {
-    GG_TRACE("");
-    if (finished_output == 0) 
+    if (gg_finished_output == 0) 
     {
         gg_num bytes_read;
         gg_num total_read = 0;
@@ -3225,10 +2951,9 @@ gg_num gg_gen_util_read (char *content, gg_num len)
 // (adding always adds, setting replaces or adds if doesn't exist)
 // n is the header name, v is value.
 //
-void gg_gen_add_header (char *n, char *v)
+static void gg_gen_add_header (char *n, char *v)
 {
-    GG_TRACE("");
-    if (finished_output == 0 && gg_get_config()->ctx.req != NULL && gg_get_config()->ctx.req->silent == 0) 
+    if (gg_finished_output == 0 && gg_get_config()->ctx.req != NULL && gg_get_config()->ctx.req->silent == 0) 
 #ifndef GG_COMMAND
         if (gg_fcgi_out != NULL) FCGX_FPrintF (gg_fcgi_out, "%s: %s\r\n", n, v);
 #else
@@ -3241,9 +2966,8 @@ void gg_gen_add_header (char *n, char *v)
 // This will send any cookies as well. It will remember that this was done and if called again for the
 // same request, it will not perform these actions again, as they need to be done only once per request.
 //
-void gg_gen_header_end ()
+static void gg_gen_header_end ()
 {
-    GG_TRACE("");
     // because this is done for all output, including errors and such, make sure req is not NULL,
     // also this output was not already done, and also this isn't silent header.
     // but do set data_was_output to 1 even if silent, so this function doesn't get called needlessly
@@ -3260,7 +2984,6 @@ void gg_gen_header_end ()
                 // keep expired and path, so we would not know to send it back the way it was.
                 if (gg_get_config()->ctx.req->cookies[ci].is_set_by_program == 1)
                 {
-                    GG_TRACE("Cookie sent to browser is [%s]", gg_get_config()->ctx.req->cookies[ci].data);
                     gg_gen_add_header ("Set-Cookie", gg_get_config()->ctx.req->cookies[ci].data);
                 }
             }
@@ -3275,10 +2998,9 @@ void gg_gen_header_end ()
 // Set content type for web output
 // v is content type (text/html for instance)
 //
-void gg_gen_set_content_type(char *v)
+static void gg_gen_set_content_type(char *v)
 {
-    GG_TRACE("");
-    if (finished_output == 0 && gg_get_config()->ctx.req != NULL && gg_get_config()->ctx.req->silent == 0) 
+    if (gg_finished_output == 0 && gg_get_config()->ctx.req != NULL && gg_get_config()->ctx.req->silent == 0) 
 #ifndef GG_COMMAND
         if (gg_fcgi_out != NULL) FCGX_FPrintF (gg_fcgi_out, "Content-Type: %s\r\n", v);
 #else
@@ -3292,7 +3014,6 @@ void gg_gen_set_content_type(char *v)
 //
 void gg_flush_out(void)
 {
-    GG_TRACE("");
 #ifndef GG_COMMAND
     if (gg_fcgi_out != NULL) FCGX_FFlush (gg_fcgi_out);
     if (gg_fcgi_err != NULL) FCGX_FFlush (gg_fcgi_err);
@@ -3308,11 +3029,10 @@ void gg_flush_out(void)
 //
 void gg_SERVICE_Finish (void)
 {
-    GG_TRACE("");
 //    No finish, since we're in the loop, and once we exit it doesn't matter. 
 //    FCGX_Accept will free all the data from the previous request.
 
-    if (finished_output == 0) 
+    if (gg_finished_output == 0) 
     {
 #ifndef GG_COMMAND
         // set status both stdout and err. SERVICE says the code will go with the last
@@ -3331,7 +3051,7 @@ void gg_SERVICE_Finish (void)
         fflush (stdout);
 #endif
     }
-    finished_output = 1; // this says that output is finished and this flag will guard against any
+    gg_finished_output = 1; // this says that output is finished and this flag will guard against any
                          // output that follows (i.e. any output will not output anything)
 }
 
@@ -3348,12 +3068,12 @@ void gg_exit (void)
 #ifdef GG_COMMAND
     // This must be *before* the cleaning down here, because ..req-> anything is managed
     // memory and will be destroyed in gg_done()!!!
-    int retcode = (pc != NULL ? pc->ctx.req->ec : -1); // return code for command line program
+    int retcode = (pc != NULL ? pc->ctx.req->ec : GG_DISTRESS_STATUS); // return code for command line program
+                                                                       // this is when say memory violation is caught
 #endif
 
 #ifdef DEBUG
     gg_end_all_db (); // end any db connections
-    gg_close_trace(); // shut off tracing if it was enabled
 
     if (pc != NULL && pc->ctx.db->conn != NULL) free (pc->ctx.db->conn); // free database list of descriptors
 
@@ -3368,7 +3088,6 @@ void gg_exit (void)
     free (pc->app.dbconf_dir);
     free (pc->app.home_dir);
     free (pc->app.file_dir);
-    free (pc->app.trace_dir);
     if (pc != NULL) free(pc); 
 #endif
 
@@ -3389,25 +3108,8 @@ void gg_exit (void)
 //
 gg_num gg_SERVICE_Accept (void)
 {
-    GG_TRACE("");
 #ifndef GG_COMMAND
-    // 
-    // By default, if server accepts client connection, but no data is to be read within 2 seconds,
-    // it will close connection. This may cause unexpected failures. This was added to fcgi
-    // recently and maybe I don't understand it, but doesn't seem quite useful.
-    // Given the original problem of read hangs is no longer present (it was in linux 2.xx), 2 seconds
-    // seem like could happen just from swaps. More reasonable value may be 5 seconds?
-    // If the user sets "LIBFCGI_IS_AF_UNIX_KEEPER_POLL_TIMEOUT" then it will be used, it must be in 
-    // milliseconds. Otherwise we set to 5 seconds.
-    // 
-    static bool init_once = false;
-    if (!init_once)
-    {
-        init_once = true;
-        char *already_set = gg_getenv ("LIBFCGI_IS_AF_UNIX_KEEPER_POLL_TIMEOUT");
-        if (already_set[0] == 0) setenv ("LIBFCGI_IS_AF_UNIX_KEEPER_POLL_TIMEOUT","5000",1);
-    }
-    finished_output = 1; // if not, first time accept may try to write to SERVICE; this is not clear why it would
+    gg_finished_output = 1; // if not, first time accept may try to write to SERVICE; this is not clear why it would
                          // but regardless, this will prevent any output until the next request starts
                          // It may have been because gg_SERVICE_Finish wasn't called properly until 16.9
                          // in the main loop at the end of each request (but rather it was called only for exiting)
@@ -3422,10 +3124,9 @@ gg_num gg_SERVICE_Accept (void)
 // Set page status for web output
 // st is the status number, line is the text (200, "OK" for example)
 //
-void gg_gen_set_status (gg_num st, char *line)
+static void gg_gen_set_status (gg_num st, char *line)
 {
-    GG_TRACE("");
-    if (finished_output == 0 && gg_get_config()->ctx.req != NULL && gg_get_config()->ctx.req->silent == 0) 
+    if (gg_finished_output == 0 && gg_get_config()->ctx.req != NULL && gg_get_config()->ctx.req->silent == 0) 
     {
         // fastcgi fprintf doesn't know %ld, and status text isn't taken
 #ifndef GG_COMMAND
@@ -3452,16 +3153,14 @@ void gg_gen_set_status (gg_num st, char *line)
 // Returns 0 if header sent. Set status of header to 'sent'
 // pc is program context
 //
-gg_num gg_header_err(gg_config *pc)
+static gg_num gg_header_err(gg_config *pc)
 {
-    GG_TRACE("");
     // if program receives TERM signal at acceping connection and thus exits, this will get called through stack/error reporting
     // and there is no request at that point (it's NULL)
     if (pc->ctx.req != NULL) 
     {
         if (pc->ctx.req->sent_header == 1) 
         {
-            GG_TRACE("Header already sent, cannot send again");
             // if program ended before header could have been finished, finish the header
             if (pc->ctx.req->data_was_output == 0) gg_gen_header_end (); // send cookies and \r\n divider
             return 0;
@@ -3478,9 +3177,8 @@ gg_num gg_header_err(gg_config *pc)
 // Output is 500 Internal Server Error
 // No reason is sent to the client. Separately stderr is written with error message.
 //
-void gg_server_error ()
+static void gg_server_error ()
 {
-    GG_TRACE ("");
     gg_config *pc = gg_get_config();
     if (gg_header_err(pc) != 1) return;
     gg_gen_set_status (500, "Internal Server Error");
@@ -3491,11 +3189,9 @@ void gg_server_error ()
 // 
 // Output error message if file requested (image, document.., a binary file in 
 // general) could not be served.
-// The reason is generally found in trace (if enabled)
 //
-void gg_cant_find_file ()
+static void gg_cant_find_file ()
 {
-    GG_TRACE ("");
     gg_config *pc = gg_get_config();
     if (gg_header_err(pc) != 1) return;
     // never print out for batch mode
@@ -3515,7 +3211,6 @@ void gg_cant_find_file ()
 //
 void gg_out_file (char *fname, gg_header *header)
 {
-    GG_TRACE("");
     gg_config *pc = gg_get_config();
 
     // this must be FIRST, before gg_disable_output() as we check if being output
@@ -3535,7 +3230,6 @@ void gg_out_file (char *fname, gg_header *header)
         // We do not serve files with .. in them to avoid path traversal attacks. Files must
         // not traverse backwards EVER.
         //
-        GG_TRACE("File path insecure, rejected");
         gg_cant_find_file();
         return;
     }
@@ -3544,7 +3238,6 @@ void gg_out_file (char *fname, gg_header *header)
     struct stat attr;
     if (stat(fname, &attr) != 0)
     {
-        GG_TRACE ("Cannot stat file name [%s], error [%s]", fname, strerror (errno));
         gg_cant_find_file();
         return;
     }
@@ -3553,7 +3246,6 @@ void gg_out_file (char *fname, gg_header *header)
     FILE *f = gg_fopen (fname, "r");
     if (f == NULL)
     {
-        GG_TRACE("Cannot open [%s], error [%s]", fname, strerror(errno));
         gg_cant_find_file();
         return;
     }
@@ -3566,7 +3258,6 @@ void gg_out_file (char *fname, gg_header *header)
         long fsize_l = ftell(f);
         if (fsize_l >= (long)INT_MAX)
         {
-            GG_TRACE ("File size too long [%ld]", fsize_l);
             gg_cant_find_file();
             return;
         }
@@ -3576,23 +3267,19 @@ void gg_out_file (char *fname, gg_header *header)
         // 
         // check if file has already been delivered to the client
         //
-        GG_TRACE("IfNoneMatch [%s], tstamp [%ld]", pc->ctx.req->if_none_match == NULL ? "" : pc->ctx.req->if_none_match, tstamp);
         if (pc->ctx.req->if_none_match != NULL && tstamp == atol(pc->ctx.req->if_none_match))
         {
             //
             // File NOT modified
             //
-            GG_TRACE("File not modified! [%s]", fname);
 
             gg_gen_add_header ("Status", "304 Not Modified");
             if (header->cache_control!=NULL)
             {
-                GG_TRACE("Setting cache [%s] for HTTP header (2)", header->cache_control);
                 gg_gen_add_header ("Cache-Control", header->cache_control);
             }
             else
             {
-                GG_TRACE("Setting no cache for HTTP header (3)");
                 gg_gen_add_header ("Cache-Control", "max-age=0, no-cache");
                 gg_gen_add_header ("Pragma", "no-cache");
             }
@@ -3606,12 +3293,10 @@ void gg_out_file (char *fname, gg_header *header)
         // 
         // read file to be sent to the client
         //
-        GG_TRACE("File read and to be sent [%s]", fname);
-        char *str = gg_malloc(fsize + 1);
+        char *str = gg_malloc0(fsize + 1);
         if (fread_unlocked(str, fsize, 1, f) != 1)
         {
-            gg_free_int (str);
-            GG_TRACE ("Cannot read [%ld] bytes from file [%s], error [%s]", fsize, fname, strerror(errno));
+            free (str);
             gg_cant_find_file();
             return;
         }
@@ -3626,22 +3311,11 @@ void gg_out_file (char *fname, gg_header *header)
         char tm[50];
         char *val;
 
-        if (header->etag==1)
-        {
-            GG_TRACE("Will send etag [%ld]", tstamp);
-        }
-        else
-        {
-            GG_TRACE("Will NOT send etag [%ld]", tstamp);
-        }
-
-
         if (header->ctype[0] == 0)
         {
             //
             // Content type is missing, we assume it's HTML
             //
-            GG_TRACE("Sending HTML, no content type");
             // html has to be empty because we have own set of headers
 
             if (header->etag==1)
@@ -3666,7 +3340,6 @@ void gg_out_file (char *fname, gg_header *header)
             // Send file and appropriate header first
             //
             char disp_name[500];
-            GG_TRACE("Header disp is [%s]", header->disp==NULL?"NULL":header->disp);
             if (header->disp != NULL)
             {
                 if (header->file_name != NULL)
@@ -3695,12 +3368,10 @@ void gg_out_file (char *fname, gg_header *header)
             }
             if (header->cache_control!=NULL)
             {
-                GG_TRACE("Setting cache [%s] for HTTP header (4)", header->cache_control);
                 gg_gen_add_header ("Cache-Control", header->cache_control);
             }
             else
             {
-                GG_TRACE("Setting no cache for HTTP header (5)");
                 gg_gen_add_header ("Cache-Control", "max-age=0, no-cache");
                 gg_gen_add_header ("Pragma", "no-cache");
             }
@@ -3734,11 +3405,10 @@ void gg_out_file (char *fname, gg_header *header)
         // Send actual file contents
         if (gg_write_web (false, pc, str, fsize) != fsize)
         {
-            GG_TRACE ("Cannot write [%ld] bytes to client from file [%s], error [%s]", fsize, fname, strerror(errno));
             // In this case, since gg_gen_write is synchronous, the server couldn't send all the data and it closed the connection
             // with the client. Nothing else to do for us.  
         }
-        gg_free_int (str);
+        free (str);
 
     }
 }
@@ -3752,7 +3422,6 @@ void gg_out_file (char *fname, gg_header *header)
 //
 void gg_bad_request ()
 {
-    GG_TRACE ("");
     gg_config *pc = gg_get_config();
     if (gg_header_err(pc) != 1) return;
     gg_gen_set_status (400, "Bad Request");
@@ -3769,7 +3438,6 @@ void gg_bad_request ()
 //
 void gg_error_request(gg_num retval)
 {
-    GG_TRACE("");
     if (gg_done_err_setjmp == 1) 
     {
         siglongjmp (gg_err_jmp_buffer, retval);
@@ -3792,7 +3460,6 @@ void gg_error_request(gg_num retval)
 //
 void gg_exit_request(gg_num retval)
 {
-    GG_TRACE("");
     if (gg_done_setjmp == 1) siglongjmp (gg_jmp_buffer, retval);
     // else do nothing
 }
@@ -3802,13 +3469,6 @@ void gg_exit_request(gg_num retval)
 //
 //
 // Set application params at run time. config file is not required. 
-// If config file not used, then current user/group is what program uses, 
-// current directory is what it uses, and all other directories are based on current directory. Very simple.
-// If config file used:
-// User must be specified, and it can't be root. When cannot set to user specified, exit with error.
-// This cannot be a root owned process, or we will exit with error message.
-// If home directory not specified, taken to be current. You can use ~ in home directory to specify $HOME for a current user.
-// Directories other than home can be specified, and if not, they are defaulted to the home directory plus appropriate subdir.
 // 
 //
 // MUST NOT USE GG_MALLOC and such. This is allocated once per execution and if gg_malloc/*, it would be deallocated at the end of each request in fcgi!!
@@ -3818,27 +3478,26 @@ void gg_exit_request(gg_num retval)
 void gg_get_runtime_options()
 {
 
-    GG_TRACE("");
     gg_config *pc = gg_get_config ();
 
-    char dir_name[300];
+    static char db_dir_name[GG_MAX_OS_UDIR_LEN];
+    static char app_dir_name[GG_MAX_OS_UDIR_LEN];
+    static char file_dir_name[GG_MAX_OS_UDIR_LEN];
+    static char trace_dir_name[GG_MAX_OS_UDIR_LEN];
 
-    snprintf (dir_name, sizeof(dir_name), GG_ROOT "/var/lib/gg/%s/app/db", gg_app_name);
-    pc->app.dbconf_dir = strdup(dir_name);
-    snprintf (dir_name, sizeof(dir_name), GG_ROOT "/var/lib/gg/%s/app", gg_app_name);
-    pc->app.home_dir = strdup(dir_name);
-    snprintf (dir_name, sizeof(dir_name), GG_ROOT "/var/lib/gg/%s/app/file", gg_app_name);
-    pc->app.file_dir = strdup(dir_name);
-    snprintf (dir_name, sizeof(dir_name), GG_ROOT "/var/lib/gg/%s/app/trace", gg_app_name);
-    pc->app.trace_dir = strdup(dir_name);
+    gg_dir (GG_DIR_DB, db_dir_name, sizeof(db_dir_name), gg_app_name, NULL);
+    pc->app.dbconf_dir = db_dir_name;
 
-    if (pc->app.dbconf_dir == NULL || pc->app.home_dir == NULL || pc->app.file_dir == NULL || pc->app.trace_dir == NULL)
-    {
-        GG_FATAL ("Cannot allocate application context memory");
-    }
+    gg_dir (GG_DIR_APP, app_dir_name, sizeof(app_dir_name), gg_app_name, NULL);
+    pc->app.home_dir = app_dir_name;
+
+    pc->app.user_dir = gg_user_dir;
+
+
+    gg_dir (GG_DIR_FILE, file_dir_name, sizeof(file_dir_name), gg_app_name, NULL);
+    pc->app.file_dir = file_dir_name;
 
     pc->app.max_upload_size  = gg_max_upload;
-    pc->debug.trace_level = gg_is_trace;
 
     // Make sure that program cannot setuid to root
     if (setuid(0) == 0 || seteuid(0) == 0)
@@ -3858,11 +3517,15 @@ void gg_get_runtime_options()
         GG_FATAL ("Cannot change directory to [%s], error [%m]", pc->app.home_dir);
     }
 
-
     //
     // END OF SETTING UID and home directory 
     //
 
+    //
+    // This is always last!!!! Since we return the file pointer here.
+    // trace dir is created by mgrg
+    gg_dir (GG_DIR_TRACENAME, trace_dir_name, sizeof(trace_dir_name), gg_app_name, NULL);
+    pc->app.btrace = trace_dir_name;
     return;
 }
 
@@ -3882,11 +3545,9 @@ void gg_get_runtime_options()
 //
 void gg_make_random (char **rnd, gg_num rnd_len, char type, bool crypto)
 {
-    GG_TRACE("");
 
     *rnd = gg_malloc (rnd_len);
-    gg_num id = gg_mem_get_id (*rnd);
-    gg_mem_set_len (id, rnd_len); 
+    gg_mem_set_len (*rnd, rnd_len); 
 
     if (crypto) 
     {
@@ -3950,7 +3611,6 @@ void gg_make_random (char **rnd, gg_num rnd_len, char type, bool crypto)
 //
 char *gg_realpath (char *path)
 {
-    GG_TRACE("");
     char *res;
     char *pcopy = gg_strdup (path);
     if ((res = realpath (dirname (pcopy), NULL)) != NULL)
@@ -3976,13 +3636,11 @@ char *gg_realpath (char *path)
 //
 void gg_hex2bin(char *src, char **dst, gg_num ilen)
 {
-    GG_TRACE("");
-    gg_num id = gg_mem_get_id(src);
-    if (ilen == -1) ilen = gg_mem_get_len(id);
-    else if (ilen > gg_mem_get_len(id)) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", ilen, gg_mem_get_len(id));
+    gg_num lsrc = gg_mem_get_len(src);
+    if (ilen == -1) ilen = lsrc;
+    else if (ilen > lsrc) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", ilen, lsrc);
 
     *dst = (char*)gg_malloc (ilen/2 + 2); // +2 in case bad data/odd # of bytes
-    gg_num did = gg_mem_get_id (*dst);
     gg_num i;
     gg_num j = 0;
     for (i = 0; i < ilen; )
@@ -3995,7 +3653,7 @@ void gg_hex2bin(char *src, char **dst, gg_num ilen)
         i+=2;
     }
     (*dst)[j] = 0;
-    gg_mem_set_len (did, j+1);
+    gg_mem_set_len (*dst, j+1);
 }
 
 //
@@ -4005,15 +3663,13 @@ void gg_hex2bin(char *src, char **dst, gg_num ilen)
 //
 void gg_bin2hex(char *src, char **dst, gg_num ilen, char *pref)
 {
-    GG_TRACE("");
-    gg_num id = gg_mem_get_id(src);
-    if (ilen == -1) ilen = gg_mem_get_len(id);
-    else if (ilen > gg_mem_get_len(id)) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", ilen, gg_mem_get_len(id));
+    gg_num lsrc = gg_mem_get_len(src);
+    if (ilen == -1) ilen = lsrc;
+    else if (ilen > lsrc) gg_report_error ("Memory read requested of length [%ld] but only [%ld] allocated", ilen, lsrc);
     
     gg_num l;
-    if (pref != NULL) l = gg_mem_get_len(gg_mem_get_id(pref)); else l = 0;
+    if (pref != NULL) l = gg_mem_get_len(pref); else l = 0;
     *dst = (char*)gg_malloc (l+ilen*2+1);
-    gg_num did = gg_mem_get_id (*dst);
     gg_num i;
     if (pref != NULL) memcpy (*dst, pref, l);
     gg_num j = l;
@@ -4023,22 +3679,9 @@ void gg_bin2hex(char *src, char **dst, gg_num ilen, char *pref)
         j += 2;
     }
     (*dst)[j] = 0;
-    gg_mem_set_len (did, j+1);
+    gg_mem_set_len (*dst, j+1);
 }
 
-//
-// Calculate base b to the power of p, both integer, return b^p
-//
-gg_num gg_topower(gg_num b,gg_num p)
-{
-    GG_TRACE("");
-    gg_num i; 
-    gg_num res = 1;
-
-    for (i = 0; i < p; i++) res *= b;
-
-    return res;
-}
 
 //
 // Return web environment variable from header h.
@@ -4046,67 +3689,19 @@ gg_num gg_topower(gg_num b,gg_num p)
 //
 char *gg_getheader(char *h)
 {
-    GG_TRACE("");
     gg_num hlen = strlen (h);
-    char *hd = gg_malloc (hlen + 6); // account for length of HTTP_ plus 1 byte
+    char *hd = gg_malloc0 (hlen + 6); // account for length of HTTP_ plus 1 byte
     memcpy (hd, "HTTP_", 5); // HTTP_ at the beginning
     memcpy (hd + 5, h, hlen + 1); // copy the rest of h after HTTP_ including null byte
     gg_upper (hd + 5); // convert to upper case, skip HTTP_
     gg_num i;
     for (i = 5; i < hlen + 5; i ++) if (hd[i] == '-') hd[i]='_'; // replace - with _, skip HTTP_
     char *res = gg_getenv(hd);
-    gg_free_int (hd);
+    free (hd);
     return res;
 }
 
 
-//
-// Convert number al to string. A new string is allocated and returned.
-// base is the base of a number (2-36). 
-// *res_len is the length of the result. 
-// Also, if base is not between 2 and 36 (inclusive), NULL is returned and res_len is set to 0.
-// NOTE: For this (and others like it) function to be the fastest, it would have  to be in a header, i.e.
-// compiled with the source as static. If done so, the 100,000,000 executions of this functions take
-// only 2.5 secs, whereas as a library it takes nearly 7 seconds. This is just because gcc can optimize
-// the code using it as an inline. It has nothing to do with static/shared libraries, signals, before/after
-// events, dispatcher or anything else. This is the reason std:to_string (for instance) is so fast - it's a header function.
-// Of course, this makes code bigger, and in a large application made of many modules, it starts to
-// show. Thus, the performance taken at such face value may not be pertinent to real world applications.
-// This particular function is the new algorithm I wrote, that in my tests is faster than any other implementation
-// I tried. It also has the most (or equal) functionality.
-//
-char *gg_num2str (gg_num al, gg_num *res_len, int base)
-{
-    GG_TRACE("");
-    if (base < 2 || base > 36) { if (res_len != NULL) *res_len = 0; return NULL;}
-    gg_num len; // length of result
-    char *res; // result
-    gg_num a; // temp number
-    // for negative numbers start with length of 1, for "-"
-    // make temp number abs() of al
-    if (al < 0) { a=-al; len = 1; } else { a=al;len = 0;}
-    // mods is the array of moduos derived from temp number, in the reverse order
-    int mods[GG_NUMBER_LENGTH]; // largest 64 bit is 64 digits in binary base
-    int k;
-    // get the length of the rest of the number (as a string), calculate mods array
-    if (al == 0) len = 1; else { for (k = 0; a != 0; mods[k++] = (a%base), a/=base){} len += k; }
-    res = gg_malloc(len + 1); // if the result is to be allocated, do so
-    gg_num id = gg_mem_get_id (res);
-    res[len] = 0; // place null at the end of string that's about to be built
-    if (al == 0) { res[0] = '0'; if (res_len != NULL) *res_len = 1; gg_mem_set_len(id, 1+1); return res; } // for zero, make it '0' and return
-    gg_num wlen = len; // wlen is the length of actual digits, so for negatives, it's one less due to '-'
-    if (al < 0) { res[0] = '-'; al = -al; wlen--;} // place '-' for negatives
-    char *p = res + len - 1; // start filling in from the end; remember our mods are calculated
-                             // in reverse, so they fit in.
-    for (k = 0; k < wlen; k++) // go in reverse, and fill in string in a single pass
-    {
-        // fill in characters for bases 2-36 (10 digits + 26 chars)
-        *p-- = "0123456789abcdefghijklmnopqrstuvwxyz"[mods[k]];
-    }
-    if (res_len != NULL) *res_len = len;
-    gg_mem_set_len (id, len+1);
-    return res; // result out
-}
 
 
 //
@@ -4116,21 +3711,19 @@ char *gg_num2str (gg_num al, gg_num *res_len, int base)
 //
 void gg_copy_string (char *src, gg_num from, char **dst, gg_num len)
 {
-    GG_TRACE("");
-    if (from > len)  gg_report_error ("Cannot copy from byte [%ld] when length is [%ld]", from, len);
-    gg_num to_copy = gg_mem_get_len(gg_mem_get_id(src))+1-from; // length of source, including last trailing null
+    if (len < 0)  gg_report_error ("Number of bytes to copy is negative [%ld]", len);
+    gg_num src_len = gg_mem_get_len(src);
+    if (from < 0 || from > src_len-1) gg_report_error ("Cannot copy from byte [%ld] which is beyond string [%ld]", from , src_len-1);
+    gg_num to_copy = src_len+1-from; // length of source, including last trailing null
     if (to_copy > len) to_copy = len; // determine bytes to copy
     *dst = gg_malloc (len+1);
-    gg_num id = gg_mem_get_id (*dst);
-    gg_mem_set_len (id, len+1);
-    ((char*)memcpy (*dst, src+from, len-from))[len] = 0; // copy len bytes and set len+1 byte to zero
+    ((char*)memcpy (*dst, src+from, len))[len] = 0; // copy len bytes and set len+1 byte to zero
 }
 
 //
 // Sleep milli seconds.
 //
 void gg_sleepabit(gg_num milli) {
-    GG_TRACE("");
     struct timespec slp;
     slp.tv_sec = milli / 1000;
     slp.tv_nsec = (milli % 1000) * 1000000;
@@ -4139,7 +3732,6 @@ void gg_sleepabit(gg_num milli) {
 
 bool gg_is_service()
 {
-    GG_TRACE("");
 #ifdef GG_COMMAND
     return false;
 #else
@@ -4157,12 +3749,9 @@ bool gg_is_service()
 //
 void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bool begin)
 {
-    GG_TRACE("");
     if (len == 0) return;
-    gg_num t_id = gg_mem_get_id (tgt);
-    gg_num t_len = gg_mem_get_len (t_id);
-    gg_num c_id = gg_mem_get_id (copy);
-    gg_num c_len = gg_mem_get_len (c_id);
+    gg_num t_len = gg_mem_get_len (tgt);
+    gg_num c_len = gg_mem_get_len (copy);
     if (len < 0) len = c_len;
     else if (len > c_len)  gg_report_error ("Copying [%ld] bytes is more than length [%ld] of copy string", len, c_len);
     if (swith < 0) 
@@ -4179,28 +3768,59 @@ void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bool begi
 
 
 //
+// Add 'add' to 'to' string, starting with beg in add of length len, and return new 'to', which can be realloc'd
+// More memory is allocated than needed to avoid fragmentation, and after gg_add_string_part(s) are
+// done (b/c this is meant for use in a+b+c... string expressions), final gg_realloc needs to be done.
+//
+void *gg_add_string_part (void *to, void *add, gg_num beg, gg_num len)
+{
+    gg_num l_to = gg_mem_get_len (to);
+    gg_num l_add = gg_mem_get_len (add);
+
+    // check beginning
+    if (beg < 0 || beg > l_add - 1) gg_report_error ("Substring beginning [%ld] is beyond the string [%ld]", beg, l_add-1);
+    // adjust len if -1 (through the end)
+    if (len == -1) len = l_add-beg;
+    // check length
+    if (len < 0 || beg+len-1 > l_add - 1) gg_report_error ("Substring beginning [%ld] and length [%ld] are beyond the string [%ld]", beg, len, l_add-1);
+
+    gg_num l_res = l_to+len+1;
+    if (l_res < 256) l_res = 256;
+    else l_res += 256;
+
+    to = gg_realloc (gg_mem_get_id (to), l_res); // resize memory to just what's needed
+
+    memcpy ((char*)to + l_to, (char*)add+beg, len);
+    ((char*)to)[l_to+len] = 0;
+    gg_mem_set_len (to, l_to+len+1);  // MUST use gg_mem_get_id() again
+                                                          // because it changed with gg_realloc!
+    return to;
+}
+
+//
 // Add 'add' to 'to' string and return new 'to', which can be realloc'd
 // More memory is allocated than needed to avoid fragmentation, and after gg_add_string(s) are
 // done (b/c this is meant for use in a+b+c... string expressions), final gg_realloc needs to be done.
+// 'to' can NOT be any variable that's used in Golf, *only* a newly created result variable can be this.
 //
 void *gg_add_string (void *to, void *add)
 {
-    GG_TRACE("");
-    gg_num to_id = gg_mem_get_id (to);
-    gg_num add_id = gg_mem_get_id(add);
-    gg_num l_to = gg_mem_get_len (to_id);
-    gg_num l_add = gg_mem_get_len (add_id);
+    gg_num l_to = gg_mem_get_len (to);
+    gg_num l_add = gg_mem_get_len (add);
 
     gg_num l_res = l_to+l_add+1;
     if (l_res < 256) l_res = 256;
     else l_res += 256;
 
-    to = gg_realloc (to_id, l_res); // resize memory to just what's needed
+    to = gg_realloc (gg_mem_get_id (to), l_res); // resize memory to just what's needed
 
     memcpy ((char*)to + l_to, (char*)add, l_add);
     ((char*)to)[l_to+l_add] = 0;
-    gg_mem_set_len (gg_mem_get_id(to), l_to+l_add+1);  // MUST use gg_mem_get_id() again
+    gg_mem_set_len (to, l_to+l_add+1);  // MUST use gg_mem_get_id() again
                                                           // because it changed with gg_realloc!
     return to;
 }
+
+
+
 

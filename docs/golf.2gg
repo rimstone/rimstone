@@ -2,46 +2,70 @@
 .SH NAME
 index \- Golf documentation ()
 .SH DESCRIPTION
-Golf is a programming language and  application server for building web services and back-end solutions on Linux. Golf is easy to develop with, memory-safe and high-performance. Read \fBAbout Golf\fP. Visit \fBDocumentation\fP. Try \fBHello World\fP. Visit \fBGolf Blog\fP for useful articles and changelog. Licensed under \fBApache 2\fP Free Open Source License. Source code is at \fBhttps://github.com/golf-lang/golf\fP (with mirrors on \fBGitlab\fP, \fBSourceForge\fP, \fBAUR\fP and \fBDebian Salsa\fP). Installation packages and source installs below are for both x86_64 and aarch64.
+Golf is a programming language and  application server for building web services and back-end solutions on Linux.
 
-.LP
-.B INSTALL GOLF PACKAGE (X86_64 AND AARCH64)
-.LP
+Golf is easy to develop with, memory-safe and high-performance, generatng C code for \fBspeed and efficiency\fP.
 
-\fBUbuntu\fP
-\fBDebian\fP
-\fBFedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia\fP
-\fBOpenSUSE\fP
-\fBArch, Manjaro\fP
-\fBRaspbian\fP
+\fBInstall Golf now\fP (no sudo required, install in a local user folder).
 
-.LP
-.B INSTALL GOLF FROM SOURCE CODE
-.LP
+Read \fBAbout Golf\fP. 
 
-\fBDebian, Ubuntu, Raspbian\fP
-\fBFedora, Redhat, Rocky, Alma, Centos, Amazon, Mageia\fP
-\fBOpenSUSE\fP
-\fBArch, Manjaro\fP
+Visit \fBDocumentation\fP. 
+
+Try \fBHello World\fP. 
+
+Visit \fBGolf Blog\fP for useful articles and changelog. 
+
+Licensed under \fBApache 2\fP Free Open Source License. 
+
+Source code is at \fBhttps://github.com/golf-lang/golf\fP (with mirrors on \fBGitlab\fP, \fBSourceForge\fP, \fBAUR\fP and \fBDebian Salsa\fP). 
+
 
 .LP
 .B CURRENT VERSION
 .LP
 
-Current version is 601.4.58. This release passed 2563 automated functional tests.
+The current release (3.0.1) passed 2902 automated functional tests.
 
 .LP
 .B EXAMPLE
 .LP
 
 Example of Golf code (from \fBSaaS example\fP):
-(Image home-example.png not available in man page, see web page documentation)
+
+.RS 4
+.EX
+
+begin-handler /update-order
+    out-header use content-type "application/json"
+    get-param order_id, item_id, quantity
+    set-number arows
+    // If quantity update is 0, issue SQL to delete an item from order, otherwise update 
+    if-true quantity equal "0"
+        run-query @db ="delete from orderItems where orderID='%s' and itemID='%s'" \\
+            : order_id, item_id no-loop affected-rows arows
+    else-if
+        run-query @db ="update orderItems set quantity='%s' where orderID='%s' and itemID='%s'" \\
+            : quantity, order_id, item_id no-loop affected-rows arows
+    end-if
+    @"<<print-out arows>>"
+end-handler
+
+.EE
+.RE
+
 
 .LP
 .B ARTICLES
 .LP
 
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-07-11 \fBMajor new Golf version coming out soon\fP
+.RE
+
 
 .RS 4
 \[bu]    

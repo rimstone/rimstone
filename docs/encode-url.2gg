@@ -35,10 +35,3 @@ encode-url str to result
 .RE
 
 The "result" is "%20%20x%3Dy%3Fz%26%20%20".
-.SH SEE ALSO
- URL encoding
-
-\fBdecode-url\fP  
-\fBencode-url\fP   
-See all 
-\fBdocumentation\fP

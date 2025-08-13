@@ -32,10 +32,3 @@ decode-url str
 .EE
 .RE
 
-.SH SEE ALSO
- URL encoding
-
-\fBdecode-url\fP  
-\fBencode-url\fP   
-See all 
-\fBdocumentation\fP

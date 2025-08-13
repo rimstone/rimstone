@@ -57,13 +57,14 @@ call-remote will wait for all <service> requests to finish. For that reason, it 
 call-remote is faster than \fBcall-web\fP because it does not use HTTP protocol; rather it only uses small and binary protocol, which is extremenly fast, especially when using Unix sockets on the same machine (see \fBnew-remote\fP). Note that the binary protocol does not have any inherent security built-in; that is part of the reason why it is fast. As such, it is very well suited for remote service calls on the same machine or between networked machines on a secure network. 
 
 .SH EXAMPLES
-This example will connect to local Unix socket file "/var/lib/gg/app_name/sock/sock" (a Golf application named "app_name"), and make a request named "server" (i.e. it will be processed by source code file "server.golf") with URL path of "/op=add/key=2" (meaning with input parameters "op=add" and "key=2"). Then, service reply is read and displayed.
+This example will connect to local Unix socket file "$HOME/.golf/app_name/sock/sock" (a Golf application named "app_name"), and make a request named "server" (i.e. it will be processed by source code file "server.golf") with URL path of "/op=add/key=2" (meaning with input parameters "op=add" and "key=2"). Then, service reply is read and displayed.
 
 .RS 4
 .EX
 
+get-app user-directory to user_dir
 // Create single call
-new-remote srv location "/var/lib/gg/app_name/sock/sock" \\
+new-remote srv location user_dir+"/app_name/sock/sock" \\
     method "GET" app-path "/app_name" request-path "/server" \\
     url-params "/op=add/key=2" 
 // Call single service call
@@ -91,12 +92,3 @@ new-remote srv location "192.168.0.28:2400" \\
 In this case, you are connecting to another service (running on IP "192.168.0.28") on port 2400. See \fBmgrg\fP on how to start a service that listens on a TCP port. You would likely use TCP connectivity only if a service you're connecting to is on a different computer.
 
 See also \fBnew-remote\fP.
-.SH SEE ALSO
- Distributed computing
-
-\fBcall-remote\fP  
-\fBnew-remote\fP  
-\fBread-remote\fP  
-\fBrun-remote\fP   
-See all 
-\fBdocumentation\fP

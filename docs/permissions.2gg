@@ -9,11 +9,3 @@ Files in Golf \fBdirectories\fP are generally created with 700 privileges, meani
 Files created by Golf (including \fBopen-file\fP and \fBwrite-file\fP) are created with 600 permissions, meaning only the user who owns the application can access them and other users (even within the same group) cannot.
 
 You can use \fBstat-file\fP to obtain permission mode for a file or directory, and \fBchange-mode\fP to set it. Note that, most of the time, you won't need to do this at all. If you do, however, you should change permission modes carefully and keep in mind the implications for both your application's security and functionality.
-.SH SEE ALSO
- General
-
-\fBabout-golf\fP  
-\fBdirectories\fP  
-\fBpermissions\fP   
-See all 
-\fBdocumentation\fP

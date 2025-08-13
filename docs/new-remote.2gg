@@ -40,7 +40,7 @@ If "local" is not used, then you must use "location" clause. <location> (in "loc
 
 .RS 4
 \[bu]    
-for a Unix socket, a fully qualified name to a Unix socket file used to communicate with the service (for a Golf server, it's "/var/lib/gg/<app name>/sock/sock", where <app name> is the application name), or
+for a Unix socket, a fully qualified name to a Unix socket file used to communicate with the service (for a Golf server, it's "$HOME/.golf/apps/<app name>/sock/sock", where <app name> is the application name), or
 
 .RE
 
@@ -228,12 +228,3 @@ Added [key3]
 .EE
 .RE
 
-.SH SEE ALSO
- Distributed computing
-
-\fBcall-remote\fP  
-\fBnew-remote\fP  
-\fBread-remote\fP  
-\fBrun-remote\fP   
-See all 
-\fBdocumentation\fP

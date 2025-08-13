@@ -14,6 +14,7 @@
 static int gg_lite_stmt_rows (char ***row, unsigned long **lens);
 static int gg_lite_add_input(gg_num i, char *arg);
 static int gg_lite_prep_stmt(char is_prep, void **prep, char *stmt, gg_num num_of_args);
+static int gg_lite_get_data ();
 
 static char *cerror = NULL;
 static gg_num qnumrows = 0;
@@ -22,39 +23,33 @@ static gg_num qrownow = 0;
 static char **qrows = NULL;
 static unsigned long *qlens = NULL;
 static gg_num qcolid = 0;
-static int gg_lite_get_data ();
 
 gg_num gg_lite_checkc()
 {
-    GG_TRACE("");
     return 1; // sqlite is a library, thus always "up" as long as the process is up
 }
 
 char *gg_lite_errm(char *errm, gg_num errmsize, char *s, char *sname, gg_num lnum, char *er, char is_prep)
 {
-    GG_TRACE("");
     GG_UNUSED(is_prep);
-    snprintf(errm,errmsize,"Error during query [%s], additional [%s] file [%s], line [%ld] : [%s]%s", s, cerror==NULL?"":cerror, sname, lnum, er ,atol(er) == ER_PARSE_ERROR ?  "Problem with parsing SQL statement" : sqlite3_errmsg(GG_CURR_DB.dbc->sqlite.con));
+    snprintf(errm,errmsize,"Error during query [%s], additional [%s] file [%s], line [%ld] : [%s]%s", s, cerror==NULL?"":cerror, sname, lnum, er ,sqlite3_errmsg(GG_CURR_DB.dbc->sqlite.con));
     return errm;
 }
 
 
 char *gg_lite_error(char *s, char is_prep)
 {
-    GG_TRACE("");
     GG_UNUSED(s); // used only for tracing
     GG_UNUSED(is_prep);
     static char errv[30];
     int errc;
     snprintf (errv, sizeof(errv), "%d", errc = sqlite3_errcode(GG_CURR_DB.dbc->sqlite.con));
-    GG_TRACE ("Error in %s: %s error code %s", s, sqlite3_errstr(errc), errv);
     return errv;
 }
 
 
 int gg_lite_rows(char ***row, unsigned long **lens)
 {
-    GG_TRACE("");
     GG_CURR_DB.need_copy = 0;
     if (gg_lite_stmt_rows (row, lens)) return 1;
     return 0;
@@ -65,9 +60,8 @@ int gg_lite_rows(char ***row, unsigned long **lens)
 // Get a row when tuples returned. *row[] is an array of strings which represent fields (columns) and *lens is the
 // array of lengths of those fields.
 //
-int gg_lite_stmt_rows (char ***row, unsigned long **lens)
+static int gg_lite_stmt_rows (char ***row, unsigned long **lens)
 {
-    GG_TRACE("");
     if (qrows == NULL || qlens == NULL) 
     {
         cerror = "Cannot get row field and length data";
@@ -81,9 +75,8 @@ int gg_lite_stmt_rows (char ***row, unsigned long **lens)
     return 0;
 }
 
-int gg_lite_get_data ()
+static int gg_lite_get_data ()
 {
-    GG_TRACE("");
     char *sname = "";
     gg_num lnum = 0;
     // get which file and line number is this going on at
@@ -176,40 +169,34 @@ int gg_lite_get_data ()
 
 gg_num gg_lite_nrows()
 {
-    GG_TRACE("");
     return qnumrows;
 }
 
 void gg_lite_free(char is_prep)
 {
-    GG_TRACE("");
     if (is_prep == 0) gg_lite_close_stmt (GG_CURR_DB.dbc->sqlite.stmt);
     return;
 }
 
 char *gg_lite_fieldname()
 {
-    GG_TRACE("");
     return (char*)sqlite3_column_name(GG_CURR_DB.dbc->sqlite.stmt, qcolid++);
 
 }
 
 gg_num gg_lite_nfield()
 {
-    GG_TRACE("");
     return qnumfields;
 }
 
 int gg_lite_use(char is_prep)
 {
-    GG_TRACE("");
     GG_UNUSED(is_prep);
     return 0;
 }
 
 int gg_lite_store(char is_prep)
 {
-    GG_TRACE("");
     GG_UNUSED(is_prep);
     return 0;
 }
@@ -217,14 +204,12 @@ int gg_lite_store(char is_prep)
 
 void gg_lite_close ()
 {
-    GG_TRACE("");
     sqlite3_close(GG_CURR_DB.dbc->sqlite.con);
 }
 
 
 gg_dbc *gg_lite_connect (gg_num abort_if_bad)
 {
-    GG_TRACE("");
     // reset all prepared statements
     gg_db_prep (NULL);
 
@@ -234,17 +219,15 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
     // This must be malloc and NOT gg_malloc since we want to reuse connection across connections.
     // Otherwise gg_malloc would be automatically freed when the request is done, and the next 
     // request would use an invalid pointer. Also must use free to free it, not gg_free.
-    if ((GG_CURR_DB.dbc = malloc (sizeof (gg_dbc))) == NULL) GG_FATAL ("Cannot allocate memory for database connection [%m]");
+    if ((GG_CURR_DB.dbc = gg_malloc0 (sizeof (gg_dbc))) == NULL) GG_FATAL ("Cannot allocate memory for database connection [%m]");
 
     char db_config_name[150];
     snprintf (db_config_name, sizeof(db_config_name), "%s/%s", gg_get_config()->app.dbconf_dir, GG_CURR_DB.db_name);
-    GG_TRACE ("Using db config file [%s]", db_config_name);
     char *cinfo;
     if (gg_read_file (db_config_name, &cinfo, 0, 0, NULL) < 0)
     {
         char em[300];
         snprintf (em, sizeof(em), "Cannot read database configuration file [%s]", db_config_name);
-        GG_TRACE ("%s", em);
         if (abort_if_bad == 1) gg_report_error ("%s", em);
         gg_end_connection (0); // without it, we would think connection exists
         return NULL; // just for compiler, never gets here
@@ -256,7 +239,6 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
     {
         char em[300];
         snprintf (em, sizeof(em), "Database file [%s] cannot have new line", ts);
-        GG_TRACE ("%s", em);
         if (abort_if_bad == 1) gg_report_error ("%s", em);
         gg_free_int(cinfo);
         return NULL;
@@ -266,7 +248,6 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
     {
         char em[300];
         snprintf (em, sizeof(em), "Cannot cannot open database [%s]", ts);
-        GG_TRACE ("%s", em);
         if (abort_if_bad == 1) gg_report_error ("%s", em);
         gg_end_connection (0); // without it, we would think connection exists
         gg_free_int(cinfo);
@@ -279,7 +260,6 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
 
 gg_num gg_lite_exec(char *s, char is_prep, void **prep, gg_num paramcount, char **params)
 {   
-    GG_TRACE("");
     if (gg_lite_prep_stmt (is_prep, prep, s, paramcount)) return 1;
     gg_num i;
     for (i = 0; i < paramcount; i++)
@@ -302,7 +282,6 @@ gg_num gg_lite_exec(char *s, char is_prep, void **prep, gg_num paramcount, char 
 //
 void gg_lite_close_stmt (void *st)
 {
-    GG_TRACE("");
     if (st == NULL) return; // statement has not been prepared yet, so cannot deallocate
     if (GG_CURR_DB.dbc != NULL) 
     {
@@ -321,9 +300,8 @@ void gg_lite_close_stmt (void *st)
 // is_prep is 0 if not prepare, 1 if it is. We need this because prep is !=NULL even when prepared
 // is not used, resulting in the same SQL executed over and over
 //
-int gg_lite_prep_stmt(char is_prep, void **prep, char *stmt, gg_num num_of_args)
+static int gg_lite_prep_stmt(char is_prep, void **prep, char *stmt, gg_num num_of_args)
 {
-    GG_TRACE("");
     char *sname = "";
     gg_num lnum = 0;
     gg_location (&sname, &lnum, 0);
@@ -334,12 +312,10 @@ int gg_lite_prep_stmt(char is_prep, void **prep, char *stmt, gg_num num_of_args)
     if (is_prep ==1 && prep != NULL && *prep != NULL) 
     {
         gg_stmt_cached = 1;
-        GG_TRACE ("reusing prepared statement");
         GG_CURR_DB.dbc->sqlite.stmt = (sqlite3_stmt*)*prep;
     }
     else
     {
-        GG_TRACE ("creating prepared statement");
         // if prep is NULL, create prepared statement
         char *origs = stmt; // original stmt
         stmt = gg_db_prep_text(stmt); // make ? instead of '%s'
@@ -372,9 +348,8 @@ int gg_lite_prep_stmt(char is_prep, void **prep, char *stmt, gg_num num_of_args)
 // (which must be 0,1,2.. for each invocation), arg is the argument.
 // return 0 on okay, 1 on error
 //
-int gg_lite_add_input(gg_num i, char *arg)
+static int gg_lite_add_input(gg_num i, char *arg)
 {
-    GG_TRACE("");
     if (sqlite3_bind_text(GG_CURR_DB.dbc->sqlite.stmt,i+1,arg,-1,SQLITE_STATIC) != SQLITE_OK) 
     {
         cerror = "Cannot bind input parameter";
@@ -386,7 +361,6 @@ int gg_lite_add_input(gg_num i, char *arg)
 
 gg_num gg_lite_affected(char is_prep) 
 {
-    GG_TRACE("");
     GG_UNUSED(is_prep);
     return (gg_num) sqlite3_changes(GG_CURR_DB.dbc->sqlite.con);
 }
@@ -400,7 +374,6 @@ gg_num gg_lite_affected(char is_prep)
 //
 int gg_lite_escape(char *from, char *to, gg_num *len)
 {
-    GG_TRACE("");
     memcpy (to, from, *len + 1);
     if (gg_replace_string (to, 2* *len+1, "\\", "\\\\", 1, NULL, 1) == -1) return 1;
     if ((*len = gg_replace_string (to, 2* *len+1, "'", "''", 1, NULL, 1)) == -1) return 1;

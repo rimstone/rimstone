@@ -33,10 +33,3 @@ encode-web str to result
 .RE
 
 The "result" is "   x&lt;y&gt;z&amp;&quot;&apos;  ".
-.SH SEE ALSO
- Web encoding
-
-\fBdecode-web\fP  
-\fBencode-web\fP   
-See all 
-\fBdocumentation\fP

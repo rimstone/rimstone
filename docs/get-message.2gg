@@ -36,7 +36,7 @@ new-message new from str
 // Read data
 read-message new key k value v
 // Display  data
-print-format "[%s] [%s]\en", k,v
+print-format "[%s] [%s]\\n", k,v
 
 .EE
 .RE
@@ -51,13 +51,3 @@ The result is:
 .EE
 .RE
 
-.SH SEE ALSO
- Messages
-
-\fBget-message\fP  
-\fBnew-message\fP  
-\fBread-message\fP  
-\fBSEMI\fP  
-\fBwrite-message\fP   
-See all 
-\fBdocumentation\fP

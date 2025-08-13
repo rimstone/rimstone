@@ -18,10 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "601.4.58"
-#ifndef GG_ROOT
-#   define GG_ROOT ""
-#endif
+#define GG_VERSION "3.0.1"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -38,10 +35,6 @@
 #   if defined(GG_SQLITE_INCLUDE)
 #       define GG_INC_SQLITE
 #   endif
-#else
-#   define GG_INC_MARIADB
-#   define GG_INC_POSTGRES
-#   define GG_INC_SQLITE
 #endif
 #ifdef GG_INC_SQLITE
 #   include <sqlite3.h>
@@ -87,15 +80,13 @@
 #include <sys/file.h>
 // Data conversion
 #include <endian.h>
-
+#include "ggcommon.h"
 
 // PCRE2 calls, include pcre2 and use only one (pcre2 or glibc), depending on pcre2 version (use pcre2 if its version >=10.37, see pcre2.c)
 #if GG_APPMAKE==1 
 #   if defined(GG_PCRE2_INCLUDE)
 #       define GG_INC_PCRE2
 #   endif
-#else
-#   define GG_INC_PCRE2
 #endif
 #ifdef GG_INC_PCRE2
 #   ifdef GG_C_GLIBC_REGEX
@@ -103,6 +94,8 @@
 #   else
 #       include "pcre2posix.h"
 #   endif
+#else
+#       include "regex.h"
 #endif
 
 // XML parsing 
@@ -110,14 +103,10 @@
 #   if defined(GG_XML_INCLUDE)
 #       define GG_INC_XML
 #   endif
-#else
-#   define GG_INC_XML
 #endif
 #ifdef GG_INC_XML
 #   include <libxml/parser.h>
 #   include <libxml/SAX2.h>
-#   include <string.h>
-#   include <ctype.h>
 #   include <libxml/parserInternals.h>
 #endif
 
@@ -126,8 +115,6 @@
 #   if defined(GG_CRYPTO_INCLUDE)
 #       define GG_INC_CRYPTO
 #   endif
-#else
-#   define GG_INC_CRYPTO
 #endif
 #ifdef GG_INC_CRYPTO
 #   include "openssl/sha.h"
@@ -156,26 +143,11 @@
 #   if defined(GG_CURL_INCLUDE)
 #       define GG_INC_CURL
 #   endif
-#else
-#   define GG_INC_CURL
 #endif
 #ifdef GG_INC_CURL
 #   include <curl/curl.h>
 #endif
 
-
-// XML parser (libxml2)
-#if GG_APPMAKE==1 
-#   if defined(GG_XML_INCLUDE)
-#       define GG_INC_XML
-#   endif
-#else
-#   define GG_INC_XML
-#endif
-#ifdef GG_INC_XML
-#   include <libxml/parser.h>
-#   include <libxml/tree.h>
-#endif
 
 // fast version of getting a config pointer
 #define gg_get_config() (gg_pc)
@@ -187,38 +159,38 @@
 
 
 // Types
-typedef int64_t gg_num;
 typedef int32_t gg_num32; // internal only
 typedef char* gg_str;
 // Request handler type
-typedef void (*gg_request_handler)(); // request handler in golf dispatcher
+typedef gg_num (*gg_request_handler)(); // request handler in golf dispatcher
 
 //
 // Generic macros
 //
 #define GG_UNUSED(x) (void)(x)
 #define  GG_FATAL(...) {syslog(LOG_ERR, __VA_ARGS__); _Exit(-1);}
-//trace is available only if Golf compiled with DI=1
-#ifdef DEBUG
-#define  GG_TRACE(...) (gg_get_config()->debug.trace_level !=0 ? _gg_trace(1, __FILE__, __LINE__, __FUNCTION__,  __VA_ARGS__) : 0)
-#else
-#define  GG_TRACE(...) (void)0
-#endif
 // Note that in runtime golfrt.c, the exit(0) at the end does NOT happen as we perform a longjmp to go to the request.
 // For exiting the process, use GG_FATAL
-#define  gg_report_error(...) {_gg_report_error(__VA_ARGS__);exit(1);}
+#define  gg_report_error(...) _gg_report_error(__VA_ARGS__),exit(1)
 void _gg_report_error (char *format, ...) __attribute__ ((format (printf, 1, 2)));
+gg_num gg_gen_write (bool is_error, char *s, gg_num nbyte);
 
 
 //
 //
 // Golf memory
+// process-request mem
+#define GG_MEM_PROCESS 4
+// memory that's made from string literal (like process, but can never be released)
+#define GG_MEM_CONST 8
 //
 //
-// Header prior to alloced memory. id is index into vm[]
+// Header prior to alloced memory. id is index into vm[]. This is the string in Golf, and the actual string follows right after,
+// allowing for good prefetching for a string.
 //
 typedef struct s_gg_head {
-    gg_num id;
+    gg_num id; 
+    gg_num len;
 } gg_head;
 //  
 //
@@ -233,69 +205,85 @@ typedef struct s_gg_head {
 // GG_MEM_FILE bit set if this is a file that eventually needs to close (unless closed already)
 // GG_MEM_PROCESS bit set if this is process memory, i.e. not to be released at the end of request
 // GG_MEM_CONST bit set if this is memory that can't be freed
-// ref is the number of references to process memory (max of 2^23-1), which is the number of "duplications" (by reference) of the same memory.
-typedef struct s_vml {
+// ref is the number of references to process memory (max of 2^8-1 or 255), which is the number of "duplications" (by reference) of the same memory.
+// The reason for a relatively small #of reference is because string constants do not have vm[] entry, which means there can be unlimited
+// number of reference to a constant string; those references probably account for 99% of duplicate references. Typically otherwise it's just
+// the same memory in different structures; if this is insufficient, then your program likely needs another look. Also, references beyond 1 only
+// apply to process-scoped memory; it's unlikely such memory would be duplicated in many structures, or within the same structure (if so, use of
+// a constant is advised).
+typedef struct s_vml { // total size 8 bytes
     void *ptr;
-    gg_num next:48;  
-    gg_num status:8; 
-    gg_num len:48; 
-    gg_num ref:24;
+    gg_num next:46;  
+    gg_num status:9;  
+    gg_num ref:9;
 } vml;
-#define GG_MAX_REF ((1<<23)-1)
-#define GG_MAX_MEM (((gg_num)1<<47)-1)
-// memory alignment of 8 bytes for alloc'd data storage
-#define GG_ALIGN (sizeof(uint64_t))
-#define gg_free(x) _gg_free(x,0)
+#define GG_MAX_REF ((gg_num)(1<<8)-1)
+#define GG_MAX_MEM (((gg_num)1<<45)-1)
+// memory alignment of 16 bytes for alloc'd data storage
+#define GG_ALIGN (sizeof(gg_head))
+#define gg_free(x) _gg_free(x)
 // gg_free_int() is internal version of gg_free() which DOES always delete memory (gg_free() in general doesn't unless at the end of request)
-#define gg_free_int(x) _gg_free(x,3)
 //
 extern vml *vm;
 extern gg_num vm_curr;
-extern char GG_EMPTY_STRING[];
+extern char* GG_EMPTY_STRING;
 //
 // Get length of memory block. GG_ALIGN is 2*sizeof(gg_num)
-// r == -1, this is just empty string
 // there's always trailing 0 set by all golf statements, so .len is useful length + 1
-#define gg_mem_get_len(r) (gg_num)(((r) == -1) ? 0:vm[(r)].len-1)
+#define gg_mem_get_len(s) (gg_num)(((gg_head*)((unsigned char *)(s)-GG_ALIGN))->len-1)
 //
-// Get index of pointer in memory block, -1 if empty or NULL
+// Get index of pointer in memory block, or -1 if string constant (string constants are NOT in variable table!)
 // at debug time, check each memory accessed is actually correct!
 //
 #ifndef DEBUG
-#define gg_mem_get_id(ptr) (gg_num)((void*)(ptr) == GG_EMPTY_STRING ? -1:(((gg_head*)((unsigned char*)(ptr)-GG_ALIGN))->id))
+#define gg_mem_get_id(ptr) ((gg_num)((gg_head*)((unsigned char*)(ptr)-GG_ALIGN))->id)
 #else
 static inline gg_num gg_mem_get_id (void *ptr)
 {
-    if (ptr == GG_EMPTY_STRING) return -1; // this is just empty string
     if (ptr == NULL) gg_report_error ("Invalid memory detected");
     gg_head *h = (gg_head*)((unsigned char*)ptr-GG_ALIGN);
     gg_num r = h->id;
+    if (r == -1) return -1;
     // at debug time, check each memory accessed is actually correct!
     if ((r < 0 || r >= vm_curr) || vm[r].ptr != ((unsigned char*)ptr-GG_ALIGN)) gg_report_error("Attempted to get length of invalid memory");
     return r;
 }
 #endif
+//
+// Native malloc with a check
+//
+static inline void *gg_malloc0(gg_num len)
+{
+    void *res = malloc (len);
+    if (res == NULL) gg_report_error ("Cannot allocate memory of size [%ld]", len);
+    return res;
+}
+//
+// Set length of memory. ptr is the memory alloc'd by Golf.
+// Memory in Golf is almost always sized exactly as needed
+// len is useful data plus 1 for nullbyte, so for "ab", it's 3
+//
+static inline void gg_mem_set_len(void *ptr,gg_num length) {((gg_head*)((unsigned char*)ptr-GG_ALIGN))->len = length;}
 // Set memory length for C programmers
-#define gg_mem_set_length(str,len) gg_mem_set_len(gg_mem_get_id (str), len)
+#define gg_mem_set_length(str,len) gg_mem_set_len(str, len)
 
 
 
 // 
 // Defines
 //
-//Number to string conversion from define
+#define GG_DISTRESS_STATUS 107 // Golf's distress code: report-error (if exit-code is still 0), or actuall distress (say memory access caught)
+//Number to string conversion from defineds
 #define GG_STRINGIZE_(x) #x
 #define GG_STRINGIZE(x) GG_STRINGIZE_(x)
+//Concatenate defined strings
+#define GG_CONCAT_(a, b) a ## b
+#define GG_CONCAT(a, b) GG_CONCAT_(a, b)
 //
 #define GG_ERR gg_errno=errno // save errno at the point of error for further examination later, if desired
 #define GG_ERR0 gg_errno=0 // no error, we caught it
 #define GG_INIT_STRING(x) x = GG_EMPTY_STRING // initialize existing string as empty for use with gg_malloc etc
-#define GG_TRACE_DIR "trace" // the name of trace directory is always 'trace'
-// since we're only supporting Centos 7+, this is what comes with it, or if it's not there, user needs to install
-// When we go to Centos 8, the code for Centos 7 remains in its own branch, and we set something else here for 8
-// (that is, if the default changes)
 // for gg_<memory handling> inline or not?  Currently not, otherwise would be 'inline' instead of empty
-#define GG_TRACE_LEN 12000 // max length of line in trace file and max length of line in verbose output of 
 #define GG_MAX_REQ_NAME_LEN 512 // max length of request name
 #define GG_MAX_NESTED_WRITE_STRING 5 // max # of nests of write-string
 // max # of custom header a programmer can add to custom reply when replying with a file
@@ -307,10 +295,13 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_MAX_PATH_LEN 1024 /* max path length */
 #define GG_MAX_SOCK_LEN 256 /* max file name for a local golf socket path */
 #define GG_ERROR_EXIT_CODE 99 // exit code of command line program when it hits any error
+#define GG_MAX_FILE_NAME 300 // max length of file name
 // constants for encoding
 #define GG_URL 1
 #define GG_WEB 2
 #define GG_NOENC 3
+// Max length of Linux user name allowed
+#define GG_MAX_OS_UNAME_LEN 64
 // Max cookies per request and max length of a single cookie
 #define GG_MAX_COOKIES 256
 #define GG_MAX_COOKIE_SIZE 2048
@@ -337,6 +328,8 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_MODE_SAFE 0
 #define GG_MODE_EXTENDED 1
 #define GG_MODE_INTERNAL 2
+//
+#define GG_MIN_STACK_DEPTH 100
 //
 //
 #define GG_SOURCE_LINE __LINE__
@@ -443,14 +436,18 @@ static inline gg_num gg_mem_get_id (void *ptr)
 #define GG_KEY_T_ENCRYPT "encrypt-decrypt"
 #define GG_KEY_T_FILE "file"
 #define GG_KEY_T_SERVICE "service"
-
 //
 //
 // End of user-interfacing constants
 //
 //
 
-
+//
+// Constants used to denote deleted array element
+//
+#define GG_STRING_NONE NULL
+#define GG_NUMBER_NONE LLONG_MIN
+#define GG_BOOL_NONE 2
 //types of random data generation
 #define GG_RANDOM_NUM 0
 #define GG_RANDOM_STR 1
@@ -534,31 +531,23 @@ typedef struct gg_arraybool_s {
     char *logic; // for booleans
     gg_num max_elem; // how many total elements there can be - we don't allocate this before hand!
     gg_num alloc_elem; // how many elements are actually allocated
-    bool process; // true if this is process-scoped
+    unsigned char process; // holds bits for process/const
 } gg_arraybool;
 typedef struct gg_arraynumber_s {
     gg_num *num; // for numbers
     gg_num max_elem; // how many total elements there can be - we don't allocate this before hand!
     gg_num alloc_elem; // how many elements are actually allocated
-    bool process; // true if this is process-scoped
+    unsigned char process; // holds bits for process/const
 } gg_arraynumber;
 typedef struct gg_arraystring_s {
     char **str;  // for strings
     gg_num max_elem; // how many total elements there can be - we don't allocate this before hand!
     gg_num alloc_elem; // how many elements are actually allocated
-    bool process; // true if this is process-scoped
+    unsigned char process; // holds bits for process/const
 } gg_arraystring;
 
 
 
-// 
-// Debug information obtained from trace/debug file
-//
-typedef struct s_gg_debug_app
-{
-    gg_num trace_level; // trace level, currently 0 (no trace) or 1 (trace)
-    gg_num trace_size;  // # of stack items in stack dump after the crash (obtained at crash from backtrace())
-} gg_debug_app;
 // 
 // Name/value pair for double-linked list API
 //
@@ -576,7 +565,7 @@ typedef struct gg_list_s
     gg_num num_of; // # of items
     gg_list_item *last; // end of list
     gg_list_item *curr; // where to apply the following action
-    bool process; // true if this is process-scoped
+    unsigned char process; // holds bits for process/const
 } gg_list;
 // 
 // Name/value pair for fifo list API
@@ -613,31 +602,49 @@ typedef struct gg_msg_s
 typedef struct gg_file_s
 {
     FILE **f; // pointer to file pointer
-    gg_num memind; // pointer to file pointer's location in Golf's memory mgmt system
+    union {
+        gg_num memind; // pointer to file pointer's location in Golf's memory mgmt system
+        gg_num id;     // OR it's a file ID for lock-file
+    } attr;
 } gg_file;
 // 
 // Configuration context data for application, read from config file. Does not change during a request.
 //
 typedef struct s_gg_app_data
 {
+    char *btrace; // backtrace file
     char *run_dir; // the current directory at the moment program starts
-    char *home_dir; // home directory
+    char *home_dir; // home app directory
+    char *user_dir; // user directory
     char *dbconf_dir; // database connections dir
-    char *trace_dir; // directory for tracing
     char *file_dir; // directory for uploads
     long max_upload_size; // maximum upload size for any file
 } gg_app_data;
 // 
-// Run-time information for tracing
 //
-typedef struct s_gg_conf_trace
+//
+// Hash structures (needed in req structure below)
+//
+// Hash table structure, this is an element of a linked list
+typedef struct gg_s_hash_table
 {
-    gg_num in_trace; // if 1, the caller that is attempting to use tracing function which originated in tracing code
-    FILE *f; // file used for tracing file, located in trace directory
-    char fname[300]; // name of trace file
-    char time[GG_TIME_LEN + 1]; // time of last tracing
-} gg_conf_trace;
-// 
+    char *key; // key for hashing
+    void *data; // data
+    struct gg_s_hash_table *next; // next element in the list
+} gg_hash_table;
+// Hash structure, top-level object
+typedef struct gg_s_hash
+{
+    gg_num num_buckets; // size of hash table
+    gg_hash_table **table; // actual table, array of lists, array of size 'size'
+    gg_num dnext; // the index in table[] from which to continue dumping key/value pairs
+    gg_hash_table *dcurr; // pointer to current dumping member of linked list within [dnext] bucket
+    gg_hash_table *dprev; // pointer to previous dumping member of linked list within [dnext] bucket
+    gg_num tot; // total how many elements in cache
+    gg_num hits; // total number of searches
+    gg_num reads; // total number of comparisons
+    unsigned char process; // holds bits for process/const
+} gg_hash;
 // 
 // Input arguments (argc,argv) from main for SERVICE program 
 //
@@ -657,11 +664,23 @@ typedef struct s_gg_ipar
         void *value; // URL values for GET/POST request, or any param set with set-param
                  // which can be of any type, not just string
         gg_num numval; // number value, if type is number, used for set-param from number so we can get-param from it (using *value won't work as C is iffy on this).
+        bool logic; // bool value
     } tval; // it's either value or numval, both are 8 bytes
+    bool set; // true if variable set, false otherwise
+    bool is_file; // true if this parameter is part of file upload. Used to not produce an error if file_xxx (other than _location) is not used.
     gg_num type; // type of variable
-    bool alloc; // is allocated? true if so. it means it's golfmem; say input from web isn't alloc'd
-    gg_num version; // current version of parameter, any parameter that doesn't match global _gg_run_version wasn't set
+    bool alloc; // is allocated? true if so. it means it's golfmem; say input from web isn't alloc'd; string only
 } gg_ipar;
+//
+//
+// Uploaded file 
+typedef struct gg_upload_t
+{
+    char *fname; // file name on client
+    char *loc; // location on golf installation
+    char *ext; // extension
+    gg_num size; // size
+} gg_upload;
 // 
 // Write string (write-string markup) information
 typedef struct gg_write_string_t
@@ -721,12 +740,12 @@ typedef struct gg_input_req_s
     gg_header *header; // if NULL, do nothing (no custom headers), if not-NULL use it to set custom headers
     char silent; // if 1, headers not output
     int ec; // exit code for command-line
-    int return_val; // return value for return-handler (see doc)
     char *body; // if POST/PUT/PATCH.. has just a body (no multipart), this is it
     gg_num body_len; // if POST/PUT/PATCH.. this is body length (for no multipart)
     gg_num method; // GG_GET/POST/PATCH/PUT/DELETE
     char *name; // request name, value of "req" param
-    bool sub; // true if current call (top or sub) is as sub-service at run-time
+    gg_num sub_depth; // how many handlers called on stack (used to limit) and determine if current call is top one
+    gg_hash *upload; // hash for uploaded files
 } gg_input_req;
 // 
 // Context of execution. Contains input request, flags
@@ -825,10 +844,8 @@ typedef struct s_gg_config
 {
     // these stay the same once set
     gg_app_data app; // does not change during a request
-    gg_debug_app debug; // does not change during a request
-
+    //
     // these change during a request
-    gg_conf_trace trace; // tracing info
     gg_context ctx; // context of execution, not config, but convenient to
                 // have it handy. That is why it's separate type. Changes at run-time
 } gg_config;
@@ -853,29 +870,6 @@ typedef struct s_gg_so_info
 } gg_so_info;
 
 
-//
-// Hash structures
-//
-// Hash table structure, this is an element of a linked list
-typedef struct gg_s_hash_table
-{
-    char *key; // key for hashing
-    void *data; // data
-    struct gg_s_hash_table *next; // next element in the list
-} gg_hash_table;
-// Hash structure, top-level object
-typedef struct gg_s_hash
-{
-    gg_num num_buckets; // size of hash table
-    gg_hash_table **table; // actual table, array of lists, array of size 'size'
-    gg_num dnext; // the index in table[] from which to continue dumping key/value pairs
-    gg_hash_table *dcurr; // pointer to current dumping member of linked list within [dnext] bucket
-    gg_hash_table *dprev; // pointer to previous dumping member of linked list within [dnext] bucket
-    gg_num tot; // total how many elements in cache
-    gg_num hits; // total number of searches
-    gg_num reads; // total number of comparisons
-    bool process; // true if process-scoped, false if request-scoped
-} gg_hash;
 
 //
 // An array of normalized JSON name/value pairs
@@ -967,7 +961,7 @@ typedef struct gg_tree_s
     gg_num hops;
     char key_type;
     bool sorted; // true if linked list allocated for
-    bool process; // true if process-wide memory used
+    unsigned char process; // holds bits for process/const
 } gg_tree;
 typedef struct gg_tree_cursor_s {
     gg_tree *root;
@@ -980,155 +974,6 @@ typedef struct gg_tree_cursor_s {
 } gg_tree_cursor;
 
 
-// 
-// Macros and function call related
-// Some of these may have a double evaluation problem (TODO) in macros
-//
-//
-// Generic compare, evaluated at compile time, so the actual comparison doesn't have any runtime overhead, since we use inline functions
-//
-#define  GG_CMP_EQ(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str, \
-    gg_num : gg_cm_num, \
-    char : gg_cm_num, \
-    int : gg_cm_num, \
-    size_t: gg_cm_num, \
-    bool : gg_cm_bool, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CMP_LESSEQ(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str_lesseq, \
-    gg_num : gg_cm_num_lesseq, \
-    char : gg_cm_num_lesseq, \
-    int : gg_cm_num_lesseq, \
-    size_t : gg_cm_num_lesseq, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CMP_LESS(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str_less, \
-    gg_num : gg_cm_num_less, \
-    char : gg_cm_num_less, \
-    int : gg_cm_num_less, \
-    size_t : gg_cm_num_less, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CMP_GREQ(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str_greq, \
-    gg_num : gg_cm_num_greq, \
-    char : gg_cm_num_greq, \
-    int : gg_cm_num_greq, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CMP_GR(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str_gr, \
-    gg_num : gg_cm_num_gr, \
-    char : gg_cm_num_gr, \
-    int : gg_cm_num_gr, \
-    size_t : gg_cm_num_gr, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CONTAINS(A,B) \
-  _Generic((B), \
-    char* : gg_contain_str, \
-    char : gg_contain_int, \
-    int : gg_contain_int, \
-    default : gg_cm_err \
-  ) (A,B)
-//
-//Regular compare with length
-//
-#define  GG_CMP_EQ_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
-#define  GG_CMP_LESSEQ_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_lesseq_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
-#define  GG_CMP_LESS_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_less_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
-#define  GG_CMP_GREQ_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_greq_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
-#define  GG_CMP_GR_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_gr_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
-//
-// Case insensitive compare, strings, only, others are an error
-//
-#define  GG_CMP_EQ_C(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str_c, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CMP_LESSEQ_C(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str_lesseq_c, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CMP_LESS_C(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str_less_c, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CMP_GREQ_C(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str_greq_c, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CMP_GR_C(A,B) \
-  _Generic((A), \
-    char* : gg_cm_str_gr_c, \
-    default : gg_cm_err \
-  ) (A,B)
-#define  GG_CONTAINS_C(A,B) \
-  _Generic((B), \
-    char* : gg_contain_str_c, \
-    char : gg_contain_int, \
-    default : gg_cm_err \
-  ) (A,B)
-//
-//Case insensitive with length
-//
-#define  GG_CMP_EQ_C_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_c_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
-#define  GG_CMP_LESSEQ_C_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_lesseq_c_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
-#define  GG_CMP_LESS_C_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_less_c_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
-#define  GG_CMP_GREQ_C_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_greq_c_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
-#define  GG_CMP_GR_C_L(A,B,L) \
-  _Generic((A), \
-    char* : gg_cm_str_gr_c_l, \
-    default : gg_cm_err \
-  ) (A,B,L)
 //
 //
 // Inline comparisons
@@ -1144,13 +989,11 @@ typedef struct gg_tree_cursor_s {
 // the useful (actual) data, so it can never happen that comparison continues beyond either memory comparison operand.
 // Equality for string works for binary as well, b/c it uses memcmp.
 //
-static inline bool gg_cm_str (char *a,char *b) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str (char *a, gg_num la, char *b, gg_num lb) {
     if (la != lb) return false; // strings not equal if lengths not equal
     return !memcmp(a,b, (size_t) la);
 }
-static inline bool gg_cm_str_l (char *a,char *b, gg_num l) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
     if ((l > la || l > lb)) {
         if (la != lb) return false; else return !memcmp(a,b, (size_t) la);
     } else {
@@ -1158,13 +1001,11 @@ static inline bool gg_cm_str_l (char *a,char *b, gg_num l) {
         return !memcmp(a,b, (size_t) l);
     }
 } 
-static inline bool gg_cm_str_c (char *a,char *b) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_c (char *a, gg_num la, char *b, gg_num lb) {
     if (la != lb) return false; // strings not equal if lengths not equal
     return !strcasecmp(a,b);
 }
-static inline bool gg_cm_str_c_l (char *a,char *b, gg_num l) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
     if ((l > la || l > lb)) {
         if (la != lb) return false; else return !strncasecmp(a,b, (size_t) la);
     } else {
@@ -1172,109 +1013,98 @@ static inline bool gg_cm_str_c_l (char *a,char *b, gg_num l) {
         return !strncasecmp(a,b, (size_t) l);
     }
 } 
-static inline bool gg_cm_str_less (char *a,char *b) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_less (char *a, gg_num la, char *b, gg_num lb) {
     gg_num lmin = MIN(la,lb)+1; 
     return strncmp(a,b,lmin)<0;
 }
-static inline bool gg_cm_str_less_l (char *a,char *b, gg_num l) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_less_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncmp(a,b,l)<0;
 } 
-static inline bool gg_cm_str_less_c (char *a,char *b) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_less_c (char *a, gg_num la, char *b, gg_num lb) {
     gg_num lmin = MIN(la,lb)+1;
     return strncasecmp(a,b,lmin)<0;
 }
-static inline bool gg_cm_str_less_c_l (char *a,char *b,gg_num l) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_less_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncasecmp(a,b,l)<0;
 }
-static inline bool gg_cm_str_gr (char *a,char *b) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_gr (char *a, gg_num la, char *b, gg_num lb) {
     gg_num lmin = MIN(la,lb)+1; 
     return strncmp(a,b,lmin)>0;
 }
-static inline bool gg_cm_str_gr_l (char *a,char *b, gg_num l) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_gr_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncmp(a,b,l)>0;
 } 
-static inline bool gg_cm_str_gr_c (char *a,char *b) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_gr_c (char *a, gg_num la, char *b, gg_num lb) {
     gg_num lmin = MIN(la,lb)+1;
     return strncasecmp(a,b,lmin)>0;
 }
-static inline bool gg_cm_str_gr_c_l (char *a,char *b,gg_num l) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_gr_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncasecmp(a,b,l)>0;
 }
-static inline bool gg_cm_str_lesseq (char *a,char *b) {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
+static inline bool gg_cm_str_lesseq (char *a, gg_num la, char *b, gg_num lb) {
     gg_num lmin = MIN(la,lb)+1; 
     return strncmp(a,b,lmin)<=0;
 }
-static inline bool gg_cm_str_lesseq_l (char *a,char *b, gg_num l)
+static inline bool gg_cm_str_lesseq_l (char *a, gg_num la, char *b, gg_num lb, gg_num l)
 {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncmp(a,b,l)<=0;
 } 
-static inline bool gg_cm_str_lesseq_c (char *a,char *b) 
+static inline bool gg_cm_str_lesseq_c (char *a, gg_num la, char *b, gg_num lb) 
 {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
     gg_num lmin = MIN(la,lb)+1;
     return strncasecmp(a,b,lmin)<=0;
 }
-static inline bool gg_cm_str_lesseq_c_l (char *a,char *b,gg_num l) 
+static inline bool gg_cm_str_lesseq_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) 
 {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncasecmp(a,b,l)<=0;
 }
-static inline bool gg_cm_str_greq (char *a,char *b) 
+static inline bool gg_cm_str_greq (char *a, gg_num la, char *b, gg_num lb) 
 {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
     gg_num lmin = MIN(la,lb)+1; 
     return strncmp(a,b,lmin)>=0;
 }
-static inline bool gg_cm_str_greq_l (char *a,char *b, gg_num l) 
+static inline bool gg_cm_str_greq_l (char *a,gg_num la, char *b, gg_num lb, gg_num l) 
 {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncmp(a,b,l)>=0;
 } 
-static inline bool gg_cm_str_greq_c (char *a,char *b) 
+static inline bool gg_cm_str_greq_c (char *a, gg_num la, char *b, gg_num lb) 
 {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
     gg_num lmin = MIN(la,lb)+1; // handles lesser/greater-or-equal and such. compare the lesser length +1
                              // +1 to avoid equality when they are not the same length
     return strncasecmp(a,b,lmin)>=0;
 }
-static inline bool gg_cm_str_greq_c_l (char *a,char *b,gg_num l) 
+static inline bool gg_cm_str_greq_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) 
 {
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1; // handles length clause, if length > lesser of lengths, use lesser+1
                                                      // +1 to avoid equality when they are not the same length
     return strncasecmp(a,b,l)>=0;
 }
-static inline char* gg_contain_str (char* a,char *b) 
+static inline char* gg_contain_str (char* a, gg_num la, char *b, gg_num lb) 
 { // works for binary!
-    gg_num la = gg_mem_get_len(gg_mem_get_id(a)); gg_num lb = gg_mem_get_len(gg_mem_get_id(b));
     return memmem(a,la,b,lb);
 }
-static inline char* gg_contain_str_c (char* a,char *b) 
-{
-    return strcasestr(a,b);
+static inline char* gg_contain_str_c (char* a, gg_num la, char *b) 
+{ 
+    char save = a[la]; // this is when we use @(), which supplies length of string which is less than it's actual length
+                       // it doesn't matter that we shorten a (in case b is a part of a); if b is beyond length la it's not a problem; if
+                       // b is below length la, than it can't be longer by definition either!
+    a[la] = 0;
+    char *res = strcasestr(a,b);
+    a[la]=save;
+    return res;
 }
-static inline char* gg_contain_int (char* a,int b) {
-    return strchr(a,b);
+static inline char* gg_contain_int (char* a, gg_num la, int b) {
+    return memchr(a,b,la);
 }
-static inline char* gg_contain_int_c (char* a,int b) {
-    char *res; res = strchr(a,b); if (res!=NULL) return res; else return strchr(a,isupper(b)?tolower(b):toupper(b));
+static inline char* gg_contain_int_c (char* a, gg_num la, int b) {
+    char *res; res = memchr(a,b, la); if (res!=NULL) return res; else return memchr(a,isupper(b)?tolower(b):toupper(b),la);
 }
 static inline bool gg_cm_num (gg_num a,gg_num b) {
     return a==b;
@@ -1337,18 +1167,16 @@ static inline bool gg_cm_err () {
 //
 //
 void gg_init_input_req (gg_input_req *iu);
-gg_num gg_open_trace ();
-gg_num gg_close_trace();
 void gg_make_SQL (char **dest, gg_num num_of_args, char *format, ...) __attribute__ ((format (printf, 3, 4)));
 void gg_output_http_header(gg_input_req *iu);
 gg_num gg_encode (gg_num enc_type, char *v, gg_num vlen, char **res, bool alloc);
 gg_num gg_get_input(gg_input_req *req, char *method, char *input);
-void *gg_get_input_param (gg_num name_id, gg_num type);
+void *gg_get_input_param (gg_num name_id, gg_num type, char *defval);
 gg_num gg_is_positive_num (char *s);
 void gg_copy_string (char *src, gg_num from, char **dst, gg_num len);
 void gg_alter_string (char *tgt, char *copy, gg_num swith, gg_num len, bool begin);
 gg_num gg_exec_program (char *prg, char *argv[], gg_num num_args, FILE *fin, FILE **fout, FILE **ferr, char *inp, gg_num inp_len, char **out_buf, char **err_buf);
-void gg_subs(char *s, void **call_handler);
+gg_num gg_subs(char *s, void **call_handler);
 void gg_get_debug_options();
 gg_num gg_flush_printf(gg_num fin);
 void gg_printf_close();
@@ -1361,7 +1189,6 @@ void gg_putenv (char *env);
 void gg_replace_all (gg_num v, char *look, char *subst);
 void gg_current_time (char *outstr, gg_num out_str_len);
 gg_config *gg_alloc_config();
-void gg_init_config(gg_config *pc);
 void gg_reset_config(gg_config *pc);
 gg_num gg_count_substring (char *str, char *find, gg_num len_find, gg_num case_sensitive);
 gg_num gg_replace_string (char *str, gg_num strsize, char *find, char *subst, gg_num all, char **last, gg_num case_sensitive);
@@ -1371,32 +1198,28 @@ void gg_file_stat (char *dir, gg_num *type, gg_num *size, gg_num *mode);
 gg_num gg_get_open_file_size(FILE *f);
 void gg_memory_init ();
 void *gg_malloc(size_t size);
+void gg_free_int(void *x);
 void *gg_calloc(size_t nmemb, size_t size);
 void *gg_realloc(gg_num r, size_t size);
-void gg_mem_set_process (char *to, char *m, bool force, bool add_ref);
+void gg_mem_add_ref (char *s, unsigned char mem_process);
 void gg_mem_release(gg_num r);
-void gg_mem_add_ref (char *m);
-void gg_mem_delete_and_return (void *ptr);
-void gg_mem_replace_and_return (void *ptr, void *new_val);
+void gg_mem_dec_process (void *s);
 gg_num gg_get_memory_len (void *ptr);
 gg_num gg_memid (void *ptr);
 void gg_set_memory_len (void *ptr, gg_num len);
-void _gg_free (void *ptr, char check);
-void gg_mem_set_len (gg_num r, gg_num len);
+void _gg_free (void *ptr);
 char *gg_strdupl (char *s, gg_num from, gg_num l);
 char *gg_strdup (char *s);
 void *gg_mem_add_const (void *p, gg_num len);
-void gg_mem_set_const (void *p);
 void gg_mem_set_status (gg_num id, unsigned char s);
 gg_num gg_add_mem (void *p);
 void *gg_vmset (void *p, gg_num r);
 gg_num gg_mem_size ();
+void *gg_add_string_part (void *to, void *add, gg_num beg, gg_num len);
 void *gg_add_string (void *to, void *add);
 void gg_done ();
-void gg_get_stack(char *fname);
-#if defined(GG_INC_MARIADB) || defined(GG_INC_POSTGRES)
+void gg_get_stack(char *err);
 gg_dbc *gg_get_db_connection (gg_num abort_if_bad);
-#endif
 void gg_close_db_conn ();
 gg_num gg_begin_transaction(char *t, char erract, char **err, char **errt);
 gg_num gg_commit(char *t, char erract, char **err, char **errt);
@@ -1404,7 +1227,6 @@ char *typename (gg_num type);
 gg_num gg_rollback(char *t, char erract, char **err, char **errt);
 void gg_get_insert_id(char *val, gg_num sizeVal);
 void gg_select_table (char *s, gg_num *arow, gg_num *nrow, gg_num *ncol, char ***col_names, char ***data, gg_num **dlen, char **er, char **errm, char is_prep, void **prep, gg_num paramcount, char **params, char erract);
-void _gg_trace(gg_num trace_level, const char *fromFile, gg_num fromLine, const char *fromFun, char *format, ...) __attribute__((format(printf, 5, 6)));
 char *gg_hash_data( char *val, char *digest_name, bool binary);
 char *gg_hmac (char *key, char *data, char *digest_name, bool binary);
 char *gg_derive_key( char *val, gg_num val_len, char *digest_name, gg_num iter_count, char *salt, gg_num salt_len, gg_num key_len, bool binary );
@@ -1412,10 +1234,8 @@ gg_num gg_ws_util_read (void * rp, char *content, gg_num len);
 gg_num gg_main (void *r);
 gg_num gg_ws_printf (void *r, char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
 gg_num gg_write_web (bool iserr, gg_config *pc, char *s, gg_num nbyte);
-void posix_print_stack_trace();
 void gg_disable_output();
 void gg_file_being_output();
-void gg_set_crash_handler(char *dir);
 void gg_dispatch_request();
 gg_num gg_copy_data (char **data, char *value);
 gg_num gg_puts_to_string (char *final_out, gg_num final_len);
@@ -1441,7 +1261,7 @@ gg_num gg_retrieve (gg_fifo *fdata, char **name, void **data);
 void gg_list_retrieve (gg_list *fdata, char **name, void **data);
 void gg_list_store (gg_list *fdata, char *name, void *data, bool append);
 gg_num gg_list_pos(gg_list *fdata, int where, gg_list_item *item);
-void gg_list_init (gg_list **fdata_ptr, bool process);
+void gg_list_init (gg_list **fdata_ptr, unsigned char process);
 void gg_store_init (gg_fifo **fdata);
 void gg_store (gg_fifo *fdata, char *name, void *data);
 void gg_store_l (gg_fifo *fdata, char *name, void *data);
@@ -1476,7 +1296,6 @@ gg_num gg_xml_new (char *val, gg_num len, gg_num *errc, gg_num *errl);
 void gg_set_xml (gg_xml **x);
 void gg_del_xml (gg_xml **x);
 char *gg_xml_err();
-char *gg_web_name(char *url);
 void gg_check_transaction(gg_num check_mode);
 void gg_break_down (char *value, char *delim, gg_split_str **broken);
 void gg_delete_break_down (gg_split_str **broken_ptr);
@@ -1493,10 +1312,8 @@ void oops(gg_input_req *iu, char *err);
 gg_num gg_total_so(gg_so_info **sos);
 FILE *gg_fopen (char *file_name, char *mode);
 int gg_fclose (FILE *f);
-#ifdef GG_INC_PCRE2
 gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_num utf, gg_num case_insensitive, gg_num single_match, regex_t **cached);
 void gg_regfree(regex_t *preg);
-#endif 
 void gg_set_env(char *arg);
 char * gg_os_name();
 char * gg_os_version();
@@ -1508,6 +1325,7 @@ void gg_exit_request(gg_num retval);
 void gg_error_request(gg_num retval);
 void after_handler();
 void before_handler ();
+void on_startup ();
 char *gg_basename (char *path);
 char *gg_realpath (char *path);
 void gg_end_connection(gg_num close_db);
@@ -1519,28 +1337,30 @@ void gg_hex2bin(char *src, char **dst, gg_num ilen);
 void gg_bin2hex(char *src, char **dst, gg_num ilen, char *pref);
 void gg_db_free_result (char is_prep);
 gg_num gg_topower(gg_num b,gg_num p);
+gg_num gg_utf_get_code (char *val, gg_num *ubeg, gg_num *totjv, char **o_errm);
 gg_num gg_decode_utf (gg_num32 u, unsigned char *r, char **e);
 gg_num gg_encode_utf (char *r, gg_num32 *u, char **e);
 gg_num32 gg_make_from_utf_surrogate (gg_num32 u0, gg_num32 u1);
 gg_num32 gg_get_hex(char *v, char **err);
 void gg_get_utf_surrogate (gg_num32 u, gg_num32 *u0, gg_num32 *u1);
-void gg_create_hash (gg_hash **hres_ptr, gg_num size, gg_hash_table **in_h, bool process);
+void gg_create_hash (gg_hash **hres_ptr, gg_num size, gg_hash_table **in_h, unsigned char process);
 void gg_delete_hash (gg_hash **h, bool del);
-void *gg_find_hash (gg_hash *h, char *key, char **keylist, bool del, gg_num *found);
-void gg_add_hash (gg_hash *h, char *key, char **keylist, void *data, void **old_data, gg_num *st);
+void *gg_find_hash (gg_hash *h, char *key, bool del, gg_num *found, bool is_golf);
+void gg_add_hash (gg_hash *h, char *key, void *data, void **old_data, gg_num *st);
 char *gg_next_hash(gg_hash *h, void **data, gg_num *st, bool del);
 void gg_del_hash_traverse (gg_hash *h);
-void gg_del_hash_entry (gg_hash *h, gg_hash_table *todel, gg_hash_table *prev, gg_num hashind, bool keydel);
 void gg_rewind_hash(gg_hash *h);
 gg_num gg_total_hash (gg_hash *h);
 gg_num gg_hash_size (gg_hash *h);
 void gg_resize_hash (gg_hash **h, gg_num newsize);
 gg_num gg_hash_reads (gg_hash *h);
+char *gg_hash_get (gg_hash *hash, char *key);
 char *gg_text_to_utf (char *val, char quoted, char **o_errm, char dec, bool alloced);
 gg_num gg_utf_to_text (char *val, gg_num len, char **res, char **err);
 char *gg_getheader(char *h);
 void gg_bad_request ();
 gg_num gg_set_input (gg_num name_id, void *val, gg_num type);
+void gg_set_input_startup (gg_num name_id);
 char *gg_getpath ();
 int gg_fcgi_client_request (char *fcgi_server, char *req_method, char *path_info, char *script_name, char *content_type, int content_len, char *payload);
 void gg_flush_out(void);
@@ -1554,23 +1374,24 @@ void gg_del_msg(gg_msg *msg);
 char *gg_get_msg(gg_msg *msg);
 gg_msg * gg_new_msg (char *from);
 void gg_sleepabit(gg_num milli);
+void gg_set_crash_handler(char *btrace);
 //
-gg_arraystring *gg_new_arraystring (gg_num max_elem, bool process);
-gg_arraynumber *gg_new_arraynumber (gg_num max_elem, bool process);
-gg_arraybool *gg_new_arraybool (gg_num max_elem, bool process);
+gg_arraystring *gg_new_arraystring (gg_num max_elem, unsigned char process);
+gg_arraynumber *gg_new_arraynumber (gg_num max_elem, unsigned char process);
+gg_arraybool *gg_new_arraybool (gg_num max_elem, unsigned char process);
 void gg_purge_arraystring (gg_arraystring *arr);
 void gg_purge_arraynumber (gg_arraynumber *arr);
 void gg_purge_arraybool (gg_arraybool *arr);
-void gg_write_arraystring (gg_arraystring *arr, gg_num key, char **old_val);
+char *gg_write_arraystring (gg_arraystring *arr, gg_num key, char **old_val);
 void gg_write_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *old_val);
 void gg_write_arraybool (gg_arraybool *arr, gg_num key, bool *old_val);
-char *gg_read_arraystring (gg_arraystring *arr, gg_num key, bool del);
-gg_num gg_read_arraynumber (gg_arraynumber *arr, gg_num key, bool del);
-bool gg_read_arraybool (gg_arraybool *arr, gg_num key, bool del);
+char *gg_read_arraystring (gg_arraystring *arr, gg_num key, gg_num *st);
+gg_num gg_read_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *st);
+bool gg_read_arraybool (gg_arraybool *arr, gg_num key, gg_num *st);
 //
 
 gg_num gg_tree_bal (gg_tree_node *tree);
-gg_tree *gg_tree_create(char key_type, bool sorted, bool process);
+gg_tree *gg_tree_create(char key_type, bool sorted, unsigned char process);
 void gg_tree_insert_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_num key_len, void *data);
 void gg_tree_search_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key, gg_num key_len);
 void gg_tree_delete_f (gg_tree_cursor *lcurs, gg_tree *orig_tree, char *key);
@@ -1587,15 +1408,14 @@ void gg_cli_delete (gg_cli *callin);
 gg_num gg_call_fcgi (gg_cli **req, gg_num threads, gg_num *finokay, gg_num *started);
 #endif
 
-#ifdef GG_INC_CRYPTO
 void gg_sec_load_algos(void);
+int gg_RAND_bytes(unsigned char *buf, int num);
+#ifdef GG_INC_CRYPTO
 gg_num gg_get_enc_key(char *password, char *salt, gg_num salt_len, gg_num iter_count, EVP_CIPHER_CTX *e_ctx, EVP_CIPHER_CTX *d_ctx,  char *cipher_name, char *digest_name);
 char *gg_encrypt(EVP_CIPHER_CTX *e, const unsigned char *plaintext, gg_num *len, gg_num is_binary, unsigned char *iv);
 char *gg_decrypt(EVP_CIPHER_CTX *e, unsigned char *ciphertext, gg_num *len, gg_num is_binary, unsigned char *iv);
-int gg_RAND_bytes(unsigned char *buf, int num);
 #endif
 
-#ifdef GG_INC_POSTGRES
 void gg_pg_close();
 gg_num gg_pg_nfield();
 gg_dbc *gg_pg_connect (gg_num abort_if_bad);
@@ -1610,8 +1430,7 @@ char *gg_pg_errm(char *errm, gg_num errmsize, char *s, char *sname, gg_num lnum,
 gg_num gg_pg_checkc();
 void gg_pg_close_stmt (void *st);
 int gg_pg_escape(char *from, char *to, gg_num *len);
-#endif
-#ifdef GG_INC_SQLITE
+
 char *gg_lite_error(char *s, char is_prep);
 void gg_lite_close ();
 gg_dbc *gg_lite_connect (gg_num abort_if_bad);
@@ -1629,9 +1448,7 @@ char *gg_lite_errm(char *errm, gg_num errmsize, char *s, char *sname, gg_num lnu
 gg_num gg_lite_checkc();
 void gg_lite_close_stmt (void *st);
 int gg_lite_escape(char *from, char *to, gg_num *len);
-#endif
 
-#ifdef GG_INC_MARIADB
 char *gg_maria_error(char *s, char is_prep);
 void gg_maria_close ();
 gg_dbc *gg_maria_connect (gg_num abort_if_bad);
@@ -1649,7 +1466,6 @@ char *gg_maria_errm(char *errm, gg_num errmsize, char *s, char *sname, gg_num ln
 gg_num gg_maria_checkc();
 void gg_maria_close_stmt (void *st);
 int gg_maria_escape(char *from, char *to, gg_num *len);
-#endif
 
 // 
 // Globals
@@ -1671,22 +1487,27 @@ extern char * gg_app_path;
 extern char * gg_root;
 extern unsigned long gg_app_path_len;
 extern gg_num gg_max_upload;
-extern gg_num gg_is_trace;
+extern gg_num gg_client_timeout;
 extern gg_num _gg_st;
 extern char *_gg_st_str;
 extern bool _gg_st_bool;
 extern int gg_errno;
 extern int gg_stmt_cached;
 extern bool gg_mem_os;
-extern bool gg_mem_process;
-extern bool gg_mem_process_key;
-extern bool gg_mem_process_data;
+extern unsigned char gg_mem_process;
 extern gg_hash gg_dispatch;
 extern gg_hash gg_paramhash;
 extern gg_tree_cursor *gg_cursor;
 extern bool gg_true;
 extern bool gg_false;
 extern bool gg_path_changed;
+extern gg_num gg_sub_max_depth;
+extern gg_input_req gg_req;
+extern gg_config *gg_s_pc;
+extern char *gg_inp_body;
+extern char *gg_inp_url;
+extern char gg_finished_output;
+extern char gg_user_dir[GG_MAX_OS_UDIR_LEN]; // user dir
 
 // DO not include golfapp.h for Golf itself, only for applications at source build time
 #if GG_APPMAKE==1

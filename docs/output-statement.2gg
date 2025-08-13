@@ -25,7 +25,7 @@ With "!" statement, all text is output verbatim, and any inline code is not exec
 
 All trailing whitespaces are trimmed from each source code line. If you need to write trailing whitespaces, with "@" statement you can use \fBprint-out\fP as \fBinline-code\fP. Maximum line length is 8KB - this is the source code line length, the actual run-time output length is unlimited.
 
-Note that all characters are output as they are written, including the escape character (\e). If you wish to output characters requiring an escape character, such as new line and tab (as is done in C by using \en, \et etc.), use \fBprint-out\fP as \fBinline-code\fP.
+Note that all characters are output as they are written, including the escape character (\\). If you wish to output characters requiring an escape character, such as new line and tab (as is done in C by using \\n, \\t etc.), use \fBprint-out\fP as \fBinline-code\fP.
 
 .SH EXAMPLES
 Outputting "Hello there": 
@@ -90,14 +90,3 @@ Today's weather is <<print-out weatherType>>
 .EE
 .RE
 
-.SH SEE ALSO
- Output
-
-\fBfinish-output\fP  
-\fBflush-output\fP  
-\fBoutput-statement\fP  
-\fBprint-format\fP  
-\fBprint-out\fP  
-\fBprint-path\fP   
-See all 
-\fBdocumentation\fP

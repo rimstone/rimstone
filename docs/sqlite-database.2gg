@@ -7,23 +7,8 @@ SQLite database configuration file should contain a single line of text, and it 
 .RS 4
 .EX
 
-/var/lib/gg/<app name>/app/<db name>.db
+$HOME/.golf/apps/<app name>/app/<db name>.db
 
 .EE
 .RE
 
-.SH SEE ALSO
- Database
-
-\fBbegin-transaction\fP  
-\fBcommit-transaction\fP  
-\fBcurrent-row\fP  
-\fBdatabase-config-file\fP  
-\fBdb-error\fP  
-\fBmariadb-database\fP  
-\fBpostgresql-database\fP  
-\fBrollback-transaction\fP  
-\fBrun-query\fP  
-\fBsqlite-database\fP   
-See all 
-\fBdocumentation\fP

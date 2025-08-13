@@ -39,11 +39,3 @@ delete-cookie "my_cookie" path "/path" secure is_secure
 .EE
 .RE
 
-.SH SEE ALSO
- Cookies
-
-\fBdelete-cookie\fP  
-\fBget-cookie\fP  
-\fBset-cookie\fP   
-See all 
-\fBdocumentation\fP

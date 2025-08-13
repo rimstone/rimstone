@@ -23,7 +23,7 @@ utf-text will convert <utf> text to <text> (specified with "to" clause). If <tex
 
 <utf> is a string that may contain UTF characters (as 2, 3 or 4 bytes representing a unicode character). Encoding creates a string that can be used as a value where text representation of UTF is required. utf-text is performed according to \fBRFC7159\fP and \fBRFC3629\fP (UTF standard).
 
-Note that hexadecimal characters used for Unicode (such as \eu21d7) are always lowercase. Solidus character ("/") is not escaped, although \fBtext-utf\fP will correctly process it if the input has it escaped.
+Note that hexadecimal characters used for Unicode (such as \\u21d7) are always lowercase. Solidus character ("/") is not escaped, although \fBtext-utf\fP will correctly process it if the input has it escaped.
 
 The number of bytes in <utf> to be converted can be specified with <length> in "length" clause. If <length> is not specified, it is the length of string <utf>. Note that a single UTF character can be anywhere between 1 to 4 bytes. For example "љ" is 2 bytes in length. 
 
@@ -36,14 +36,14 @@ Convert UTF string to text and verify the expected result:
 .EX
 
 // UTF string 
-set-string utf_str = "\[char92]"Doc\[char92]"\en\et\eb\ef\er\et⇗⇘\et▷◮𝄞ᏫⲠш\en/\[char92]"()\et"
+set-string utf_str = "\[char92]"Doc\[char92]"\\n\\t\\b\\f\\r\\t⇗⇘\\t▷◮𝄞ᏫⲠш\\n/\[char92]"()\\t"
 
 // Convert UTF string to text
 utf-text utf_str status encstatus to text_text
 
 // This is the text expected
 (( expected_result
-@\[char92]"Doc\[char92]"\en\et\eb\ef\er\et\eu21d7\eu21d8\et\eu25b7\eu25ee\eud834\eudd1e\eu13eb\eu2ca0\eu0448\en/\[char92]"()\et
+@\[char92]"Doc\[char92]"\\n\\t\\b\\f\\r\\t\\u21d7\\u21d8\\t\\u25b7\\u25ee\\ud834\\udd1e\\u13eb\\u2ca0\\u0448\\n/\[char92]"()\\t
 ))
 
 // Make sure conversion was okay, decs is the length of the result (encj string)
@@ -54,10 +54,3 @@ end-if
 .EE
 .RE
 
-.SH SEE ALSO
- UTF
-
-\fBtext-utf\fP  
-\fButf-text\fP   
-See all 
-\fBdocumentation\fP

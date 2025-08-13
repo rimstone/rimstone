@@ -42,7 +42,7 @@ To read a text file line by line, and display as a web page with line breaks:
 
 read-line "/home/bear/tmp/ll/filexx" to one_line status st
     string-length one_line to line_len
-    @Line length is <<print-out line_len>>, line is <<p-web one_line>> status <<print-out st>><br/>
+    @Line length is <<print-out line_len>>, line is <<print-out one_line web-encode>> status <<print-out st>><br/>
 end-read-line
 if-true st lesser-than 0
     get-req error to err
@@ -63,25 +63,3 @@ read-line "/home/user/dir/file" to one_line status len delimiter '|'
 .EE
 .RE
 
-.SH SEE ALSO
- Files
-
-\fBchange-mode\fP  
-\fBclose-file\fP  
-\fBcopy-file\fP  
-\fBdelete-file\fP  
-\fBfile-position\fP  
-\fBfile-storage\fP  
-\fBfile-uploading\fP  
-\fBlock-file\fP  
-\fBopen-file\fP  
-\fBread-file\fP  
-\fBread-line\fP  
-\fBrename-file\fP  
-\fBstat-file\fP  
-\fBtemporary-file\fP  
-\fBuniq-file\fP  
-\fBunlock-file\fP  
-\fBwrite-file\fP   
-See all 
-\fBdocumentation\fP

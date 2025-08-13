@@ -59,13 +59,3 @@ change-dir home
 .EE
 .RE
 
-.SH SEE ALSO
- Directories
-
-\fBchange-dir\fP  
-\fBchange-mode\fP  
-\fBdelete-dir\fP  
-\fBdirectories\fP  
-\fBnew-dir\fP   
-See all 
-\fBdocumentation\fP

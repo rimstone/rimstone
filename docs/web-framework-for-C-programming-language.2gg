@@ -7,7 +7,7 @@ web-framework-for-C-programming-language \- Golf documentation (C-language)
 .B GOLF AS A WEB FRAMEWORK FOR C PROGRAMMING LANGUAGE
 .LP
 
-Golf source code translates to C before compilation for maximum performance; as a result, Golf offers the ability to include C code directly in extended mode (via \fBcall-extended\fP statement and \fBServer-API\fP) which means Golf is also an effective framework for C programming language.
+Golf source code translates to C before compilation; as a result, Golf offers the ability to include C code directly in extended mode (via \fBcall-extended\fP statement and \fBServer-API\fP) which means Golf is also an effective framework for C programming language.
 
 Golf offers simple statements to perform complex common tasks, as well as memory safety. The C code that you'd include via call-extended statement may or may not be memory safe; thus once your application is in extended mode (see \fBextended-mode\fP), your application may no longer be memory safe.
 
@@ -16,7 +16,7 @@ To make sure a Golf application is memory safe, simply search for extended-mode 
 .RS 4
 .EX
 
-find . -name "*.golf" -print -exec grep -l '^\es*extended\-mode' {} \e;
+find . -name "*.golf" -print -exec grep -l '^\\s*extended\\-mode' {} \\;
 
 .EE
 .RE
@@ -25,14 +25,6 @@ If no matches are found, the application is memory safe.
 
 However, for applications that are written in C (for performance, access to hardware or OS features, or for any other reason), Golf offers a framework that can offload many tasks from your project, while you write C code where it's needed or necessary.
 
-The benefit is that the part of your application written in Golf (which may be a vast majority of it) offers memory safety, ease of development and maintenance, server facilities, lots of functionality, as well as high performance to begin with. Your Golf code would call your C code when needed, thus accomplishing the functionality and goals you set out to do.
+The benefit is that the part of your application written in Golf (which may be a vast majority of it) offers memory safety, ease of development and maintenance, server facilities and lots of functionality. Your Golf code would call your C code when needed, thus accomplishing the functionality and goals you set out to do.
 
 Just as a note of technicality, when used in extended mode, Golf is considered a framework and not a library, because Golf code will call your C code (and not the other way around).
-.SH SEE ALSO
- C language
-
-\fBcall-extended\fP  
-\fBextended-mode\fP  
-\fBweb-framework-for-C-programming-language\fP   
-See all 
-\fBdocumentation\fP

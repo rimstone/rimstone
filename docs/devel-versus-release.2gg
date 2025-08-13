@@ -1,0 +1,39 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+devel-versus-release \- Golf documentation (general)
+.SH DESCRIPTION
+By default, when you make your application, a "devel" (or development) version is built, for instance:
+
+.RS 4
+.EX
+
+gg -q
+
+.EE
+.RE
+
+You can also explicitly specify this:
+
+.RS 4
+.EX
+
+gg -q --devel
+
+.EE
+.RE
+
+The development version of your application will not use all the compiler optimizations and it will not use the Link Time Optimizations (LTO), sometimes also referred to as "whole program optimization". So this version will exhibit lower run-time performance. However, it is also much faster to build and it includes additional debugging symbols as well.
+
+When you wish to produce a release executable, use "--release" option, for instance:
+
+.RS 4
+.EX
+
+gg -q --release
+
+.EE
+.RE
+
+This will include all the compiler optimizations as well as LTO; it will also include the minimal necessary debugging information. Release executables can be significantly faster than development ones; use them for releases as well as when you wish to do performance testing. Note however that making release executables will take significantly longer, so you probably do not want to do it while developing your application.
+
+Note that if your gcc (C compiler) version changes, such as after system updates, Golf may recompile itself. This is because LTO works the best when Golf itself is compiled with the gcc version currently installed. During such rare occassions, Golf will need sudo privilege to install the recompiled executables.

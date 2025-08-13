@@ -1,0 +1,56 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+scan-string \-  (strings)
+.SH PURPOSE
+Scans string for another string or a character.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+scan-string <string> [ start-with <start with> ] [ length <length> ] \\
+    for <for string> \\
+    status <status>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+scan-string will search <string> for <for string> (which can be a string or character such as 'A' for instance) specified in "for" clause.
+
+If "start-with" clause is used, then the first byte to start the scan from is <start with>; with the very first byte being specified as 0.
+
+If "length" clause is used, then only the <length> bytes are scanned, starting either from the beginning of <string> or from byte <start with> if "start-with" clause is specified.
+
+<status> in "status" clause will be the byte position from the beginning of <string> where <for string> is found, or GG_ERR_POSITION if <for string> is not found.
+
+.SH EXAMPLES
+Getting the byte position of a string:
+
+.RS 4
+.EX
+
+set-string s = "wow this is a string!" 
+scan-string s start-with 3 length 13 for "this" status pos
+if-true pos equal 4
+    @Found string where it should be!
+end-if
+
+.EE
+.RE
+
+Getting the byte position of a character:
+
+.RS 4
+.EX
+
+set-string s = "wow this is a string!" 
+scan-string s for 'g' status pos
+if-true pos equal 19
+    @Found character where it should be!
+end-if
+
+.EE
+.RE
+

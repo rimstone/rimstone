@@ -17,7 +17,7 @@ Skip the rest of the request, and move on quickly to handle the next request wit
 
 .RS 4
 \[bu]    
-Stop and exit, and it may be automatically restarted if it's a \fBservice\fP. For instance, the process could be out of memory, or the database is permanently down and connection cannot be re-established.
+Stop and exit, and it may be automatically restarted if it's a \fBservice\fP. For instance, the process could be out of memory, or the database is permanently down and connection cannot be re-established, or there is an internal error.
 .RE
 . 
 Note that if your program is \fBcommand-line\fP, it will exit in any case since it handles a single request anyway.
@@ -34,24 +34,10 @@ If there is a fatal internal error (i.e. error in Golf code itself that cannot b
 .B LOGGING THE ERROR
 .LP
 
-Regardless of the type of error and regardless of whether the process exits or not, the error is logged and the program stack with full source code lines (see \fBgg\fP for including debug information) will be written to backtrace file (use -e option of \fBgg\fP to obtain its location). Note that the program stack is logged only if debugging info is present (i.e. if installed from package you must install debugging package as well).
+Regardless of the type of error and regardless of whether the process exits or not, the error is output to the standard error stream along with the error details: cause of error and full stack trace (including source file names and line numbers); note that for \fBreport-error\fP error details are not output since you're providing your own details.
 
-You can see the list of last N errors (and the location of file containing backtrace for them) by using \fBgg\fP, for instance to see the last 3 errors:
+.LP
+.B OUTPUT WHEN ERROR HAPPENS
+.LP
 
-.RS 4
-.EX
-
-gg -e 3
-
-.EE
-.RE
-
-.SH SEE ALSO
- Error handling
-
-\fBdb-error\fP  
-\fBerror-code\fP  
-\fBerror-handling\fP  
-\fBreport-error\fP   
-See all 
-\fBdocumentation\fP
+When your program errors out, a generic message is output to the standard output, i.e. to the client, that indicates that error has occurred, and to check the error log. The actual details are output to standard error stream, see details above. Note that in case of fatal error (such as Golf internal error), no message is sent to the client; rather the program ends. On how to view the error log (including the stack traces), see \fBdebugging\fP.

@@ -21,7 +21,7 @@ A number of options are available to setup and manage the execution of a Golf pr
 
 <app name> specifies the name of your application. Each application must have a unique name. <app name> may contain alphanumeric characters and an underscore, must start with a character and its maximum length is 30. 
 
-mgrg runs as a light-weight daemon (often requiring only 100-150K of resident RAM), with a separate instance for each application specified by the <app name>. When mgrg starts your service, its current directory is set to /var/lib/gg/<app name>/app. The permissions context is inherited from the caller, so the effective user ID, group ID and any supplemental groups are that of the caller. You can use tools like runuser to specifically set the permissions context.
+mgrg runs as a light-weight daemon (often requiring only 100-150K of resident RAM), with a separate instance for each application specified by the <app name>. When mgrg starts your service, its current directory is set to $HOME/.golf/apps/<app name>/app. The permissions context is inherited from the caller, so the effective user ID, group ID and any supplemental groups are that of the caller. You can use tools like runuser to specifically set the permissions context.
 
 mgrg will re-start service processes that exited or died, keeping the number of processes as specified, unless -n option is used. The number of worker processes can be specified with a fixed (-w) option, or it can dynamically change based on the load (-d option), including none at all. Hence, it is possible to have no worker processes at all, and they will be started when incoming request(s) come in, and stay up as determined by the request load.
 
@@ -30,13 +30,13 @@ mgrg will re-start service processes that exited or died, keeping the number of 
 .RS 4
 \[bu]    
 -i
-Initialize the directory and file structure for application <app name>. If you are building application from source code, this must be executed in the source code directory; mgrg will create file ".golfapp" which identifies the application so \fBgg\fP can run in the directory. You must run as root when using this option (and must not run as root otherwise) - this is the only mgrg option requiring sudo. The directory structure is setup in /var/lib/gg/<app name> (see \fBdirectories\fP).
+Initialize the directory and file structure for application <app name>. If you are building application from source code, this must be executed in the source code directory; mgrg will create file ".golfapp" which identifies the application so \fBgg\fP can run in the directory. The directory structure is setup in $HOME/.golf/apps/<app name> (see \fBdirectories\fP).
 
 .RE
 
 .RS 4
 \[bu]    
--u <user>
+-u <OS user>
 The owner of your application. This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It cannot be root. 
 
 .RE
@@ -44,7 +44,7 @@ The owner of your application. This is only used when initializing directory str
 .RS 4
 \[bu]    
 -r <proxy group>
-The group of proxy web server (such as Apache or Nginx). This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It restricts the ability to connect to your application only to the members of said group (in addition to the user who owns your server) when a Unix socket is used, otherwise anyone can connect.
+The group of proxy web server (such as Apache or Nginx). This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It restricts the ability to connect to your application only to the members of said group (in addition to the user who owns your server) when a Unix socket is used, otherwise anyone can connect. If you are not a member of this group, then you must invoke mgrg with sudo - this is the only time this is necessary.
 
 .RE
 
@@ -65,7 +65,7 @@ TCP/IP port number your service program will listen on (and accept connections),
 .RS 4
 \[bu]    
 -x
-Use Unix domain socket to connect from proxy web server to your application server. This socket is automatically created by mgrg and its full path name is "/var/lib/gg/<app name>/sock/sock" (you can connect to it via \fBClient-API\fP, \fBcall-remote\fP etc.). When using a proxy web server (like Apache or Nginx), you typically need to specify ProxyPass, "location" or similar FastCGI directives so it can connect to your application. If you specify neither -x nor -p (TCP/IP socket), then -x (unix domain socket) is the default.
+Use Unix domain socket to connect from proxy web server to your application server. This socket is automatically created by mgrg and its full path name is "$HOME/.golf/apps/<app name>/sock/sock" (you can connect to it via \fBClient-API\fP, \fBcall-remote\fP etc.). When using a proxy web server (like Apache or Nginx), you typically need to specify ProxyPass, "location" or similar FastCGI directives so it can connect to your application. If you specify neither -x nor -p (TCP/IP socket), then -x (unix domain socket) is the default.
 
 .RE
 
@@ -163,7 +163,7 @@ Display verbose messages.
 .RS 4
 \[bu]    
 -c <program>
-Full absolute path to your service program. If omitted, the executable /var/lib/gg/bld/<app name>/<app name>.srvc is assumed, which is the standard Golf service executable. If present, but without any slashes in it to indicate path (including current directory as ./), then this executable is assumed to be /var/lib/gg/bld/<app name>/<program>.
+Full absolute path to your service program. If omitted, the executable $HOME/.golf/bld/<app name>/<app name>.srvc is assumed, which is the standard Golf service executable. If present, but without any slashes in it to indicate path (including current directory as ./), then this executable is assumed to be $HOME/.golf/bld/<app name>/<program>.
 
 .RE
 
@@ -181,7 +181,7 @@ Display help.
 
 .RE
 
-mgrg writes log file at /var/lib/gg/<app name>/mgrglog/log file. This file is overwritten when mgrg starts, so it contains the log of the current daemon instance only.
+mgrg writes log file at $HOME/.golf/apps/<app name>/mgrglog/log file. This file is overwritten when mgrg starts, so it contains the log of the current daemon instance only.
 
 .LP
 .B EXIT CODE
@@ -331,9 +331,3 @@ pkg-config systemd --variable=systemdsystemunitdir
 .RE
 
 The file should be saved as <app name>.service (or similar). Once saved, you can use standard systemctl commands to start, stop and restart your service.
-.SH SEE ALSO
- Service manager
-
-\fBmgrg\fP   
-See all 
-\fBdocumentation\fP

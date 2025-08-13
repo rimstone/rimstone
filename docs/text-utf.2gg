@@ -26,14 +26,14 @@ You can obtain <status> in "status" clause. <status> number is GG_OKAY if succes
 .RS 4
 .EX
 
-// Unicode value to encode to UTF8 or UTF16 (such as \\euD834\\euDD1E as a surrogate pair)
-set-string txt = "\eu0459\\\[char92]"Doc\\\[char92]"\\en\\et\\eb\\ef\\er\\et\\eu21d7\\eu21d8\\et\\eu25b7\\eu25ee\\euD834\\euDD1E\\eu13eb\\eu2ca0\\eu0448\\en\\e/\\\[char92]"()\\et"
+// Unicode value to encode to UTF8 or UTF16 (such as \\\\uD834\\\\uDD1E as a surrogate pair)
+set-string txt = "\\u0459\\\\\[char92]"Doc\\\\\[char92]"\\\\n\\\\t\\\\b\\\\f\\\\r\\\\t\\\\u21d7\\\\u21d8\\\\t\\\\u25b7\\\\u25ee\\\\uD834\\\\uDD1E\\\\u13eb\\\\u2ca0\\\\u0448\\\\n\\\\/\\\\\[char92]"()\\\\t"
 
 // Convert to UTF 
 text-utf txt status txt_status error-text txt_error
 
 // Expected UTF result
-set-string utf = "љ\[char92]"Doc\[char92]"\en\et\eb\ef\er\et⇗⇘\et▷◮𝄞ᏫⲠш\en/\[char92]"()\et"
+set-string utf = "љ\[char92]"Doc\[char92]"\\n\\t\\b\\f\\r\\t⇗⇘\\t▷◮𝄞ᏫⲠш\\n/\[char92]"()\\t"
 
 // Make sure conversion was successful
 if-true utf not-equal txt or txt_status not-equal GG_OKAY or txt_error not-equal ""
@@ -43,10 +43,3 @@ end-if
 .EE
 .RE
 
-.SH SEE ALSO
- UTF
-
-\fBtext-utf\fP  
-\fButf-text\fP   
-See all 
-\fBdocumentation\fP

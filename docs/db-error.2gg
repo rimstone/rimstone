@@ -41,24 +41,3 @@ db-error @mydb continue
 .EE
 .RE
 
-.SH SEE ALSO
- Database
-
-\fBbegin-transaction\fP  
-\fBcommit-transaction\fP  
-\fBcurrent-row\fP  
-\fBdatabase-config-file\fP  
-\fBdb-error\fP  
-\fBmariadb-database\fP  
-\fBpostgresql-database\fP  
-\fBrollback-transaction\fP  
-\fBrun-query\fP  
-\fBsqlite-database\fP   
- Error handling
-
-\fBdb-error\fP  
-\fBerror-code\fP  
-\fBerror-handling\fP  
-\fBreport-error\fP   
-See all 
-\fBdocumentation\fP

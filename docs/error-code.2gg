@@ -13,7 +13,7 @@ delete-file "some_directory" status stc
 if-true stc equal GG_ERR_DELETE
     get-req errno to e
     @Cannot delete file
-    print-format "Error %ld\en", e
+    print-format "Error %ld\\n", e
 end-if
 
 .EE
@@ -22,12 +22,3 @@ end-if
 Note that with some GG_ERR_... codes, the "errno" clause in get-req may return 0. This means the error was detected by Golf and not reported by the operating system.
 
 You can use standard Linux constants, as defined in C "errno.h" include file to compare the error code obtained with get-req. For instance, you can use constants like EACCES or EEXIST. To see what's the meaning of errno number or name, use standard Linux utility "errno".
-.SH SEE ALSO
- Error handling
-
-\fBdb-error\fP  
-\fBerror-code\fP  
-\fBerror-handling\fP  
-\fBreport-error\fP   
-See all 
-\fBdocumentation\fP

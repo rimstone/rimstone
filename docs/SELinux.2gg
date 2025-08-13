@@ -15,12 +15,12 @@ Note that OpenSUSE package does not come with SELinux policy as of this release,
 .B GENERAL
 .LP
 
-Golf policy files (including .te, .fc files, while .if file is empty) can be found here:
+Golf policy files (including .te files) can be found here:
 
 .RS 4
 .EX
 
-ls $(gg -l)/selinux/*.{te,fc}
+ls $(gg -l)/selinux/
 
 .EE
 .RE
@@ -29,7 +29,7 @@ As a part of installing Golf, the following SELinux types will be installed:
 
 .RS 4
 \[bu]    
-ggfile_t: all files within Golf directory (/var/lib/gg) are labeled with this type.
+ggfile_t: all files within Golf directory ($HOME/.golf) are labeled with this type.
 
 .RE
 
@@ -61,7 +61,7 @@ allows web servers (httpd_t domain type) to connect to sockets labeled with ggfi
 allows web servers to connect to any Golf process that is listening on a TCP port (see \fBgg\fP), but does not allow any other access (i.e. to any other ports).
 Golf policy allows normal functioning of Golf features only, but does not introduce any unnecessary privileges to the rest of the system.
 
-Note: Golf installation does not distribute .pp (compile) policy files, because it is not currently part of distro repos. Due to changes in SELinux and difference in versions installed across derived distros, Golf will compile source .te and .fc files during the installation, ensuring the best possibility of successful SELinux policy setup.
+Note: Golf installation does not distribute .pp (compile) policy files, because it is not currently part of distro repos. Due to changes in SELinux and difference in versions installed across derived distros, Golf will compile source .te files during the installation, ensuring the best possibility of successful SELinux policy setup.
 
 .LP
 .B UNIX DOMAIN SOCKETS
@@ -99,7 +99,7 @@ sudo semanage port -a -t ggport_t -p tcp  2209
 .B CHANGING OR ADDING DIRECTORIES
 .LP
 
-If you are adding directories to be used by Golf program, or changing a directory, for example using a different storage instead of /var/lib/gg (see \fBdirectories\fP), you need to label files in new directories:
+If you are adding directories to be used by Golf program, or changing a directory, for example using a different storage instead of "$HOME/.golf" (see \fBdirectories\fP), you need to label files in new directories:
 
 .RS 4
 .EX
@@ -121,9 +121,3 @@ sudo restorecon -R /your/new/dir
 .EE
 .RE
 
-.SH SEE ALSO
- SELinux
-
-\fBSELinux\fP   
-See all 
-\fBdocumentation\fP

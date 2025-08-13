@@ -25,6 +25,49 @@ string-number <string> [ to <number> ] \\
 
 If there are trailing invalid characters (for instance "182xy" for base 10), <number> is the result of conversion up to the first invalid character and <status> is GG_ERR_TOO_MANY. In this example, <number> would be 182.
 
+.LP
+.B SHORTCUT
+.LP
+
+For convenience, you can use a shortcut for converting a string to a number, by prepending a "#" sign to the variable name, for example:
+
+.RS 4
+.EX
+
+set-string s = "-10"
+set-number n = #s + 10
+
+.EE
+.RE
+
+The above is the same as:
+
+.RS 4
+.EX
+
+set-string s = "-10"
+string-number s to val
+set-number n = val + 10
+
+.EE
+.RE
+
+Effectively, # in front of a string variable is the same as string-number that converts it to a number with the base being the default (see above). If a string cannot be converted to a number, your program will \fBerror out\fP. To check values with a status, use string-number.
+
+You can use # for an expression, in which case the expression must be within parenthesis:
+
+.RS 4
+.EX
+
+set-string s1 = "-10"
+set-string s2 = "2"
+set-number n = #(s1+s2) + 10
+
+.EE
+.RE
+
+In this case number "n" will have value of -92, because strings "s1" and "s2" concatenate to produce "-102", which is then converted to a number and finally 10 added to it, producing -92.
+
 .SH EXAMPLES
 In this example, number "n" would be 49 and status "st" would be GG_OKAY:
 
@@ -36,13 +79,3 @@ string-number "49" to n base 10 status st
 .EE
 .RE
 
-.SH SEE ALSO
- Numbers
-
-\fBabs-number\fP  
-\fBnumber-expressions\fP  
-\fBnumber-string\fP  
-\fBset-number\fP  
-\fBstring-number\fP   
-See all 
-\fBdocumentation\fP

@@ -29,22 +29,3 @@ trim-string str
 .EE
 .RE
 
-.SH SEE ALSO
- Strings
-
-\fBconcatenate-strings\fP  
-\fBcopy-string\fP  
-\fBcount-substring\fP  
-\fBdelete-string\fP  
-\fBlower-string\fP  
-\fBnew-string\fP  
-\fBread-split\fP  
-\fBreplace-string\fP  
-\fBset-string\fP  
-\fBsplit-string\fP  
-\fBstring-length\fP  
-\fBtrim-string\fP  
-\fBupper-string\fP  
-\fBwrite-string\fP   
-See all 
-\fBdocumentation\fP

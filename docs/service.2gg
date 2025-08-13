@@ -61,24 +61,14 @@ which will start 20 processes.
 .B CONNECTION TIMEOUT
 .LP
 
-In a heavy-load environment, a client's connection may be rejected by the server. This may happen if the client runs very slowly due to swapping perhaps. Once a client establishes a connection, it has up to 5 seconds by default to send data; if it doesn't, the server will close the connection. Typically, clients send data right away, but due to a heavy load, this time may be longer. To set the connection timeout in milliseconds, set the following variable before starting the application server, for instance:
+In a heavy-load environment, a client's connection may be rejected by the server. This may happen if the client runs very slowly due to swapping perhaps. Once a client establishes a connection, it has up to 5 seconds by default to send data; if it doesn't, the server will close the connection. Typically, clients send data right away, but due to a heavy load, this time may be longer. To set the connection timeout in seconds, use "--client-timeout" option in gg when making the application:
 
 .RS 4
 .EX
 
-export "LIBFCGI_IS_AF_UNIX_KEEPER_POLL_TIMEOUT"="8000"
-mgrg -w 1 <app name>
+gg -q --client-timeout=8 
 
 .EE
 .RE
 
 In this case, the timeout is set to 8 seconds.
-.SH SEE ALSO
- Running application
-
-\fBapplication-setup\fP  
-\fBCGI\fP  
-\fBcommand-line\fP  
-\fBservice\fP   
-See all 
-\fBdocumentation\fP

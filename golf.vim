@@ -1,7 +1,10 @@
+" SPDX-License-Identifier: Apache-2.0
+" Copyright 2018-2025 Gliim LLC.
+" Licensed under Apache License v2. See LICENSE file.
+" On the web http://golf-lang.com/ - this file is part of Golf framework.
 " Language: Golf
-" Vim syntax file
+" Vim indent file
 " Maintainer: Gliim LLC
-" Latest Revision: 2025-June-05
 so $VIMRUNTIME/syntax/c.vim
 syntax sync minlines=10000
 hi def link golfConstruct Statement
@@ -275,6 +278,19 @@ syn region gg_r_construct_get_lifo start="^[[:space:]]*get-lifo" skip="\\[[:spac
     hi def link gg_h_clause_output_get_lifo    golfClauseOutput
     hi def link gg_h_construct_get_lifo    golfConstruct
     hi def link gg_h_print_inline_get_lifo    golfConstruct
+syn region gg_r_construct_get_upload start="^[[:space:]]*get-upload" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_upload,gg_r_inline_get_upload,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_upload,gg_r_inline_get_upload,gg_r_at
+    syn match gg_h_construct_get_upload "^[[:space:]]*get-upload" contained containedin=gg_r_construct_get_upload
+    syn match gg_h_clause_output_get_upload " client-file \@=" contained containedin=gg_r_construct_get_upload
+    syn match gg_h_clause_output_get_upload " extension \@=" contained containedin=gg_r_construct_get_upload
+    syn match gg_h_clause_output_get_upload " local-file \@=" contained containedin=gg_r_construct_get_upload
+    syn match gg_h_clause_output_get_upload " size \@=" contained containedin=gg_r_construct_get_upload
+    syn match gg_h_clause_get_upload " status \@=" contained containedin=gg_r_construct_get_upload
+    hi def link gg_h_clause_get_upload    golfClause
+    hi def link gg_h_clause_output_get_upload    golfClauseOutput
+    hi def link gg_h_construct_get_upload    golfConstruct
+    hi def link gg_h_print_inline_get_upload    golfConstruct
 syn region gg_r_construct_new_tree start="^[[:space:]]*new-tree" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_new_tree,gg_r_inline_new_tree,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_new_tree,gg_r_inline_new_tree,gg_r_at
@@ -395,6 +411,7 @@ syn region gg_r_construct_read_array start="^[[:space:]]*read-array" skip="\\[[:
     syn match gg_h_clause_read_array " delete,\@=" contained containedin=gg_r_construct_read_array
     syn match gg_h_clause_read_array " delete$" contained containedin=gg_r_construct_read_array
     syn match gg_h_clause_read_array " key \@=" contained containedin=gg_r_construct_read_array
+    syn match gg_h_clause_output_read_array " status \@=" contained containedin=gg_r_construct_read_array
     syn match gg_h_clause_output_read_array " value \@=" contained containedin=gg_r_construct_read_array
     hi def link gg_h_clause_read_array    golfClause
     hi def link gg_h_clause_output_read_array    golfClauseOutput
@@ -881,7 +898,6 @@ syn region gg_r_construct_set_bool start="^[[:space:]]*set-bool" skip="\\[[:spac
     syn match gg_h_clause_set_bool " contain \@=" contained containedin=gg_r_construct_set_bool
     syn match gg_h_clause_set_bool " equal \@=" contained containedin=gg_r_construct_set_bool
     syn match gg_h_clause_set_bool " every \@=" contained containedin=gg_r_construct_set_bool
-    syn match gg_h_clause_set_bool " from-condition \@=" contained containedin=gg_r_construct_set_bool
     syn match gg_h_clause_set_bool " greater-equal \@=" contained containedin=gg_r_construct_set_bool
     syn match gg_h_clause_set_bool " greater-than \@=" contained containedin=gg_r_construct_set_bool
     syn match gg_h_clause_set_bool " length \@=" contained containedin=gg_r_construct_set_bool
@@ -990,6 +1006,7 @@ syn region gg_r_construct_get_param start="^[[:space:]]*get-param" skip="\\[[:sp
     syn match gg_h_clause_get_param " , \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " ,,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " ,$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " default-value \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool-array \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool-array,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool-array$" contained containedin=gg_r_construct_get_param
@@ -1109,6 +1126,18 @@ syn region gg_r_construct_copy_string start="^[[:space:]]*copy-string" skip="\\[
     hi def link gg_h_clause_output_copy_string    golfClauseOutput
     hi def link gg_h_construct_copy_string    golfConstruct
     hi def link gg_h_print_inline_copy_string    golfConstruct
+syn region gg_r_construct_scan_string start="^[[:space:]]*scan-string" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_scan_string,gg_r_inline_scan_string,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_scan_string,gg_r_inline_scan_string,gg_r_at
+    syn match gg_h_construct_scan_string "^[[:space:]]*scan-string" contained containedin=gg_r_construct_scan_string
+    syn match gg_h_clause_scan_string " for \@=" contained containedin=gg_r_construct_scan_string
+    syn match gg_h_clause_scan_string " length \@=" contained containedin=gg_r_construct_scan_string
+    syn match gg_h_clause_scan_string " start-with \@=" contained containedin=gg_r_construct_scan_string
+    syn match gg_h_clause_output_scan_string " status \@=" contained containedin=gg_r_construct_scan_string
+    hi def link gg_h_clause_scan_string    golfClause
+    hi def link gg_h_clause_output_scan_string    golfClauseOutput
+    hi def link gg_h_construct_scan_string    golfConstruct
+    hi def link gg_h_print_inline_scan_string    golfConstruct
 syn region gg_r_construct_replace_string start="^[[:space:]]*replace-string" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_replace_string,gg_r_inline_replace_string,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_replace_string,gg_r_inline_replace_string,gg_r_at
@@ -1212,17 +1241,24 @@ syn region gg_r_construct_get_req start="^[[:space:]]*get-req" skip="\\[[:space:
     syn match gg_h_clause_get_req " source-file,\@=" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_get_req " source-file$" contained containedin=gg_r_construct_get_req
     syn match gg_h_clause_output_get_req " to \@=" contained containedin=gg_r_construct_get_req
-    syn match gg_h_clause_get_req " trace-file \@=" contained containedin=gg_r_construct_get_req
-    syn match gg_h_clause_get_req " trace-file,\@=" contained containedin=gg_r_construct_get_req
-    syn match gg_h_clause_get_req " trace-file$" contained containedin=gg_r_construct_get_req
     hi def link gg_h_clause_get_req    golfClause
     hi def link gg_h_clause_output_get_req    golfClauseOutput
     hi def link gg_h_construct_get_req    golfConstruct
     hi def link gg_h_print_inline_get_req    golfConstruct
+syn region gg_r_construct_set_app start="^[[:space:]]*set-app" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_set_app,gg_r_inline_set_app,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_set_app,gg_r_inline_set_app,gg_r_at
+    syn match gg_h_construct_set_app "^[[:space:]]*set-app" contained containedin=gg_r_construct_set_app
+    syn match gg_h_clause_set_app " stack-depth \@=" contained containedin=gg_r_construct_set_app
+    hi def link gg_h_clause_set_app    golfClause
+    hi def link gg_h_clause_output_set_app    golfClauseOutput
+    hi def link gg_h_construct_set_app    golfConstruct
+    hi def link gg_h_print_inline_set_app    golfConstruct
 syn region gg_r_construct_get_app start="^[[:space:]]*get-app" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_app,gg_r_inline_get_app,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_app,gg_r_inline_get_app,gg_r_at
     syn match gg_h_construct_get_app "^[[:space:]]*get-app" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " application \@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " db-vendor \@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " directory \@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " directory,\@=" contained containedin=gg_r_construct_get_app
@@ -1237,16 +1273,18 @@ syn region gg_r_construct_get_app start="^[[:space:]]*get-app" skip="\\[[:space:
     syn match gg_h_clause_get_app " name,\@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " name$" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " path \@=" contained containedin=gg_r_construct_get_app
-    syn match gg_h_clause_get_app " root-directory \@=" contained containedin=gg_r_construct_get_app
-    syn match gg_h_clause_get_app " root-directory,\@=" contained containedin=gg_r_construct_get_app
-    syn match gg_h_clause_get_app " root-directory$" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " socket-file \@=" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " socket-file,\@=" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " socket-file$" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " stack-depth \@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_output_get_app " to \@=" contained containedin=gg_r_construct_get_app
-    syn match gg_h_clause_get_app " trace-directory \@=" contained containedin=gg_r_construct_get_app
-    syn match gg_h_clause_get_app " trace-directory,\@=" contained containedin=gg_r_construct_get_app
-    syn match gg_h_clause_get_app " trace-directory$" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " upload-size \@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " upload-size,\@=" contained containedin=gg_r_construct_get_app
     syn match gg_h_clause_get_app " upload-size$" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " user \@=" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " user-directory \@=" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " user-directory,\@=" contained containedin=gg_r_construct_get_app
+    syn match gg_h_clause_get_app " user-directory$" contained containedin=gg_r_construct_get_app
     hi def link gg_h_clause_get_app    golfClause
     hi def link gg_h_clause_output_get_app    golfClauseOutput
     hi def link gg_h_construct_get_app    golfConstruct
@@ -1259,9 +1297,15 @@ syn region gg_r_construct_get_sys start="^[[:space:]]*get-sys" skip="\\[[:space:
     syn match gg_h_clause_get_sys " directory,\@=" contained containedin=gg_r_construct_get_sys
     syn match gg_h_clause_get_sys " directory$" contained containedin=gg_r_construct_get_sys
     syn match gg_h_clause_get_sys " environment \@=" contained containedin=gg_r_construct_get_sys
+    syn match gg_h_clause_get_sys " os-dir \@=" contained containedin=gg_r_construct_get_sys
+    syn match gg_h_clause_get_sys " os-dir,\@=" contained containedin=gg_r_construct_get_sys
+    syn match gg_h_clause_get_sys " os-dir$" contained containedin=gg_r_construct_get_sys
     syn match gg_h_clause_get_sys " os-name \@=" contained containedin=gg_r_construct_get_sys
     syn match gg_h_clause_get_sys " os-name,\@=" contained containedin=gg_r_construct_get_sys
     syn match gg_h_clause_get_sys " os-name$" contained containedin=gg_r_construct_get_sys
+    syn match gg_h_clause_get_sys " os-user \@=" contained containedin=gg_r_construct_get_sys
+    syn match gg_h_clause_get_sys " os-user,\@=" contained containedin=gg_r_construct_get_sys
+    syn match gg_h_clause_get_sys " os-user$" contained containedin=gg_r_construct_get_sys
     syn match gg_h_clause_get_sys " os-version \@=" contained containedin=gg_r_construct_get_sys
     syn match gg_h_clause_get_sys " os-version,\@=" contained containedin=gg_r_construct_get_sys
     syn match gg_h_clause_get_sys " os-version$" contained containedin=gg_r_construct_get_sys
@@ -1903,27 +1947,6 @@ syn region gg_r_construct_exit_status start="^[[:space:]]*exit-status" skip="\\[
     hi def link gg_h_clause_output_exit_status    golfClauseOutput
     hi def link gg_h_construct_exit_status    golfConstruct
     hi def link gg_h_print_inline_exit_status    golfConstruct
-syn region gg_r_construct_trace_run start="^[[:space:]]*trace-run" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
-    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_trace_run,gg_r_inline_trace_run,gg_r_at
-    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_trace_run,gg_r_inline_trace_run,gg_r_at
-    syn match gg_h_construct_trace_run "^[[:space:]]*trace-run" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " , \@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " ,,\@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " ,$" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " to \@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " to-error \@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " to-error,\@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " to-error$" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " url-encode \@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " url-encode,\@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " url-encode$" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " web-encode \@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " web-encode,\@=" contained containedin=gg_r_construct_trace_run
-    syn match gg_h_clause_trace_run " web-encode$" contained containedin=gg_r_construct_trace_run
-    hi def link gg_h_clause_trace_run    golfClause
-    hi def link gg_h_clause_output_trace_run    golfClauseOutput
-    hi def link gg_h_construct_trace_run    golfConstruct
-    hi def link gg_h_print_inline_trace_run    golfConstruct
 syn region gg_r_construct_report_error start="^[[:space:]]*report-error" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_report_error,gg_r_inline_report_error,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_report_error,gg_r_inline_report_error,gg_r_at

@@ -2,7 +2,7 @@
 .SH NAME
 copy-string \-  (strings)
 .SH PURPOSE
-Copies string to another string.
+Copies (sub)string to another string.
 
 .SH SYNTAX
 
@@ -17,7 +17,7 @@ copy-string <source string> to <dest string> \\
 .RE
 
 .SH DESCRIPTION
-Use copy-string to copy <source string> to <dest string>.
+Use copy-string to copy <source string> to <dest string>, in its entirety or just a part of it.
 
 <start with> number (in "start-with" clause) is the position in <source string> to start copying from, with 0 being the first byte.
 
@@ -43,6 +43,23 @@ upper-string str // change the copy
 .RE
 
 
+.LP
+.B SUBSTRINGS WITHIN EXPRESSIONS
+.LP
+
+You can use "@" to extract a substring and use it as a <string> in \fBstring-expressions\fP; it takes the form of @(<source string>, <start with>, <length>), just like in copy-string. For instance:
+
+.RS 4
+.EX
+
+set-string str = "some string!"
+set-string res = @(str, 5,3) + " yes!"
+
+.EE
+.RE
+
+The value of variable "res" would be "str yes!". The advantage of using @() notation in string expressions is that it is more efficient and of higher performance; a substring is added to other string(s) without being first copied into a separate string.
+
 .SH EXAMPLES
 After copy-string below, "my_str" will be a copy of string "some value":
 
@@ -66,22 +83,3 @@ copy-string other_string to my_str length 3 start-with 1
 .EE
 .RE
 
-.SH SEE ALSO
- Strings
-
-\fBconcatenate-strings\fP  
-\fBcopy-string\fP  
-\fBcount-substring\fP  
-\fBdelete-string\fP  
-\fBlower-string\fP  
-\fBnew-string\fP  
-\fBread-split\fP  
-\fBreplace-string\fP  
-\fBset-string\fP  
-\fBsplit-string\fP  
-\fBstring-length\fP  
-\fBtrim-string\fP  
-\fBupper-string\fP  
-\fBwrite-string\fP   
-See all 
-\fBdocumentation\fP

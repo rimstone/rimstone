@@ -74,13 +74,3 @@ set-string mins="42"
 .EE
 .RE
 
-.SH SEE ALSO
- Language
-
-\fBinline-code\fP  
-\fBstatements\fP  
-\fBsyntax-highlighting\fP  
-\fBunused-var\fP  
-\fBvariable-scope\fP   
-See all 
-\fBdocumentation\fP

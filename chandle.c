@@ -10,7 +10,10 @@
 // crash occurs.
 //
 // For the source code/line number reporting to work,  -g and
-// -rdynamic (most likely) must be used. 
+// -rdynamic (most likely) must be used. Golf always does that automatically.
+//
+// This uses libbacktrace (see LICENSE in btrace directory in Golf source, as well License 
+// in documentation for copyright and acknowledgement details).
 //
 
 #ifndef _GNU_SOURCE
@@ -20,6 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <assert.h>
 #include <execinfo.h>
 #include <string.h>
@@ -31,196 +35,234 @@
 #include <link.h>
 #include <sys/resource.h>
 #include "golf.h"
+#include "btrace/backtrace.h"
 
 // *******************
-// NO CALLS TO CODE OUTSIDE OF THIS MODULE MUST BE MADE AND NO GG_TRACE()!!
+// NO CALLS TO CODE OUTSIDE OF THIS MODULE MUST BE MADE!! This is a self-containing backtrace-providing module.
 // *******************
-// Otherwise, those calls' tracing would always place
-// the last 'traced' (i.e. visited) location, right there
-// and not in the place where it happened
-// Meaning, as a crash-handling code, all of it is right here.
  
 // limitations on stack size, intended to be reasonably well sized
 //
-#define MAX_STACK_FRAMES 512
-#define MAX_EXPL_LEN 1024
+#define GG_MAX_MSG_LEN 2048 // max length of message with backtrace. It goes from deepest levels first, so it will catch the most important bits
+#define GG_MAX_STACK_FRAMES 150
 
-
-// Describes the ELF segments of shared libraries used, in particular the name and address range for each
-// so that at run time we find out for each stack element where exactly it comes from - and determine
-// the exact source code location. We assume program has less than MAX_SO shared objects used
-#define MAX_SO 100
+static char *expla = ""; // error explanation
+// outputting data
+static char gg_emsg[GG_MAX_MSG_LEN];  // message that's output
+static gg_num gg_emsg_pos = 0; // current position where we're writing into the message
+//
 
 // these are generally set elsewhere for usage here, they provide
 // additional information about where we were when crash happened
 volatile gg_num gg_end_program=0; // when SIGTERM is received, set this to 1 to exit gracefully
-extern gg_num gg_in_request;
+extern gg_num gg_in_request; // 1 if we're processing request when signal happened, 0 if not
+                             // determines how we handle the signal (we wait for request to end if it's in the request,
+                             // otherwise quit)
 
-// Static variables to be used in the case of a crash
-static void *stack_dump[MAX_STACK_FRAMES]; // stack frame`
-static char timestr[100];
-static char expla[MAX_EXPL_LEN + 1];
-static char backtrace_file[600];
-static char backtrace_start[sizeof(backtrace_file)+1500];
-static gg_so_info so[MAX_SO]; // info on all shared libraries linked with this program
-static gg_num total_so = 0; // total number of shared libraries we found on startup
+// Functions
+static void signal_handler(int sig);
+static void set_signal_handler();
+static char *btrace_path; // full path of backtrace, including file prefix bt.<PID>
+static struct backtrace_state *bt_state; // state of backtrace viewer, created once
+static void bt_handle_error (void *data, const char *msg, int error_number);
+static int bt_handle_info (void *data, uintptr_t pc, const char *srcfile, int lnum, const char *function);
+static void gg_add_msg (char *add, gg_num *pos, char *to, gg_num avail);
+static void gg_itos (int n, char *s, gg_num avail);
+char *curr_err; // current error message from the caller
 
-// function prototypes
-gg_num addr2line(void const * const addr, char *fname);
-void posix_print_stack_trace();
-void signal_handler(int sig);
-void set_signal_handler();
-void gg_get_time_crash (char *outstr, gg_num outstrLen);
-int modinfo(struct dl_phdr_info *info, size_t size, void *data);
-
-
-// 
-// Resolve symbol name and source location given the path to the executable 
-// and an address 
-// addr is program address for which to find line #.
-// fname is file name where to write.
-// Returns exit code from addr2line
-// This function is called multiple times (once for each line
-//      on backtrace), so we use >> to add to output
-//
-gg_num addr2line(void const * const addr, char *fname)
-{
-    char addr2line_cmd[512] = {0};
-    assert (fname);
-    assert (addr);
-    gg_num it;
-
-    //
-    // Go through all shared objects and find out where is the address on the stack located.
-    // This allows us to find base address and shared object name, and thus the source code location.
-    //
-    for (it = 0; it < total_so; it++)
-    {
-       //
-       // Is address in question between the start and end address of shared object?
-       //
-       if (so[it].mod_addr<=addr && addr<=so[it].mod_end) 
-       {
-           break;
-       }
-    }
-
-
-    if (it == total_so)
-    {
-        //
-        // This should NEVER happen, we couldn't find the address in any shared object!! We just default to first one
-        // even if it won't really work
-        //
-        it = 0;
-    }
-
-    if (strstr (so[it].mod_name, "linux-vdso.so.1") == NULL)
-    {
-
-        // get line information for an address, and put it into a backtrace file
-        // that has timestamp and process number. We do this by finding the actual RELATIVE
-        // address of the fault address (addr) and the load address of this executable module (mod_addr)
-        snprintf(addr2line_cmd, sizeof(addr2line_cmd), "addr2line -f -e %s 0x%lx |grep -v \"??\" >> %s", so[it].mod_name, (unsigned long)(addr-so[it].mod_addr+so[it].mod_offset),
-            fname);
-    
-        // execute addr2line, which is a Linux utility that does this 
-        return system(addr2line_cmd);
-    }
-    else
-        return 0;
-}
-
-// 
-// Get stack trace for current execution, then abort program.
-//
-void posix_print_stack_trace()
-{
-    gg_get_stack(backtrace_file);
-    gg_report_error ("Program received a signal, see backtrace file");
-}
 
 // 
 // Obtain backtrace, and write information to output file fname.
-// Obtain each stack item and process it to obtain file name and line number.
-// Print out along side other information for debugging and post-mortem.
-// Do not call this more than once, because certain failures may loop back here
-// and go into infinite loop, destroying all useful information.
+// We don't use signal unsafe functions, like printf, hence our own number-to-string conversion, plus formatted output
 //
-void gg_get_stack(char *fname)
+void gg_get_stack(char *err)
 {
-#ifndef DEBUG
-    return; // do not bog down production with stack printout, only if debugging mode
-#endif
-
-    //
-    // This static variable is okay because if we're here, the program WILL end right here in this module.
-    // So after it restarts, this static variable will re-initialize.
-    //
-    static gg_num was_here = 0;
-    gg_num i = 0;
-    gg_num trace_size = 0;
-    char **dump_msg = (char **)NULL;
-    gg_num rs;
-
-    if (was_here == 1)
-        return;
-
-    was_here = 1;
-    GG_UNUSED(rs);
-
-    // set a hook for module loading, so we go through all modules loaded
-    // and then figure out the one we're in and get the info needed for
-    // source code/line number resolution. 
-    dl_iterate_phdr(&modinfo, NULL);
-
-
-    // get stack and symbols
-    trace_size = backtrace(stack_dump, MAX_STACK_FRAMES);
-    dump_msg = backtrace_symbols(stack_dump, trace_size);
- 
-    snprintf(backtrace_start, sizeof(backtrace_start), "echo 'START STACK DUMP ***********' >> %s", fname);
-    rs = system (backtrace_start);
-
-    gg_get_time_crash (timestr, sizeof(timestr)-1);
-    snprintf(backtrace_start, sizeof(backtrace_start), "echo '%d: %s: %s' >> %s", getpid(), timestr, expla, backtrace_file);
-    rs = system (backtrace_start);
-
-    // get source and line number for each stack line item
-    for (i = 0; i < trace_size; ++i)
-    {
-        // try to display what we can
-        // we don't check for return value because some lines with ??
-        // are filtered out (we only look for source line in the module we originate from)
-
-        // divide stack entries
-        snprintf(backtrace_start, sizeof(backtrace_start), "echo '-----' >> %s",  fname);
-        rs = system (backtrace_start);
-
-        // display source file/line number
-        addr2line(stack_dump[i], fname);
-        snprintf(backtrace_start, sizeof(backtrace_start), "echo '%s' >> %s", dump_msg[i], fname);
-        rs = system (backtrace_start);
+    // init stack just before getting it. We don't do it in signal handler, because we can call gg_get_stack() outside of it, say for
+    // Golf own exceptions
+    static bool binit = false;
+    if (!binit)
+    { // perform init just once
+        // we don't use threads, so second param is 0. If this fails, it calls error handler and that's it.
+        bt_state = backtrace_create_state(NULL, 0, bt_handle_error, NULL); // init can be called here, it's as gcc does it
+        binit = true;
     }
-    snprintf(backtrace_start, sizeof(backtrace_start), "echo 'END STACK DUMP ***********' >> %s", fname);
-    rs = system (backtrace_start);
 
-    // skip freeing to avoid potential issues SIGKILL
-    //if (dump_msg) { free(dump_msg); } 
+    // init buffer for writing
+    gg_emsg[0] = 0;
+    gg_emsg_pos = 0;
+    // get stack
+    curr_err = err;
+    //
+    // backtrace_full will get a full stack backtrace. Second parameter is the number of frames to skip; we could skip this function
+    // but we do filtering ourselves. NULL is the 'data', which is the first parameter in the handlers; we can pass something along here.
+    backtrace_full(bt_state, 0, bt_handle_info, bt_handle_error, NULL);
+    //
+    //
+    //
+    gg_gen_write (true, gg_emsg, gg_emsg_pos); // write to stderr - first write the stack
+
+    // Construct the file name to output to
+    char btrace_cur[GG_MAX_FILE_NAME+50]; // file name of the current stack trace (pid-1,2,3...) so one for each incident, easier to use
+    gg_num btrace_pos = 0; // position in btrace_cur string
+    static gg_num btrace_counter  = 0; // counter of stack trace incidents, 1,2,3...
+    // get the counter as string
+    char counter[30];
+    gg_itos (btrace_counter, counter, sizeof(counter));
+    // file name, generic trace $HOME/.golf/apps/<app>/app/trace/bt.PID-<incident>
+    gg_add_msg (btrace_cur, &btrace_pos, btrace_path, sizeof(btrace_cur));
+    gg_add_msg (btrace_cur, &btrace_pos, "-", sizeof(btrace_cur));
+    gg_add_msg (btrace_cur, &btrace_pos, counter, sizeof(btrace_cur));
+    btrace_counter++; // increase for the next one
+    // open file, write, close it; this way info is passed on to OS for sure; file is owner read/write only
+    int bwrite = open (btrace_cur, O_WRONLY|O_APPEND|O_CREAT, S_IRUSR+S_IWUSR);
+    int written = write (bwrite, gg_emsg, gg_emsg_pos); 
+    GG_UNUSED(written); // if it doesn't work, we do nothing as this isn't the functionality; it's a best-effort try to record
+    close (bwrite);
 
 }
 
+//
+// Convert safely (without using signal unsafe functions) number n to string s
+// avail is the number of bytes available in s
+static void gg_itos (int n, char *s, gg_num avail)
+{
+    bool neg = (n<0?true:false);
+    if (neg) n = -n;
+#define GG_MAX_DIGITS 25
+    if (avail <= GG_MAX_DIGITS) {s[0] = 0; return;}
+    int last = GG_MAX_DIGITS-2;
+    do
+    {
+        int mod = n % 10;
+        n = n / 10;
+        s[last--] = '0'+mod;
+        if (last == 0) { s[0] = 0; return; }
+    } while (n>0);
+    last++; // go back the first digit
+    int sign_adj = 0;
+    if (neg) {s[0] = '-'; sign_adj=1;}
+    memmove (s+sign_adj, s+last, GG_MAX_DIGITS-2-last+1);
+    s[sign_adj+GG_MAX_DIGITS-2-last+1] = 0;
+}
+
+//
+// Add string 'add' to 'to', which has avail bytes left. Start with pos in add.
+// If no room, ignore 'to' (this is a best effort task)
+//
+static void gg_add_msg (char *add, gg_num *pos, char *to, gg_num avail)
+{
+    gg_num lto = strlen (to);
+    if (*pos + lto >= avail-1) return; // keep room for \0
+    memcpy (add+*pos, to, lto);
+    *pos+=lto;
+    add[*pos] = 0;
+}
+
+
+//
+// Error Handler for backtrace. We shouldn't really encounter this. Typically, 
+// msg is something like 'no debug info found'. Or it could be a corrupted executable etc.
+// error_number is errno for this.
+//
+static void bt_handle_error (void *data, const char *msg, int error_number) 
+{
+    GG_UNUSED(data);
+    if (error_number == -1) 
+    { // cannot determine error information
+        return;
+    }
+    else 
+    {
+        // display what was the issue, why couldn't we get the stack backtrace?
+        gg_add_msg (gg_emsg, &gg_emsg_pos, "Backtrace error ", sizeof(gg_emsg));
+        char lnum[50];
+        gg_itos (error_number, lnum, sizeof(lnum));
+        gg_add_msg (gg_emsg, &gg_emsg_pos, (char*)lnum, sizeof(gg_emsg));
+        gg_add_msg (gg_emsg, &gg_emsg_pos, ": ", sizeof(gg_emsg));
+        gg_add_msg (gg_emsg, &gg_emsg_pos, (char*)msg, sizeof(gg_emsg));
+        gg_add_msg (gg_emsg, &gg_emsg_pos, "\n", sizeof(gg_emsg));
+        // this will be displayed in gg_get_stack() since this is called  from backtrace_full(), also written to a file there
+  }
+}
+
+
+//
+// This is called to make each line of stack trace by the backtrace. pc is program counter. filename is the source file.
+// lnum is the line number in it. function is the function name.
+// Returns 0 to continue tracing. We return 1 when too many stack traces are present. This is so we don't go overboard ourselves
+// and crash here; we want to show something useful, but if program dies here, nothing may come out of it.
+// srcfile has a full path
+//
+static int bt_handle_info (void *data, uintptr_t pc, const char *srcfile, int lnum, const char *function) 
+{
+    GG_UNUSED(data);
+    GG_UNUSED(pc);
+    static gg_num sframes = 0; // how many stack frames we process?
+    static gg_num first_output = true; // special output for the very first output
+
+    if (srcfile != NULL && function != NULL && lnum != 0)  // sanity check
+    {
+        const char *filename = strrchr(srcfile, '/'); // find the first / in reverse
+        if (filename != NULL) filename++; else filename = srcfile; // file name is now basename(), which we don't use for safety here
+        // Do not output anything for functions here, in golfrt.c and for main/libc. This is just to remove info that isn't very useful.
+        // Just these specific functions, others are fine (and needed); mostly because these are fixed and always there.
+        if (!(
+                (!strcmp (filename, "chandle.c"))
+                || 
+                (!strcmp (filename, "golfrt.c") && !strcmp (function, "gg_write_ereport")) 
+                || 
+                (!strcmp (filename, "golfrt.c") && !strcmp (function, "gg_dispatch_request")) 
+                || 
+                (!strncmp (function, "__libc_", 7)) 
+                || 
+                (!strcmp (function, "main")) 
+          ))
+        {
+            if (first_output)
+            { 
+                // For the very first line, output error itself, timestamp, and intro that backtrace follow
+                first_output = false;
+                gg_add_msg (gg_emsg, &gg_emsg_pos, "\n--- ", sizeof(gg_emsg));
+                gg_add_msg (gg_emsg, &gg_emsg_pos, curr_err, sizeof(gg_emsg));
+                gg_add_msg (gg_emsg, &gg_emsg_pos, ". Stack backtrace of the error:\n", sizeof(gg_emsg));
+            }
+            // output backtrace line
+            // this will be displayed in gg_get_stack() since this is called  from backtrace_full(), also written to a file there
+            //
+            bool is_golf = (strstr (filename,".golf") != NULL);
+            // If this is golf source, put * in front, this makes it visually easier to see
+            // otherwise just plain indent
+            if (is_golf) gg_add_msg (gg_emsg, &gg_emsg_pos, "     *", sizeof(gg_emsg));
+            else gg_add_msg (gg_emsg, &gg_emsg_pos, "      ", sizeof(gg_emsg));
+            /// convert line num to string
+            char lnum_str[50];
+            gg_itos (lnum, lnum_str, sizeof(lnum_str));
+            // display filename:line in func()
+            gg_add_msg (gg_emsg, &gg_emsg_pos, (char*)filename, sizeof(gg_emsg));
+            gg_add_msg (gg_emsg, &gg_emsg_pos, ":", sizeof(gg_emsg));
+            gg_add_msg (gg_emsg, &gg_emsg_pos, (char*)lnum_str, sizeof(gg_emsg));
+            gg_add_msg (gg_emsg, &gg_emsg_pos,  " in ", sizeof(gg_emsg));
+            gg_add_msg (gg_emsg, &gg_emsg_pos, (char*)function, sizeof(gg_emsg));
+            gg_add_msg (gg_emsg, &gg_emsg_pos,  "()", sizeof(gg_emsg));
+            gg_add_msg (gg_emsg, &gg_emsg_pos, "\n", sizeof(gg_emsg));
+            if (sframes++ > GG_MAX_STACK_FRAMES) return  1; // this means stop doing it, too many; meaning backtrace_full() will stop after this
+        }
+    }
+    return 0; // continue to the next line, backtrace_full() uses this
+}
+
+
+
 // 
 // Signal handler for signal sig. sig is signal number
-// This way at run time we know which signal was caught. We also core dump for 
-// more information.
+// This way at run time we know which signal was caught. 
 // NO GOLF MEMORY HANDLING HERE
 // This will either end program (due to request to end it, or some fatal condition), or set the flag
 // to end it once the current request completes, and that's all it can do.
 //
-void signal_handler(int sig)
+static void signal_handler(int sig)
 {
-
+    
     // this code MUST REMAIN SPARSE and use only basic ops, as it handles jumping 
     // here, unless this is SIGTERM, this is fatal and the process EXITS
 
@@ -236,58 +278,57 @@ void signal_handler(int sig)
     // on what's really happening
     gg_in_fatal_exit = 1;
 
+    expla="Unknown error"; // default if we can't figure it out
 
     switch(sig)
     {
         case SIGFPE:
-            gg_strncpy(expla, "Caught SIGFPE: math exception, such as divide by zero\n",
-                MAX_EXPL_LEN - 1);
+            expla= "Caught SIGFPE: math exception, such as divide by zero";
             break;
         case SIGILL:
-            gg_strncpy(expla, "Caught SIGILL: illegal code\n",  MAX_EXPL_LEN - 1);
+            expla= "Caught SIGILL: illegal code";
             break;
         case SIGABRT:
         case SIGBUS:
         case SIGSEGV:
-            if (sig == SIGABRT) gg_strncpy(expla, "Caught SIGABRT: usually caused by an abort() or assert()\n", MAX_EXPL_LEN - 1);
-            if (sig == SIGBUS) gg_strncpy(expla, "Caught SIGBUS: bus error\n",  MAX_EXPL_LEN - 1);
-            if (sig == SIGSEGV) gg_strncpy(expla, "Caught SIGSEGV: segmentation fault\n",  MAX_EXPL_LEN - 1);
+            if (sig == SIGABRT) expla= "Caught SIGABRT: usually caused by an abort() or assert()";
+            if (sig == SIGBUS) expla= "Caught SIGBUS: bus error";
+            if (sig == SIGSEGV) expla= "Caught SIGSEGV: segmentation fault";
             break;
         case SIGHUP:
-            gg_strncpy(expla, "Caught SIGHUP: hang up\n",  MAX_EXPL_LEN - 1);
+            expla= "Caught SIGHUP: hang up";
             break;
         case SIGTERM:
             gg_end_program = 1;
             if (gg_in_request == 0) 
             {
-                gg_strncpy(expla, "Caught SIGTERM: request for graceful shutdown, shutting down now as I am not processing a request\n",  MAX_EXPL_LEN - 1);
-                // since we're not processing request, req is undefined and will make gg_report_error() crash (we will
-                // inevitably call it as part of quitting).
-                // so we make it NULL, since gg_report_error() guards against that.
-                gg_get_config()->ctx.req = NULL;
-                break;
+                expla="Caught SIGTERM: request for graceful shutdown, shutting down now as Golf is not processing a request";
+                break; // go down, print out stack and end it
             }
             else
             {
-                gg_strncpy(expla, "Caught SIGTERM: request for graceful shutdown, will shutdown once a request is processed\n",  MAX_EXPL_LEN - 1);
+                expla= "Caught SIGTERM: request for graceful shutdown, Golf will shutdown once a request is processed";
             }
-            return;
-        default:
-            // this really should not happen since we handled all the signals we trapped, just in case
-            snprintf(expla, sizeof(expla), "Caught something not handled, signal [%d]\n", sig);
-            break;
+            return; // we go back to finish current request if SIGTERM was sent, and we're in the middle of it
     }
 
-    snprintf(backtrace_start, sizeof(backtrace_start), "echo '***\n***\n***\n' >> %s", backtrace_file);
-    gg_num rs = system (backtrace_start);
-    GG_UNUSED(rs);
-
-    // 
-    // Printout stack trace
-    //
-    posix_print_stack_trace();
+    // this means if the error is outside request processing, and it's command, still output to standard error
+    // because we can do it; and we're exiting here anyway at this point
+#ifdef GG_COMMAND
+    gg_finished_output = 0;
+#endif
 
 
+    gg_get_stack(expla);
+     // NOTE: this is in signal handler, only serious Golf bugs basically come here. We just dump stack and exit. Doing more than
+     // that can cause more trouble. We cannot realistically send server status back to the client. Client will know just by the fact
+     // that the connection broke. 
+     //
+     // A report-error (whether it's a statement, or if Golf called it because of memory safety guard or like that), will NEVER be calling here
+     // That goes to  v1.c (in do_printf) or _gg_report_error (if memory safety issue or status etc). Those will continue processing (if service).
+     //
+
+    // exit and quit, cannot continue
     GG_FATAL ("Exiting because of the signal: [%s]", expla);
 }
  
@@ -295,143 +336,56 @@ void signal_handler(int sig)
 // 
 // Set each signal handler, this must be called asap in the program
 //
-void set_signal_handler()
+static void set_signal_handler()
 {
     struct sigaction psa;
     memset (&psa, 0, sizeof (psa));
     psa.sa_handler = signal_handler;
+    sigemptyset(&psa.sa_mask);
+    psa.sa_flags = SA_RESTART;
     // We do not set psa.sa_flags to SA_RESTART because vf -d process management depends on
     // properly interrupting the read() and such
     if (sigaction(SIGABRT, &psa, NULL) == -1) GG_FATAL ("Cannot set ABRT signal handler");
     if (sigaction(SIGFPE,  &psa, NULL) == -1) GG_FATAL ("Cannot set FPE signal handler");
     if (sigaction(SIGILL,  &psa, NULL) == -1) GG_FATAL ("Cannot set ILL signal handler");
     if (sigaction(SIGSEGV, &psa, NULL) == -1) GG_FATAL ("Cannot set SEGV signal handler");
+    if (sigaction(SIGFPE, &psa, NULL) == -1) GG_FATAL ("Cannot set SEGFPE signal handler");
     if (sigaction(SIGBUS, &psa, NULL) == -1) GG_FATAL ("Cannot set BUS signal handler");
     if (sigaction(SIGTERM, &psa, NULL) == -1) GG_FATAL ("Cannot set TERM signal handler");
     if (sigaction(SIGHUP, &psa, NULL) == -1) GG_FATAL ("Cannot set HUP signal handler");
+    //
     // ignore these
-    signal(SIGPIPE, SIG_IGN); // ignore broken pipe
-    signal(SIGINT, SIG_IGN); // ignore ctrl c and such
-    signal(SIGUSR1, SIG_IGN); // ignore as it has no meaning for Golf
-    signal(SIGUSR2, SIG_IGN); // ignore as it has no meaning for Golf
+    //
+    struct sigaction ipsa;
+    memset (&ipsa, 0, sizeof (ipsa));
+    sigemptyset(&ipsa.sa_mask);
+    ipsa.sa_handler = SIG_IGN;
+    if (sigaction(SIGINT, &ipsa, NULL) == -1) GG_FATAL ("Cannot ignore SIGINT"); // ctrl c
+    if (sigaction(SIGPIPE, &ipsa, NULL) == -1) GG_FATAL ("Cannot ignore SIGPIPE"); // broken pipe
+    if (sigaction(SIGUSR1, &ipsa, NULL) == -1) GG_FATAL ("Cannot ignore SIGUSR1"); // no meaning in golf yet
+    if (sigaction(SIGUSR2, &ipsa, NULL) == -1) GG_FATAL ("Cannot ignore SIGUSR2"); // no meaning in golf yet
     // CANNOT ignore SIGCHLD because we DO need status from them
     // DO NOT do anything with SIGALRM - curl uses it for timeouts
 }
 
 
 
-// 
-// Obtain load start address for current executable module. This must be 
-// deducted from an address obtained by backtrace.. in order to have proper
-// source/line number information available.
-// Returns 0.
-//
-int modinfo(struct dl_phdr_info *info, size_t size, void *data)
-{
-    // set as unused as API is broader than what we need
-    GG_UNUSED(size);
-    GG_UNUSED(data);
-
-
-    gg_num i;
-
-    // go through a list of segments loaded for this module and pick one we're in
-    // and make sure we get the loading address
-    for (i = 0; i < info->dlpi_phnum; i++) 
-    {
-        // get start load address of module - look at all that are executable (PF_X) - this
-        // covers not just shared libs but the main executable too
-        if (info->dlpi_phdr[i].p_type == PT_LOAD && (info->dlpi_phdr[i].p_flags & PF_X))
-        {
-            // this is global module address we will use in addr2line as a base to deduct
-            so[total_so].mod_addr = (void *) (info->dlpi_addr + info->dlpi_phdr[i].p_vaddr);
-
-            // the offset is in the file, but for addr2line we need that
-            so[total_so].mod_offset = info->dlpi_phdr[i].p_offset;
-
-            // get ending module, we use it here to find out if we're in the range of addresses
-            // for this module, and if we are, this is the base module for our code
-            so[total_so].mod_end = so[total_so].mod_addr + info->dlpi_phdr[i].p_memsz-1;
-
-            // get module name, we will be using it in addr2line
-            if (info->dlpi_name == NULL || info->dlpi_name[0] == 0)
-            {
-                // this is main program
-                if (readlink("/proc/self/exe", so[total_so].mod_name, sizeof(so[total_so].mod_name)-1) == -1)
-                {
-                    continue; // do not increment total_so, go to the next one, should not happen
-                }
-            }
-            else
-            {
-                snprintf(so[total_so].mod_name,sizeof(so[total_so].mod_name),"%s", info->dlpi_name);
-            }
-            total_so++;
-            if (total_so >= MAX_SO)
-            {
-                break; // in this case there's more shared object(plus main) than we can handle, we will break
-                       // and try to find the addresses, but some are missing. The only solution to this problem
-                       // is to increase MAX_SO. Normally 100 should be more than enough though.
-            }
-        }
-    }
-    return 0;
-}
- 
 //
 // This is what's called by generated GOLF program at the beginning
 // to enable catchng signals and dumping human-readable stack in backtrace file
-// 'dir' is the tracing directory where to write trace file
+// btrace is a partial file name (with path), i.e. /$HOME/.golf/apps/<app>/app/trace/bt.<PID> and we add -1, -2.. to it
+// when writing out incidents
 //
-void gg_set_crash_handler(char *dir)
+void gg_set_crash_handler(char *btrace)
 {
-    // build backtrace file name to be used througout here
-    snprintf(backtrace_file, sizeof(backtrace_file), "%s/backtrace", dir);
-
-    expla[0] = 0;
-
+    expla="";
+    btrace_path = btrace;
     // set signal handling
     set_signal_handler();
 
 }
 
-// 
-// Get time without tracing, self contained here
-// This is on purpose, so no outside calls are made
-// see explanation at the top of this file
-// This uses localtime on the server
-// 'outstr' is the output time, and 'outstrLen' is the 
-// length of this buffer.
-//
-void gg_get_time_crash (char *outstr, gg_num outstrLen)
-{
-    time_t t;
-    struct tm *tmp;
 
-    t = time(NULL);
-    tmp = localtime(&t);
-    if (tmp == NULL) 
-    {
-        outstr[0] = 0;
-        return; 
-    }
-
-    if (strftime(outstr, outstrLen, "%F-%H-%M-%S", tmp) == 0) 
-    {
-        outstr[0] = 0;
-    }
-}
-
-
-//
-// Return total number of shared libraries loaded.
-// Output variable sos is the list of shared libraries loaded, which we can print out if needed.
-//
-gg_num gg_total_so(gg_so_info **sos)
-{
-    *sos =  so;
-    return total_so;
-}
 
 
 

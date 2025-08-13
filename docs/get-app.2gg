@@ -10,9 +10,11 @@ Obtain data that describes the application.
 .EX
 
 get-app \\
-    name | directory | trace-directory | file-directory | root-directory \\
+        name | directory | file-directory | 
+        ( user-directory [ user <user> ] ) | \\
+        ( socket-file [ user <user> ] [ application <app> ] ) \\
         | db-vendor <database configuration> | upload-size \\
-        | path | is-service \\
+        | path | is-service | stack-depth \\
     to <variable>
 
 .EE
@@ -35,13 +37,13 @@ Application-related variables can be obtained with get-app statement. The follow
 
 .RS 4
 \[bu]    
-"trace-directory" is the directory where your application trace files are written, if enabled (see \fBdirectories\fP).
+"user-directory" is the user directory, i.e a directory that houses all applications that belong to the user (see \fBdirectories\fP). If "user" is not given, then user is the current Operating system user; otherwise user is <user>. 
 
 .RE
 
 .RS 4
 \[bu]    
-"root-directory" is the Golf's root directory (i.e. where Golf is installed, see \fBdirectories\fP).
+"socket-file" is the socket-file used to communicate with an application (see \fBnew-remote\fP, \fBggcli\fP, \fBClient-API\fP). If neither "user" nor "application" subclauses are given, then user is current Operating system user and application is the currently running application. If "user" subclause is given, then user is <user>. If "application" subclause is specified, then application is <application>. 
 
 .RE
 
@@ -66,6 +68,12 @@ Application-related variables can be obtained with get-app statement. The follow
 .RS 4
 \[bu]    
 "path" is the leading path of the URL request that can be used to build web forms and links leading back to your application. It returns the same value as used in \fBprint-path\fP before <request path> is appended.
+
+.RE
+
+.RS 4
+\[bu]    
+"stack-depth" is the maximum allowed stack depth for calling handlers, including recursion.
 
 .RE
 
@@ -99,9 +107,3 @@ end-if
 .EE
 .RE
 
-.SH SEE ALSO
- Application information
-
-\fBget-app\fP   
-See all 
-\fBdocumentation\fP

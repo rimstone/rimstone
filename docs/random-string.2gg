@@ -34,7 +34,7 @@ Get a 100-digit long random value (as an alphanumeric string):
 .EX
 
 random-string to str length 100
-print-format "%s\en", str
+print-format "%s\\n", str
 
 .EE
 .RE
@@ -45,7 +45,7 @@ Get a random number of length 10 in string representation:
 .EX
 
 random-string to str length 10 number
-print-format "%s\en", str
+print-format "%s\\n", str
 
 .EE
 .RE
@@ -60,15 +60,3 @@ random-string to str length 8 binary
 .EE
 .RE
 
-.SH SEE ALSO
- Encryption
-
-\fBdecrypt-data\fP  
-\fBderive-key\fP  
-\fBencrypt-data\fP  
-\fBhash-string\fP  
-\fBhmac-string\fP  
-\fBrandom-crypto\fP  
-\fBrandom-string\fP   
-See all 
-\fBdocumentation\fP

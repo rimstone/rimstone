@@ -4,12 +4,12 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 601.4.58
+.B REFERENCE FOR GOLF VERSION 3.0.1
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
 
-Browse by topic:    API,   Application information,   Array,   Base64,   Booleans,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Encryption,   Error handling,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   Install golf,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
+Browse by topic:    API,   Application information,   Array,   Articles,   Base64,   Booleans,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Encryption,   Error handling,   Examples,   FastCGI client,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   Install golf,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
 
 
 
@@ -27,7 +27,8 @@ API
 \[bu]    
 Application information
 
-\fBget-app\fP   
+\fBget-app\fP  
+\fBset-app\fP   
 .RE
 
 
@@ -40,6 +41,48 @@ Array
 \fBpurge-array\fP  
 \fBread-array\fP  
 \fBwrite-array\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Articles
+
+\fBarticle-capi\fP  
+\fBarticle-cookies\fP  
+\fBarticle-debug\fP  
+\fBarticle-distributed\fP  
+\fBarticle-encryption\fP  
+\fBarticle-fifo\fP  
+\fBarticle-file-manager\fP  
+\fBarticle-hello-server\fP  
+\fBarticle-hello-world\fP  
+\fBarticle-hello-world-service\fP  
+\fBarticle-hello-world-service-web\fP  
+\fBarticle-json\fP  
+\fBarticle-language\fP  
+\fBarticle-mariadb\fP  
+\fBarticle-memory-safety\fP  
+\fBarticle-memory-safety-web\fP  
+\fBarticle-notes-postgres\fP  
+\fBarticle-random\fP  
+\fBarticle-regex\fP  
+\fBarticle-remote-call\fP  
+\fBarticle-request-function\fP  
+\fBarticle-security\fP  
+\fBarticle-sendmail\fP  
+\fBarticle-server\fP  
+\fBarticle-shopping\fP  
+\fBarticle-sqlite\fP  
+\fBarticle-statements\fP  
+\fBarticle-status-check\fP  
+\fBarticle-tree\fP  
+\fBarticle-tree-web\fP  
+\fBarticle-vim-coloring\fP  
+\fBarticle-web-framework-for-c-programming-language\fP  
+\fBarticle-what-is-golf\fP  
+\fBarticle-what-is-web-service\fP   
 .RE
 
 
@@ -108,8 +151,7 @@ Database
 \[bu]    
 Debugging
 
-\fBdebugging\fP  
-\fBtrace-run\fP   
+\fBdebugging\fP   
 .RE
 
 
@@ -177,6 +219,24 @@ Error handling
 
 .RS 4
 \[bu]    
+Examples
+
+\fBexamples\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+FastCGI client
+
+\fBggcli\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
 FIFO
 
 \fBdelete-fifo\fP  
@@ -200,6 +260,7 @@ Files
 \fBfile-position\fP  
 \fBfile-storage\fP  
 \fBfile-uploading\fP  
+\fBget-upload\fP  
 \fBlock-file\fP  
 \fBopen-file\fP  
 \fBread-file\fP  
@@ -219,6 +280,7 @@ Files
 General
 
 \fBabout-golf\fP  
+\fBdevel-versus-release\fP  
 \fBdirectories\fP  
 \fBpermissions\fP   
 .RE
@@ -262,20 +324,7 @@ Hex encoding
 \[bu]    
 Install golf
 
-\fBinstall-arch-manjaro\fP  
-\fBinstall-debian\fP  
-\fBinstall-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
-\fBinstall-from-source-arch-manjaro\fP  
-\fBinstall-from-source-debian-ubuntu-raspbian\fP  
-\fBinstall-from-source-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
-\fBinstall-from-source-opensuse\fP  
-\fBinstall-in-any-folder-arch-manjaro\fP  
-\fBinstall-in-any-folder-debian-ubuntu-raspbian\fP  
-\fBinstall-in-any-folder-fedora-redhat-rocky-alma-centos-amazon-mageia\fP  
-\fBinstall-in-any-folder-opensuse\fP  
-\fBinstall-opensuse\fP  
-\fBinstall-raspbian\fP  
-\fBinstall-ubuntu\fP  
+\fBinstall-golf\fP  
 \fBuninstall\fP   
 .RE
 
@@ -514,16 +563,18 @@ Service processing
 \[bu]    
 Strings
 
-\fBconcatenate-strings\fP  
 \fBcopy-string\fP  
 \fBcount-substring\fP  
 \fBdelete-string\fP  
 \fBlower-string\fP  
+\fBmatch-regex\fP  
 \fBnew-string\fP  
 \fBread-split\fP  
 \fBreplace-string\fP  
+\fBscan-string\fP  
 \fBset-string\fP  
 \fBsplit-string\fP  
+\fBstring-expressions\fP  
 \fBstring-length\fP  
 \fBtrim-string\fP  
 \fBupper-string\fP  
@@ -636,32 +687,42 @@ XML parsing
 .B MAN PAGES
 .LP
 
-Golf documentation is available online, and also as man pages (i.e. manual pages). You can take any of the topics above and type it in man, for example
+Golf documentation is available online, and also as man pages (i.e. manual pages). You can use 'man' to get help (if man program is available on your system), for instance:
 
 .RS 4
 .EX
 
-man run-query
+man read-file
 
 .EE
 .RE
 
-The Golf section is '2gg', so in case of other software having conflicting topic names, you can also type
+Golf uses section 2gg of man, so you can also use (in case of conflicts):
 
 .RS 4
 .EX
 
-man 2gg run-query
+man 2gg read-file
 
 .EE
 .RE
 
-You can see all available man pages (along with the sections they belong to) with:
+If man program is not available on your system, you can also view topics with 'gg --man <topic>', for example:
 
 .RS 4
 .EX
 
-gg --man
+gg --man run-query
+
+.EE
+.RE
+
+To show all topics, type:
+
+.RS 4
+.EX
+
+gg --man all
 
 .EE
 .RE
