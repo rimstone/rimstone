@@ -25,7 +25,7 @@ Source code is at \fBhttps://github.com/golf-lang/golf\fP (with mirrors on \fBGi
 .B CURRENT VERSION
 .LP
 
-The current release (3.0.1) passed 2902 automated functional tests.
+The current release (3.0.9) passed 2909 automated functional tests.
 
 .LP
 .B EXAMPLE
@@ -60,6 +60,12 @@ end-handler
 .LP
 
 \fBBlog\fP articles and examples:
+
+.RS 4
+\[bu]    
+2025-08-13 \fBNew version of Golf available\fP
+.RE
+
 
 .RS 4
 \[bu]    

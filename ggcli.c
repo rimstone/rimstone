@@ -75,12 +75,12 @@ int main (int argc, char **argv)
     // Make a request
     int res = gg_cli_request (&req);
 
-    // Check return status, and if there's an error, display error code and exit with the
-    // corresponding error message. Otherwise, print out server response verbatim.
-    if (res != GG_OKAY) {fprintf(stderr,"%s", req.errm); exit(res);}
-    else printf("%s", gg_cli_data(&req));
+    // Output exactly the bytes sent back, both stderr and stdout
+    fwrite_unlocked(gg_cli_error(&req), req.error_len, 1, stderr); 
+    // Print stdout as well, since service can produce both!
+    fwrite_unlocked(gg_cli_data(&req), req.data_len, 1, stdout); 
 
     // Free up resources so there are no memory leaks;  though we're exiting in this case, so it's faster for the OS to perform this
     //gg_cli_delete(&req);
-    exit(0); // okay status
+    exit(res); // okay status
 }

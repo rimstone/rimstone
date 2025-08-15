@@ -198,7 +198,7 @@ static int bt_handle_info (void *data, uintptr_t pc, const char *srcfile, int ln
     GG_UNUSED(data);
     GG_UNUSED(pc);
     static gg_num sframes = 0; // how many stack frames we process?
-    static gg_num first_output = true; // special output for the very first output
+    static gg_num first_output = 1; // special output for the very first output
 
     if (srcfile != NULL && function != NULL && lnum != 0)  // sanity check
     {

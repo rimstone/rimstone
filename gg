@@ -798,10 +798,10 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
 #
 #
 function showerr() {
-    NUMT=$(ls -rt $GG_DATA/apps/$GG_C_NAME/trace/bt* 2>/dev/null||true|wc -l)
-    if [ "$NUMT" != "0" ]; then
-        STRACE=$(ls -rt $GG_DATA/apps/$GG_C_NAME/trace/bt* | tail -n $1)
-        for i in $STRACE; do
+    #accounts for too many files
+    ERRF=$(find $GG_DATA/apps/$GG_C_NAME/trace/ -maxdepth 1 -name "bt*" -type f -printf '%T@ %p\n' | sort -k1,1nr |  awk '{print $2}'| head -$1)
+    if [ "$ERRF" != "" ]; then
+        for i in $ERRF; do
             echo "******* File: $i"
             cat $i
             echo ""

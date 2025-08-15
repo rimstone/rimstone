@@ -14,6 +14,7 @@ Get Golf source code from its official GitHub repo (depth is 1 for speed):
 .EX
 
 git clone --depth 1 https://github.com/golf-lang/golf.git
+cd golf
 
 .EE
 .RE
