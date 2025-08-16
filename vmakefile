@@ -56,7 +56,7 @@ endif
   
 #Note: -rdynamic is necessary for libgcc to be loaded in order to get a backtrace when needed
 ifeq ($(strip $(GG_C_DEVEL)),1)
-    _OPTIM_COMP=-g3 -O $(GG_DEBUG) -rdynamic 
+    _OPTIM_COMP=-g3 -O $(GG_DEBUG) -DGG_DEVEL -rdynamic 
     _OPTIM_LINK=-rdynamic
     CFLAGS_WARN_ERROR=-Werror 
     _LTO=

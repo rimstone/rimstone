@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "3.0.9"
+#define GG_VERSION "3.0.12"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -70,6 +70,7 @@
 #include <stdbool.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/prctl.h>
 // param.h for min/max without side effects
 #include <sys/param.h>
 #include <stdint.h>

@@ -453,6 +453,7 @@ typedef struct s_gg_if {
 //
 //
 
+bool gg_check_lib = true; // check if libraries are present; do not check when in debug mode
 char *out_file_name = NULL; // file name that's output for .golf file
 // what libs we use
 bool gg_mod_curl = false;
@@ -3134,6 +3135,7 @@ char *process_bool_exp (char *v)
     if (!strcmp (v, "true") || !strcmp (v, "false")) return v;
     bool found;
     check_bool (v, &found);
+    if (!found) gg_report_error ("Expression is not a boolean");
     make_var (&v, GG_DEFBOOL, false); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
     return v; // new variable instead of expression
 }
@@ -3156,6 +3158,7 @@ char *process_number_exp (char *v)
 {
     bool found;
     check_exp (v, &found);
+    if (!found) gg_report_error ("Expression is not a number");
     make_var (&v, GG_DEFNUMBER, false); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
     return v;
 }
@@ -11288,88 +11291,91 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
         }
     }
     
-    // mark exact libs we need for linking, this must happen *BEFORE* any gg_report_error below, 
-    // or otherwise gglib won't be able to tell what needs to be done
-    if (gg_mod_mariadb) mark_lib ("MARIADB");
-    if (gg_mod_sqlite) mark_lib ("SQLITE");
-    if (gg_mod_postgres) mark_lib ("POSTGRES");
-    if (gg_mod_curl) mark_lib ("CURL");
-    if (gg_mod_pcre2) mark_lib ("PCRE2");
-    if (gg_mod_crypto) mark_lib ("CRYPTO");
-    if (gg_mod_xml) mark_lib ("XML");
-    if (gg_mod_service) mark_lib ("SERVICE");
-    if (gg_mod_array) mark_lib ("ARRAY");
-    if (gg_mod_tree) mark_lib ("TREE");
+    if (gg_check_lib)
+    {
+        // mark exact libs we need for linking, this must happen *BEFORE* any gg_report_error below, 
+        // or otherwise gglib won't be able to tell what needs to be done
+        if (gg_mod_mariadb) mark_lib ("MARIADB");
+        if (gg_mod_sqlite) mark_lib ("SQLITE");
+        if (gg_mod_postgres) mark_lib ("POSTGRES");
+        if (gg_mod_curl) mark_lib ("CURL");
+        if (gg_mod_pcre2) mark_lib ("PCRE2");
+        if (gg_mod_crypto) mark_lib ("CRYPTO");
+        if (gg_mod_xml) mark_lib ("XML");
+        if (gg_mod_service) mark_lib ("SERVICE");
+        if (gg_mod_array) mark_lib ("ARRAY");
+        if (gg_mod_tree) mark_lib ("TREE");
 #define GG_INST "Required library [%s] is not installed. You can install it from command line with:\n%s\nPlease install it and try again"
-    // Examine libraries and offer exact advice on how to install
-    if (gg_mod_mariadb)
-    {
-        char *has_mariadb = getenv ("GG_MARIADB_EX");
-        if (has_mariadb == NULL || has_mariadb[0] != '0')
+        // Examine libraries and offer exact advice on how to install
+        if (gg_mod_mariadb)
         {
-            char *pkg = getenv ("GG_MARIADB_PACKAGE");
-            char *ipkg = getenv ("GG_MARIADB_INSTALL");
-            gg_report_error (GG_INST, pkg==NULL?"MariaDB":pkg, ipkg==NULL?"unknown":ipkg ); 
+            char *has_mariadb = getenv ("GG_MARIADB_EX");
+            if (has_mariadb == NULL || has_mariadb[0] != '0')
+            {
+                char *pkg = getenv ("GG_MARIADB_PACKAGE");
+                char *ipkg = getenv ("GG_MARIADB_INSTALL");
+                gg_report_error (GG_INST, pkg==NULL?"MariaDB":pkg, ipkg==NULL?"unknown":ipkg ); 
+            }
         }
-    }
-    if (gg_mod_sqlite)
-    {
-        char *has_sqlite = getenv ("GG_SQLITE_EX");
-        if (has_sqlite == NULL || has_sqlite[0] != '0')
+        if (gg_mod_sqlite)
         {
-            char *pkg = getenv ("GG_SQLITE_PACKAGE");
-            char *ipkg = getenv ("GG_SQLITE_INSTALL");
-            gg_report_error (GG_INST, pkg==NULL?"SQLite":pkg, ipkg==NULL?"unknown":ipkg ); 
+            char *has_sqlite = getenv ("GG_SQLITE_EX");
+            if (has_sqlite == NULL || has_sqlite[0] != '0')
+            {
+                char *pkg = getenv ("GG_SQLITE_PACKAGE");
+                char *ipkg = getenv ("GG_SQLITE_INSTALL");
+                gg_report_error (GG_INST, pkg==NULL?"SQLite":pkg, ipkg==NULL?"unknown":ipkg ); 
+            }
         }
-    }
-    if (gg_mod_postgres)
-    {
-        char *has_postgres = getenv ("GG_POSTGRES_EX");
-        if (has_postgres == NULL || has_postgres[0] != '0')
+        if (gg_mod_postgres)
         {
-            char *pkg = getenv ("GG_POSTGRES_PACKAGE");
-            char *ipkg = getenv ("GG_POSTGRES_INSTALL");
-            gg_report_error (GG_INST, pkg==NULL?"Postgres":pkg, ipkg==NULL?"unknown":ipkg ); 
+            char *has_postgres = getenv ("GG_POSTGRES_EX");
+            if (has_postgres == NULL || has_postgres[0] != '0')
+            {
+                char *pkg = getenv ("GG_POSTGRES_PACKAGE");
+                char *ipkg = getenv ("GG_POSTGRES_INSTALL");
+                gg_report_error (GG_INST, pkg==NULL?"Postgres":pkg, ipkg==NULL?"unknown":ipkg ); 
+            }
         }
-    }
-    if (gg_mod_curl)
-    {
-        char *has_curl = getenv ("GG_CURL_EX");
-        if (has_curl == NULL || has_curl[0] != '0')
+        if (gg_mod_curl)
         {
-            char *pkg = getenv ("GG_CURL_PACKAGE");
-            char *ipkg = getenv ("GG_CURL_INSTALL");
-            gg_report_error (GG_INST, pkg==NULL?"curl":pkg, ipkg==NULL?"unknown":ipkg ); 
+            char *has_curl = getenv ("GG_CURL_EX");
+            if (has_curl == NULL || has_curl[0] != '0')
+            {
+                char *pkg = getenv ("GG_CURL_PACKAGE");
+                char *ipkg = getenv ("GG_CURL_INSTALL");
+                gg_report_error (GG_INST, pkg==NULL?"curl":pkg, ipkg==NULL?"unknown":ipkg ); 
+            }
         }
-    }
-    if (gg_mod_pcre2) 
-    {
-        char *has_pcre2 = getenv ("GG_PCRE2_EX");
-        if (has_pcre2 == NULL || has_pcre2[0] != '0')
+        if (gg_mod_pcre2) 
         {
-            char *pkg = getenv ("GG_PCRE2_PACKAGE");
-            char *ipkg = getenv ("GG_PCRE2_INSTALL");
-            gg_report_error (GG_INST, pkg==NULL?"PCRE2":pkg, ipkg==NULL?"unknown":ipkg ); 
+            char *has_pcre2 = getenv ("GG_PCRE2_EX");
+            if (has_pcre2 == NULL || has_pcre2[0] != '0')
+            {
+                char *pkg = getenv ("GG_PCRE2_PACKAGE");
+                char *ipkg = getenv ("GG_PCRE2_INSTALL");
+                gg_report_error (GG_INST, pkg==NULL?"PCRE2":pkg, ipkg==NULL?"unknown":ipkg ); 
+            }
         }
-    }
-    if (gg_mod_crypto)
-    {
-        char *has_crypto = getenv ("GG_CRYPTO_EX");
-        if (has_crypto == NULL || has_crypto[0] != '0')
+        if (gg_mod_crypto)
         {
-            char *pkg = getenv ("GG_CRYPTO_PACKAGE");
-            char *ipkg = getenv ("GG_CRYPTO_INSTALL");
-            gg_report_error (GG_INST, pkg==NULL?"OpenSSL":pkg, ipkg==NULL?"unknown":ipkg ); 
+            char *has_crypto = getenv ("GG_CRYPTO_EX");
+            if (has_crypto == NULL || has_crypto[0] != '0')
+            {
+                char *pkg = getenv ("GG_CRYPTO_PACKAGE");
+                char *ipkg = getenv ("GG_CRYPTO_INSTALL");
+                gg_report_error (GG_INST, pkg==NULL?"OpenSSL":pkg, ipkg==NULL?"unknown":ipkg ); 
+            }
         }
-    }
-    if (gg_mod_xml)
-    {
-        char *has_xml = getenv ("GG_XML_EX");
-        if (has_xml == NULL || has_xml[0] != '0')
+        if (gg_mod_xml)
         {
-            char *pkg = getenv ("GG_XML_PACKAGE");
-            char *ipkg = getenv ("GG_XML_INSTALL");
-            gg_report_error (GG_INST, pkg==NULL?"XML":pkg, ipkg==NULL?"unknown":ipkg ); 
+            char *has_xml = getenv ("GG_XML_EX");
+            if (has_xml == NULL || has_xml[0] != '0')
+            {
+                char *pkg = getenv ("GG_XML_PACKAGE");
+                char *ipkg = getenv ("GG_XML_INSTALL");
+                gg_report_error (GG_INST, pkg==NULL?"XML":pkg, ipkg==NULL?"unknown":ipkg ); 
+            }
         }
     }
 
@@ -11579,6 +11585,10 @@ int main (int argc, char* argv[])
         else if (!strcmp (argv[i], "-single-file"))
         {
             gg_single_file = true;
+        }
+        else if (!strcmp (argv[i], "-debug")) // internal for debugging only
+        {
+            gg_check_lib = false;
         }
         else if (!strcmp (argv[i], "-public"))
         {
@@ -11996,6 +12006,13 @@ int main (int argc, char* argv[])
     
         oprintf("int main (int argc, char *argv[])\n");
         oprintf("{\n");
+        //
+        // If a program is devel (not release), give ptracer privilege to anyone who otherwise has privileges on it
+        // This isn't something that *must* succeed, we will not stop or issue message if it doesn't as it may cause malfunctioning otherwise
+        // We would check if -1 if we ever  do that.
+        oprintf("#ifdef GG_DEVEL\n");
+        oprintf ("prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY);\n");
+        oprintf("#endif\n");
         //
 
         // gg_done_init and allocation of config structure are done once per program run

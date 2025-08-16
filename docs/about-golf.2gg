@@ -223,6 +223,12 @@ In extended mode, Golf is also a \fBweb-framework-for-C-programming-language\fP.
 Do not use object names (such as variables and request names) that start with "_gg_" or "gg_" (including upper-case variations) as those are reserved by Golf.
 
 .LP
+.B CONTRIBUTIONS
+.LP
+
+See \fBcontributions\fP for more information.
+
+.LP
 .B AUTHOR
 .LP
 
