@@ -43,7 +43,7 @@ get-app directory to home_dir
 .B TRIMMING
 .LP
 
-Just like with all other Golf code, every line is trimmed both on left and write, so this:
+Just like with all other Golf code, the text of every statement is trimmed both on left and write, so this:
 
 .RS 4
 .EX
@@ -69,7 +69,7 @@ is the same as:
 
 write-string (or "((") statement must always be on a line by itself (and so does end-write-string, or "))" statement). The string being built starts with the line following write-string, and ends with the line immediately prior to end-write-string. 
 
-All trailing empty lines are removed, for example:
+All trailing whitespaces (including new lines) are removed, for example:
 
 .RS 4
 .EX

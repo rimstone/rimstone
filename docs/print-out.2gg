@@ -9,13 +9,10 @@ Print data out.
 .RS 4
 .EX
 
-print-out <string> [ <length> ] [ url-encode | web-encode ] [ new-line ]
-
-print-out <number> new-line 
-
-print-out source-file [ new-line ]
-
-print-out source-line [ new-line ]
+print-out ( ( <string> [ length <length> ] [ url-encode | web-encode ] [ new-line ] )
+          | <number> new-line 
+          | source-file [ new-line ]
+          | source-line [ new-line ] ) , ...
 
 .EE
 .RE
@@ -220,3 +217,19 @@ If "new-line" clause is used, then a new line ("\\n") is output afterwards.
 
 .RE
 
+
+.LP
+.B LIST OF EXPRESSIONS
+.LP
+
+You can specify a list of expressions separated by a comma to print them out in the order specified, with the end result the same as if they were separate print-outs, for instance:
+
+.RS 4
+.EX
+
+print-out str new-line, num, " some string ", str1 web-encode new-line
+
+.EE
+.RE
+
+In this case, you'll be outputting string "str", number "num", a string constant " some string ", and a web-encoded string "str1". There are no whitespaces between each item output.

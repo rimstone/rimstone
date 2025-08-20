@@ -3,7 +3,7 @@
 examples \- Golf documentation (examples)
 .SH DESCRIPTION
 Golf examples
-Updated on 2025-08-16
+Updated on 2025-08-19
 
 
 .RS 4
@@ -46,6 +46,15 @@ Distributed computing is two or more servers communicating for a common purpose.
 \[bu]    
 \fBEncryption: ciphers, digests, salt, IV and a hands-on guide\fP
 Encryption is a method of turning data into an unusable form that can be made useful only by means of decryption. The purpose is to make data available solely to those who can decrypt it (i.e. make it usable). Typically, data needs to be encrypted to make sure it cannot be obtained in case of unauthorized access. It is the last line of defense after an attacker has managed to break through authorization systems and access control. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHow to get the web page source code programmatically\fP
+Fetching a web resource (including web page source) is a one-liner in Golf. First, create a new application ("get-page" here): ...
 
 .RE
 
@@ -100,6 +109,15 @@ Writing a \fBservice\fP is the same as writing a \fBcommand-line\fP program in G
 \[bu]    
 \fBWeb service Hello World\fP
 To access a Golf service on the web, you need to have a web server or load balancer (think Apache, Nginx, HAProxy etc.). ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHow to create a Golf application\fP
+To create a Golf application, use "-k" option of gg utility: ...
 
 .RE
 

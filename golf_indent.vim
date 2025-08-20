@@ -13,7 +13,7 @@ let b:did_indent = 1
 
 setlocal iskeyword+=-
 setlocal indentexpr=GetGolfIndent(v:lnum)
-setlocal indentkeys=o,O,e,0},=end-if,=end-query,=end-handler,=end-loop,=end-read-line,=end-do-once,=end-defined,=end-after-handler,=end-before-handler,=end-write-string,0)),0%%,=else-if,!^F
+setlocal indentkeys=o,O,e,0},=end-if,=end-query,=end-handler,=end-loop,=end-read-line,=end-do-once,=end-defined,=end-after-handler,=end-before-handler,=end-write-string,=)),0%%,=else-if,!^F
 
 function! GetGolfIndent(lnum)
     let l = a:lnum

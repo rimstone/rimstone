@@ -521,6 +521,12 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
     fi
     check_name "$GG_C_NAME" "application name"
     export GG_BLD=$GG_DATA/apps/$GG_C_NAME/.bld
+    E=0
+#make a tmp directory as it's faster, but if not, use the classic, then link so we have a fixed URL always that's the same
+    GG_BLD_TMP=$(mktemp -d /tmp/golf-$GG_C_NAME-XXXXXXXXXX)||E=$?
+    if [ "$E" == "0" ]; then 
+        ln -s $GG_BLD_TMP $GG_BLD
+    fi
     export GG_BLD0=$GG_BLD/.bld
     export GG_H="$GG_DATA/apps/$GG_C_NAME"
     export GG_A="$GG_H/app"
@@ -1065,20 +1071,26 @@ $OF"
         done
     done
 
-    echo "#SPDX-License-Identifier: Apache-2.0" >> $GG_BLD/$_T.new
-    echo "#Copyright 2018-2025 Gliim LLC. " >> $GG_BLD/$_T.new
-    echo >> $GG_BLD/$_T.new
-    echo "#" >> $GG_BLD/$_T.new
-    echo "#Lists source files in your application. This is an auto-generated file." >> $GG_BLD/$_T.new
-    echo "#" >> $GG_BLD/$_T.new
-    echo >> $GG_BLD/$_T.new
-    echo "#Include files here:" >> $GG_BLD/$_T.new
+    NL=$'\n'
+#
+#
+#
+    TNEW=""
+    TNEW+="#SPDX-License-Identifier: Apache-2.0$NL"
+    TNEW+="#Copyright 2018-2025 Gliim LLC. $NL"
+    TNEW+=$NL
+    TNEW+="#$NL"
+    TNEW+="#Lists source files in your application. This is an auto-generated file.$NL"
+    TNEW+="#$NL"
+    TNEW+=$'\n'
+    TNEW+="#Include files here:$NL"
     _HFILES=$(grep -a -v golfapp.h <<<"$GG_HLIST" | xargs)
-    echo "GG_HEADER_FILES=$(echo $_HFILES)" >> $GG_BLD/$_T.new
-    echo >> $GG_BLD/$_T.new
-    echo "#Source files here:" >> $GG_BLD/$_T.new
-    echo "GG_SOURCE_FILES=$(echo $GG_GOLFLIST)" >> $GG_BLD/$_T.new
-    echo "GG_SOURCE_C_FILES=$(echo $GG_CLIST)" >> $GG_BLD/$_T.new
+    TNEW+="GG_HEADER_FILES=$_HFILES$NL"
+    TNEW+=$NL
+    TNEW+="#Source files here:$NL"
+    TNEW+="GG_SOURCE_FILES=$GG_GOLFLIST$NL"
+    TNEW+="GG_SOURCE_C_FILES=$GG_CLIST$NL"
+    echo "$TNEW" >$GG_BLD/$_T.new
 
     _ISDIFF=$(diff $GG_BLD/$_T.new $GG_BLD/$_T 2>/dev/null) || true
     if [[ "$_ISDIFF" != "" || ! -f "$GG_BLD/$_T" ]]; then
@@ -1094,21 +1106,23 @@ $OF"
 #
     _T="golfapp.h"
 
-    echo "// SPDX-License-Identifier: Apache-2.0"  >> $GG_BLD/$_T.new
-    echo "// Copyright 2018-2025 Gliim LLC. ">> $GG_BLD/$_T.new
-    echo >> $GG_BLD/$_T.new
-    echo "// This is an auto-generated file for a GOLF application" >> $GG_BLD/$_T.new
-    echo >> $GG_BLD/$_T.new
-    echo "#ifndef _GOLFAPP" >> $GG_BLD/$_T.new
-    echo "#define _GOLFAPP" >> $GG_BLD/$_T.new
-    echo >> $GG_BLD/$_T.new
+    TNEW=""
+    TNEW+="// SPDX-License-Identifier: Apache-2.0$NL"
+    TNEW+="// Copyright 2018-2025 Gliim LLC.$NL"
+    TNEW+=$NL
+    TNEW+="// This is an auto-generated file for a GOLF application$NL"
+    TNEW+=$NL
+    TNEW+="#ifndef _GOLFAPP$NL"
+    TNEW+="#define _GOLFAPP$NL"
+    TNEW+=$NL
     if [ "$_HFILES" != "" ]; then
         for i in $_HFILES; do
-            sed 's/\(.*\)/#include "\1"/g' <<< $i >> $GG_BLD/$_T.new
+            ONEH=$(sed 's/\(.*\)/#include "\1"/g' <<< $i)
+            TNEW+="$ONEH$NL"
         done
-        echo >> $GG_BLD/$_T.new
+        TNEW+=$NL
     fi
-    echo "// function prototypes of your code" >> $GG_BLD/$_T.new
+    TNEW+="// function prototypes of your code$NL"
 #declare all functions, including non-request ones (whether implemented or not)
     for _F in $GG_REQLIST; do
         RN=${_F%.*}
@@ -1121,10 +1135,11 @@ $OF"
             rm -f $GG_BLD/$_T.new 
             error "Service handler name cannot be a C reserved word [$RN]"
         fi
-        echo "gg_num ${RN}();" >> $GG_BLD/$_T.new
+        TNEW+="gg_num ${RN}();$NL"
     done
-    echo >> $GG_BLD/$_T.new
-    echo "#endif" >> $GG_BLD/$_T.new
+    TNEW+="$NL"
+    TNEW+="#endif$NL"
+    echo "$TNEW" >$GG_BLD/$_T.new 
 
     #if newly generated file is the same as the old one, don't touch the old one in order to
     #prevent recompilation needlessly
@@ -1145,20 +1160,21 @@ $OF"
         error "Application must have at least one .golf file, or no begin-handler (or %%) statements found"
     fi
 
-    echo "// SPDX-License-Identifier: Apache-2.0" >>$GG_BLD/$_T.new
-    echo "// Copyright 2018-2025 Gliim LLC. " >>$GG_BLD/$_T.new
-    echo >>$GG_BLD/$_T.new
-    echo "// GOLF auto-generated request dispatcher" >>$GG_BLD/$_T.new
-    echo >>$GG_BLD/$_T.new
-    echo "#include \"golf.h\"" >>$GG_BLD/$_T.new
-    echo "void gg_dispatch_request() {" >>$GG_BLD/$_T.new
+    TNEW=""
+    TNEW+="// SPDX-License-Identifier: Apache-2.0$NL"
+    TNEW+="// Copyright 2018-2025 Gliim LLC. $NL"
+    TNEW+=$NL
+    TNEW+="// GOLF auto-generated request dispatcher$NL"
+    TNEW+=$NL
+    TNEW+="#include \"golf.h\"$NL"
+    TNEW+="void gg_dispatch_request() {$NL"
 
 
 #req_done used to skip before/after execution if no handler used
-    echo "    volatile int req_done;" >>$GG_BLD/$_T.new #volatile because of longjmp, so the init below doesn't get optimized
+    TNEW+="    volatile int req_done;$NL" #volatile because of longjmp, so the init below doesn't get optimized
 
     if [ "$GG_REQLIST_C" != "0" ]; then
-        echo "    char *req=gg_get_config()->ctx.req->name;" >>$GG_BLD/$_T.new
+        TNEW+="    char *req=gg_get_config()->ctx.req->name;$NL"
     fi
     #
     # Setting up longjmp must be done after ANY local variables are established so they are not lost after any exit-handler
@@ -1170,65 +1186,72 @@ $OF"
 #then move on to the next request.
 #Cannot place setjmp within if, may not process correctly when jump happens.
 #We use gg_done_setjmp to prohibit exit-handler from executing the jump unless sigsetjmp was done first at runtime.
-    echo "    int ret_val = sigsetjmp(gg_jmp_buffer, 1);" >>$GG_BLD/$_T.new
-    echo "    if (ret_val != 0) goto end_point_exit;" >>$GG_BLD/$_T.new
-    echo "    gg_done_setjmp = 1;" >>$GG_BLD/$_T.new
+    TNEW+="    int ret_val = sigsetjmp(gg_jmp_buffer, 1);$NL"
+    TNEW+="    if (ret_val != 0) goto end_point_exit;$NL"
+    TNEW+="    gg_done_setjmp = 1;$NL"
 #right now the return value is always 0 (directly or called from longjmp)
 #the jump will work because all we do is go to after_handler() function, which doesn't depend on any
 #automatic variables from gg_dispatch_request, and after that function exits
 #
 #
+    TNEW+="    req_done = 0;$NL" #must be initialized separately (not as int req_done=0;) because longjmp may return to the same function and won't be initialized again
 #
-    echo "    req_done = 0;" >>$GG_BLD/$_T.new #must be initialized separately (not as int req_done=0;) because longjmp may return to the same function and won't be initialized again
+#
+#
 #create file with all request names for v1 to process for the main function code. This way all request info is stored as constants to be loaded as program's data, meaning the fastest possible in huge memory blocks, without having to set up each individually
 #first line is the number of lines that follow, to make code generation easier
-    echo $GG_REQLIST_C > $GG_BLD/.reqlist.new
     _F_FIRST=""
+    REQL="$GG_REQLIST_C$NL"
     for _F in $GG_REQLIST; do
         RN=${_F%.*}
         #function name cannot have -
         RN=${RN//-/_}
         if [ "$_F_FIRST" == "" ]; then _F_FIRST="$RN"; fi
-        echo "$RN" >>$GG_BLD/.reqlist.new
+        REQL+="$RN$NL"
     done
-    echo "  gg_request_handler _gg_req_handler;" >>$GG_BLD/$_T.new
-    echo "  gg_num found = GG_OKAY;" >>$GG_BLD/$_T.new
+    echo -n "$REQL" >$GG_BLD/.reqlist.new
+#
+#
+#
+    TNEW+="  gg_request_handler _gg_req_handler;$NL"
+    TNEW+="  gg_num found = GG_OKAY;$NL"
     #if only a single request, speed things up by checking simply if that's the one, and run it (i.e. do not call gg_find_hash)
     if [ "$GG_REQLIST_C" == "1" ]; then
-        echo "    if (!strcmp (req, \"$_F_FIRST\") || req[0] == 0) _gg_req_handler = $_F_FIRST; else found = GG_ERR_EXIST;" >>$GG_BLD/$_T.new
+        TNEW+="    if (!strcmp (req, \"$_F_FIRST\") || req[0] == 0) _gg_req_handler = $_F_FIRST; else found = GG_ERR_EXIST;$NL"
     else
 #get handler function that handles this request from the pre-computed hash. Both what's in gg_dispatch and req are NOT golf mem, so false for is_golf memory
-        echo "    _gg_req_handler = gg_find_hash (&gg_dispatch, req, 0, &found, false);" >>$GG_BLD/$_T.new
+        TNEW+="    _gg_req_handler = gg_find_hash (&gg_dispatch, req, 0, &found, false);$NL"
     fi
 #before handler executes only IF req found a handler, that's why it's not in front of if()
-    echo "      if (found == GG_OKAY) {" >>$GG_BLD/$_T.new
-    echo "        before_handler();" >>$GG_BLD/$_T.new
-    echo "        req_done = 1;" >>$GG_BLD/$_T.new
-    echo "        _gg_req_handler();" >>$GG_BLD/$_T.new
-    echo "    } else {" >>$GG_BLD/$_T.new
-    echo "        gg_bad_request();" >>$GG_BLD/$_T.new
-    echo "        gg_replace_string (req, strlen(req), \"__\", \"/\", 1, NULL, 1);" >>$GG_BLD/$_T.new # subst makes for smaller string, so okay, this is to show proper path in error
-    echo "        gg_report_error (\"Request [%s] not found\", req);" >>$GG_BLD/$_T.new
-    echo "    }" >>$GG_BLD/$_T.new
+    TNEW+="      if (found == GG_OKAY) {$NL"
+    TNEW+="        before_handler();$NL"
+    TNEW+="        req_done = 1;$NL"
+    TNEW+="        _gg_req_handler();$NL"
+    TNEW+="    } else {$NL"
+    TNEW+="        gg_bad_request();$NL"
+    TNEW+="        gg_replace_string (req, strlen(req), \"__\", \"/\", 1, NULL, 1);$NL"  # subst makes for smaller string, so okay, this is to show proper path in error
+    TNEW+="        gg_report_error (\"Request [%s] not found\", req);$NL"
+    TNEW+="    }$NL"
 
 #when exit-handler is done, this is where we must end up. Since this code is executed after
 #gg_dispatch_request, we can't longjump here. We long jump to a prior point and then go to here.
-    echo "end_point_exit:" >>$GG_BLD/$_T.new
+    TNEW+="end_point_exit:$NL"
 #set gg_done_setjmp to 0, because if we do exit-handler in after_handler(), it would go into infinite loop, coming back to after.
 #this way, exit-handler in after_handler, or anywhere afterwards, will do nothing. Only when the next request comes along, and gg_done_setjmp is set to 1
 #in the beginning of this function, we will actually jump to end_point_exit:
-    echo "    gg_done_setjmp = 0;" >>$GG_BLD/$_T.new
+    TNEW+="    gg_done_setjmp = 0;$NL"
 #regardless of whether a request normally ended, or had exit-handler, it would come here, and before anything else, memory handling must be set back
 #to Golf, or otherwise, and gg_* memory function will fail if set to true. after_handler() should not be affected by type of memory used.
 
 #cannot do exit-handler in after_handler - must simply do return(s)
-    echo "    if (req_done == 1) { after_handler(); }" >>$GG_BLD/$_T.new
+    TNEW+="    if (req_done == 1) { after_handler(); }$NL"
 #
 #There can be NOTHING after .after() that uses any automatic variables from gg_dispatch_request() or
 #exit-handler (and longjmp) will not work
 #
-    echo "}" >>$GG_BLD/$_T.new
-    echo >>$GG_BLD/$_T.new
+    TNEW+="}$NL"
+    TNEW+=$NL
+    echo "$TNEW">$GG_BLD/$_T.new
 
     copy_if_diff "$_T"
     copy_if_diff ".reqlist"
@@ -1526,8 +1549,8 @@ $_DBCONF"
         fi
     done
 #check db conf name unique
-    _TUNIQ=$(echo $_ALLC|sort -k 1|uniq|wc -l)
-    _TOT=$(echo $_ALLC|wc -l)
+    _TUNIQ=$(sort -k 1 <<<$_ALLC|uniq|wc -l)
+    _TOT=$(wc -l <<<$_ALLC)
     if [ "$_TUNIQ" != "$_TOT" ]; then
         error "Database configuration names must be unique"
     fi

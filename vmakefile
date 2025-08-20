@@ -34,81 +34,81 @@ endif
 
 #ASAN (internal)
 ifeq ($(strip $(GG_C_ASAN)),1)
-    _ASAN=-fsanitize=address -fsanitize-recover=address
-     ASAN_OPTIONS=detect_leaks=0:log_path=asan:halt_on_error=1
+	_ASAN:=-fsanitize=address -fsanitize-recover=address
+	ASAN_OPTIONS:=detect_leaks=0:log_path=asan:halt_on_error=1
     export ASAN_OPTIONS
 else
-    _ASAN=
+	_ASAN:=
 endif
 
 ifeq ($(strip $(GG_C_IGNORE_WARN)),1)
-    GG_IGNORE_WARN=-ignore-warn
+	GG_IGNORE_WARN:=-ignore-warn
 else
-    GG_IGNORE_WARN=
+	GG_IGNORE_WARN:=
 endif
 
 #internal debug
 ifeq ($(strip $(GG_C_DEBUG)),1)
-    GG_DEBUG=-DDEBUG
+	GG_DEBUG:=-DDEBUG
 else
-    GG_DEBUG=
+	GG_DEBUG:=
 endif
   
 #Note: -rdynamic is necessary for libgcc to be loaded in order to get a backtrace when needed
 ifeq ($(strip $(GG_C_DEVEL)),1)
-    _OPTIM_COMP=-g3 -O $(GG_DEBUG) -DGG_DEVEL -rdynamic 
-    _OPTIM_LINK=-rdynamic
-    CFLAGS_WARN_ERROR=-Werror 
-    _LTO=
-    GDEST=$(GG_DATA)/lib/devel
+	_OPTIM_COMP:=-g3 -O $(GG_DEBUG) -DGG_DEVEL -rdynamic 
+	_OPTIM_LINK:=-rdynamic
+	CFLAGS_WARN_ERROR:=-Werror 
+	_LTO:=
+	GDEST:=$(GG_DATA)/lib/devel
 else
-    _OPTIM_COMP=-g -O3
-    _OPTIM_LINK=
-    CFLAGS_WARN_ERROR=
-    _LTO=-flto=auto
-    GDEST=$(GG_DATA)/lib/release
+	_OPTIM_COMP:=-g -O3
+	_OPTIM_LINK:=
+	CFLAGS_WARN_ERROR:=
+	_LTO:=-flto=auto
+	GDEST:=$(GG_DATA)/lib/release
 endif
 
 
-_APPMAKE=-DGG_APPMAKE=1    
+_APPMAKE:=-DGG_APPMAKE=1    
 
-GG_SERVICE_TARGET=$(GG_BLD)/$(GG_C_NAME).srvc
-GG_TARGET=$(GG_BLD)/$(GG_C_NAME)
+GG_SERVICE_TARGET:=$(GG_BLD)/$(GG_C_NAME).srvc
+GG_TARGET:=$(GG_BLD)/$(GG_C_NAME)
 
 ifeq ($(strip $(_SYSTEMID)),opensuse)
-    GG_SERVICE_INCLUDE=-I /usr/include/fastcgi
+	GG_SERVICE_INCLUDE:=-I /usr/include/fastcgi
 else
-    GG_SERVICE_INCLUDE=
+	GG_SERVICE_INCLUDE:=
 endif
 
 
 #If --single-file is used, then each request handler must be in its own file and own directory as per request path
 #Without it, then each .golf file can have any number of request handlers, but they must start with file name, so still organized
 ifeq ($(strip $(GG_C_SINGLE_FILE)),1)
-    GG_SINGLE_FILE=-single-file
+	GG_SINGLE_FILE:=-single-file
 else
-    GG_SINGLE_FILE=
+	GG_SINGLE_FILE:=
 endif
 
 #If --public is used, then all request handlers are publicly accessible unless private
 #Without --public, they are all private unless public
 ifeq ($(strip $(GG_C_PUBLIC)),1)
-    GG_PUBLIC_FLAG=-public
+	GG_PUBLIC_FLAG:=-public
 else
-    GG_PUBLIC_FLAG=
+	GG_PUBLIC_FLAG:=
 endif
 
 #If c-lines is used, then show all diagnostics
 ifeq ($(strip $(GG_C_SKIPLINES)),1)
-    GG_X_FLAG=-x
+	GG_X_FLAG:=-x
 else
-    GG_X_FLAG=
+	GG_X_FLAG:=
 endif
 
 ifeq ($(strip $(GG_C_POSIXREGEX)),1)
-    GG_POSIXREGEX_FLAG=-DGG_C_POSIXREGEX
+	GG_POSIXREGEX_FLAG:=-DGG_C_POSIXREGEX
 else
-    GG_POSIXREGEX_FLAG=
+	GG_POSIXREGEX_FLAG:=
 endif
 
 #Note we don't strip executables anymore. The debug info does not appear to make much, if any, difference any more.
@@ -116,7 +116,7 @@ endif
 
 #ignoring char-subscripts (such as str[str[0]] is fine because golf checks for boundaries
 #GG_C_CFLAGS *must* be the last in order to override anything else by user action!
-_CFLAGS=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_ALL_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(CURDIR) -I $(GG_INCLUDE_PATH) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(_ASAN) $(_PROF) $(GG_C_CFLAGS) $(_LTO) -fno-diagnostics-show-caret
+_CFLAGS:=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_ALL_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(CURDIR) -I $(GG_INCLUDE_PATH) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(_ASAN) $(_PROF) $(GG_C_CFLAGS) $(_LTO) -fno-diagnostics-show-caret
 
 
 
@@ -141,7 +141,7 @@ GG_HEADER_FILES:=$(GG_HEADER_FILES)
 
 #string subst: short for $(patsubst %.golf,%.o,$(GG_SOURCE_FILES)) which finds whitespace-separated word in $(GG_SOURCE_FILES) that match %.golf and replaces them with %.o
 #the same for C files in GG_SOURCE_C_FILES
-_OBJ_FILES=$(GG_SOURCE_FILES:%.golf=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG_BLD)/%.oc)
+_OBJ_FILES:=$(GG_SOURCE_FILES:%.golf=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG_BLD)/%.oc)
 
 define calc_libs
 	ALLSRC=(*.golf) >/dev/null || true
@@ -173,14 +173,17 @@ define make_source
 		sed 's/^/golf: /g' $(GG_BLD)/.comperr.$${TFILE##*/} 1>&2
 	    exit 1
 	fi 
-	>$(GG_BLD)/gg_sparam_$${SFILE##*/}.h
+	PARAMS=""; 
 	if [ -f "$(GG_BLD)/.setparam/$${SFILE##*/}.sp" ]; then
-	    for i in $$(cat $(GG_BLD)/.setparam/$${SFILE##*/}.sp|sort -k 1|uniq); do
+	    for i in $$(sort -k 1 $(GG_BLD)/.setparam/$${SFILE##*/}.sp|uniq); do
 	        PNAME=$${i%+*}
 	        PTYPE=$${i#*+}
-	        echo "extern gg_num _gg_aprm_$$PNAME;">>$(GG_BLD)/gg_sparam_$${SFILE##*/}.h
+	        PARAMS+="extern gg_num _gg_aprm_$$PNAME;\n"
 	    done
-	    echo -e "extern void **_gg_sprm_run; extern gg_ipar _gg_sprm_par[];\n extern gg_num _gg_sprm_run_tot;">>$(GG_BLD)/gg_sparam_$${SFILE##*/}.h 
+	    PARAMS+="extern void **_gg_sprm_run; extern gg_ipar _gg_sprm_par[];\n extern gg_num _gg_sprm_run_tot;"
+	    echo -e "$${PARAMS}">$(GG_BLD)/gg_sparam_$${SFILE##*/}.h 
+	else
+	    >$(GG_BLD)/gg_sparam_$${SFILE##*/}.h
 	fi
 	rm -f $(GG_BLD)/__$${TFILE##*/}.incf;INCF=($(GG_BLD)/__$${TFILE##*/}.c.inc.*) >/dev/null||true ; for i in "$${INCF[@]}"; do cat $$i >>$(GG_BLD)/__$${TFILE##*/}.incf; done
 	read -r GG_ALL_INCL < <(cat $(GG_BLD)/__$${TFILE##*/}.incf 2>/dev/null)
@@ -216,7 +219,7 @@ $(GG_BLD)/%.oc: %.c $(GG_INCLUDE_PATH)/golf.h $(GG_HEADER_FILES) $(GG_BLD)/golfa
 #the next next time something changes on the gg command line! /dev/null is used to suppress error message if there are no parameters in project.
 $(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
 	echo -e "#ifndef _GG_SPARAM\n#define _GG_SPARAM\n" >$(GG_BLD)/gg_sparam.h.new; echo "// Golf: Run-time parameters file"> $(GG_BLD)/gg_sparam.c.new
-	    GG_SPAR_LIST=$$(find $(GG_BLD)/.setparam -type f -name "*" -print0 |xargs -0 cat 2>/dev/null|sort -k 1|uniq);  tot_sprm=0
+	    GG_SPAR_LIST=$$(find $(GG_BLD)/.setparam -type f -name "*" -print0 |xargs -0 sort -k 1|uniq);  tot_sprm=0
 	    for i in $$GG_SPAR_LIST; do
 	        ((tot_sprm=tot_sprm+1))
 	    done
@@ -276,7 +279,7 @@ $(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
 	fi 
 
 #GG_C_LFLAGS *must* be the last in order to override anything else by user action!
-_LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GDEST) -Wl,--enable-new-dtags -L$(GDEST) $(_OPTIM_LINK) -Wl,-z,relro  $(_ASAN) $(_PROF) $(GG_C_LFLAGS) $(_LTO) 
+_LFLAGS:=-Wl,--no-undefined -Wl,--rpath=$(GDEST) -Wl,--enable-new-dtags -L$(GDEST) $(_OPTIM_LINK) -Wl,-z,relro  $(_ASAN) $(_PROF) $(GG_C_LFLAGS) $(_LTO) 
 
 
 #libs are always specified *after* the object where they're needed. Link flags (including -L) go first.
@@ -285,7 +288,7 @@ _LFLAGS=-Wl,--no-undefined -Wl,--rpath=$(GDEST) -Wl,--enable-new-dtags -L$(GDEST
 #a Golf application, and makes it effectively unlimited.
 #Note below: we force static linking for Golf libs; that's the only one available; but if you have older Golf libs, they would have had
 #dynamic libs cause lots of trouble (they are old and incompatible). We revert to dynamic libs when it's time to link external libs
-$(GG_BLD)/$(GG_C_NAME).srvc: $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
+$(GG_SERVICE_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
 	if [ "$$GG_C_SHOW" == "1" ]; then echo "golf: Making command-line executable"; fi
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
 	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(GG_EVENT_STUBS) -lsrvcgolf -lgolfbtrace -lggfcgi $$(cat $(GG_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(GG_BLD)/.all_libs) > $(GG_BLD)/.comperr.server.link 2>&1 || ECODE="$$?"
@@ -297,7 +300,7 @@ $(GG_BLD)/$(GG_C_NAME).srvc: $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_reque
 
 #Note below: we force static linking for Golf libs; that's the only one available; but if you have older Golf libs, they would have had
 #dynamic libs cause lots of trouble (they are old and incompatible). We revert to dynamic libs when it's time to link external libs
-$(GG_BLD)/$(GG_C_NAME): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
+$(GG_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
 	if [ "$$GG_C_SHOW" == "1" ]; then echo "golf: Making server executable"; fi
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
 	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(GG_EVENT_STUBS) -lgolf -lgolfbtrace $$(cat $(GG_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(GG_BLD)/.all_libs) > $(GG_BLD)/.comperr.link 2>&1 || ECODE="$$?"

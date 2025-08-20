@@ -6401,7 +6401,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI+newI1;
                         char *nl = find_keyword (mtext, GG_KEYNEWLINE, 1); // can be used with any other clause
-                        carve_statement (&nl, "print-out", GG_KEYNEWLINE, 0, 0);
+                        carve_statement (&nl, "print-path", GG_KEYNEWLINE, 0, 0);
                         check_sub (mtext); // this must be BEFORE carve_stmt_obj as it may create temp variable which is just some generated var name
                                            // it trims mtext, but we're about to do that anyway (but this must be after all other carve-outs)
                         carve_stmt_obj (&mtext, true, true);
@@ -6421,7 +6421,16 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         GG_GUARD
                         i = newI;
                         // GG_KEYLENGTH GG_KEYNEWLINE GG_KEYSOURCELINE GG_KEYSOURCEFILE GG_KEYWEBENCODE GG_KEYURLENCODE
-                        do_print (mtext, 0);
+                        while (1) 
+                        {
+                            char *comma = find_keyword (mtext, GG_KEYCOMMA, 0);
+                            carve_statement (&comma, "print-out", GG_KEYCOMMA, 0, 1); // separate entries with comma first, so
+                                                                                      // this find/carve MUST come before the rest below!
+                                                                                      //
+                            do_print (mtext, 0);
+
+                            if (comma == NULL) break; else mtext = comma;
+                        }
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "print-format", &mtext, &msize, 0, &gg_is_inline)) != 0 ||

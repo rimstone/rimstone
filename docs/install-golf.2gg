@@ -8,7 +8,28 @@ Golf is installed in a home directory (either in a separate user account or in y
 .B GET GOLF SOURCE CODE
 .LP
 
-Get Golf source code from its official GitHub repo (depth is 1 for speed):
+Get Golf source code from either:
+
+.RS 4
+\[bu]    
+A zipped file (.tar.gz):
+
+.RS 4
+.EX
+
+wget "https://github.com/golf-lang/golf/archive/refs/heads/main.tar.gz" -O main.tar.gz
+tar xvfz main.tar.gz
+cd golf-main
+
+.EE
+.RE
+
+.RE
+
+
+.RS 4
+\[bu]    
+If you use git, from its official GitHub repo (depth is 1 for speed):
 
 .RS 4
 .EX
@@ -17,6 +38,8 @@ git clone --depth 1 https://github.com/golf-lang/golf.git
 cd golf
 
 .EE
+.RE
+
 .RE
 
 
@@ -41,7 +64,7 @@ If you'd like to install all base and toolkit packages automatically now, then u
 .RS 4
 .EX
 
-\[char46] ./gginst.sh all
+\[char46]/gginst.sh all
 
 .EE
 .RE
@@ -70,8 +93,7 @@ Go to \fB123-hello-world\fP for your Hello World.
 
 .B - SELinux
 
-If you have SELinux enabled then you'll need to install SELinux support for Golf. This requires sudo privilege because it involves setting Operating System permissions
- for Golf. This will be done automatically during the installation.
+If you have SELinux enabled then you'll need to install SELinux support for Golf. This requires sudo privilege because it involves setting Operating System permissions for Golf. This will be done automatically during the installation.
 
 If you don't want or need SELinux support, you can use permissive mode with:
 

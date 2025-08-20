@@ -7,57 +7,12 @@ uninstall \- Golf documentation (install-golf)
 .B UNINSTALL GOLF IF INSTALLED FROM SOURCE
 .LP
 
-Run from command line (if you installed to a folder, add "DESTDIR=<folder>" where <folder> is the directory where it was installed):
+Run from command line:
 
 .RS 4
 .EX
 
-sudo make uninstall
-
-.EE
-.RE
-
-
-.LP
-.B UNINSTALL GOLF IF INSTALLED FROM PACKAGE
-.LP
-
-For Ubuntu:
-
-.RS 4
-.EX
-
-sudo apt remove golf
-
-.EE
-.RE
-
-For Redhat, Fedora and similar:
-
-.RS 4
-.EX
-
-sudo dnf remove golf
-
-.EE
-.RE
-
-For OpenSUSE:
-
-.RS 4
-.EX
-
-sudo zypper remove golf
-
-.EE
-.RE
-
-For Arch and similar:
-
-.RS 4
-.EX
-
-sudo pacman -R golf
+make uninstall
 
 .EE
 .RE
