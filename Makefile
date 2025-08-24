@@ -262,7 +262,7 @@ copy_binaries: build_spec  build_structure
 #$(GDEST) is the directory where executables go (release or devel)
 .PHONY: build_structure
 build_structure:
-	$(AT)$(info Creating Golf directories($(GDEST)))
+	$(AT)$(info Creating Golf directories ($(GDEST)))
 	$(AT)install -m 0711 -d $(DESTDIR)/ 
 	install -m 0711 -d $(V_APPS)/
 	install -m 0700 -d $(V_INC)/
@@ -281,6 +281,7 @@ build_structure:
 	install -m 0700 -d $(V_SHARE)/src/
 	install -D -m 0600 golf.vim -t $(V_LIB)/
 	install -D -m 0600 golf_indent.vim -t $(V_LIB)/
+	install -D -m 0700 ggsetenv.sh -t $(V_LIB)/
 	install -D -m 0600 LICENSE -t $(V_GG_ABOUT)/ 
 	install -D -m 0600 NOTICE -t $(V_GG_ABOUT)/
 	install -D -m 0600 README -t $(V_GG_ABOUT)/
@@ -291,7 +292,7 @@ build_structure:
 	install -D -m 0700 gg  -t $(V_BIN)/
 	$(AT)#install map pages if not a debian package, which does it automatically. man pages will not exist for install of LTO (source recompile in package).
 	$(AT)if [ -d docs ]; then install -m 0700 -d $(V_MAN) ; install -D -m 0600 docs/*.2gg -t $(V_MAN)/ ; sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(V_MAN)/*.2gg; sed -i "s/\$$DATE/$(DATE)/g" $(V_MAN)/*.2gg; fi
-	@GF=".version .version_public CONTRIBUTING LICENSE Makefile NOTICE README arr.c btrace/LICENSE btrace/atomic.c btrace/backtrace-supported.h btrace/backtrace.c btrace/backtrace.h btrace/config.h btrace/dwarf.c btrace/elf.c btrace/fileline.c btrace/filenames.h btrace/internal.h btrace/mmap.c btrace/mmapio.c btrace/posix.c btrace/print.c btrace/simple.c btrace/sort.c btrace/state.c chandle.c curl.c db.c fcgi/LICENSE fcgi/fastcgi.h fcgi/fcgiapp.c fcgi/fcgiapp.h fcgi/ggsock.c fcgi/ggsock.h fcgi/strerror.c gcli.c gcli.h gg gg.te ggcli.c ggcommon.c ggcommon.h gginst.sh gglib golf.h golf.sel golf.te golf.vim golf_indent.vim golfmem.c golfrt.c golfrtc.c hash.c json.c lite.c mgrg.c msg.c mys.c pcre2.c pg.c sec.c stub.c stub_after.c stub_before.c sys tree.c utf.c utfs.c v1.c vmakefile xml.c"; tar cvfz golf.tar.gz $$GF >/dev/null;
+	@GF=".version .version_public CONTRIBUTING LICENSE Makefile NOTICE README arr.c btrace/LICENSE btrace/atomic.c btrace/backtrace-supported.h btrace/backtrace.c btrace/backtrace.h btrace/config.h btrace/dwarf.c btrace/elf.c btrace/fileline.c btrace/filenames.h btrace/internal.h btrace/mmap.c btrace/mmapio.c btrace/posix.c btrace/print.c btrace/simple.c btrace/sort.c btrace/state.c chandle.c curl.c db.c fcgi/LICENSE fcgi/fastcgi.h fcgi/fcgiapp.c fcgi/fcgiapp.h fcgi/ggsock.c fcgi/ggsock.h fcgi/strerror.c gcli.c gcli.h gg gg.te ggcli.c ggcommon.c ggcommon.h gginst.sh gglib ggsetenv.sh golf.h golf.sel golf.te golf.vim golf_indent.vim golfmem.c golfrt.c golfrtc.c hash.c json.c lite.c mgrg.c msg.c mys.c pcre2.c pg.c sec.c stub.c stub_after.c stub_before.c sys tree.c utf.c utfs.c v1.c vmakefile xml.c "; tar cvfz golf.tar.gz $$GF>/dev/null
 	$(AT)install -D -m 0600 golf.tar.gz -t $(V_SHARE)/ 
 
 #This, if needed, must be run as root (obviously). For instance, if you have SELinux enabled, and you want to run a server that's accessed from say a web server
@@ -301,11 +302,11 @@ install-selinux:
 	$(AT)#This runs during rpm creation or during make install
 	$(AT)#it does NOT run during rpm installation, there is post scriptlet that calls golf.sel to do that (GG_NO_SEL)
 	$(AT)install -D -m 0600 gg.te -t $(V_LIB)/selinux/
-	install -D -m 0600 golf.te -t $(V_LIB)/selinux/
-	install -D -m 0700 golf.sel -t $(V_LIB)/selinux/
-	echo '#!/bin/bash'>selinux.setup
-	echo "if [ -f /etc/selinux/config ]; then $(V_LIB)/selinux/golf.sel '$(V_LIB)/selinux' '$(V_GG_SELINUXDIR)' '$(DESTDIR)' ; fi">>selinux.setup
-	chmod 0700 selinux.setup
+	$(AT)install -D -m 0600 golf.te -t $(V_LIB)/selinux/
+	$(AT)install -D -m 0700 golf.sel -t $(V_LIB)/selinux/
+	$(AT)echo '#!/bin/bash'>selinux.setup
+	$(AT)echo "if [ -f /etc/selinux/config ]; then $(V_LIB)/selinux/golf.sel '$(V_LIB)/selinux' '$(V_GG_SELINUXDIR)' '$(DESTDIR)' ; fi">>selinux.setup
+	$(AT)chmod 0700 selinux.setup
 	$(AT)#this selinux.setup will be executed in rpm post section, and here (below) if this is a system with SELinux
 	$(AT)#the text saved to selinux.setup does NOT use DESTDIR, since this script never runs in fake root, meaning if it does run, then DESTDIR is empty (which is
 	$(AT)#sudo make install from source) or it runs during %post section when installing package. So in either case, not a fake root.
@@ -315,10 +316,11 @@ install-selinux:
 
 #semodule -r golf >/dev/null || true  would need to run to remove Golf associations
 #do not delete .golf itself, as it will remove selinux labels (restorecon would have to be run)
+#delete all but apps which may hold app data
 .PHONY: uninstall
 uninstall:
 	$(AT)echo "Uninstalling Golf"
-	$(AT)rm -rf $(DESTDIR)/* || true >/dev/null
+	$(AT)cd $(DESTDIR); rm -rf about bin golf include lib man || true >/dev/null
 
 #this just builds and copies binaries to the directory (based on REL). No install action.
 .PHONY: build
@@ -379,7 +381,7 @@ endif
 .PHONY: build_spec
 #v1 doesn't know about gg_finished_output, it always outputs; the distinction is only server vs command-line app
 build_spec: $(GGDEPS)
-	$(AT)$(info Building Golf binaries ($(GDEST)))
+	$(AT)$(info Built Golf binaries ($(GDEST)))
 $(GDEST)/v1: $(GDEST)/v1.o $(GDEST)/golfmems.o $(GDEST)/chandlesrv.o $(GDEST)/golfrtc.o $(GDEST)/hash.o $(GDEST)/utf.o $(GDEST)/libgolfbtrace.a $(GDEST)/ggcommon.o
 	$(AT)echo -n "."
 	$(AT)$(CC) -o $@ $^ $(LFLAGS) 

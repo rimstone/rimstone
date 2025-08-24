@@ -84,18 +84,14 @@ if [[ -f /etc/selinux/config && -f "/usr/share/selinux/devel/Makefile" ]]; then
 fi
 
 
-GG_SETUP='export GG_ROOT="$HOME/.golf" #golf-setup
-export PATH="$GG_ROOT/bin":"$GG_ROOT/man/man2gg/":$PATH #golf-setup
-export C_INCLUDE_PATH="$GG_ROOT/include":$C_INCLUDE_PATH #golf-setup
-export MANPATH="$GG_ROOT/man/man2gg/":$MANPATH #golf-setup'
-
 echo "Setting environment variables..."
 #remove old setup
 sed -i '/#golf-setup\s*$/d' $HOME/.bashrc
 #setup Golf
-echo "$GG_SETUP" >>$HOME/.bashrc
-#execute for this session
-eval "$GG_SETUP"
+#check if file exists if Golf is not there
+echo "if [ -f $HOME/.golf/lib/ggsetenv.sh ]; then . $HOME/.golf/lib/ggsetenv.sh; fi #golf-setup" >>$HOME/.bashrc
+#execute for this session in case it's sourced
+. $HOME/.golf/lib/ggsetenv.sh
 
 #setup minimum permissions (inlcuding for Unix sockets)
 echo "Setting permissions..."

@@ -853,6 +853,7 @@ function getdbs() {
 #
 #GG_C_MAXERRORS does not affect compilation, only the output of errors, so not
 #part of mkset.
+#GG_C_VERSION ensures your apps are recompiled when upgrading/downgrading
 #
 #
 function mkset() {
@@ -862,6 +863,7 @@ GG_C_PROF='$GG_C_PROF'
 GG_C_IGNORE_WARN='$GG_C_IGNORE_WARN'
 GG_C_SHOW='$GG_C_SHOW'
 GG_C_GCC='$GG_C_GCC'
+GG_C_VERSION='$GG_VERSION$_BETA'
 GG_C_DEVEL='$GG_C_DEVEL'
 GG_C_DEBUG='$GG_C_DEBUG'
 GG_C_PUBLIC='$GG_C_PUBLIC'
