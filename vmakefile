@@ -119,15 +119,22 @@ endif
 _CFLAGS:=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_ALL_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(CURDIR) -I $(GG_INCLUDE_PATH) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(_ASAN) $(_PROF) $(GG_C_CFLAGS) $(_LTO) -fno-diagnostics-show-caret
 
 
+#clean before making target (server) at all
+#the files are proof make was okay
+.PHONY: clean_build
+clean_build:
+	rm -f $(GG_BLD)/.succ.srv $(GG_BLD)/.succ
 
 
 #
 # Rules for building
 # 
 
-all: $(GG_SERVICE_TARGET)  $(GG_TARGET)
+all: clean_build $(GG_SERVICE_TARGET)  $(GG_TARGET)
 
 #clean files. *.golfo is produced by GOLF, the result is generated/object files
+#cleaning .all* is important because packing app in gg (-k option) depends on it existing as proof that app is compiled and not cleaned; because
+#if it's cleaned then .mod.XXX files are gone too and we can't pack.
 clean:
 	if [ -d "$(GG_BLD)" ]; then find $(GG_BLD)/ -name "*" -type f \( -name "*.o" -or -name "*.c" -or -name "*.h" -or -name "*.mod.*" -or -name "*.inc.*" -or -name ".all*"  \) -exec rm -f {} \; ; fi
 
@@ -288,6 +295,7 @@ _LFLAGS:=-Wl,--no-undefined -Wl,--rpath=$(GDEST) -Wl,--enable-new-dtags -L$(GDES
 #a Golf application, and makes it effectively unlimited.
 #Note below: we force static linking for Golf libs; that's the only one available; but if you have older Golf libs, they would have had
 #dynamic libs cause lots of trouble (they are old and incompatible). We revert to dynamic libs when it's time to link external libs
+#.succ serves as proof of okay build
 $(GG_SERVICE_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
 	if [ "$$GG_C_SHOW" == "1" ]; then echo "golf: Making command-line executable"; fi
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
@@ -297,9 +305,11 @@ $(GG_SERVICE_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(
 	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.server.link" 1>&2
 	    exit 1
 	fi
+	echo "1"> $(GG_BLD)/.succ
 
 #Note below: we force static linking for Golf libs; that's the only one available; but if you have older Golf libs, they would have had
 #dynamic libs cause lots of trouble (they are old and incompatible). We revert to dynamic libs when it's time to link external libs
+#.succ.srv serves as proof of okay build
 $(GG_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
 	if [ "$$GG_C_SHOW" == "1" ]; then echo "golf: Making server executable"; fi
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
@@ -309,5 +319,6 @@ $(GG_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FIL
 	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.link" 1>&2
 	    exit 1
 	fi
+	echo "1"> $(GG_BLD)/.succ.srv
 
 

@@ -44,7 +44,7 @@ The owner of your application. This is only used when initializing directory str
 .RS 4
 \[bu]    
 -r <proxy group>
-The group of proxy web server (such as Apache or Nginx). This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It restricts the ability to connect to your application only to the members of said group (in addition to the user who owns your server) when a Unix socket is used, otherwise anyone can connect. If you are not a member of this group, then you must invoke mgrg with sudo - this is the only time this is necessary.
+The group of proxy web server (such as Apache or Nginx). This is only used when initializing directory structure used by mgrg (see -i option). Do not use it otherwise. It restricts the ability to connect to your application only to the members of said group (in addition to the user who owns your server) when a Unix socket is used, otherwise anyone can connect. If you are not a member of this group, then you must invoke mgrg with sudo - this is the only time this is necessary (see below an example on how to run with sudo).
 
 .RE
 
@@ -209,11 +209,12 @@ To begin using mgrg for a specific application, you must initialize it first. Fo
 .RS 4
 .EX
 
-sudo mgrg -i -u $(whoami) myapp
+sudo $(which mgrg) -i -u $(whoami) myapp
 
 .EE
 .RE
 
+Note that you need to use $(which mgrg) when using sudo, since root's user directory has no Golf installation and mgrg executable won't be found. Since shell $() construct is executed by bash prior to the command, this will produce the correct executable path for mgrg.
 
 .RE
 

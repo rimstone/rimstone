@@ -124,11 +124,11 @@ GG_ALWAYS_INLINE inline size_t gg_dir (int type, char *dir, size_t dir_size, cha
                     memcpy (cdir, _GG_BLD, sizeof(_GG_BLD)-1);
                     cdir += sizeof(_GG_BLD)-1;
                 } 
-                else if (type == GG_DIR_MGRG1) // this is mgrg log file /apps/<app>/.mgrglog
+                else if (type == GG_DIR_ART) // this is .mgrgart log file /apps/<app>/.mgrgart
                 {
-#define _GG_MGRG1 "/.mgrglog1"
-                    memcpy (cdir, _GG_MGRG1, sizeof(_GG_MGRG1)-1);
-                    cdir += sizeof(_GG_MGRG1)-1;
+#define _GG_ART "/.mgrgart"
+                    memcpy (cdir, _GG_ART, sizeof(_GG_ART)-1);
+                    cdir += sizeof(_GG_ART)-1;
                 } 
                 else if (type == GG_DIR_MGRG) // this is mgrg log file /apps/<app>/.mgrglog
                 {

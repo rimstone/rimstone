@@ -11,16 +11,16 @@ You can install Golf source code from a Golf package, available for popular Linu
 
 Why use a package? For one, if you have multiple developers working on the same machine, they can use the same Golf source code provided by the Golf package, and the version control is easier. And secondly, a Golf package will install all the Golf's base and toolkit dependencies (such as database drivers, XML library, make sure gcc/make are installed etc).
 
-Since the packages do not contain any binaries, they can be installed on a wide variety of versions (for any given distro), and even on distros not mentioned here (such as on derived ones). Note that only the latest versions are actually tested with each release, so whether a package would work with a particular distro and version you're using is a matter of trying it out. Here are the packages available (all available can be found \fBhere\fP):
+Since the packages do not contain any binaries, they can be installed on a wide variety of versions (for any given distro), and even on distros not mentioned here (such as on derived ones). Note that only the latest versions are actually tested with each release, so whether a package would work with a particular distro and version you're using is a matter of trying it out. Here are the packages available (all available can be found \fBhere\fP). Download the package and then install it:
 
 .RS 4
 \[bu]    
 Debian and similar
-\fBDownload it\fP, and then install with:
 
 .RS 4
 .EX
 
+wget "https://github.com/golf-lang/golf/releases/latest/download/golf_main_deb_any.deb" -O golf_main_deb_any.deb
 sudo apt install ./golf_main_deb_any.deb
 
 .EE
@@ -32,11 +32,11 @@ sudo apt install ./golf_main_deb_any.deb
 .RS 4
 \[bu]    
 Ubuntu and similar
-\fBDownload it\fP,and then install with:
 
 .RS 4
 .EX
 
+wget "https://github.com/golf-lang/golf/releases/latest/download/golf_main_ubuntu_any.deb" -O golf_main_ubuntu_any.deb
 sudo apt install ./golf_main_ubuntu_any.deb
 
 .EE
@@ -48,11 +48,11 @@ sudo apt install ./golf_main_ubuntu_any.deb
 .RS 4
 \[bu]    
 Fedora and similar
-\fBDownload it\fP, and then install with:
 
 .RS 4
 .EX
 
+wget "https://github.com/golf-lang/golf/releases/latest/download/golf-main-fc.noarch.rpm" -O golf-main-fc.noarch.rpm
 sudo dnf install ./golf-main-fc.noarch.rpm
 
 .EE
@@ -64,11 +64,11 @@ sudo dnf install ./golf-main-fc.noarch.rpm
 .RS 4
 \[bu]    
 Redhat and similar
-\fBDownload it\fP, and then install with:
 
 .RS 4
 .EX
 
+wget "https://github.com/golf-lang/golf/releases/latest/download/golf-main-redhat.noarch.rpm" -O golf-main-redhat.noarch.rpm
 sudo dnf install ./golf-main-redhat.noarch.rpm
 
 .EE
@@ -80,11 +80,11 @@ sudo dnf install ./golf-main-redhat.noarch.rpm
 .RS 4
 \[bu]    
 OpenSUSE and similar
-\fBDownload it\fP, and then install with (zypper won't install unsigned packages, hence --no-gpg-checks):
 
 .RS 4
 .EX
 
+wget "https://github.com/golf-lang/golf/releases/latest/download/golf-main-opensuse.noarch.rpm" -O golf-main-opensuse.noarch.rpm
 sudo zypper --no-gpg-checks install ./golf-main-opensuse.noarch.rpm
 
 .EE
@@ -96,11 +96,11 @@ sudo zypper --no-gpg-checks install ./golf-main-opensuse.noarch.rpm
 .RS 4
 \[bu]    
 Arch Linux and similar
-\fBDownload it\fP, and then install with:
 
 .RS 4
 .EX
 
+wget "https://github.com/golf-lang/golf/releases/latest/download/golf-main-arch-any.pkg.tar.zst" -O golf-main-arch-any.pkg.tar.zst
 sudo pacman -U ./golf-main-arch-any.pkg.tar.zst
 
 .EE
@@ -113,7 +113,7 @@ sudo pacman -U ./golf-main-arch-any.pkg.tar.zst
 .B BUILDING PACKAGES
 .LP
 
-If you are a packaging developer, the following can be used to build a Golf package. All of these use \fBgolf_3.1.18.orig.tar.gz\fP source archive; the naming convention is obviously for Debian, but all other packages have been made to conform for simplicity.
+If you are a packaging developer, the following can be used to build a Golf package. All of these use \fBgolf_3.1.31.orig.tar.gz\fP source archive; the naming convention is obviously for Debian, but all other packages have been made to conform for simplicity.
 
 .B - apt packaging
 

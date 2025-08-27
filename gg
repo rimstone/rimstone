@@ -166,7 +166,7 @@ function main() {
 #list of Golf options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o k:e:,q,o,l,m,i,h,c,v,s,u,r --long verbose,ignore-warn,exclude-dir:,man:,single-file,public,parallel:,db:,lflag:,cflag:,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,prof,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,devel,release,req:,exec,method:,maxupload:,client-timeout:,max-errors:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o k:e:,q,p:,a:,o,l,m,i,h,c,v,s,u,r --long verbose,ignore-warn,exclude-dir:,man:,single-file,public,parallel:,db:,lflag:,cflag:,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,prof,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,devel,release,req:,exec,method:,maxupload:,client-timeout:,max-errors:,version:,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit_s -1
@@ -290,6 +290,21 @@ _DO_QUICK=0
         -e )
 #display last N errors from backtrace
             _SHOWERROR="$2"
+            shift 2
+            ;;
+        -p )
+#package application
+            _PACK_APP="$2"
+            shift 2
+            ;;
+        -a )
+#install app packaged with -p
+            _UNPACK_APP="$2"
+            shift 2
+            ;;
+        --version  )
+            if [ "$_PACK_APP" == "" ]; then error "--version can be used after -p only"; fi
+            export _PACK_APP_VERSION="$2"
             shift 2
             ;;
         --lflag  )
@@ -504,7 +519,7 @@ _DO_QUICK=0
     fi
 
 #can run this from anywhere if has --req and (--service or --app), otherwise must be in app dir
-if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_IP" != "" || "$_REQ_SOCK" != "")))  ]]; then
+    if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_IP" != "" || "$_REQ_SOCK" != "")))  ]]; then
         _TOEXEC=".gg_reqexec"
         #need || true to remove temp file
         show_run_program || true
@@ -512,21 +527,37 @@ if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_
         exit 0
     fi
 
+    if [ "$_PACK_APP" != "" ]; then
+        if [ "$_UNPACK_APP" != "" ]; then error "Cannot package and install app at the same time"; fi
+        packapp $_PACK_APP
+        exit 0
+    fi
+
+    if [ "$_UNPACK_APP" != "" ]; then
+        if [ "$_PACK_APP" != "" ]; then error "Cannot package and install app at the same time"; fi
+        unpackapp $_UNPACK_APP
+        exit 0
+    fi
+
+
+#
+#
+#
+# At this point forward, application must have been created for options handled below
+#
+#
+
 #application name created with mgrg in .vappname, which must exist
+    ERREX="Golf application was not created yet. Please use 'gg -k' to create an application first"
     if [ -f ".vappname" ]; then
         #this is special $() which doesn't create subshell, but just reads contents into a variable
         export GG_C_NAME=$(<.vappname)
     else
-        error "Golf application was not created yet. Please use 'gg- k' to create an application first"
+        error "$ERREX"
     fi
     check_name "$GG_C_NAME" "application name"
     export GG_BLD=$GG_DATA/apps/$GG_C_NAME/.bld
-    E=0
-#make a tmp directory as it's faster, but if not, use the classic, then link so we have a fixed URL always that's the same
-    GG_BLD_TMP=$(mktemp -d /tmp/golf-$GG_C_NAME-XXXXXXXXXX)||E=$?
-    if [ "$E" == "0" ]; then 
-        ln -s $GG_BLD_TMP $GG_BLD
-    fi
+    if [[ ! -d "$GG_BLD" ]]; then error "$ERREX"; fi
     export GG_BLD0=$GG_BLD/.bld
     export GG_H="$GG_DATA/apps/$GG_C_NAME"
     export GG_A="$GG_H/app"
@@ -795,6 +826,86 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
 }
 
 
+
+#
+#
+#
+#Install application $1
+#
+#
+#
+function unpackapp() {
+    echo "unpack $1"
+}
+
+#
+#
+#
+#Package application $1
+#
+#
+#
+#NEED --package-ver for version so file can be named, issue warning if downgrading, still do it, but ask
+#NEED --force-user to make sure user name is the same on target
+#NEED to record which toolkits are used and to make sure that's available on target
+#NEED to say which dbs are used and on target to remind user to have those databases
+#NEED to collect -lflags used if any -l there and record this to check if it exists on target
+function packapp() {
+    APP=$1
+    export GG_H="$GG_DATA/apps/$APP"
+    export GG_BLD="$GG_DATA/apps/$APP/.bld"
+    #test application created
+    if [[ ! -d "$GG_DATA/apps/$APP" || ! -f "$GG_H/.mgrgart" ]]; then
+        error "Application must be created first. Use 'gg -k' or mgrg to create and application"
+    fi
+    #test application built. We ensure build was successful by 1) checking executables exist, .succ* files are there (which are removed
+    #just prior to build) and blds file is there with settings
+    if [[ ! -f "$GG_BLD/$APP" || ! -f "$GG_BLD/$APP.srvc" || ! -f "$GG_BLD/blds" || ! -f "$GG_BLD/.succ.srv" || ! -f "$GG_BLD/.succ" ]]; then
+        error "Application must be built to be packaged. Build it first with --release option prior to packaging"
+    fi
+    . "$GG_BLD/blds" 
+    if [ "$GG_C_DEBUG" == "1" ]; then
+        error "Application must be built with --release option to be packaged"
+    fi
+    rm -rf $GG_BLD/package
+    mkdir -p $GG_BLD/package
+    mkdir -p $GG_BLD/package/libs
+    if [[ ! -d "$GG_BLD/package" ]]; then
+        error "Could not create [$GG_BLD/package] directory"
+    fi
+    if [[ ! -d "$GG_BLD/package/libs" ]]; then
+        error "Could not create [$GG_BLD/package/libs] directory"
+    fi
+    if [[ -d "$GG_H/db" ]]; then
+        cp -rf "$GG_H/db" $GG_BLD/package
+        if [[ ! -d "$GG_BLD/package/db" ]]; then
+            error "Could not create [$GG_BLD/package/db] directory"
+        fi
+    fi
+    cp -rf "$GG_H/app" $GG_BLD/package
+    if [[ ! -d "$GG_BLD/package/app" ]]; then
+        error "Could not create [$GG_BLD/package/app] directory"
+    fi
+    cp "$GG_BLD/$APP" "$GG_BLD/$APP.srvc" "$GG_H/.mgrgart"   $GG_BLD/package
+    if [ "$_PACK_APP_VERSION" != "" ]; then
+        echo -n "$_PACK_APP_VERSION" > $GG_BLD/package/.version
+        if [[ ! -f "$GG_BLD/package/.version" ]]; then
+            error "Could not write .version file"
+        fi
+    fi
+    #find out which libraries are neeeded for this package
+    if [[ -f "$GG_BLD/.mod.CURL" ]]; then echo -n "1" > $GG_BLD/package/libs/curl; fi
+    if [[ -f "$GG_BLD/.mod.PCRE2" ]]; then echo -n "1" > $GG_BLD/package/libs/pcre2; fi
+    if [[ -f "$GG_BLD/.mod.CRYPTO" ]]; then echo -n "1" > $GG_BLD/package/libs/crypto; fi
+    if [[ -f "$GG_BLD/.mod.MARIADB" ]]; then echo -n "1" > $GG_BLD/package/libs/mariadb; fi
+    if [[ -f "$GG_BLD/.mod.POSTGRES" ]]; then echo -n "1" > $GG_BLD/package/libs/postgres; fi
+    if [[ -f "$GG_BLD/.mod.SQLITE" ]]; then echo -n "1" > $GG_BLD/package/libs/sqlite; fi
+    if [[ -f "$GG_BLD/.mod.XML" ]]; then echo -n "1" > $GG_BLD/package/libs/xml; fi
+
+    PFILE="$GG_BLD/$APP.tar.gz" 
+    tar cvfz "$PFILE" -C $GG_BLD/ package
+    echo "Packaged application [$APP] into file [$PFILE]"
+}
 
 #
 #

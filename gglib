@@ -325,6 +325,7 @@ function display_install(){
 #before each install we check if installed, because it can as a dependency of one of the previous installs!
 function exec_install(){
     discovery
+    FINST="0"
     echo "$1"|while IFS= read -r line; do 
         case "$line" in $GG_MARIADB_I|$GG_POSTGRES_I|$GG_SQLITE_I|$GG_CURL_I|$GG_XML_I|$GG_PCRE2_I|$GG_CRYPTO_I|$GG_GCC_I|$GG_MAKE_I|$GG_PKGCONF_I|$GG_TAR_I|$GG_SEL_I) 
                 if [ "$2" == "1" ]; then
@@ -333,6 +334,14 @@ function exec_install(){
                         INST=$(display_install $line)
 echo "$INST"
                         if [[ "$INST" =~ ^sudo.*$ ]]; then
+                            if [ "$GG_REL_NAME" == "debian" ]; then
+                                #for debian/ubuntu etc, run apt update prior to the first install
+                                if [ "$FINST" == "0" ]; then
+                                    FINST=1
+                                    echo "Updating repository..."
+                                    sudo apt update >/dev/null 2>&1
+                                fi
+                            fi
                             echo "Installing [$(namelib $line)]..."
                             eval $INST >/dev/null 2>&1
                             E=0; gotlib $line||E=$?

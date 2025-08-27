@@ -135,7 +135,6 @@ static pid_t *plist; // list of process IDs started by mgrg instance
 static gg_num sockfd; // socket passed down to forked child
 static gg_num num_process; // abs max # of processes, plist is sized on it
 static FILE *logfile = NULL; // this is mgrg.log
-static FILE *logfile1 = NULL; // this is mgrg1.log
 static pid_t sid = 0; // session id of the child group
 static char *golfapp = ""; // app name
 static gg_num num_to_start_min = 5; // min-worker
@@ -1048,6 +1047,7 @@ int main(int argc, char **argv)
         // This is for when we need to set socket privs to be a group of another user
         //if (seteuid (0) == 0) exit_error ("You cannot run as root");
 
+
         // create ID file for application that states application name. Used by gg to work
         // without having to specify application name
         char *vfile = ".vappname";
@@ -1079,6 +1079,19 @@ int main(int argc, char **argv)
         gg_dir (GG_DIR_APP, ipath, sizeof(ipath), golfapp, run_user);
         owned (ipath, run_user_id); // make sure no one else already took this
         initdir (ipath, 0700, run_user_id, run_user_grp_id);
+        //
+        // Make creation artifact, used to recreate the application
+        // Must be aftere the above GG_DIR_APP is created or the dir may not exist for the artifact here
+        //
+        char artname[GG_MAX_OS_UDIR_LEN];
+        gg_dir (GG_DIR_ART, artname, sizeof(artname), golfapp, run_user);
+        FILE *art = NULL; // artifact of creation
+        if ((art = fopen (artname, "w+")) == NULL) exit_error ("Cannot open creation artifact file [%s]", artname);
+        // add if sudo
+        if (geteuid() == 0) { if (fputs ("sudo ", art) == EOF) exit_error ("Cannot write creation artifact file [%s]", artname); }
+        // add all params ([0] is the program name)
+        for (int i = 0; i < argc; i++) { if (fputs (argv[i], art) == EOF ||  fputs (" ", art) == EOF) exit_error ("Cannot write creation artifact file [%s]", artname);; }
+        fclose (art);
         //
         // create ./golf/apps/<app>/.bld dir
         //
@@ -1206,10 +1219,6 @@ int main(int argc, char **argv)
     // log file defined outside fork as it must be visible to parent AND child
     char logn[GG_MAX_OS_UDIR_LEN];
     gg_dir (GG_DIR_MGRG, logn, sizeof(logn), golfapp, NULL);
-    char logn1[GG_MAX_OS_UDIR_LEN];
-    gg_dir (GG_DIR_MGRG1, logn1, sizeof(logn1), golfapp, NULL);
-    logfile1 = fopen (logn1, "a+");
-    if (logfile1 == NULL) exit_error ("Cannot open log file1 [%s]", GG_FERR);
 
     atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst); // always reset so that previous command doesn't stay in memory if previous server went away
     
@@ -1319,7 +1328,6 @@ int main(int argc, char **argv)
     } else if (deadres == -1) {
         exit_error ("Could not start Golf Service Manager for [%s], [%s]", golfapp, GG_FERR);
     } else {
-        fprintf (logfile1, "Starting other process [%ld]\n", opid);
         // ORIGINAL PARENT FROM COMMAND LINE OR A SCRIPT, deadres is the PID of the child process (the resident process)
         // get success message from child (our resident process)
         // THIS NEVER HAPPENS IN FOREGROUND MODE, as there is no fork (parent and child), but only one process
@@ -1330,16 +1338,12 @@ int main(int argc, char **argv)
 
             // check for client commands (client being the other process created in fork above)
             gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
-            fprintf (logfile1, "Reading messages, command [%ld], data [%s], [%ld]\n", command, golfmem->data1, opid);
             checkshm(false); 
-            fprintf (logfile1, "After checkshm, command [%ld], data [%s], [%ld]\n", command, golfmem->data1, opid);
             if (command == GG_DONESTARTUP) {out_msg ("Golf Service Manager [%s] for [%s] successfully started", GG_PKGVERSION, golfapp); exit(0);}
             else if (command == GG_DONESTARTUP0) {out_msg ("Golf Service Manager [%s] for [%s] is already running. If you want to restart it, stop it first (-m quit), then start it", GG_PKGVERSION, golfapp); exit(1);}
             sleepabit (mslp);
-            fprintf (logfile1, "Done Reading messages, command [%ld], data [%s] [%ld]\n", command, golfmem->data1, opid);
         }
-        gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
-        fprintf (logfile1, "End Reading messages, command [%ld], data [%s] [%ld]\n", command, golfmem->data1, opid);
+        atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
         exit_error ("Could not start Golf Service Manager for [%s],[%ld],[1], log file [%s]", golfapp, tries, logn);
     }
     gg_num pcount = 0;

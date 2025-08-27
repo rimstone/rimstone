@@ -41,7 +41,7 @@ size_t gg_dir (int type, char *dir, size_t dir_size, char *app, char *user);
 #define GG_DIR_SOCKFILE 10
 #define GG_DIR_MEM 11
 #define GG_DIR_LOCK 12
-#define GG_DIR_MGRG1 13
+#define GG_DIR_ART 13
 #define GG_DIR_TMP 14
 #define GG_DIR_TRACENAME 15
 
