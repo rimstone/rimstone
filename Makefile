@@ -87,6 +87,7 @@ ifeq ($(strip $(REL)),1)
     GDEST=release
     GG_ALWAYS_INLINE=__attribute__((always_inline))
     ASAN=
+    DEVEL=
 else
     CFLAGS_WARN_ERROR=-Werror 
     OPTIM_COMP=-g3 $(DBG) -rdynamic
@@ -94,6 +95,7 @@ else
     LTO=
     GDEST=devel
     GG_ALWAYS_INLINE=
+    DEVEL=-DGG_DEVEL
 endif
 
 #determine which libraries are present and which are not (0 means present)
@@ -162,6 +164,7 @@ V_APPS:=$(DESTDIR)/apps
 V_LIB:=$(DESTDIR)/lib
 V_INC:=$(DESTDIR)/include
 V_BIN:=$(DESTDIR)/bin
+V_TMP:=$(DESTDIR)/tmp
 V_MAN:=$(DESTDIR)/man/man2
 V_SHARE:=$(DESTDIR)/golf
 V_GG_SELINUXDIR:=/usr/share
@@ -185,7 +188,7 @@ endif
 #C flags are as strict as we can do, in order to discover as many bugs as early on
 #Release doesn't use -Werror because with many flavors of gcc out there, chances of failing are high (dev only)
 #unwind tables are mandatory on all x86_64 ABIs, so the inclusion below is really for aarch64
-CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIADB_INC) $(GG_POSTGRES_INC) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ALWAYS_INLINE='$(GG_ALWAYS_INLINE)' $(OPTIM_COMP) $(ASAN) $(PROF) -fmax-errors=5 -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(LTO) -funwind-tables $(GGINCF)
+CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fpic -fno-semantic-interposition  $(GG_MARIADB_INC) $(GG_POSTGRES_INC) $(GG_LIBXML2_INCLUDE) -DGG_OSNAME="\"$(OSNAME)\"" -DGG_OSVERSION="\"$(OSVERSION)\"" -DGG_PKGVERSION="\"$(PACKAGE_VERSION)\"" -DGG_ALWAYS_INLINE='$(GG_ALWAYS_INLINE)' $(OPTIM_COMP) $(ASAN) $(PROF) -fmax-errors=5 -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(LTO) -funwind-tables $(GGINCF) $(DEVEL)
 
 #linker flags. 
 LFLAGS_COMMON=-Wl,-z,relro
@@ -287,6 +290,7 @@ build_structure:
 	install -D -m 0600 README -t $(V_GG_ABOUT)/
 	install -D -m 0600 CONTRIBUTING -t $(V_GG_ABOUT)/
 	install -m 0700 -d $(V_BIN)/
+	install -m 0700 -d $(V_TMP)/
 	install -D -m 0700 sys -t $(V_LIB)/
 	install -D -m 0700 gglib  -t $(V_BIN)/
 	install -D -m 0700 gg  -t $(V_BIN)/

@@ -339,10 +339,13 @@ echo "$INST"
                                 if [ "$FINST" == "0" ]; then
                                     FINST=1
                                     echo "Updating repository..."
-                                    sudo apt update >/dev/null 2>&1
+                                    sudo DEBIAN_FRONTEND=noninteractive apt update >/dev/null 2>&1
                                 fi
                             fi
                             echo "Installing [$(namelib $line)]..."
+                            if [ "$GG_REL_NAME" == "debian" ]; then
+                                INST=$(sed 's/^sudo /sudo DEBIAN_FRONTEND=noninteractive /g'<<<"$INST")
+                            fi
                             eval $INST >/dev/null 2>&1
                             E=0; gotlib $line||E=$?
                             if [ "$E" != "0" ]; then
@@ -462,7 +465,7 @@ function base_install(){
 # Main interface for command-line use
 #
 function use_message() {
-    echo "Usage: $0 [ -a ] [ -r <app> ] [ -l ] [ -b ] [ -h ]"
+    echo "Usage: gglib [ -a ] [ -r <app> ] [ -l ] [ -b ] [ -h ]"
     echo "-a         shows installation instructions for all toolkit packages Golf may use that are not installed."
     echo "r <app>    shows installation instructions for all required toolkit packages for <app> that are not installed."
     echo "-b         shows base packages installation instructions for all base packages that are not installed."

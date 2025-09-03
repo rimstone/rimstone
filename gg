@@ -145,6 +145,11 @@ OPTIONS:
              --exclude-dir=<dir list>
              --ignore-warn
              --verbose
+-p <app> package application 
+             --version=<version>
+-a <pkg> install package <pkg> created with -p
+             --downgrade
+             --all
 -i       display build flags for FastCGI client
              --include
                  displays C compile flags
@@ -157,6 +162,17 @@ Type 'man gg' for more information.
 "
 }
 
+ERREX="Golf application not created yet. Please use 'gg -k' or mgrg to create an application first"
+function setup_app_name() {
+    NAME="$1"
+    check_name "$NAME" "application name"
+    export GG_BLD=$GG_DATA/apps/$NAME/.bld
+    if [[ ! -d "$GG_BLD" ]]; then error "$ERREX"; fi
+    export GG_H="$GG_DATA/apps/$NAME"
+    if [[ ! -d "$GG_H" ]]; then error "$ERREX"; fi
+    export GG_A="$GG_H/app"
+    if [[ ! -d "$GG_A" ]]; then error "$ERREX"; fi
+}
 
 #process all command-line options
 function main() {
@@ -166,7 +182,7 @@ function main() {
 #list of Golf options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o k:e:,q,p:,a:,o,l,m,i,h,c,v,s,u,r --long verbose,ignore-warn,exclude-dir:,man:,single-file,public,parallel:,db:,lflag:,cflag:,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,prof,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,devel,release,req:,exec,method:,maxupload:,client-timeout:,max-errors:,version:,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o k:e:,q,p:,a:,o,l,m,i,h,c,v,s,u,r --long verbose,ignore-warn,exclude-dir:,man:,single-file,public,parallel:,db:,lflag:,cflag:,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,prof,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,devel,release,req:,exec,method:,maxupload:,client-timeout:,max-errors:,version:,downgrade,all,force-user,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit_s -1
@@ -302,10 +318,25 @@ _DO_QUICK=0
             _UNPACK_APP="$2"
             shift 2
             ;;
+        --force-user  )
+            if [ "$_PACK_APP" == "" ]; then error "--force-user can be used after -p only"; fi
+            _PACK_APP_FORCE_USER="1"
+            shift 1
+            ;;
         --version  )
             if [ "$_PACK_APP" == "" ]; then error "--version can be used after -p only"; fi
             export _PACK_APP_VERSION="$2"
             shift 2
+            ;;
+        --all  )
+            if [ "$_UNPACK_APP" == "" ]; then error "--all can be used after -a only"; fi
+            export _UNPACK_ALL="1"
+            shift 1
+            ;;
+        --downgrade  )
+            if [ "$_UNPACK_APP" == "" ]; then error "--downgrade can be used after -a only"; fi
+            export _UNPACK_DOWNGRADE="1"
+            shift 1
             ;;
         --lflag  )
             export GG_C_LFLAGS="$2"
@@ -465,6 +496,15 @@ _DO_QUICK=0
         esac
     done
 
+#something extra and unexpected, complain about it, probably an error
+    if [ "$1" != "" ]; then
+        error "Unknown input [$1]"
+    fi
+
+    #this is important so that any other script (especially sourced) does NOT inherit parameters passed to here! Example: gg -a would 
+    #pass -a to gglib which wasn't the intent at all
+    eval set --
+
     if [ "$GG_C_DEVEL" == "1" ]; then
         GDEST="devel"
     else
@@ -507,10 +547,6 @@ _DO_QUICK=0
         error "In order to use ASAN, you must use --devel option"
     fi
 
-#something extra and unexpected, complain about it, probably an error
-    if [ "$1" != "" ]; then
-        error "Unknown input [$1]"
-    fi
 
 #before app name checking b/c it doesn't have anything to do with it
     if [ "$_DO_HIGHLIGHT" != "" ]; then
@@ -548,19 +584,13 @@ _DO_QUICK=0
 #
 
 #application name created with mgrg in .vappname, which must exist
-    ERREX="Golf application was not created yet. Please use 'gg -k' to create an application first"
     if [ -f ".vappname" ]; then
         #this is special $() which doesn't create subshell, but just reads contents into a variable
         export GG_C_NAME=$(<.vappname)
     else
         error "$ERREX"
     fi
-    check_name "$GG_C_NAME" "application name"
-    export GG_BLD=$GG_DATA/apps/$GG_C_NAME/.bld
-    if [[ ! -d "$GG_BLD" ]]; then error "$ERREX"; fi
-    export GG_BLD0=$GG_BLD/.bld
-    export GG_H="$GG_DATA/apps/$GG_C_NAME"
-    export GG_A="$GG_H/app"
+    setup_app_name "$GG_C_NAME"
 
 #THEN perform any actions
 
@@ -587,10 +617,10 @@ _DO_QUICK=0
     if [ "$_COMMRUN" != "" ]; then
         _TOEXEC="$GG_BLD/.reqexec"
         #this is if running gg -r from outside source directory
-        if [ ! -f $GG_BLD/.blds ]; then
+        if [ ! -f $GG_BLD/blds ]; then
             error "Cannot find application, use --app option."
         fi
-        . $GG_BLD/.blds
+        . $GG_BLD/blds
         show_run_program
         exit 0
     fi
@@ -707,7 +737,7 @@ function last_path_seg() {
 #
 #
 function show_run_program() {
-    #GG_C_RESTPATH is set and restored from .blds file, so even if it's not in gg -r, it was in gg -q
+    #GG_C_RESTPATH is set and restored from blds file, so even if it's not in gg -r, it was in gg -q
     #and here it is now - this is so we don't have to remember the path set if we're in development build directory
     if [ "$GG_C_RESTPATH" == "" ];  then
         _APATH="/$GG_C_NAME"
@@ -825,6 +855,31 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
     fi
 }
 
+#           
+#           
+#           
+#Take all parameters, and sort them as versions, then find the lowest version of them all
+#version is something like num.num.num
+#           
+#
+#           
+function lowest_version() {
+    echo "$@" | sed 's/ /\n/g'| sort -V | head -n 1
+}  
+
+#
+#
+#
+#Check package version to be numbers and dots
+#
+#
+#
+check_package_version() {
+    if ! [[ "$1" =~ ^[0-9.]+$ ]]; then
+        error "Version [$1] is incorrect"
+    fi
+}
+
 
 
 #
@@ -835,26 +890,170 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
 #
 #
 function unpackapp() {
-    echo "unpack $1"
+    #check file for validity
+    echo "Checking package..."
+    PFILE="$1"
+    if [[ ! -f "$PFILE" ]]; then
+        error "File [$PFILE] does not exist"
+    fi
+    E=0; tar -tf "$PFILE" >/dev/null 2>&1 || E=$?
+    if [ "$E" != "0" ]; then error "File [$PFILE] is not a valid tar.gz archive"; fi
+
+    echo "Creating temporary directory..."
+    #make a tmp directory for this unpacking 
+    GG_TMP="$HOME/.golf/tmp/install/$PFILE"
+    mkdir -p $GG_TMP
+    if [[ ! -d "$GG_TMP" ]]; then error "Cannot create temporary directory"; fi
+    #untar file
+    tar xvfz "$PFILE" -C $GG_TMP
+    cd $GG_TMP/package
+    echo "Using temporary directory [$GG_TMP/package]"
+    #if --force-user used, check user
+    PUSER="$(cat .user)"
+    if [[ -f ".user.force" ]]; then
+        if [ "$GG_USER" != "$PUSER" ]; then
+            error "This application requires that Operating System user name is [$PUSER]"
+        fi
+    fi
+
+    #get app name
+    echo "Checking package name..."
+    if [[ ! -f ".name" ]]; then
+        error "No name specified for package"
+    else
+        #first check name is okay
+        APP=$(cat .name)
+        check_name "$APP" "application name"
+        echo "Creating application [$APP] in user account [$PUSER]..."
+        #create application
+        F=".mgrgart"
+        if [[ ! -f "$F" ]]; then error "File [$F] is missing"; fi
+        #change user if not the same
+        if [ "$GG_USER" != "$PUSER" ]; then
+            #Linux user can only have alphanumerics, underscores and hyphens, so this will work
+            sed -i 's/\s\+-u\s\+'$PUSER'/ -u '$GG_USER'/g' $F
+        fi
+        chmod +x $F
+        E=0; ./$F||E=$?
+        if [ "$E" != "0" ]; then error "Cannot create Golf application, statement [$(cat $F)]"; fi
+        #check app dirs okay
+        setup_app_name "$APP"
+    fi
+    #
+    #
+    #now GG_... like GG_BLD are available
+    #
+    #
+
+    #for --version, check if upgrade or downgrade
+    echo "Checking package version..."
+    if [[ ! -f ".version" ]]; then
+        error "No version specified for package"
+    else
+        if [[ ! -f $GG_H/.version ]]; then old_ver=0; else old_ver=$(cat $GG_H/.version); fi
+        new_ver=$(cat .version)
+        check_package_version "$new_ver"
+        lowv=$(lowest_version "$old_ver" "$new_ver")
+        if [[ "$lowv" == "$new_ver" && "$old_ver" != "$new_ver" ]]; then
+            if [ "$_UNPACK_DOWNGRADE" != "1" ]; then
+                error "This package would downgrade application. If that is what you want, use --downgrade"
+            else
+                echo "Downgrading from [$old_ver] to [$new_ver] as requested"
+            fi
+        fi
+        cp -f .version $GG_H/.version
+    fi
+
+    #databases (db)
+    cp -rf db $GG_H
+
+    #re-enact the settings
+    . ./blds
+    echo "Checking databases..."
+    if [ "$GG_DBS" != "" ]; then
+        echo "The following database configuration files are used. You may need to edit their database login information, if different than the computer where the package was created:"
+        for i in $GG_DBS; do
+            i=$(sed 's|^\([^:]\+\):\(.*\)$|    Configuration file ['"$GG_H/db/"'\2] for a \1 database|g'<<<$i)
+            echo $i
+        done
+    fi
+
+    #check libraries missing
+    #make sure $1 is not passed to gglib
+    eval set --
+    echo "Checking required libraries..."
+    . $GG_BIN_PATH/gglib 
+    discovery
+    DISP_LIB=
+    NL=$'\n'
+    if [[ -f "libs/curl" && "$GG_CURL_EX" != "0"  ]]; then 
+        DISP_LIB+="$GG_CURL_I$NL";
+    fi
+    if [[ -f "libs/pcre2" && "$GG_PCRE2_EX" != "0"  ]]; then 
+        DISP_LIB+="$GG_PCRE2_I$NL";
+    fi
+    if [[ -f "libs/crypto" && "$GG_CRYPTO_EX" != "0"  ]]; then 
+        DISP_LIB+="$GG_CRYPTO_I$NL";
+    fi
+    if [[ -f "libs/mariadb" && "$GG_MARIADB_EX" != "0"  ]]; then
+        DISP_LIB+="$GG_MARIADB_I$NL";
+    fi
+    if [[ -f "libs/postgres" && "$GG_POSTGRES_EX" != "0"  ]]; then
+        DISP_LIB+="$GG_POSTGRES_I$NL";
+    fi
+    if [[ -f "libs/sqlite" && "$GG_SQLITE_EX" != "0"  ]]; then
+        DISP_LIB+="$GG_SQLITE_I$NL";
+    fi
+    if [[ -f "libs/xml" && "$GG_XML_EX" != "0"  ]]; then
+        DISP_LIB+="$GG_XML_I$NL";
+    fi
+    if [ "$DISP_LIB" != "" ]; then
+        echo "Some libraries are not installed and need to be installed for application to work. You can 1) install them now by entering 'yes' (in which case the commands below will execute), or 2) enter 'no', install them yourself and try again. In either scenario you will need sudo privileges."
+        echo
+        exec_install "$DISP_LIB" 0
+        echo
+        if [ "$_UNPACK_ALL" != "1" ]; then
+            read -p "Install libraries now? (yes to proceed)" inst
+        fi
+        if [[ "$_UNPACK_ALL" == "1" || "$inst" == "yes" ]]; then
+            exec_install "$DISP_LIB" 1
+        else
+            error "Package not installed, exiting"
+        fi
+    fi
+
+    echo "Checking for any unresolved libraries..."
+    #check if any unresolved libs
+    E=0; NFS=$(ldd ./$APP.srvc 2>&1 | grep ' => not found') || E=$?
+    if [ "$NFS" != "" ]; then 
+        error "Some libraries are still unresolved:\n$NFS"; 
+    fi
+
+    echo "Copying executables..."
+    #make sure they are executable
+    chmod +x $APP $APP.srvc
+    #copy executables
+    cp -f "$APP" "$APP.srvc" blds $GG_BLD/
+    if [[ ! -f ".vappname" ]]; then
+        echo -n "$APP" > .vappname
+    fi
+
 }
 
 #
 #
 #
-#Package application $1
+#Package application $1 (always non empty)
 #
 #
 #
-#NEED --package-ver for version so file can be named, issue warning if downgrading, still do it, but ask
-#NEED --force-user to make sure user name is the same on target
-#NEED to record which toolkits are used and to make sure that's available on target
-#NEED to say which dbs are used and on target to remind user to have those databases
-#NEED to collect -lflags used if any -l there and record this to check if it exists on target
+#MUST add Golf version, so we can check on target
 function packapp() {
+    echo "*** Note: Packaging process will include database configuration files. If you do not use passwordless login for databases, and if there is a potential risk, you should blank any such passwords out before building the executables."
     APP=$1
     export GG_H="$GG_DATA/apps/$APP"
     export GG_BLD="$GG_DATA/apps/$APP/.bld"
-    #test application created
+    #test application created based on name
     if [[ ! -d "$GG_DATA/apps/$APP" || ! -f "$GG_H/.mgrgart" ]]; then
         error "Application must be created first. Use 'gg -k' or mgrg to create and application"
     fi
@@ -864,9 +1063,11 @@ function packapp() {
         error "Application must be built to be packaged. Build it first with --release option prior to packaging"
     fi
     . "$GG_BLD/blds" 
+    #check built as release
     if [ "$GG_C_DEBUG" == "1" ]; then
         error "Application must be built with --release option to be packaged"
     fi
+    #package directory
     rm -rf $GG_BLD/package
     mkdir -p $GG_BLD/package
     mkdir -p $GG_BLD/package/libs
@@ -876,22 +1077,34 @@ function packapp() {
     if [[ ! -d "$GG_BLD/package/libs" ]]; then
         error "Could not create [$GG_BLD/package/libs] directory"
     fi
+    #database config files
     if [[ -d "$GG_H/db" ]]; then
         cp -rf "$GG_H/db" $GG_BLD/package
         if [[ ! -d "$GG_BLD/package/db" ]]; then
             error "Could not create [$GG_BLD/package/db] directory"
         fi
     fi
+    #app directory
     cp -rf "$GG_H/app" $GG_BLD/package
     if [[ ! -d "$GG_BLD/package/app" ]]; then
         error "Could not create [$GG_BLD/package/app] directory"
     fi
-    cp "$GG_BLD/$APP" "$GG_BLD/$APP.srvc" "$GG_H/.mgrgart"   $GG_BLD/package
+    #name of app
+    echo -n "$APP" > $GG_BLD/package/.name
+    #user of app (if asked for)
+    echo -n "$GG_USER" > $GG_BLD/package/.user
+    if [ "$_PACK_APP_FORCE_USER" == "1" ]; then
+        echo -n "1" > $GG_BLD/package/.user.force
+    fi
+    #binaries, app creation, settings
+    cp "$GG_BLD/$APP" "$GG_BLD/$APP.srvc" "$GG_H/.mgrgart" "$GG_BLD/blds"   $GG_BLD/package
     if [ "$_PACK_APP_VERSION" != "" ]; then
         echo -n "$_PACK_APP_VERSION" > $GG_BLD/package/.version
         if [[ ! -f "$GG_BLD/package/.version" ]]; then
             error "Could not write .version file"
         fi
+    else
+        error "Version not specified (use --version)"
     fi
     #find out which libraries are neeeded for this package
     if [[ -f "$GG_BLD/.mod.CURL" ]]; then echo -n "1" > $GG_BLD/package/libs/curl; fi
@@ -901,8 +1114,8 @@ function packapp() {
     if [[ -f "$GG_BLD/.mod.POSTGRES" ]]; then echo -n "1" > $GG_BLD/package/libs/postgres; fi
     if [[ -f "$GG_BLD/.mod.SQLITE" ]]; then echo -n "1" > $GG_BLD/package/libs/sqlite; fi
     if [[ -f "$GG_BLD/.mod.XML" ]]; then echo -n "1" > $GG_BLD/package/libs/xml; fi
-
-    PFILE="$GG_BLD/$APP.tar.gz" 
+    #create package
+    PFILE="$APP.tar.gz" 
     tar cvfz "$PFILE" -C $GG_BLD/ package
     echo "Packaged application [$APP] into file [$PFILE]"
 }
@@ -986,8 +1199,6 @@ GG_C_CFLAGS='$GG_C_CFLAGS'
 GG_C_LFLAGS='$GG_C_LFLAGS'
 GG_C_LFLAGS='$GG_C_LFLAGS'
 GG_C_POSIXREGEX='$GG_C_POSIXREGEX'
-GG_C_V1_MOD='$(stat -c "%Y" $GG_LIBRARY_PATH/v1)'
-GG_C_GG_MOD='$(stat -c "%Y" $(which gg))'
 GG_DBS='$_ALLDB'
 " > $GG_BLD/.blds
     if [ ! -f "$GG_BLD/blds" ]; then
@@ -1093,6 +1304,8 @@ function read_modules() {
     export GG_CRYPTO_LIB=
     export GG_POSTGRES_LIB=
     #determine library existance
+    #make sure $1 is not passed to gglib
+    eval set --
     . $GG_BIN_PATH/gglib 
     #make all include paths available if needed (we only include those actually used so not to waste time processing .h files we don't need)
     export GG_ALL_INCLUDE="$GG_MARIADB_INC $GG_SQLITE_INC $GG_CURL_INC $GG_PCRE2_INC $GG_CRYPTO_INC $GG_POSTGRES_INC $GG_XML_INC"

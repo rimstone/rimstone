@@ -51,9 +51,8 @@
 #define GG_FERR (errno == 0 ? "" : strerror(errno))
 
 // assert not null (used for malloc)
-#define GG_ANN(x) ((x) == NULL ? exit_error("Cannot allocate memory [%s]", GG_FERR) : 0)
+#define GG_ANN(x) ((x) == NULL ? exit_error(-1, "Cannot allocate memory [%s]", GG_FERR) : 0)
 
-#define GG_MAX_CLI_WAIT 10 // max second client will wait to hear back from server
 
 #define GG_MAX_ARGS 64 // max args to mgrg in -a
 
@@ -66,9 +65,13 @@
 #define GG_DONESTARTUP 4
 #define GG_DONESTARTUP0 5
 
+// invalid exit status of child process (used to tell us we don't know what happened)
+#define GG_BAD_EXIT 1000
+
 // locks for checking server the only one running for an app
 #define GG_LOCK 1 // lock it
-#define GG_CHECKLOCK 2 // make a lock and then release it if okay, the effect of checking if we can
+#define GG_CHECKLOCK 2 // check if locked
+#define GG_MAX_CLI_WAIT 10 // max second client will wait to hear back from server
 
 //
 // now that we know the server is (most likely) running, do the handshake so we get the confirmation the job is done
@@ -167,11 +170,12 @@ static gg_num exenotfound = 0; // print exe not found just once
 static gg_num fg = 0; // if 1, run in foreground
 
 // functions prototypes
-static pid_t whatisprocess(pid_t p);
+static pid_t whatisprocess(pid_t p, int *st);
 static void log_msg0(gg_num dest, char *format, ...);
-static void exit_error(char *format, ...);
+static void exit_error(int ec, char *format, ...);
+static void wait_server_end() ;
 static void getshm();
-static void checkshm(bool canquit);
+static void checkshm(bool is_running_server);
 static void cli_getshm(char *comm, gg_num byserver);
 static void usage(int ec);
 static void start_child (char *command, gg_num pcount);
@@ -180,6 +184,7 @@ static void tokarg();
 static void handlestop(gg_num sig);
 static void sleepabit(gg_num milli);
 static void unlockfile (gg_num lf);
+static gg_num testlockfile (char *fname) ;
 static gg_num lockfile (char *fname, gg_num *lf);
 static gg_num srvhere(gg_num op);
 static void runasuser();
@@ -246,8 +251,8 @@ static void initfile (char *ipath, gg_num mode, uid_t uid, gid_t guid) {
     // We check if this isn't local install; if so, we will try chown;
     // We'll check if current user/group matches what we want to change to, and if not, emit error; otherwise continue since
     // nothing's changing
-    if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
-    if (chmod(ipath, mode) != 0) exit_error ("Cannot set permissions for file [%s]", GG_FERR);
+    if (chown (ipath, uid, guid)!= 0) exit_error (-1, "Cannot change the ownership of file [%s], [%s]", ipath, GG_FERR);
+    if (chmod(ipath, mode) != 0) exit_error (-1, "Cannot set permissions for file [%s]", GG_FERR);
 }
 
 
@@ -256,12 +261,12 @@ static void initfile (char *ipath, gg_num mode, uid_t uid, gid_t guid) {
 //
 static void initdir (char *ipath, gg_num mode, uid_t uid, gid_t guid) {
     log_msg ("Creating directory [%s]", ipath);
-    if (mkdir (ipath, mode) != 0) if (errno != EEXIST) exit_error ("Cannot create directory [%s], [%s]", ipath, GG_FERR); 
+    if (mkdir (ipath, mode) != 0) if (errno != EEXIST) exit_error (-1, "Cannot create directory [%s], [%s]", ipath, GG_FERR); 
     // We check if this isn't local install; if so, we will try chown;
     // We'll check if current user/group matches what we want to change to, and if not, emit error; otherwise continue since
     // nothing's changing
-    if (chown (ipath, uid, guid)!= 0) exit_error ("Cannot change the ownership of directory [%s], [%s]", ipath, GG_FERR);
-    if (chmod(ipath, mode) != 0) exit_error ("Cannot set permissions for directory [%s]", GG_FERR);
+    if (chown (ipath, uid, guid)!= 0) exit_error (-1, "Cannot change the ownership of directory [%s], [%s]", ipath, GG_FERR);
+    if (chmod(ipath, mode) != 0) exit_error (-1, "Cannot set permissions for directory [%s]", GG_FERR);
 }
 
 //
@@ -275,12 +280,12 @@ static void owned (char *ipath, uid_t uid) {
     char *usernew;
     if (stat(ipath, &sbuff) == 0) {
         if (sbuff.st_uid != uid) {
-            if ((pwd = getpwuid (sbuff.st_uid)) == NULL) exit_error ("Cannot find user who owns [%s], user id [%ld], [%s]", ipath, sbuff.st_uid, GG_FERR);
+            if ((pwd = getpwuid (sbuff.st_uid)) == NULL) exit_error (-1,"Cannot find user who owns [%s], user id [%ld], [%s]", ipath, sbuff.st_uid, GG_FERR);
             // must allocate new buffer as getpwuid results overwrite the old ones
             GG_ANN (userown = strdup(pwd->pw_name));
-            if ((pwd1 = getpwuid (uid)) == NULL) exit_error ("Cannot find user [%ld], [%s]", ipath, uid, GG_FERR);
+            if ((pwd1 = getpwuid (uid)) == NULL) exit_error (-1,"Cannot find user [%ld], [%s]", ipath, uid, GG_FERR);
             GG_ANN (usernew= strdup(pwd->pw_name));
-            exit_error ("Directory [%s] is already owned by another user [%s], current user [%s]", ipath, userown, usernew);
+            exit_error (-1,"Directory [%s] is already owned by another user [%s], current user [%s]", ipath, userown, usernew);
         }
     }
 }
@@ -292,28 +297,30 @@ static void runasuser() {
     // Make sure root isn't here - it can't be, but double check. 
     // Final test is to try and make us a root. If succeeded, there was some bug, but in any case, this is the end of it
     // It will never run as root, bug or no bug.
-    if (setuid(0) == 0 || seteuid(0) == 0) exit_error ("Program can never run as root");
+    if (setuid(0) == 0 || seteuid(0) == 0) exit_error (-1,"Program can never run as root");
 
     char ipath[GG_MAX_OS_UDIR_LEN];
     gg_dir (GG_DIR_APP, ipath, sizeof(ipath), golfapp, NULL);
-    if (chdir(ipath) != 0) exit_error ("Cannot set current directory to [%s], [%s]", ipath, GG_FERR);
+    if (chdir(ipath) != 0) exit_error (-1,"Cannot set current directory to [%s], [%s]", ipath, GG_FERR);
 }
 
 
 //
-// returns 1 if there is another server running, 0 if not. If op is GG_CHECKLOCK, then do not keep a lock (client).
-// If it is GG_LOCK, keep a lock (only server does this).
-// A file is locked to achieve one-app-one-server. Return 0 if can lock, 1 otherwise.
+// returns 1 if there is another server running, 0 if not. If op is GG_CHECKLOCK, then do not lock (client), just check.
+// If it is GG_LOCK, lock the file (only server does this).
+// A file is locked to achieve one-app-one-server.
 //
 static gg_num srvhere(gg_num op) {
     char lpath[GG_MAX_OS_UDIR_LEN];
-    if (lfd != -1) return 1; // this is when calling srvhere again in the same process like in sending okay_started/okay_running
     gg_dir (GG_DIR_LOCK, lpath, sizeof(lpath), golfapp, NULL);
+    if (op == GG_CHECKLOCK) 
+    {
+        if (testlockfile (lpath) == 1) return 1; else return 0;
+    }
     if (lockfile (lpath, &lfd) == 0) {
         log_msg("Another server is running, lock file failed");
         return 1;
     }
-    if (op == GG_CHECKLOCK) {unlockfile(lfd); close (lfd); lfd = -1;}
     return 0;
 }
 
@@ -328,10 +335,39 @@ static void sleepabit(gg_num milli) {
 }
 
 //
+// Test lock on a file fname. Returns 0 if not locked or error, 1 if locked
+//
+static gg_num testlockfile (char *fname) 
+{
+    struct flock lock;
+    memset(&lock, 0, sizeof(lock));
+    int fd = open(fname, O_RDWR);
+    if (fd  == -1) return 0;
+    lock.l_type = F_WRLCK; 
+    lock.l_start = 0;      
+    lock.l_len = 0;       
+    lock.l_whence = SEEK_SET; 
+
+    if (fcntl(fd, F_GETLK, &lock) == -1) { //error
+        log_msg("Test lock file [%s] failed [%s]", fname, GG_FERR);
+        close(fd);
+        return 0;
+    } else if (lock.l_type != F_UNLCK) { //locked
+        log_msg("Test lock file [%s] locked by [%d]", fname, lock.l_pid);
+        close(fd);
+        return 1;
+    } else { // not locked
+        close(fd);
+        return 0;
+    }
+}
+
+//
 // UnLock a file id lf. We don't really check for return here, it is what it is, as it's a best effor endeavour.
 //
 static void unlockfile (gg_num lf) {
     struct flock lock;
+    memset(&lock, 0, sizeof(lock));
     //
     lock.l_type = F_UNLCK;
     lock.l_whence = SEEK_SET;
@@ -349,6 +385,7 @@ static void unlockfile (gg_num lf) {
 //
 static gg_num lockfile (char *fname, gg_num *lf) {
     struct flock lock;
+    memset(&lock, 0, sizeof(lock));
     *lf = open(fname, O_RDWR | O_CREAT, 0600);
     if (*lf  == -1) return 0;
 
@@ -396,9 +433,9 @@ static void tokarg() {
             if (instring == 0 && parg[begarg] != 0) xarg[carg++] = parg + begarg;
             break;
         } else c++;
-        if (carg >= GG_MAX_ARGS - 1) exit_error ("Too many arguments specified for service processes [%ld]", carg);
+        if (carg >= GG_MAX_ARGS - 1) exit_error (-1,"Too many arguments specified for service processes [%ld]", carg);
     }
-    if (instring == 1) exit_error ("Unterminated string in arguments specified for service process, at [%ld]", begstring);
+    if (instring == 1) exit_error (-1,"Unterminated string in arguments specified for service process, at [%ld]", begstring);
     xarg[carg] = NULL;
 }
 
@@ -422,8 +459,9 @@ static void log_msg0(gg_num dest, char *format, ...) {
 
 //
 // Display error message to stderr, which may be redirected in printf-style
+// ec is the exit code
 //
-static void exit_error(char *format, ...) {
+static void exit_error(int ec, char *format, ...) {
     time_t t;
     time(&t);
     fprintf(stderr, "%ld: %s: Error: ", (gg_num)getpid(), strtok (ctime(&t), "\n"));
@@ -433,16 +471,20 @@ static void exit_error(char *format, ...) {
     va_end (args);
     fputs ("\n", stderr);
     fflush (stderr);
-    exit(-1);
+    exit(ec);
 }
 
 //
-// What is the status of the process with PID p? Returns p if running, -p if running but either stopped or continued,
+// What is the status of the child process with PID p? Returns p if running, -p if running but either stopped or continued,
 // -1 if process dead, 0 if cannot determine
+// if process exited, then st is its exit status; st can be NULL; if child actually exited, then st is the status, if not 
+// (such as if it was terminated, or otherwise we can't get it), then st is GG_BAD_EXIT (which is 1000, not a valid exit status, thus signalling it never exited)
+// st is set only if process does not exist any more, so if it does exist, it's GG_BAD_EXIT
 //
-static pid_t whatisprocess(pid_t p) {
+static pid_t whatisprocess(pid_t p, int *st) {
     int pstat = 0; // waitpid may not set anything, so it may be random (bad)
     gg_num pid = waitpid (p, &pstat, WNOHANG);
+    if (st != NULL) *st = GG_BAD_EXIT;
     if (pid == 0) { // pid 0 means status not changed, child is running
         return p;
     }
@@ -450,11 +492,21 @@ static pid_t whatisprocess(pid_t p) {
         if (!WIFEXITED(pstat) && !WIFSIGNALED(pstat)) { // was not killed, must have been stopped or continued, but still up
             return -p;
         }
-        else return -1; // exited or terminated by a signal
+        else 
+        {
+            if (st != NULL) { 
+                if (WIFEXITED(pstat)) 
+                    *st = WEXITSTATUS(pstat); 
+                else 
+                    *st = GG_BAD_EXIT; 
+            }
+            return -1; // exited or terminated by a signal
+        }
     } 
     else if (pid == -1 || errno == ECHILD) {
         return -1;// else child may have exited already or been killed, or there is a process with this PID that is not a child
     } else {
+        if (st != NULL) *st = GG_BAD_EXIT;
         return 0; // this can be only bad option; but it isn't (WNOHANG). Should never happen.
     }
 }
@@ -473,7 +525,7 @@ static void handlestop(gg_num sig) {
         gg_num pkilled = 0;
         for (i = 0; i < num_process; i++) {
             if (plist[i] == -1) continue; // no process in this slot
-            pid_t p = whatisprocess (plist[i]);
+            pid_t p = whatisprocess (plist[i], NULL);
             if (p == plist[i]) { // means status not changed, child is running
                 log_msg("Sending SIGTERM to [%ld]", plist[i]);
                 kill (plist[i], SIGTERM);
@@ -516,19 +568,20 @@ static void getshm() {
     char shmem[NAME_MAX];
     snprintf (shmem, sizeof(shmem), "%s_%s", GG_SHMEM, golfapp);
     ggmemid = shm_open (shmem, O_CREAT|O_RDWR, 0600);
-    if (ggmemid == -1) exit_error ("Cannot create shared memory [%s]", GG_FERR);
-    if (ftruncate (ggmemid, sizeof (shbuf)) == -1) exit_error ("Cannot set shared memory size [%s]", GG_FERR);
+    if (ggmemid == -1) exit_error (-1,"Cannot create shared memory [%s]", GG_FERR);
+    if (ftruncate (ggmemid, sizeof (shbuf)) == -1) exit_error (-1,"Cannot set shared memory size [%s]", GG_FERR);
     golfmem = mmap (NULL, sizeof(shbuf), PROT_READ|PROT_WRITE, MAP_SHARED, ggmemid, 0);
-    if (golfmem == MAP_FAILED) exit_error ("Cannot get shared memory [%s]", GG_FERR);
+    if (golfmem == MAP_FAILED) exit_error (-1,"Cannot get shared memory [%s]", GG_FERR);
     atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
 }
 
 //
 // Check in server if there's client command.
-// canquit is true if we can quit the resident process here; that's true only in the resident process itself (which is what
-// canquit conveys).
+// is_running_server is true if this is the established resident process here (not the fork of a client trying to become one); 
+// that's true only in the resident process itself (which is what
+// is_running_server conveys).
 //
-static void checkshm(bool canquit) {
+static void checkshm(bool is_running_server) {
     gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
     if (command == GG_COMMAND) {
         log_msg ("Received command [%s]", golfmem->data1);
@@ -551,16 +604,21 @@ static void checkshm(bool canquit) {
             strcpy (golfmem->data1, "okay");
             atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
         } else if (!strcmp (golfmem->data1, "okay_started")) {
+            if (is_running_server) return; // this is client trying to start the server and it's child should answer this; not the running server
             atomic_store_explicit (&(golfmem->command) , GG_DONESTARTUP, memory_order_seq_cst);
         } else if (!strcmp (golfmem->data1, "okay_running")) {
+            if (is_running_server) return; // this is client trying to start the server and it's child should answer this; not the running server
             atomic_store_explicit (&(golfmem->command) , GG_DONESTARTUP0, memory_order_seq_cst);
         } else if (!strcmp (golfmem->data1, "stop")) {
             handlestop (GG_STOP);            
             temp_no_restart = 1;
             atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
-        } else if (canquit && !strcmp (golfmem->data1, "quit")) {
-            atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst); // this must come BEFORE handling quit as that will delete memory!
-            handlestop (GG_QUIT); // exits, no return
+        } else if (!strcmp (golfmem->data1, "quit")) {
+            if (is_running_server) // this has to be here and not in else if above, b/c then the below Unknown command would run, messing up response
+            {
+                atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst); // this must come BEFORE handling quit as that will delete memory!
+                handlestop (GG_QUIT); // exits, no return
+            }
         }
         else
         {
@@ -568,6 +626,22 @@ static void checkshm(bool canquit) {
             log_msg ("Unknown command [%s]", golfmem->data1);
             atomic_store_explicit (&(golfmem->command) , GG_DONEBAD, memory_order_seq_cst);
         }
+    }
+}
+
+//
+// When client sends a quit message to server, wait until it's no longer there. Otherwise, the following startup will fail,
+// because the server is still running.
+//
+static void wait_server_end() 
+{
+    gg_num tries = GG_TRIES;
+    while (tries-- >= 0) 
+    {
+        if (srvhere(GG_CHECKLOCK) != 1) {
+            break;
+        }
+        sleepabit (mslp);
     }
 }
 
@@ -582,7 +656,7 @@ static void cli_getshm(char *comm, gg_num byserver) {
 
     // okay_started/okay_running is internal command, not for the message list
     if (strcmp(comm, "start") && strcmp(comm, "stop") && strcmp(comm, "restart") && strcmp(comm, "quit") && strcmp(comm, "status") && strcmp(comm, "okay_started") && strcmp(comm, "okay_running")) {
-        exit_error ("Unrecognized command [%s]. Available commands are start, stop, restart and quit", comm);
+        exit_error (-1,"Unrecognized command [%s]. Available commands are start, stop, restart and quit", comm);
     }
 
     if (byserver == 0)
@@ -593,20 +667,22 @@ static void cli_getshm(char *comm, gg_num byserver) {
         ggmemid = shm_open (shmem, O_RDWR, 0600);
         if (ggmemid == -1) 
         {
-            if (strcmp (comm, "quit")) exit_error ("There is no active mgrg server named [%s]", golfapp);
+            // note that server process can exit or be killed, and shared memory will still be there; that's why we use locked files
+            if (strcmp (comm, "quit")) exit_error (-1,"There is no active mgrg server named [%s]", golfapp);
             else exit(0); // quit achieved without error message
         }
         golfmem = mmap (NULL, sizeof(shbuf), PROT_READ|PROT_WRITE, MAP_SHARED, ggmemid, 0);
-        if (golfmem == MAP_FAILED) exit_error ("Cannot get shared memory [%s]", GG_FERR);
+        if (golfmem == MAP_FAILED) exit_error (-1,"Cannot get shared memory [%s]", GG_FERR);
     }
 
 
 
 
-    // check if server here 
-    if (srvhere(GG_CHECKLOCK) == 0) {
-        if (strcmp (comm, "quit")) exit_error ("Server is not running");
-        else exit(0); // quit achieved without error message
+    // check if server here if stopping, status. For restart, it doesn't matter.For quitting don't say anything.
+    // if we checked this for server, then lock would be removed with srvhere(GG_CHECKLOCK)
+    if (byserver == 0 && srvhere(GG_CHECKLOCK) == 0) {
+        if (!strcmp (comm, "stop") ||  !strcmp (comm, "status")) exit_error (-1,"Server is not running");
+        else if (!strcmp (comm, "quit")) exit(0); // for quit just exit normally
     }
 
     char *servererr = "Server either too busy, experiencing problems, or down";
@@ -625,7 +701,7 @@ static void cli_getshm(char *comm, gg_num byserver) {
             } else break;
         }
         gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
-        if (command == GG_COMMAND) exit_error ("Cannot contact server: %s", servererr);
+        if (command == GG_COMMAND) exit_error (-1,"Cannot contact server: %s", servererr);
     }
     // Now issue the actual command, know the server is in a good state (most likely)
     snprintf (golfmem->data1, sizeof (golfmem->data1), "%s", comm);
@@ -636,10 +712,14 @@ static void cli_getshm(char *comm, gg_num byserver) {
     while (tries-- >= 0) {
         command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
         if (command != GG_COMMAND) {
-            if (command == GG_DONEBAD) exit_error ("Unknown command [%s]", comm);
+            if (command == GG_DONEBAD) exit_error (-1,"Unknown command [%s]", comm);
             // if asked for status, print what server responded. Use stdout, as no dup2 took place.
             if (!strcmp (comm, "status")) out_msg ("%s\n", golfmem->data1);
             log_msg ("Got server response on [%s], by server [%ld] command [%ld]", comm, byserver, command);
+            // for quit wait until it's actually gone; this is because a message from a killed server cannot be reliable sent back; because
+            // the server and its shared memory are gone!
+            // only wait if not server (i.e. client)
+            if (byserver == 0 && !strcmp (comm, "quit")) wait_server_end();
             return;
         } 
         sleepabit (mslp);
@@ -657,8 +737,12 @@ static void cli_getshm(char *comm, gg_num byserver) {
     // this is server telling client it started. If client dies before getting this (which is 
     // true in if below), there is no reason for server to die too.
     if (ccom == GG_COMMAND) {
-        if (strcmp (comm, "quit") && strcmp (comm, "okay_started") && strcmp (comm, "okay_running")) exit_error ("Request [%s] sent, but cannot get response from %s: %s", comm, byserver==1 ? "client":"server", servererr);
+        if (strcmp (comm, "quit") && strcmp (comm, "okay_started") && strcmp (comm, "okay_running")) exit_error (-1,"Request [%s] sent, but cannot get response from %s: %s", comm, byserver==1 ? "client":"server", servererr);
     }
+    // for quit wait until it's actually gone; this is because a message from a killed server cannot be reliable sent back; because
+    // the server and its shared memory are gone! This bit here is if getting response back (above) failed.
+    // only wait if not server (i.e. client)
+    if (byserver == 0 && !strcmp (comm, "quit")) wait_server_end();
 }
 
 //
@@ -727,7 +811,7 @@ static void start_child (char *command, gg_num pcount) {
         // The prctl will fail if parent died between the fork() above and prctl(). Here we check if parent is still
         // around. If not, then child dies right away too.
         if (res == -1 || ppid != getppid()) {
-            exit_error ("Cannot set parent death signal [%s]", GG_FERR);
+            exit_error (-1,"Cannot set parent death signal [%s]", GG_FERR);
         }
 
 
@@ -744,13 +828,13 @@ static void start_child (char *command, gg_num pcount) {
         close(1);
         close(2);
         if (dup (sockfd) != 0) {
-            exit_error ("Cannot dup socket to 0 [%s]", GG_FERR);
+            exit_error (-1,"Cannot dup socket to 0 [%s]", GG_FERR);
         }
         if (dup (sockfd) != 1) {
-            exit_error ("Cannot dup socket to 1 [%s]", GG_FERR);
+            exit_error (-1,"Cannot dup socket to 1 [%s]", GG_FERR);
         }
         if (dup (sockfd) != 2) {
-            exit_error ("Cannot dup socket to 2 [%s]", GG_FERR);
+            exit_error (-1,"Cannot dup socket to 2 [%s]", GG_FERR);
         }
 
         if (lfd != -1) close(lfd); // close lock file (since lock doesn't propogate to child anyway)
@@ -774,14 +858,14 @@ static void start_child (char *command, gg_num pcount) {
         gg_num curr_env = 0;
         gg_env[curr_env++] = o_sil;
         gg_env[curr_env] = NULL;
-        if (curr_env >= tot_env) exit_error (em);
+        if (curr_env >= tot_env) exit_error (-1,em);
         //
         // Execute service process
         //
         if (execvpe(command, xarg, gg_env)) exit(-1);
     } else if (fres == -1) {
         // ERROR
-        exit_error("Cannot fork child process [%s]", GG_FERR);
+        exit_error(-1,"Cannot fork child process [%s]", GG_FERR);
     } else {
         // PARENT (NEW PARENT REMAINING)
         //
@@ -802,7 +886,7 @@ static gg_num totprocess() {
         if (plist[i] == -1) { 
             continue;
         }
-        pid_t p = whatisprocess (plist[i]);
+        pid_t p = whatisprocess (plist[i], NULL);
         if (p == -1)  {
             plist[i] = -1; // set process as dead
             continue;
@@ -839,7 +923,7 @@ static void processup(char addone) {
             }
         }
         else {
-            pid_t p = whatisprocess (plist[i]);
+            pid_t p = whatisprocess (plist[i], NULL);
             if (p == -1) {
                 pid_t pid = plist[i];
                 plist[i] = -1; // set process as dead
@@ -860,6 +944,14 @@ static void processup(char addone) {
 //
 int main(int argc, char **argv)
 {
+    //
+    // If a program is devel (not release), give ptracer privilege to anyone who otherwise has privileges on it
+    // This isn't something that *must* succeed, we will not stop or issue message if it doesn't as it may cause malfunctioning otherwise
+    // We would check if -1 if we ever  do that.
+#ifdef GG_DEVEL
+    prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY);
+#endif
+
     gg_num c;
 
     //
@@ -882,7 +974,7 @@ int main(int argc, char **argv)
             case 0:
                 if (!strcmp (opts[oind].name, "min-worker")) {
                     num_to_start_min = atol (optarg);
-                    if (num_to_start_min < 0 || num_to_start_min >= SOMAXCONN - 10) exit_error ("Minimum number of workers must be between 0 and %ld", SOMAXCONN -10);
+                    if (num_to_start_min < 0 || num_to_start_min >= SOMAXCONN - 10) exit_error (-1,"Minimum number of workers must be between 0 and %ld", SOMAXCONN -10);
                 } else if (!strcmp (opts[oind].name, "max-worker")) {
                     maxproc = atol (optarg);
                 }
@@ -930,18 +1022,18 @@ int main(int argc, char **argv)
                 struct group *grp;
                 if ((grp = getgrnam(proxy_grp)) == NULL) 
                 {
-                    exit_error ("Unknown group [%s], [%s]", proxy_grp, GG_FERR);
+                    exit_error (-1,"Unknown group [%s], [%s]", proxy_grp, GG_FERR);
                 }
                 proxy_grp_id = grp->gr_gid;
                 break;
             case 't':
                 tspike = atol (optarg);
-                if (tspike < 5 || tspike >= 86400) exit_error ("Timeout for releasing processes must be between 5 and 86400");
+                if (tspike < 5 || tspike >= 86400) exit_error (-1,"Timeout for releasing processes must be between 5 and 86400");
                 tspikeset = 1;
                 break;
             case 'l':
                 maxblog = atol (optarg);
-                if (maxblog < 10 || maxblog >= SOMAXCONN) exit_error ("Listening backlog size must be between 10 and %ld", SOMAXCONN-1);
+                if (maxblog < 10 || maxblog >= SOMAXCONN) exit_error (-1,"Listening backlog size must be between 10 and %ld", SOMAXCONN-1);
                 break;
             case 'd':
                 adapt = 1;
@@ -951,7 +1043,7 @@ int main(int argc, char **argv)
                 break;
             case 's':
                 mslp = atoi(optarg);
-                if (mslp < 100 || mslp > 5000) exit_error ("sleep (in milliseconds) must be between 100 and 5000");
+                if (mslp < 100 || mslp > 5000) exit_error (-1,"sleep (in milliseconds) must be between 100 and 5000");
                 break;
             case 'p':
                 port = atoi(optarg);
@@ -962,16 +1054,16 @@ int main(int argc, char **argv)
             case 'w':
                 num_to_start_min = atoi(optarg);
                 if (num_to_start_min < 1 || num_to_start_min >= SOMAXCONN) {
-                    exit_error ("Number of workers must be between 1 and %ld", SOMAXCONN);
+                    exit_error (-1,"Number of workers must be between 1 and %ld", SOMAXCONN);
                 }
                 maxproc = num_to_start_min; 
                 numworkset = 1;
                 break;
             case '?':
-                exit_error("Unrecognized option [-%c]", optopt);
+                exit_error(-1,"Unrecognized option [-%c]", optopt);
                 break;
             default:
-                exit_error("Unrecognized option");
+                exit_error(-1,"Unrecognized option");
                 break;
         }
     }
@@ -986,13 +1078,13 @@ int main(int argc, char **argv)
     if (adapt == 0 && numworkset == 0) adapt = 1;
 
     if (adapt == 1) dnr = 0; // do not restart is not used in non-adaptive mode only, and must be set to 0 for adaptive
-    if (minmaxset == 1 && adapt == 0) exit_error ("--min-worker and --max-worker can only be used with -d (adaptive load)");
-    if (adapt == 1 && numworkset == 1) exit_error ("You can use either -d or -w option but not both");
-    if (adapt == 0 && tspikeset == 1) exit_error ("You can only use -t option with -d option");
+    if (minmaxset == 1 && adapt == 0) exit_error (-1,"--min-worker and --max-worker can only be used with -d (adaptive load)");
+    if (adapt == 1 && numworkset == 1) exit_error (-1,"You can use either -d or -w option but not both");
+    if (adapt == 0 && tspikeset == 1) exit_error (-1,"You can only use -t option with -d option");
     if (adapt == 0 && maxproc == 0) maxproc = 3;
     if (adapt == 1 && maxproc == 0) maxproc = 20;
-    if (maxproc < 1 || maxproc >= SOMAXCONN) exit_error ("Maximum number of workers must be between 1 and %ld", SOMAXCONN);
-    if (minmaxset == 1 && maxproc<=num_to_start_min) exit_error ("Maximum number of workers must be at least one above minimum number of workers");
+    if (maxproc < 1 || maxproc >= SOMAXCONN) exit_error (-1,"Maximum number of workers must be between 1 and %ld", SOMAXCONN);
+    if (minmaxset == 1 && maxproc<=num_to_start_min) exit_error (-1,"Maximum number of workers must be at least one above minimum number of workers");
 
     // Create and initialize list of srvc child processes
     GG_ANN (plist = (pid_t*)calloc(maxproc, sizeof(pid_t)));
@@ -1002,23 +1094,23 @@ int main(int argc, char **argv)
     // get app name
     if (optind <= argc - 1) GG_ANN (golfapp = strdup (argv[optind++]));
     else {
-        if (golfapp[0] == 0) exit_error ("Application name must be specified as an argument [%ld,%ld]", optind, argc-1);
+        if (golfapp[0] == 0) exit_error (-1,"Application name must be specified as an argument [%ld,%ld]", optind, argc-1);
     }
     gg_num l;
-    if ((l = strlen (golfapp)) > 30) exit_error ("Application name [%s] too long", golfapp);
+    if ((l = strlen (golfapp)) > 30) exit_error (-1,"Application name [%s] too long", golfapp);
     for (i = 0; i < l; i++) 
     {
         if (isalnum(golfapp[i])) continue;
         if (golfapp[i]=='_') continue;
         if (golfapp[i] == '-') { continue; }
-        exit_error ("Application name can be comprised only of underscore, hyphen, digits and characters, found [%s]", golfapp);
+        exit_error (-1,"Application name can be comprised only of underscore, hyphen, digits and characters, found [%s]", golfapp);
     }
-    if (!isalpha(golfapp[0])) exit_error ("Application name must start with alphabetic character, found [%s]", golfapp);
+    if (!isalpha(golfapp[0])) exit_error (-1,"Application name must start with alphabetic character, found [%s]", golfapp);
 
     // Command line checks
     char ipath[GG_MAX_OS_UDIR_LEN];
-    if (optind != argc) exit_error ("Extra unwanted arguments on the command line [%s]", argv[optind]);
-    if (unix_sock == 1 && port != 0) exit_error ("Cannot use both unix socket and TCP socket. Use one or the other");
+    if (optind != argc) exit_error (-1,"Extra unwanted arguments on the command line [%s]", argv[optind]);
+    if (unix_sock == 1 && port != 0) exit_error (-1,"Cannot use both unix socket and TCP socket. Use one or the other");
 
 
     //
@@ -1027,11 +1119,11 @@ int main(int argc, char **argv)
     //
     struct passwd* pwd;
     if (run_user[0] == 0) {
-        if (initit == 1) exit_error ("You must specify the user who owns the application, in order to initialize it");
-        if ((pwd = getpwuid (geteuid())) == NULL) exit_error ("Cannot find current user [%s]", GG_FERR);
+        if (initit == 1) exit_error (-1,"You must specify the user who owns the application, in order to initialize it");
+        if ((pwd = getpwuid (geteuid())) == NULL) exit_error (-1,"Cannot find current user [%s]", GG_FERR);
     } else {
-        if (initit == 0) exit_error ("User (-u) can be specified only when initializing (-i)");
-        if ((pwd = getpwnam(run_user)) == NULL) exit_error ("Cannot find user [%s], [%s]", run_user, GG_FERR);
+        if (initit == 0) exit_error (-1,"User (-u) can be specified only when initializing (-i)");
+        if ((pwd = getpwnam(run_user)) == NULL) exit_error (-1,"Cannot find user [%s], [%s]", run_user, GG_FERR);
         free (run_user); // it was allocated by strdup in options processing, will be allocated again, just below
     }
     GG_ANN (run_user = strdup (pwd->pw_name));
@@ -1045,7 +1137,7 @@ int main(int argc, char **argv)
         // BEGIN ROOT - this section is the only time mgrg is allowed as root
         // This is mgrg -i setup, the only time we may need root privs. Most of the time we don't
         // This is for when we need to set socket privs to be a group of another user
-        //if (seteuid (0) == 0) exit_error ("You cannot run as root");
+        //if (seteuid (0) == 0) exit_error (-1,"You cannot run as root");
 
 
         // create ID file for application that states application name. Used by gg to work
@@ -1086,11 +1178,11 @@ int main(int argc, char **argv)
         char artname[GG_MAX_OS_UDIR_LEN];
         gg_dir (GG_DIR_ART, artname, sizeof(artname), golfapp, run_user);
         FILE *art = NULL; // artifact of creation
-        if ((art = fopen (artname, "w+")) == NULL) exit_error ("Cannot open creation artifact file [%s]", artname);
+        if ((art = fopen (artname, "w+")) == NULL) exit_error (-1,"Cannot open creation artifact file [%s]", artname);
         // add if sudo
-        if (geteuid() == 0) { if (fputs ("sudo ", art) == EOF) exit_error ("Cannot write creation artifact file [%s]", artname); }
+        if (geteuid() == 0) { if (fputs ("sudo ", art) == EOF) exit_error (-1,"Cannot write creation artifact file [%s]", artname); }
         // add all params ([0] is the program name)
-        for (int i = 0; i < argc; i++) { if (fputs (argv[i], art) == EOF ||  fputs (" ", art) == EOF) exit_error ("Cannot write creation artifact file [%s]", artname);; }
+        for (int i = 0; i < argc; i++) { if (fputs (argv[i], art) == EOF ||  fputs (" ", art) == EOF) exit_error (-1,"Cannot write creation artifact file [%s]", artname);; }
         fclose (art);
         //
         // create ./golf/apps/<app>/.bld dir
@@ -1128,7 +1220,7 @@ int main(int argc, char **argv)
         // remote process). Very precise to balance security vs utility.
         if (proxy_grp[0] != 0) {
             struct group *grp;
-            if ((grp = getgrnam(proxy_grp)) == NULL) exit_error ("Unknown group [%s], [%s]", proxy_grp, GG_FERR);
+            if ((grp = getgrnam(proxy_grp)) == NULL) exit_error (-1,"Unknown group [%s], [%s]", proxy_grp, GG_FERR);
             proxy_grp_id = grp->gr_gid;
             //
             gg_dir (GG_DIR_SOCK, ipath, sizeof(ipath), golfapp, run_user);
@@ -1144,10 +1236,10 @@ int main(int argc, char **argv)
         // do not recreate file, as that leaves current server's memory in a limbo - will never receive anything
         if (stat(ipath, &sbuff) != 0) {
             gg_num f;
-            if ((f = open (ipath, O_CREAT | O_RDWR | O_TRUNC, 0700)) == -1) exit_error ("Cannot create mem file [%s] [%s]", ipath, GG_FERR); else close(f);
+            if ((f = open (ipath, O_CREAT | O_RDWR | O_TRUNC, 0700)) == -1) exit_error (-1,"Cannot create mem file [%s] [%s]", ipath, GG_FERR); else close(f);
         }
-        if (chown (ipath, run_user_id, run_user_grp_id)!= 0) exit_error ("Cannot change the ownership/group of shmem key file [%s], [%s]", ipath, GG_FERR);
-        if (chmod(ipath, 0700) != 0) exit_error ("Cannot set permissions for shmem key file [%s]", GG_FERR);
+        if (chown (ipath, run_user_id, run_user_grp_id)!= 0) exit_error (-1,"Cannot change the ownership/group of shmem key file [%s], [%s]", ipath, GG_FERR);
+        if (chmod(ipath, 0700) != 0) exit_error (-1,"Cannot set permissions for shmem key file [%s]", GG_FERR);
         exit (0);
         //
         // END of what may be ROOT
@@ -1161,9 +1253,9 @@ int main(int argc, char **argv)
 
     // check if this app initialized
     gg_dir (GG_DIR_APP, ipath, sizeof(ipath), golfapp, NULL);
-    if (stat(ipath, &sbuff) != 0) exit_error ("Directory [%s] does not exist or cannot be accessed", ipath); 
+    if (stat(ipath, &sbuff) != 0) exit_error (-1,"Directory [%s] does not exist or cannot be accessed", ipath); 
     gg_dir (GG_DIR_MEM, ipath, sizeof(ipath), golfapp, NULL);
-    if (stat(ipath, &sbuff) != 0) exit_error ("File [%s] does not exist or cannot be accessed", ipath); 
+    if (stat(ipath, &sbuff) != 0) exit_error (-1,"File [%s] does not exist or cannot be accessed", ipath); 
 
     // This is if there is -m <command>, run mgrg as client, and exit right away
     // this does not require root privilege
@@ -1210,7 +1302,7 @@ int main(int argc, char **argv)
 
 // check if command exists and is executable
     if (access(command, X_OK) != 0) {
-        exit_error ("Command [%s] does not exist, is not executable, or you have no permissions to execute it", command);
+        exit_error (-1,"Command [%s] does not exist, is not executable, or you have no permissions to execute it", command);
     }
 
     gg_num init_start;
@@ -1224,17 +1316,24 @@ int main(int argc, char **argv)
     
     static gg_num opid;
     opid =(gg_num)getpid();
-    gg_num deadres; // used for first round of forking, which isn't relevant
+    pid_t deadres; // used for first round of forking, which isn't relevant
     // if foreground mode, do not fork
     if (fg == 0) deadres=fork(); else deadres = 0;
+    signal(SIGCHLD, SIG_DFL);  // we need this so that we can waitpid on a child (the resident process below). This is needed when we check
+                               // if it's done, such as when server is already running, and we exit with status 2 which we want to collect.
+                               // Since we will wait on it first (see below), it won't become a zombie
     if (deadres == 0) {
+// so we can attach to process with gdb without sudo
+#ifdef GG_DEVEL
+        prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY);
+#endif
         // THIS IS THE RESIDENT SERVER PROCESS (child of original)
 
         // create new session so that terminating current logged-on session will not send terminating signals to here
         // not as important for Golf, as it handles all signals, in general a good idea
         if (fg == 0) { // create session only if running in background
             if ((sid = setsid()) < 0) {
-                exit_error ("Cannot create new session group [%s]", GG_FERR);
+                exit_error (-1,"Cannot create new session group [%s]", GG_FERR);
             }
         }
     
@@ -1242,19 +1341,19 @@ int main(int argc, char **argv)
         // up to this point, all output is stdout, stderr. Now it's log file, but just for current invocation (does not grow)
         if (fg == 0) { // redirect stdin,out,err only if background mode, otherwise print to console
             logfile = fopen (logn, "a+");
-            if (logfile == NULL) exit_error ("Cannot open log file [%s]", GG_FERR);
+            if (logfile == NULL) exit_error (-1,"Cannot open log file [%s]", GG_FERR);
             // close stdin,stdout,stderror, and redirect them to /var/log/golf
             close(0);
             close(1);
             close(2);
             if (dup (fileno(logfile)) != 0) { // logfileile to stdin? we will never read; must have it so children can use it to dup socket!
-                exit_error ("Cannot dup logfile to 0 [%s]", GG_FERR);
+                exit_error (-1,"Cannot dup logfile to 0 [%s]", GG_FERR);
             } 
             if (dup (fileno(logfile)) != 1) {
-                exit_error ("Cannot dup logfile to 1 [%s]", GG_FERR);
+                exit_error (-1,"Cannot dup logfile to 1 [%s]", GG_FERR);
             }
             if (dup (fileno(logfile)) != 2) {
-                exit_error ("Cannot dup logfile to 2 [%s]", GG_FERR);
+                exit_error (-1,"Cannot dup logfile to 2 [%s]", GG_FERR);
             }
             initfile (logn, 0700, run_user_id, proxy_grp_id);
         }
@@ -1265,7 +1364,7 @@ int main(int argc, char **argv)
         if (srvhere(GG_LOCK) == 1) {
             // if server already running, communicate to front end that it is okay, then exit
             if (fg == 0) cli_getshm ("okay_running", 1); // nobody to communicate with unless forked first
-            exit_error ("The Golf process manager for application [%s] is already running", golfapp);
+            exit_error (2,"The Golf process manager for application [%s] is already running", golfapp);
         }
 
         log_msg ("Golf Service Manager v%s starting", GG_PKGVERSION);
@@ -1277,13 +1376,13 @@ int main(int argc, char **argv)
         if (unix_sock == 1) sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
         else sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd == -1) {
-            exit_error("Cannot create socket [%s]", GG_FERR);
+            exit_error (-1,"Cannot create socket [%s]", GG_FERR);
         } 
 
         if (unix_sock == 0) {
             // reuse address, port; get load balancing; only the original user can take advantage of reusing port
             if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int)) < 0) {
-                exit_error ("Cannot set socket option (1) [%s]", GG_FERR);
+                exit_error (-1,"Cannot set socket option (1) [%s]", GG_FERR);
             }
         }
 
@@ -1299,8 +1398,8 @@ int main(int argc, char **argv)
             strncpy (servaddr.sun_path, ipath, sizeof(servaddr.sun_path)); 
             servaddr.sun_path[sizeof(servaddr.sun_path)-1] = 0;
             //
-            if (unlink(servaddr.sun_path) != 0) if (errno != ENOENT) exit_error ("Cannot unlink unix domain socket file [%s]", GG_FERR);
-            if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) != 0) exit_error ("Cannot bind unix domain socket [%s], [%s]", servaddr.sun_path, GG_FERR);
+            if (unlink(servaddr.sun_path) != 0) if (errno != ENOENT) exit_error (-1,"Cannot unlink unix domain socket file [%s]", GG_FERR);
+            if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) != 0) exit_error (-1,"Cannot bind unix domain socket [%s], [%s]", servaddr.sun_path, GG_FERR);
             if (proxy_grp[0] != 0) {
                 // create .golf/apps/<app>/.sock
                 initfile (servaddr.sun_path, 0660, run_user_id, proxy_grp_id);
@@ -1315,43 +1414,77 @@ int main(int argc, char **argv)
             servaddr.sin_family = AF_INET;
             servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
             servaddr.sin_port = htons(port);
-            if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) != 0) exit_error("Cannot bind socket [%s]", GG_FERR);
+            if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) != 0) exit_error (-1,"Cannot bind socket [%s]", GG_FERR);
         }
         log_msg ("After binding socket [%ld]", opid);
         
         if ((rv = listen(sockfd, maxblog)) != 0) {
-            exit_error("Cannot listen on socket [%s]", GG_FERR);
+            exit_error (-1,"Cannot listen on socket [%s]", GG_FERR);
+        }
+        // Start the actual worker processes, we will say it started only after that's done. This we can do after this whole if()
+        // which checks both forked processes, since listen() will queue up requests for processes and they won't be lost. However,
+        // starting children before replying with okay_started may speed up original response time if client requests immediately
+        // follow starting the server.
+        // We also use init_start in the other forked process (the client), so if starting childred ever goes after this whole if()
+        // then we must make a copy of init_start into another variable for this process. We can use this variable now in both processes
+        // since the other forked process gets a copy, so us doing --init_start won't affect it.
+        gg_num pcount = 0;
+        num_process = maxproc;
+        signal(SIGCHLD, SIG_IGN); // avoid defunct processes when children killed - we do not expect return value
+                                  // this is for actual Golf server processes
+        while (--init_start >= 0) {
+            start_child (command, pcount++);
         }
         if (fg == 0) cli_getshm ("okay_started", 1); // nobody to communicate with unless forked first
         log_msg ("Golf Service Manager v%s successfully started", GG_PKGVERSION);
-
     } else if (deadres == -1) {
-        exit_error ("Could not start Golf Service Manager for [%s], [%s]", golfapp, GG_FERR);
+        exit_error (-1,"Could not start Golf Service Manager for [%s], [%s]", golfapp, GG_FERR);
     } else {
+#define GG_SRV_RUNNING "Golf Service Manager [%s] for [%s] is already running. If you want to restart it, stop it first (-m quit), then start it"
+#define GG_SRV_STARTED "Golf Service Manager [%s] for [%s] successfully started"
+#define GG_SRV_NOSTART "Could not start Golf Service Manager for [%s],[%ld],[1], log file [%s]"
         // ORIGINAL PARENT FROM COMMAND LINE OR A SCRIPT, deadres is the PID of the child process (the resident process)
         // get success message from child (our resident process)
         // THIS NEVER HAPPENS IN FOREGROUND MODE, as there is no fork (parent and child), but only one process
-        gg_num tries = GG_TRIES;
+        // Try longer tries here, because this is a startup, and we know the PID of the process we're waiting for (and it's a child)
+        gg_num tries = 3*GG_TRIES;
         while (tries-- >= 0) {
-            // DO NOT check if child process has died, because if the server is already running, it will exit, i.e. die
-            // and before it dies, it will send okay_started message
-
-            // check for client commands (client being the other process created in fork above)
+            int st;
+            // wait on a child (i.e. resident process above) first so it never becomes a zombie
+            pid_t p = whatisprocess (deadres, &st);
+            if (!(p == deadres || p == -deadres))  // if resident process started above is no longer alive
+            {
+                if (st == 2) 
+                {
+                    // this is when server is already running
+                    // it will be either this or the GG_SRV_RUNNING below, so this is to make sure we get that message
+                    atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+                    checkshm(false);  // reset server memory
+                    out_msg (GG_SRV_RUNNING, GG_PKGVERSION, golfapp); 
+                    exit(1);
+                } 
+                else 
+                {
+                    // resident server process no longer alive
+                    atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+                    checkshm(false);  // reset server memory
+                    exit_error (-1,GG_SRV_NOSTART, golfapp, tries, logn);
+                }
+            }
+            // Check for confirmation from server that it started, or running
+            // check for client commands (client being the other process created in fork above) as a reply
             gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
-            checkshm(false); 
-            if (command == GG_DONESTARTUP) {out_msg ("Golf Service Manager [%s] for [%s] successfully started", GG_PKGVERSION, golfapp); exit(0);}
-            else if (command == GG_DONESTARTUP0) {out_msg ("Golf Service Manager [%s] for [%s] is already running. If you want to restart it, stop it first (-m quit), then start it", GG_PKGVERSION, golfapp); exit(1);}
+            checkshm(false); // this must be AFTER getting golfmem->command, as that's what's checked 
+            // This says ONLY that a manager daemon has started. The actual processes start asynchronously after this!!!
+            if (command == GG_DONESTARTUP) {out_msg (GG_SRV_STARTED, GG_PKGVERSION, golfapp); exit(0);}
+            else if (command == GG_DONESTARTUP0) {out_msg (GG_SRV_RUNNING, GG_PKGVERSION, golfapp); exit(1);}
             sleepabit (mslp);
         }
-        atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
-        exit_error ("Could not start Golf Service Manager for [%s],[%ld],[1], log file [%s]", golfapp, tries, logn);
-    }
-    gg_num pcount = 0;
-    num_process = maxproc;
-    while (--init_start >= 0) {
-        start_child (command, pcount++);
+        // time out on starting, didn't get any message from server
+        exit_error (-1,GG_SRV_NOSTART, golfapp, tries, logn);
     }
 
+    // This is now resident server process checking for messages, forever or until user quits it
     
     gg_num nspike = 0;
 
