@@ -131,3 +131,12 @@ send-file "/home/user/file.pdf" headers download content-type "application/pdf"
 .EE
 .RE
 
+.SH SEE ALSO
+ Web
+
+\fBcall-web\fP  
+\fBout-header\fP  
+\fBsend-file\fP  
+\fBsilent-header\fP   
+See all 
+\fBdocumentation\fP

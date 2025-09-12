@@ -305,7 +305,7 @@
 //guard against if (..) gg_statement, causes if (..) char ...; which is illegal
 #define GG_GUARD   oprintf("char _gg_statement_must_be_within_code_block_here_%ld; GG_UNUSED (_gg_statement_must_be_within_code_block_here_%ld);\n", vnone, vnone), vnone++;
 // check if query returns a tuple, if not, cannot use row-count on it
-#define GG_CHECK_TUPLE(k) if (gen_ctx->qry[k].returns_tuple == 0) gg_report_error( "row-count cannot be used on query [%s] because it does not output any columns", gen_ctx->qry[k].name)
+#define GG_CHECK_TUPLE(k) if (gen_ctx->qry[k].returns_tuple == 0) gg_report_error( "row-count cannot be used on a query because it does not output any columns")
 // current query id - 0 for the first, 1 for nested in it, 2 for nested further, then 0 again for the one next to the first etc.
 #define query_id (gen_ctx->curr_qry_ptr-1)
 
@@ -6207,7 +6207,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         if (gen_ctx->qry[query_id].returns_tuple == 0)
                         {
-                            gg_report_error( "current-row cannot be used on query [%s] because it does not output any columns", gen_ctx->qry[query_id].name);
+                            gg_report_error( "current-row cannot be used on a query because it does not output any columns");
                         }
                         char *to = NULL;
                         if (newI != 0)

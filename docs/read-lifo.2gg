@@ -73,3 +73,15 @@ In this example, a LIFO list is created, and two key/value pairs added. They are
 .EE
 .RE
 
+.SH SEE ALSO
+ LIFO
+
+\fBdelete-lifo\fP  
+\fBget-lifo\fP  
+\fBnew-lifo\fP  
+\fBpurge-lifo\fP  
+\fBread-lifo\fP  
+\fBrewind-lifo\fP  
+\fBwrite-lifo\fP   
+See all 
+\fBdocumentation\fP

@@ -510,14 +510,19 @@ static gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num re
     // Errm is set HERE and used right after it - it doesn't go beyond a request.
     static char errm[8192];
 
+    // get location in source code (if set, GOLF automatically does this)
+    char *sname = "";
+    gg_num lnum = 0;
+    gg_location (&sname, &lnum, 0);
+
     *er = GG_EMPTY_STRING;
     if (err_message!=NULL) *err_message=GG_EMPTY_STRING;
 
     gg_num connlost = 0;
-    char * local_error = "";
     if (GG_CURR_DB.db_type == GG_DB_POSTGRES)
     {
-        local_error = gg_pg_error(s);
+        *er = gg_strdup (gg_pg_error(s));
+        if (err_message!=NULL) *err_message=gg_strdup(gg_pg_errm(errm, sizeof(errm), s, sname, lnum, *er));
         if (gg_pg_checkc() != 1) 
         {
             // do not call gg_end_connection as that will free the 'con' structure
@@ -527,7 +532,12 @@ static gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num re
     }
     else if (GG_CURR_DB.db_type == GG_DB_MARIADB)
     {
-        local_error = gg_maria_error(s, is_prep);
+        *er = gg_strdup (gg_maria_error(s, is_prep));
+        //
+        // With MariaDB, gg_maria_checkc() which calls mysql_ping() *will* reset error message, so we have to get it first.
+        // This isn't the case with the PostgreSQL and SQLite though, so those are fine regardless
+        //
+        if (err_message!=NULL) *err_message=gg_strdup(gg_maria_errm(errm, sizeof(errm), s, sname, lnum, *er, is_prep));
         if (gg_maria_checkc() != 1) 
         {
             // do not call gg_end_connection as that will free the 'con' structure
@@ -537,7 +547,8 @@ static gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num re
     }
     else if (GG_CURR_DB.db_type == GG_DB_SQLITE)
     {
-        local_error = gg_lite_error(s, is_prep);
+        *er = gg_strdup (gg_lite_error(s, is_prep));
+        if (err_message!=NULL) *err_message=gg_strdup(gg_lite_errm(errm, sizeof(errm), s, sname, lnum, *er, is_prep));
         if (gg_lite_checkc() != 1) 
         {
             // do not call gg_end_connection as that will free the 'con' structure
@@ -550,10 +561,6 @@ static gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num re
         gg_report_error ("Unknown database type [%ld]", GG_CURR_DB.db_type); 
     }
 
-    // get location in source code (if set, GOLF automatically does this)
-    char *sname = "";
-    gg_num lnum = 0;
-    gg_location (&sname, &lnum, 0);
 
     if (connlost == 1)
     {
@@ -567,27 +574,6 @@ static gg_num gg_handle_error (char *s, char **er, char **err_message, gg_num re
         *er = gg_strdup ("-1"); // connection lost
         char * lostm = "Database connection lost or cannot be (re)established";
         if (err_message!=NULL) *err_message=gg_strdup(lostm); 
-    }
-    else 
-    {
-        // Probably a fatal error, application must handle
-        *er = gg_strdup (local_error);
-        if (GG_CURR_DB.db_type == GG_DB_POSTGRES)
-        {
-            if (err_message!=NULL) *err_message=gg_strdup(gg_pg_errm(errm, sizeof(errm), s, sname, lnum, *er));
-        }
-        else if (GG_CURR_DB.db_type == GG_DB_MARIADB)
-        {
-            if (err_message!=NULL) *err_message=gg_strdup(gg_maria_errm(errm, sizeof(errm), s, sname, lnum, *er, is_prep));
-        }
-        else if (GG_CURR_DB.db_type == GG_DB_SQLITE)
-        {
-            if (err_message!=NULL) *err_message=gg_strdup(gg_lite_errm(errm, sizeof(errm), s, sname, lnum, *er, is_prep));
-        }
-        else
-        {
-            gg_report_error ("Unknown database type [%ld]", GG_CURR_DB.db_type); 
-        }
     }
 
     // regardless of what went wrong, report error if on-error set to exit, or return 0 for application to handle

@@ -7,8 +7,24 @@ SQLite database configuration file should contain a single line of text, and it 
 .RS 4
 .EX
 
-$HOME/.golf/apps/<app name>/app/<db name>.db
+/home/myuser/.golf/apps/<app name>/app/<db name>.db
 
 .EE
 .RE
 
+Note that you can use tilde (~) as the first character of the path to signify user's home directory, so in the above example it could be "~/.golf/apps/<app name>/app/<db name>.db".
+.SH SEE ALSO
+ Database
+
+\fBbegin-transaction\fP  
+\fBcommit-transaction\fP  
+\fBcurrent-row\fP  
+\fBdatabase-config-file\fP  
+\fBdb-error\fP  
+\fBmariadb-database\fP  
+\fBpostgresql-database\fP  
+\fBrollback-transaction\fP  
+\fBrun-query\fP  
+\fBsqlite-database\fP   
+See all 
+\fBdocumentation\fP

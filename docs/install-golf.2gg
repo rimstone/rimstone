@@ -127,3 +127,11 @@ Here's how to \fBuninstall\fP.
 .LP
 
 Go to \fB123-hello-world\fP for your Hello World.
+.SH SEE ALSO
+ Install golf
+
+\fBinstall-golf\fP  
+\fBinstall-package\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP

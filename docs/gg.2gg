@@ -259,6 +259,7 @@ Show library directory - Golf's libraries and v1 code processor are located ther
 Create application package file for application <app name>, which can be used to install the application on a different computer; such computer must have a compatible Operating System (the same Linux distribution and the same or higher minor version number) and the compatible version of Golf must be installed (the same major and the same or higher minor version number). <version> is your application's version number, which is assigned by you. If "--force-user" is used, then this application, when installed elsewhere, must be installed into Operating System user account with the same user name as the current user when package is created. 
 Note that packaging an application will transfer all that's necessary for your application to run elsewhere (executables, database configuration files, the information about which libraries are required etc.). It does not (and cannot) deal with your own infrastructure, such as for example your own actual databases; those external dependencies are your responsibility. 
 If you have client applications built (see \fBClient-API\fP), you can copy their built executables as-is to a target machine, provided above versioning rules are observed and no extra libraries were linked with it. This is because Golf client executables do not have any external dependencies, other than any that you introduce (by linking with additional external libraries).
+Note that if your application uses databases, check database files (specified in "--db" option when your application is built), and blank out any database passwords you do not wish packaged. You should use passwordless database authentication or "dummy" passwords on the development and testing sites and never actual production passwords.
 The result of packaging is a file <app name>.tar.gz which you can use elsewhere with "-a" option to install the application; you can rename this file as long as it remains with ".tar.gz" extension.
 
 
@@ -269,6 +270,7 @@ The result of packaging is a file <app name>.tar.gz which you can use elsewhere 
 -a <packaged .tar.gz file> [ --downgrade ] [ --all ]
 Installs your application on a different computer from a file created with "-p" option (i.e. <packaged .tar.gz file>). If "-all" is used, then all required tool kit libraries are installed automatically; otherwise you'd need to install them yourself. If "--downgrade" is used, then the installer will allow you to install a lower version of your application; normally that's not allowed. Note that same version of Golf must be installed prior to installing any applications (see "-p" option). 
 If you do not plan to build any other Golf applications on this target computer, you can uninstall gcc and make after Golf is installed.
+Note that if your application uses databases, check database files located in $HOME/.golf/apps/<app name>/db/ (where <app name> is your application name), and review/update them for the application deployment site.
 
 
 .RE
@@ -462,3 +464,9 @@ gg -q
 
 .RE
 
+.SH SEE ALSO
+ Golf compiler and utility
+
+\fBgg\fP   
+See all 
+\fBdocumentation\fP

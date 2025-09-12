@@ -24,6 +24,7 @@ static void gg_gen_set_content_length(char *v);
 static void gg_server_error ();
 static gg_num gg_header_err(gg_config *pc);
 static void gg_cant_find_file ();
+static inline void gg_check_web_param_type (char *n, gg_num par_ind);
 #ifndef GG_COMMAND
 static char *gg_gen_get_env(char *n);
 #endif
@@ -769,6 +770,43 @@ gg_num gg_lockfile(char *filepath, gg_num *lock_fd)
     return GG_OKAY;
 }
 
+// 
+// Check web input param for type. It's always natively string, but we'll convert to number or boolean if the target 
+// param is defined as such. If okay, then the string value will be converted to a number or boolean; if not, the error 
+// message is displayed. If it's a string, then it's set (and it's not allocated b/c it's not in input). 
+// par_ind is the parameter index in the global array where each has a unique and immutable entry; n is the name of param.
+//
+static inline void gg_check_web_param_type (char *n, gg_num par_ind)
+{
+    if (_gg_sprm_par[par_ind].type != GG_DEFSTRING)
+    {
+        char *sv = _gg_sprm_par[par_ind].tval.value;
+        if (_gg_sprm_par[par_ind].type == GG_DEFNUMBER) // type of param , check it
+        {
+            gg_num st;
+            _gg_sprm_par[par_ind].tval.numval = gg_str2num (sv, 10, &(st));
+            if (st != GG_OKAY) gg_report_error ("Parameter [%s] is a number, but input data [%s] is not a number", n, sv);
+            _gg_sprm_par[par_ind].set = true;
+        }
+        else if (_gg_sprm_par[par_ind].type == GG_DEFBOOL)
+        {
+            if (!strcmp (sv, "true")) _gg_sprm_par[par_ind].tval.logic = true;
+            else if (!strcmp (sv, "false")) _gg_sprm_par[par_ind].tval.logic = false;
+            else gg_report_error ("Parameter [%s] is a boolean, but input data [%s] is not a boolean", n, sv);
+            _gg_sprm_par[par_ind].set = true;
+        }
+        else
+        {
+            gg_bad_request();
+            gg_report_error ("Parameter [%s] is not of string type, but request URL tries to set its value to a string", n);
+        }
+    }
+    else
+    {
+        _gg_sprm_par[par_ind].alloc = false;
+        _gg_sprm_par[par_ind].set = true;
+    }
+}
 
 
 // 
@@ -1443,15 +1481,8 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
             gg_num trimmed_len = value_len;
             _gg_sprm_par[par_ind].tval.value = gg_trim_ptr (v, &trimmed_len);// trim the input parameter for whitespaces (both left and right)
             // add as partial, parent is always  non-delete, so no need to set it
-            if (_gg_sprm_par[par_ind].type != GG_DEFSTRING)
-            {
-                gg_bad_request();
-                gg_report_error ("Parameter [%s] is not of string type, but request URL tries to set its value to a string", n);
-            }
-            _gg_sprm_par[par_ind].alloc = false;
-            _gg_sprm_par[par_ind].set = true;
+            gg_check_web_param_type (n, par_ind);
         } 
-
     }
 
     // 
@@ -1588,9 +1619,7 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
                 // this name/value must be added
                 gg_num trimmed_len = val_len;
                 _gg_sprm_par[par_ind].tval.value = gg_trim_ptr (value, &trimmed_len);// trim the input parameter for whitespaces (both left and right)
-                _gg_sprm_par[par_ind].type = GG_DEFSTRING;
-                _gg_sprm_par[par_ind].alloc = false;
-                _gg_sprm_par[par_ind].set = true;
+                gg_check_web_param_type (name, par_ind);
             }
         }
     }

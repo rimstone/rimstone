@@ -3,193 +3,13 @@
 examples \- Golf documentation (examples)
 .SH DESCRIPTION
 Golf examples
-Updated on 2025-09-02
+Updated on 2025-09-10. Always use the latest Golf version to run these examples.
 
 
 .RS 4
 \[bu]    
-\fBUse C language API to talk to Golf Server\fP
-Golf application server can be accessed via C API. Most programming languages allow for C linkage, so this makes it easy to talk to Golf server from anywhere. The \fBClient-API\fP is very simple with just a few functions and a single data type. It's also MT-safe (i.e. safe for multi-threaded applications). ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBCookies in Golf applications, plus HAProxy\fP
-Cookies are used in web development to remember the state of your application on a client device. This way, your end-user on this client device doesn't have to provide the same (presumably fairly constant) information all the time. A "client device" can be just a plain web browser, or it can be anything else, such as any internet connected device. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBHow to debug Golf programs with gdb\fP
-Debugging information is always included regardless of how you make your application; what varies is the amount of debugging info included. You can compile your Golf application normally: ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBHow to write distributed applications\fP
-Distributed computing is two or more servers communicating for a common purpose. Typically, some tasks are divvied up between a number of computers, and they all work together to accomplish it. Note that "separate servers" may mean physically separate computers. It may also mean virtual servers such as Virtual Private Servers (VPS) or containers, that may share the same physical hardware, though they appear as separate computers on the network.  ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBEncryption: ciphers, digests, salt, IV and a hands-on guide\fP
-Encryption is a method of turning data into an unusable form that can be made useful only by means of decryption. The purpose is to make data available solely to those who can decrypt it (i.e. make it usable). Typically, data needs to be encrypted to make sure it cannot be obtained in case of unauthorized access. It is the last line of defense after an attacker has managed to break through authorization systems and access control. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBHow to get the web page source code programmatically\fP
-Fetching a web resource (including web page source) is a one-liner in Golf. First, create a new application ("get-page" here): ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBFirst In First Out (FIFO) example\fP
-Golf has built-in FIFO list type. You can create a FIFO variable and then store key/value string pairs in it, which you can then read back in the order you put them in. You can also rewind the FIFO list and obtain the same key/value pairs over and over again if needed. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBWeb file manager in less than 100 lines of code\fP
-Uploading and download files in web browser is a common task in virtually any web application or service. This article shows how to do this with very little coding - in less than 100 lines of code. The database used is PostgreSQL, and the web server is Nginx. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fB34000 requests per second on a modest laptop\fP
-Here's a video showing how to create and start an application server, and how to connect to it and make requests from a C client (or from any language that supports C API extension), you can watch a \fBvideo here\fP. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBHello World in Golf\fP
-Create a directory for your Hello World application and then switch to it: ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBHello World as a Service\fP
-Writing a \fBservice\fP is the same as writing a \fBcommand-line\fP program in Golf. Both take the same input and produce the same output, so you can test with either one to begin with. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBWeb service Hello World\fP
-To access a Golf service on the web, you need to have a web server or load balancer (think Apache, Nginx, HAProxy etc.). ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBHow to create a Golf application\fP
-To create a Golf application, use "-k" option of gg utility: ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBFast JSON parser with little coding\fP
-Golf's JSON parser produces an array of name/value pairs. A name is a path to value, for instance "country"."state"."name", and the value is simply the data associated with it, for instance "Idaho". You can control if the name contains array indexes or not, for instance if there are multiple States in the document, you might have names like "country"."state"[0]."name" with [..] designating an array element. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBGolf is a different kind of programming language\fP
-Over the past 50 years, general-purpose programming languages became more complex due to the constant influx of new features (some of which are great, while others are a "feature creep"). Just look at any major programming language in its early days, versus the latest incarnations. From a distance, it may look like you switched from riding a bicycle to flying a passenger jet with a few hundred knobs, buttons and readout consoles. Arguably, the language structure covers many more usage patterns, yields additional power and safety has improved, but the complexity and the learning curve has increased too. While in the beginning there was lots of pitfalls due to the lack of features and safety, which would usually result in too many ways of doing the same thing, in the end there's a minefield due to an overcrowded feature-scape that's paralyzing to deal with and often not quite understood by anyone on the team. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBWeb services with MariaDB\fP
-Create a directory for your project, it'll be where this example takes place. Also create Golf application "stock": ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBHow is memory organized in Golf\fP
-Golf is a memory-safe language. A string variable is the actual pointer to a string (whether it's a text or binary). This eliminates at least one extra memory read. Bytes before the string constitute the ID to a memory table entry as well as the length of a string, with additional info used by memory-safety mechanisms: ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBMemory safety: what about performance?\fP
-Memory safety guards against software security risks and malfunctions by assuring data isn't written to or read from unintended areas of memory. Preventing leaks is a separate feature that's important for web services which are long-running processes - memory leaks usually lead to running out of memory and crashes. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBMulti-tenant SaaS (Notes web application) in 200 lines of code\fP
-This is a complete SaaS example (Software-as-a-Service) using PostgreSQL as a database, and Golf as a web service engine; it includes user signup/login/logout with an email and password, separate user accounts and data, and a notes application. All in about 200 lines of code! \fBHere's a video\fP that shows it - two users sign up and create their own notes. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBRandom numbers in Golf\fP
- Generating random numbers is important in a wide range of applications. For instance, session IDs often use random numbers; they are also used in generating passwords; another example is load balancing where (say instead of round-robin), the next available process to serve a request is chosen randomly; some applications (like gambling) depend on random qualities; any kind of simulation would heavily rely on random numbers; financial and polling applications use random samples to determine outcomes and policies. The list of possible uses is pretty long. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBUsing Regex in Golf\fP
-Regex (or "REGular EXpressions") is a powerful way to search strings, as well as to replace parts of strings. It makes it easier to reliably do so, since regular expressions are usually short; at the same time there's a learning curve in becoming proficient. However, given that regex is ubiquitous, it is worth learning at least some of it, as it can come handy. ...
+\fBMore than one table in a database transaction in SQLite\fP
+Here you'll learn how to use a database transaction to insert/update into multiple tables; so that if any of those fail, the entire transaction is cancelled (rollbacked), and if they all succeed, the transaction is committed as a whole, atomically. ...
 
 .RE
 
@@ -206,89 +26,8 @@ A web service doesn't necessarily need to be called from "the web", meaning from
 
 .RS 4
 \[bu]    
-\fBFunctions and parameters in Golf\fP
-In Golf, there are no "functions" or "methods" as you may be used to in other languages. Any encapsulation is a request handler - you can think of it as a simple function that executes to handle a request - it can an external request (i.e. from an outside caller such as web browser, web API, or from a command-line), or internal requests from another handler in your application.  ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBSecurity of web services\fP
-The security of web services is a broad subject, but there are a few common topics that one should be well aware. They affect if your web application, or an API service, will be a success or not. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBHow to send email with Golf\fP
-This example shows how to send email with Golf. The web service you'll create here is very simple and it will display an HTML form to collect info needed to send email, such as "From" and "To" (the sender and the recipient emails), the Subject and of course the Message itself. Once user clicks Submit, email is sent.  ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBWhat is an application server\fP
-Every Golf application is built as both an application server and a command-line program. You can use both, depending on what's the nature of your application. Some programs are meant to be used in scripts, or executed directly from command line. Others need to stay in memory and execute user requests as servers. The nice thing is that they both work the same, meaning you can run from command line anything that an application server does, and vice versa. This is also handy for testing; it makes writing tests for an application server much easier because you can run such tests in a plain bash script. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBHow to build a Web Service API\fP
-This article will show a simple shopping web API with basic functions, such as adding customers, items and orders, as well as updating and deleting them. It's easy to write and easy to understand with Golf; that's the reason code doesn't have much in a way of comments - there's no need. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBSQLite with Golf\fP
-This example will create a service that inserts key and value into SQLite table. It's tested from command line. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBStatements in Golf\fP
-Golf is a new programming language and framework for developing web services and web applications. The reason for Golf is to make software development easier and more reliable. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBExample of auto status checking with Golf\fP
-When talking about safety in programming, it is memory safety that usually takes the spotlight. However, here we'll touch on another common safety issue that typically causes application logic errors, meaning your program won't function correctly. It's about checking the status of any kind of statement that provides it. Not checking the status could mean that the result of a statement isn't correct, yet your program is proceeding as if it were. Of course, this is bound to cause problems, and this is true for any programming language. ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBCache server in 30 lines\fP
-This is a cache server that can add, delete and query key/value pairs, with their number limited only by available memory.  ...
-
-.RE
-
-
-
-.RS 4
-\[bu]    
-\fBCache as a web service\fP
-This example shows Apache as the front-end (or "reverse proxy") for \fBarticle-tree\fP - it's assumed you've completed it first. Three steps to setting up Apache quickly: ...
+\fBWeb service Hello World\fP
+To access a Golf service on the web, you need to have a web server or load balancer (think Apache, Nginx, HAProxy etc.). ...
 
 .RE
 
@@ -305,8 +44,224 @@ Golf installation comes with a Vim module for highlighting Golf code. After inst
 
 .RS 4
 \[bu]    
+\fBEncryption: ciphers, digests, salt, IV and a hands-on guide\fP
+Encryption is a method of turning data into an unusable form that can be made useful only by means of decryption. The purpose is to make data available solely to those who can decrypt it (i.e. make it usable). Typically, data needs to be encrypted to make sure it cannot be obtained in case of unauthorized access. It is the last line of defense after an attacker has managed to break through authorization systems and access control. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBUsing Regex in Golf\fP
+Regex (or "REGular EXpressions") is a powerful way to search strings, as well as to replace parts of strings. It makes it easier to reliably do so, since regular expressions are usually short; at the same time there's a learning curve in becoming proficient. However, given that regex is ubiquitous, it is worth learning at least some of it, as it can come handy. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBMore than one table in a database transaction in MariaDB\fP
+Here you'll learn how to use a database transaction to insert/update into multiple tables; so that if any of those fail, the entire transaction is cancelled (rollbacked), and if they all succeed, the transaction is committed as a whole, atomically. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHow to write distributed applications\fP
+Distributed computing is two or more servers communicating for a common purpose. Typically, some tasks are divvied up between a number of computers, and they all work together to accomplish it. Note that "separate servers" may mean physically separate computers. It may also mean virtual servers such as Virtual Private Servers (VPS) or containers, that may share the same physical hardware, though they appear as separate computers on the network.  ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fB34000 requests per second on a modest laptop\fP
+Here's a video showing how to create and start an application server, and how to connect to it and make requests from a C client (or from any language that supports C API extension), you can watch a \fBvideo here\fP. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHow to build a Web Service API\fP
+This article will show a simple shopping web API with basic functions, such as adding customers, items and orders, as well as updating and deleting them. It's easy to write and easy to understand with Golf; that's the reason code doesn't have much in a way of comments - there's no need. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBCookies in Golf applications, plus HAProxy\fP
+Cookies are used in web development to remember the state of your application on a client device. This way, your end-user on this client device doesn't have to provide the same (presumably fairly constant) information all the time. A "client device" can be just a plain web browser, or it can be anything else, such as any internet connected device. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBGolf is a different kind of programming language\fP
+Over the past 50 years, general-purpose programming languages became more complex due to the constant influx of new features (some of which are great, while others are a "feature creep"). Just look at any major programming language in its early days, versus the latest incarnations. From a distance, it may look like you switched from riding a bicycle to flying a passenger jet with a few hundred knobs, buttons and readout consoles. Arguably, the language structure covers many more usage patterns, yields additional power and safety has improved, but the complexity and the learning curve has increased too. While in the beginning there was lots of pitfalls due to the lack of features and safety, which would usually result in too many ways of doing the same thing, in the end there's a minefield due to an overcrowded feature-scape that's paralyzing to deal with and often not quite understood by anyone on the team. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBFast JSON parser with little coding\fP
+Golf's JSON parser produces an array of name/value pairs. A name is a path to value, for instance "country"."state"."name", and the value is simply the data associated with it, for instance "Idaho". You can control if the name contains array indexes or not, for instance if there are multiple States in the document, you might have names like "country"."state"[0]."name" with [..] designating an array element. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
 \fBWeb framework for C programming language\fP
 Golf has an "extended" mode, which allows for C code to be used directly. Normally, this is not allowed, but if you use \fBextended-mode\fP statement in your .golf file, then you can call C code from it. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBFunctions and parameters in Golf\fP
+In Golf, there are no "functions" or "methods" as you may be used to in other languages. Any encapsulation is a request handler - you can think of it as a simple function that executes to handle a request - it can an external request (i.e. from an outside caller such as web browser, web API, or from a command-line), or internal requests from another handler in your application.  ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBWhat is web service\fP
+Web service is code that responds to a request and provides a reply over HTTP protocol. It doesn't need to work over the web, despite its name. You can run a web service locally on a server or on a local network. You can even run a web service from command line. In fact, that's an easy way to test them. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHow to create a Golf application\fP
+To create a Golf application, use "-k" option of gg utility: ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBCache server in 30 lines\fP
+This is a cache server that can add, delete and query key/value pairs, with their number limited only by available memory.  ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBMulti-tenant SaaS (Notes web application) in 200 lines of code\fP
+This is a complete SaaS example (Software-as-a-Service) using PostgreSQL as a database, and Golf as a web service engine; it includes user signup/login/logout with an email and password, separate user accounts and data, and a notes application. All in about 200 lines of code! \fBHere's a video\fP that shows it - two users sign up and create their own notes. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHow to send email with Golf\fP
+This example shows how to send email with Golf. The web service you'll create here is very simple and it will display an HTML form to collect info needed to send email, such as "From" and "To" (the sender and the recipient emails), the Subject and of course the Message itself. Once user clicks Submit, email is sent.  ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHow to debug Golf programs with gdb\fP
+Debugging information is always included regardless of how you make your application; what varies is the amount of debugging info included. You can compile your Golf application normally: ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBSecurity of web services\fP
+The security of web services is a broad subject, but there are a few common topics that one should be well aware. They affect if your web application, or an API service, will be a success or not. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBRandom numbers in Golf\fP
+ Generating random numbers is important in a wide range of applications. For instance, session IDs often use random numbers; they are also used in generating passwords; another example is load balancing where (say instead of round-robin), the next available process to serve a request is chosen randomly; some applications (like gambling) depend on random qualities; any kind of simulation would heavily rely on random numbers; financial and polling applications use random samples to determine outcomes and policies. The list of possible uses is pretty long. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHello World in Golf\fP
+Create a directory for your Hello World application and then switch to it: ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBExample of auto status checking with Golf\fP
+When talking about safety in programming, it is memory safety that usually takes the spotlight. However, here we'll touch on another common safety issue that typically causes application logic errors, meaning your program won't function correctly. It's about checking the status of any kind of statement that provides it. Not checking the status could mean that the result of a statement isn't correct, yet your program is proceeding as if it were. Of course, this is bound to cause problems, and this is true for any programming language. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBMore than one table in a database transaction in PostgreSQL\fP
+Here you'll learn how to use a database transaction to insert/update into multiple tables; so that if any of those fail, the entire transaction is cancelled (rollbacked), and if they all succeed, the transaction is committed as a whole, atomically. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBFirst In First Out (FIFO) example\fP
+Golf has built-in FIFO list type. You can create a FIFO variable and then store key/value string pairs in it, which you can then read back in the order you put them in. You can also rewind the FIFO list and obtain the same key/value pairs over and over again if needed. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBSQLite with Golf\fP
+This example will create a service that inserts key and value into SQLite table. It's tested from command line. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBUse C language API to talk to Golf Server\fP
+Golf application server can be accessed via C API. Most programming languages allow for C linkage, so this makes it easy to talk to Golf server from anywhere. The \fBClient-API\fP is very simple with just a few functions and a single data type. It's also MT-safe (i.e. safe for multi-threaded applications). ...
 
 .RE
 
@@ -323,10 +278,88 @@ Golf is a new programming language and framework for developing web services and
 
 .RS 4
 \[bu]    
-\fBWhat is web service\fP
-Web service is code that responds to a request and provides a reply over HTTP protocol. It doesn't need to work over the web, despite its name. You can run a web service locally on a server or on a local network. You can even run a web service from command line. In fact, that's an easy way to test them. ...
+\fBStatements in Golf\fP
+Golf is a new programming language and framework for developing web services and web applications. The reason for Golf is to make software development easier and more reliable. ...
 
 .RE
 
 
 
+.RS 4
+\[bu]    
+\fBWeb file manager in less than 100 lines of code\fP
+Uploading and download files in web browser is a common task in virtually any web application or service. This article shows how to do this with very little coding - in less than 100 lines of code. The database used is PostgreSQL, and the web server is Nginx. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBWhat is an application server\fP
+Every Golf application is built as both an application server and a command-line program. You can use both, depending on what's the nature of your application. Some programs are meant to be used in scripts, or executed directly from command line. Others need to stay in memory and execute user requests as servers. The nice thing is that they both work the same, meaning you can run from command line anything that an application server does, and vice versa. This is also handy for testing; it makes writing tests for an application server much easier because you can run such tests in a plain bash script. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHow is memory organized in Golf\fP
+Golf is a memory-safe language. A string variable is the actual pointer to a string (whether it's a text or binary). This eliminates at least one extra memory read. Bytes before the string constitute the ID to a memory table entry as well as the length of a string, with additional info used by memory-safety mechanisms: ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHow to get the web page source code programmatically\fP
+Fetching a web resource (including web page source) is a one-liner in Golf. First, create a new application ("get-page" here): ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBCache as a web service\fP
+This example shows Apache as the front-end (or "reverse proxy") for \fBarticle-tree\fP - it's assumed you've completed it first. Three steps to setting up Apache quickly: ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBMemory safety: what about performance?\fP
+Memory safety guards against software security risks and malfunctions by assuring data isn't written to or read from unintended areas of memory. Preventing leaks is a separate feature that's important for web services which are long-running processes - memory leaks usually lead to running out of memory and crashes. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBHello World as a Service\fP
+Writing a \fBservice\fP is the same as writing a \fBcommand-line\fP program in Golf. Both take the same input and produce the same output, so you can test with either one to begin with. ...
+
+.RE
+
+
+
+.RS 4
+\[bu]    
+\fBWeb services with MariaDB\fP
+Create a directory for your project, it'll be where this example takes place. Also create Golf application "stock": ...
+
+.RE
+
+
+
+.SH SEE ALSO
+ Examples
+
+\fBexamples\fP   
+See all 
+\fBdocumentation\fP

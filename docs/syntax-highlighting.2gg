@@ -27,3 +27,13 @@ and also update your local $HOME/.vimrc file to use this syntax for files with .
 You can then change the color scheme to anything you like by using ":colorscheme" directly in editor, or by specifying "colorscheme" in your ".vimrc" file for a persistent change.
 
 The Golf highlighting syntax is tested with Vim 8.1.
+.SH SEE ALSO
+ Language
+
+\fBinline-code\fP  
+\fBstatements\fP  
+\fBsyntax-highlighting\fP  
+\fBunused-var\fP  
+\fBvariable-scope\fP   
+See all 
+\fBdocumentation\fP

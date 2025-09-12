@@ -179,3 +179,15 @@ decrypt-data encd1 password "mypwd" salt rs1 to decd1 cipher "camellia-256-cfb1"
 .EE
 .RE
 
+.SH SEE ALSO
+ Encryption
+
+\fBdecrypt-data\fP  
+\fBderive-key\fP  
+\fBencrypt-data\fP  
+\fBhash-string\fP  
+\fBhmac-string\fP  
+\fBrandom-crypto\fP  
+\fBrandom-string\fP   
+See all 
+\fBdocumentation\fP

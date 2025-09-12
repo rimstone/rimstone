@@ -32,7 +32,7 @@ gg_num gg_lite_checkc()
 char *gg_lite_errm(char *errm, gg_num errmsize, char *s, char *sname, gg_num lnum, char *er, char is_prep)
 {
     GG_UNUSED(is_prep);
-    snprintf(errm,errmsize,"Error during query [%s], additional [%s] file [%s], line [%ld] : [%s]%s", s, cerror==NULL?"":cerror, sname, lnum, er ,sqlite3_errmsg(GG_CURR_DB.dbc->sqlite.con));
+    snprintf(errm,errmsize,"Error during query [%s], additional [%s] file [%s], line [%ld] : [%s]:%s", s, cerror==NULL?"":cerror, sname, lnum, er ,sqlite3_errmsg(GG_CURR_DB.dbc->sqlite.con));
     return errm;
 }
 
@@ -233,8 +233,8 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
         return NULL; // just for compiler, never gets here
     }
     // clean up config file, must be just file name
-    gg_num l = (gg_num)strlen (cinfo);
-    char *ts = gg_trim_ptr (cinfo, &l);
+    gg_num lpath = (gg_num)strlen (cinfo);
+    char *ts = gg_trim_ptr (cinfo, &lpath);
     if (strstr (ts, "\n")) 
     {
         char em[300];
@@ -243,8 +243,25 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
         gg_free_int(cinfo);
         return NULL;
     }
+    // Replace tilde with home directory, only if it's the first character
+    char *exp_ts = NULL;
+    if (ts[0] == '~')
+    {
+        struct passwd *pw = getpwuid(getuid());
+        char *home = pw->pw_dir;
+        if (home != NULL) // don't do anything if home not found
+        {
+            gg_num hlen = strlen(home);
+            gg_num ns = hlen+lpath+10; // +10 indeed just +1, for good measure only
+            exp_ts = gg_malloc (ns);
+            memcpy (exp_ts, home, hlen);
+            exp_ts[hlen]='/';
+            memcpy (exp_ts+hlen+1, ts+1, lpath-1); // skip ~ when copying (ts+1)
+            exp_ts[hlen+lpath-1+1]=0; // +1 for /
+        } else exp_ts = ts;
+    } else exp_ts = ts;
     // make connection to database
-    if (sqlite3_open(ts, &(GG_CURR_DB.dbc->sqlite.con)) != SQLITE_OK) 
+    if (sqlite3_open(exp_ts, &(GG_CURR_DB.dbc->sqlite.con)) != SQLITE_OK) 
     {
         char em[300];
         snprintf (em, sizeof(em), "Cannot cannot open database [%s]", ts);
@@ -253,6 +270,7 @@ gg_dbc *gg_lite_connect (gg_num abort_if_bad)
         gg_free_int(cinfo);
         return NULL;
     }
+    if (exp_ts != ts) gg_free_int (exp_ts);
     gg_free_int(cinfo);
 
     return GG_CURR_DB.dbc;

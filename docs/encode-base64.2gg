@@ -78,3 +78,10 @@ end-if
 .EE
 .RE
 
+.SH SEE ALSO
+ Base64
+
+\fBdecode-base64\fP  
+\fBencode-base64\fP   
+See all 
+\fBdocumentation\fP

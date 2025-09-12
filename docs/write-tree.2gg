@@ -143,3 +143,15 @@ Not found, queried [2]
 .RE
 
 See \fBread-tree\fP for more examples.
+.SH SEE ALSO
+ Tree
+
+\fBdelete-tree\fP  
+\fBget-tree\fP  
+\fBnew-tree\fP  
+\fBpurge-tree\fP  
+\fBread-tree\fP  
+\fBuse-cursor\fP  
+\fBwrite-tree\fP   
+See all 
+\fBdocumentation\fP

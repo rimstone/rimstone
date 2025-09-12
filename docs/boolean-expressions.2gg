@@ -32,3 +32,10 @@ set-bool bv = !barr[0]
 .EE
 .RE
 
+.SH SEE ALSO
+ Booleans
+
+\fBboolean-expressions\fP  
+\fBset-bool\fP   
+See all 
+\fBdocumentation\fP

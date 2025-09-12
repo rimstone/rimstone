@@ -29,12 +29,12 @@ char *gg_maria_errm(char *errm, gg_num errmsize, char *s, char *sname, gg_num ln
 {
     if (is_prep == 0)
     {
-        snprintf(errm,errmsize,"Error during query [%s], additional [%s] file [%s], line [%ld] : [%s]%s", s, cerror==NULL?"":cerror, sname, lnum, er ,atol(er) == ER_PARSE_ERROR ?  "Problem with parsing SQL statement" : mysql_error(GG_CURR_DB.dbc->maria.con));
+        snprintf(errm,errmsize,"Error during query [%s], additional [%s] file [%s], line [%ld] : [%s]:%s", s, cerror==NULL?"":cerror, sname, lnum, er ,atol(er) == ER_PARSE_ERROR ?  "Problem with parsing SQL statement" : mysql_error(GG_CURR_DB.dbc->maria.con));
         return errm;
     }
     else
     {
-        snprintf(errm,errmsize,"Error during query [%s], additional [%s] file [%s], line [%ld] : [%s]%s", s, cerror==NULL?"":cerror, sname, lnum, er ,atol(er) == ER_PARSE_ERROR ?  "Problem with parsing SQL statement" : mysql_stmt_error(GG_CURR_DB.dbc->maria.stmt));
+        snprintf(errm,errmsize,"Error during query [%s], additional [%s] file [%s], line [%ld] : [%s]:%s", s, cerror==NULL?"":cerror, sname, lnum, er ,atol(er) == ER_PARSE_ERROR ?  "Problem with parsing SQL statement" : mysql_stmt_error(GG_CURR_DB.dbc->maria.stmt));
         return errm;
     }
 }

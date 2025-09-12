@@ -54,3 +54,10 @@ end-if
 .EE
 .RE
 
+.SH SEE ALSO
+ UTF
+
+\fBtext-utf\fP  
+\fButf-text\fP   
+See all 
+\fBdocumentation\fP

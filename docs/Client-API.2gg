@@ -815,3 +815,10 @@ Some error!
 .RE
 
 The output shows service exit code (82, see \fBexit-status\fP in the Golf code above), length of data output, and other information which includes environment variables passed to the service from the client, the PID of server process, the request body from the client, and then the error output. Note that the data output (stdout) and the error output (stderr) are separated, since the protocol does use separate streams over the same connection. This makes working with the output easy, while the data transfer is fast at the same time.
+.SH SEE ALSO
+ API
+
+\fBClient-API\fP  
+\fBServer-API\fP   
+See all 
+\fBdocumentation\fP

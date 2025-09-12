@@ -43,3 +43,11 @@ get-cookie my_cookie_value="my_cookie_name"
 .EE
 .RE
 
+.SH SEE ALSO
+ Cookies
+
+\fBdelete-cookie\fP  
+\fBget-cookie\fP  
+\fBset-cookie\fP   
+See all 
+\fBdocumentation\fP

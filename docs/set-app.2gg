@@ -20,3 +20,10 @@ Set maximum <stack depth> for calling handlers (see \fBcall-handler\fP), includi
 Be careful when setting <stack depth> too high, as it may cause application and system stability issues that are unrelated to Golf.
 
 Once set, this setting applies to the current process and all future requests it handles. Typically you'd set the stack depth in \fBdo-once\fP statement, so it's set only once.
+.SH SEE ALSO
+ Application information
+
+\fBget-app\fP  
+\fBset-app\fP   
+See all 
+\fBdocumentation\fP

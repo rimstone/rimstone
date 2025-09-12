@@ -51,3 +51,15 @@ position-list mylist first
 .EE
 .RE
 
+.SH SEE ALSO
+ Linked list
+
+\fBdelete-list\fP  
+\fBget-list\fP  
+\fBnew-list\fP  
+\fBposition-list\fP  
+\fBpurge-list\fP  
+\fBread-list\fP  
+\fBwrite-list\fP   
+See all 
+\fBdocumentation\fP

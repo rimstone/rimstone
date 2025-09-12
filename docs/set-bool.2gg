@@ -45,3 +45,10 @@ set-bool my_bool = num1 equal num2 or str1 not-equal str2
 .EE
 .RE
 
+.SH SEE ALSO
+ Booleans
+
+\fBboolean-expressions\fP  
+\fBset-bool\fP   
+See all 
+\fBdocumentation\fP

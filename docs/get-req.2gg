@@ -178,3 +178,9 @@ get-req process-id to pid
 .EE
 .RE
 
+.SH SEE ALSO
+ Request information
+
+\fBget-req\fP   
+See all 
+\fBdocumentation\fP

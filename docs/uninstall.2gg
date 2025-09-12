@@ -23,3 +23,11 @@ make uninstall
 .LP
 
 Note that $HOME/.golf directory will not be removed, since it may contain application files; you may delete it if there's no data there you care about, or you backed it up.
+.SH SEE ALSO
+ Install golf
+
+\fBinstall-golf\fP  
+\fBinstall-package\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP

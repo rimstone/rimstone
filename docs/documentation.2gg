@@ -9,7 +9,7 @@ documentation \- Golf documentation (documentation)
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
 
-Browse by topic:    API,   Application information,   Array,   Articles,   Base64,   Booleans,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Encryption,   Error handling,   Examples,   FastCGI client,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   Install golf,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
+Browse by topic:    API,   Application information,   Array,   Base64,   Booleans,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Encryption,   Error handling,   Examples,   FastCGI client,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   Install golf,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
 
 
 
@@ -41,50 +41,6 @@ Array
 \fBpurge-array\fP  
 \fBread-array\fP  
 \fBwrite-array\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-Articles
-
-\fBarticle-capi\fP  
-\fBarticle-cookies\fP  
-\fBarticle-debug\fP  
-\fBarticle-distributed\fP  
-\fBarticle-encryption\fP  
-\fBarticle-fetch-web-page\fP  
-\fBarticle-fifo\fP  
-\fBarticle-file-manager\fP  
-\fBarticle-hello-server\fP  
-\fBarticle-hello-world\fP  
-\fBarticle-hello-world-service\fP  
-\fBarticle-hello-world-service-web\fP  
-\fBarticle-how-to-create-golf-application\fP  
-\fBarticle-json\fP  
-\fBarticle-language\fP  
-\fBarticle-mariadb\fP  
-\fBarticle-memory-safety\fP  
-\fBarticle-memory-safety-web\fP  
-\fBarticle-notes-postgres\fP  
-\fBarticle-random\fP  
-\fBarticle-regex\fP  
-\fBarticle-remote-call\fP  
-\fBarticle-request-function\fP  
-\fBarticle-security\fP  
-\fBarticle-sendmail\fP  
-\fBarticle-server\fP  
-\fBarticle-shopping\fP  
-\fBarticle-sqlite\fP  
-\fBarticle-statements\fP  
-\fBarticle-status-check\fP  
-\fBarticle-tree\fP  
-\fBarticle-tree-web\fP  
-\fBarticle-vim-coloring\fP  
-\fBarticle-web-framework-for-c-programming-language\fP  
-\fBarticle-what-is-golf\fP  
-\fBarticle-what-is-web-service\fP   
 .RE
 
 

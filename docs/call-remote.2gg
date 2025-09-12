@@ -92,3 +92,12 @@ new-remote srv location "192.168.0.28:2400" \\
 In this case, you are connecting to another service (running on IP "192.168.0.28") on port 2400. See \fBmgrg\fP on how to start a service that listens on a TCP port. You would likely use TCP connectivity only if a service you're connecting to is on a different computer.
 
 See also \fBnew-remote\fP.
+.SH SEE ALSO
+ Distributed computing
+
+\fBcall-remote\fP  
+\fBnew-remote\fP  
+\fBread-remote\fP  
+\fBrun-remote\fP   
+See all 
+\fBdocumentation\fP

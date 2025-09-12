@@ -43,3 +43,10 @@ The value of "hexout" will be:
 .EE
 .RE
 
+.SH SEE ALSO
+ Hex encoding
+
+\fBdecode-hex\fP  
+\fBencode-hex\fP   
+See all 
+\fBdocumentation\fP

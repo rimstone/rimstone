@@ -20,7 +20,7 @@ gg_num gg_pg_checkc()
 char *gg_pg_errm(char *errm, gg_num errmsize, char *s, char *sname, gg_num lnum, char *er)
 {
     char *detail = PQresultErrorField(GG_CURR_DB.dbc->pg.res, PG_DIAG_MESSAGE_DETAIL);
-    snprintf(errm,errmsize,"Error during query [%s], additional [%s], detail [%s], file [%s], line [%ld] : [%s]%s", s, cerror==NULL?"":cerror, detail==NULL?"":detail, sname, lnum, er ,PQerrorMessage(GG_CURR_DB.dbc->pg.con));
+    snprintf(errm,errmsize,"Error during query [%s], additional [%s], detail [%s], file [%s], line [%ld] : [%s]:%s", s, cerror==NULL?"":cerror, detail==NULL?"":detail, sname, lnum, er ,PQerrorMessage(GG_CURR_DB.dbc->pg.con));
     return errm;
 }
 

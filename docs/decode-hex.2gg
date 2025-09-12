@@ -42,3 +42,10 @@ The value of "binout" will be binary data equal to this C literal:
 .EE
 .RE
 
+.SH SEE ALSO
+ Hex encoding
+
+\fBdecode-hex\fP  
+\fBencode-hex\fP   
+See all 
+\fBdocumentation\fP

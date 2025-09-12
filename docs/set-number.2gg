@@ -73,3 +73,13 @@ set-number my_num = (some_num*3+1)%5
 .EE
 .RE
 
+.SH SEE ALSO
+ Numbers
+
+\fBabs-number\fP  
+\fBnumber-expressions\fP  
+\fBnumber-string\fP  
+\fBset-number\fP  
+\fBstring-number\fP   
+See all 
+\fBdocumentation\fP

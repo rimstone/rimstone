@@ -64,3 +64,12 @@ read-array arr key 500 value res delete
 .EE
 .RE
 
+.SH SEE ALSO
+ Array
+
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBwrite-array\fP   
+See all 
+\fBdocumentation\fP

@@ -42,3 +42,10 @@ If there are no more data elements to read, <type> is GG_JSON_TYPE_NONE.
 
 .SH EXAMPLES
 See \fBjson-doc\fP.
+.SH SEE ALSO
+ JSON parsing
+
+\fBjson-doc\fP  
+\fBread-json\fP   
+See all 
+\fBdocumentation\fP

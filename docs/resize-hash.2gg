@@ -31,3 +31,14 @@ resize-hash h hash-size 100000
 .EE
 .RE
 
+.SH SEE ALSO
+ Hash
+
+\fBget-hash\fP  
+\fBnew-hash\fP  
+\fBpurge-hash\fP  
+\fBread-hash\fP  
+\fBresize-hash\fP  
+\fBwrite-hash\fP   
+See all 
+\fBdocumentation\fP

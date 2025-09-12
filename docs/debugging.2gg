@@ -134,3 +134,9 @@ which would handle any request to your application. Request names are decorated 
 Note that by default, gdb will show Golf code and you can step through it as you've written it, which is easy to follow and understand. 
 
 However, if you wish to step through the underlying C libraries, use "--c-lines" option in \fBgg\fP when making your application. 
+.SH SEE ALSO
+ Debugging
+
+\fBdebugging\fP   
+See all 
+\fBdocumentation\fP

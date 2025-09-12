@@ -233,3 +233,14 @@ print-out str new-line, num, " some string ", str1 web-encode new-line
 .RE
 
 In this case, you'll be outputting string "str", number "num", a string constant " some string ", and a web-encoded string "str1". There are no whitespaces between each item output.
+.SH SEE ALSO
+ Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
+See all 
+\fBdocumentation\fP

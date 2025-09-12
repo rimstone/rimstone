@@ -157,3 +157,11 @@ end-handler
 .RE
 
 In this example, you are using a C macro, so number "fact" is assigned a value directly, per C language rules. The result printed out is "3".
+.SH SEE ALSO
+ C language
+
+\fBcall-extended\fP  
+\fBextended-mode\fP  
+\fBweb-framework-for-C-programming-language\fP   
+See all 
+\fBdocumentation\fP

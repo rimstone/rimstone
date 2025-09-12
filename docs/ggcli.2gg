@@ -26,3 +26,9 @@ The above variables are not explained here; you can find much about them in many
 You can see the examples of setting the above environment variables and the usage of ggcli if you use "-r" option of \fBgg\fP; if you skip "--exec" option, gg will display the settings and the usage of ggcli utility.
 
 Note that you should be able to use ggcli when talking to any FastCGI server (such as PHP), not just Golf.
+.SH SEE ALSO
+ FastCGI client
+
+\fBggcli\fP   
+See all 
+\fBdocumentation\fP

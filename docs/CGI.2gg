@@ -44,3 +44,12 @@ The following script sets up an application named "func_test" (any kind of appli
 .EE
 .RE
 
+.SH SEE ALSO
+ Running application
+
+\fBapplication-setup\fP  
+\fBCGI\fP  
+\fBcommand-line\fP  
+\fBservice\fP   
+See all 
+\fBdocumentation\fP

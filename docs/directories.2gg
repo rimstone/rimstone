@@ -68,3 +68,19 @@ ln -s /home/disk0/file $HOME/.golf/apps/<app name>/file
 .EE
 .RE
 
+.SH SEE ALSO
+ Directories
+
+\fBchange-dir\fP  
+\fBchange-mode\fP  
+\fBdelete-dir\fP  
+\fBdirectories\fP  
+\fBnew-dir\fP   
+ General
+
+\fBabout-golf\fP  
+\fBdevel-versus-release\fP  
+\fBdirectories\fP  
+\fBpermissions\fP   
+See all 
+\fBdocumentation\fP

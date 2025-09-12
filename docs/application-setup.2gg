@@ -113,3 +113,12 @@ See \fBmgrg\fP for more details.
 .LP
 
 You can run your application as \fBservice\fP, \fBCGI\fP or \fBcommand-line\fP.
+.SH SEE ALSO
+ Running application
+
+\fBapplication-setup\fP  
+\fBCGI\fP  
+\fBcommand-line\fP  
+\fBservice\fP   
+See all 
+\fBdocumentation\fP

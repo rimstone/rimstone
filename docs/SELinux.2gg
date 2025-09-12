@@ -121,3 +121,9 @@ sudo restorecon -R /your/new/dir
 .EE
 .RE
 
+.SH SEE ALSO
+ SELinux
+
+\fBSELinux\fP   
+See all 
+\fBdocumentation\fP

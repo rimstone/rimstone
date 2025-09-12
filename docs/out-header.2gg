@@ -150,3 +150,12 @@ out-header use content-type "text/html" cache-control "max-age:3600" custom "som
 .EE
 .RE
 
+.SH SEE ALSO
+ Web
+
+\fBcall-web\fP  
+\fBout-header\fP  
+\fBsend-file\fP  
+\fBsilent-header\fP   
+See all 
+\fBdocumentation\fP

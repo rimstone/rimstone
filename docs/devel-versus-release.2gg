@@ -37,3 +37,12 @@ gg -q --release
 This will include all the compiler optimizations as well as LTO; it will also include the minimal necessary debugging information. Release executables can be significantly faster than development ones; use them for releases as well as when you wish to do performance testing. Note however that making release executables will take significantly longer, so you probably do not want to do it while developing your application.
 
 Note that if your gcc (C compiler) version changes, such as after system updates, Golf may recompile itself. This is because LTO works the best when Golf itself is compiled with the gcc version currently installed. During such rare occassions, Golf will need sudo privilege to install the recompiled executables.
+.SH SEE ALSO
+ General
+
+\fBabout-golf\fP  
+\fBdevel-versus-release\fP  
+\fBdirectories\fP  
+\fBpermissions\fP   
+See all 
+\fBdocumentation\fP

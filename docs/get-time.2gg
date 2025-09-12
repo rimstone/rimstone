@@ -119,3 +119,10 @@ print-out mytime
 .EE
 .RE
 
+.SH SEE ALSO
+ Time
+
+\fBget-time\fP  
+\fBpause-program\fP   
+See all 
+\fBdocumentation\fP

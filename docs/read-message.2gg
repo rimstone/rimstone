@@ -28,3 +28,13 @@ Once a message is read from, it cannot be written to (see \fBwrite-message\fP).
 
 .SH EXAMPLES
 See \fBnew-message\fP.
+.SH SEE ALSO
+ Messages
+
+\fBget-message\fP  
+\fBnew-message\fP  
+\fBread-message\fP  
+\fBSEMI\fP  
+\fBwrite-message\fP   
+See all 
+\fBdocumentation\fP

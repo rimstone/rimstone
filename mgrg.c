@@ -42,10 +42,6 @@
 // POSIX shared memory used by server
 #define GG_SHMEM "/golfmem"
 
-// actions for processes and manager
-#define GG_STOP 1
-#define GG_QUIT 2
-#define GG_STOPONE 3
 
 // display error
 #define GG_FERR (errno == 0 ? "" : strerror(errno))
@@ -59,11 +55,21 @@
 #define GG_MAX_FILELEN 200 // max path+file length
 
 // client commands to server and back
-#define GG_COMMAND 1
-#define GG_DONE 2
-#define GG_DONEBAD 3
-#define GG_DONESTARTUP 4
-#define GG_DONESTARTUP0 5
+#define GG_OKAY 0
+#define GG_START 1
+#define GG_STOP 2
+#define GG_RESTART 3
+#define GG_QUIT 4
+#define GG_OKAY_STARTED 5
+#define GG_OKAY_RUNNING 6
+#define GG_STATUS 7
+#define GG_STOPONE 8
+// codes for processes and manager communication
+#define GG_COMMAND 9
+#define GG_DONE 10
+#define GG_DONEBAD 11
+#define GG_DONESTARTUP 12
+#define GG_DONESTARTUP0 13
 
 // invalid exit status of child process (used to tell us we don't know what happened)
 #define GG_BAD_EXIT 1000
@@ -88,15 +94,11 @@
 #define log_msg(...) log_msg0(GG_MLOG, __VA_ARGS__)
 
 // Command from client to server, all updates to command are atomic.
-// Only the 'command' number needs to be atomic; this is because in the process that writes, we always set data1 *before* setting 'command';
-// and in the process that reads, we always retrieve data1 *after* getting 'command'. Since "atomic" operation (see in the code atomic_load..
-// and atomic_store...) present a memory barrier, this assures that string data1 will not be "re-ordered" out; meaning what happened before write
-// of atomic number is properly set for another process, and what happens after read of atomic number will have such data guaranteed correct.
 // This is the fastest way to synchronize reads and writes without using semaphores, mutexes etc. It's like there's a memory barrier at atomic write
 // that assures all that is written before it will be properly available after the barrier at atomic read. A neat C11 feature.
 typedef struct s_shbuf {
     volatile _Atomic gg_num command;
-    char data1[100];
+    volatile _Atomic gg_num data1;
 } shbuf;
 
 // Help for -h
@@ -583,10 +585,11 @@ static void getshm() {
 //
 static void checkshm(bool is_running_server) {
     gg_num command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+    gg_num data1 = atomic_load_explicit(&(golfmem->data1), memory_order_seq_cst);
     if (command == GG_COMMAND) {
-        log_msg ("Received command [%s]", golfmem->data1);
+        log_msg ("Received command [%ld]", data1);
         // we don't send a response, just make sure we don't do it again
-        if (!strcmp (golfmem->data1, "restart")) {
+        if (data1 == GG_RESTART) {
             // restart stops, then immediately restarts
             temp_no_restart = 0;
             handlestop (GG_STOP);            
@@ -594,26 +597,26 @@ static void checkshm(bool is_running_server) {
             processup(0);
             log_msg ("After process up restart");
             atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
-        } else if (!strcmp (golfmem->data1, "start")) {
+        } else if (data1 == GG_START) {
             temp_no_restart = 0;
             log_msg ("Before process up");
             processup(0);
             log_msg ("After process up");
             atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
-        } else if (!strcmp (golfmem->data1, "status")) {
-            strcpy (golfmem->data1, "okay");
+        } else if (data1 == GG_STATUS) {
+            atomic_store_explicit (&(golfmem->data1) , GG_OKAY, memory_order_seq_cst);
             atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
-        } else if (!strcmp (golfmem->data1, "okay_started")) {
+        } else if (data1 == GG_OKAY_STARTED) {
             if (is_running_server) return; // this is client trying to start the server and it's child should answer this; not the running server
             atomic_store_explicit (&(golfmem->command) , GG_DONESTARTUP, memory_order_seq_cst);
-        } else if (!strcmp (golfmem->data1, "okay_running")) {
+        } else if (data1 == GG_OKAY_RUNNING) {
             if (is_running_server) return; // this is client trying to start the server and it's child should answer this; not the running server
             atomic_store_explicit (&(golfmem->command) , GG_DONESTARTUP0, memory_order_seq_cst);
-        } else if (!strcmp (golfmem->data1, "stop")) {
+        } else if (data1 == GG_STOP) {
             handlestop (GG_STOP);            
             temp_no_restart = 1;
             atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst);
-        } else if (!strcmp (golfmem->data1, "quit")) {
+        } else if (data1 == GG_QUIT) {
             if (is_running_server) // this has to be here and not in else if above, b/c then the below Unknown command would run, messing up response
             {
                 atomic_store_explicit (&(golfmem->command) , GG_DONE, memory_order_seq_cst); // this must come BEFORE handling quit as that will delete memory!
@@ -623,7 +626,7 @@ static void checkshm(bool is_running_server) {
         else
         {
             // bad command
-            log_msg ("Unknown command [%s]", golfmem->data1);
+            log_msg ("Unknown command [%ld]", data1);
             atomic_store_explicit (&(golfmem->command) , GG_DONEBAD, memory_order_seq_cst);
         }
     }
@@ -704,17 +707,34 @@ static void cli_getshm(char *comm, gg_num byserver) {
         if (command == GG_COMMAND) exit_error (-1,"Cannot contact server: %s", servererr);
     }
     // Now issue the actual command, know the server is in a good state (most likely)
-    snprintf (golfmem->data1, sizeof (golfmem->data1), "%s", comm);
+if (!strcmp (comm, "start")) 
+            atomic_store_explicit (&(golfmem->data1) , GG_START, memory_order_seq_cst);
+else if (!strcmp (comm, "stop")) 
+            atomic_store_explicit (&(golfmem->data1) , GG_STOP, memory_order_seq_cst);
+else if (!strcmp (comm, "restart")) 
+            atomic_store_explicit (&(golfmem->data1) , GG_RESTART, memory_order_seq_cst);
+else if (!strcmp (comm, "quit")) 
+            atomic_store_explicit (&(golfmem->data1) , GG_QUIT, memory_order_seq_cst);
+else if (!strcmp (comm, "status")) 
+            atomic_store_explicit (&(golfmem->data1) , GG_STATUS, memory_order_seq_cst);
+else if (!strcmp (comm, "okay_started")) 
+            atomic_store_explicit (&(golfmem->data1) , GG_OKAY_STARTED, memory_order_seq_cst);
+else if (!strcmp (comm, "okay_running")) 
+            atomic_store_explicit (&(golfmem->data1) , GG_OKAY_RUNNING, memory_order_seq_cst);
+else exit_error (-1, "Unknown client command [%s]", comm);
+
     atomic_store_explicit (&(golfmem->command) , GG_COMMAND, memory_order_seq_cst);
     log_msg ("Sent command [%s], by server [%ld]", comm, byserver);
     tries = GG_TRIES;
     gg_num command;
+    gg_num data1;
     while (tries-- >= 0) {
         command = atomic_load_explicit(&(golfmem->command), memory_order_seq_cst);
+        data1 = atomic_load_explicit(&(golfmem->data1), memory_order_seq_cst);
         if (command != GG_COMMAND) {
             if (command == GG_DONEBAD) exit_error (-1,"Unknown command [%s]", comm);
             // if asked for status, print what server responded. Use stdout, as no dup2 took place.
-            if (!strcmp (comm, "status")) out_msg ("%s\n", golfmem->data1);
+            if (!strcmp (comm, "status")) out_msg ("%s\n", data1==GG_OKAY?"okay":"not running");
             log_msg ("Got server response on [%s], by server [%ld] command [%ld]", comm, byserver, command);
             // for quit wait until it's actually gone; this is because a message from a killed server cannot be reliable sent back; because
             // the server and its shared memory are gone!
@@ -1322,6 +1342,7 @@ int main(int argc, char **argv)
     signal(SIGCHLD, SIG_DFL);  // we need this so that we can waitpid on a child (the resident process below). This is needed when we check
                                // if it's done, such as when server is already running, and we exit with status 2 which we want to collect.
                                // Since we will wait on it first (see below), it won't become a zombie
+    atomic_store_explicit (&(golfmem->command) , GG_OKAY, memory_order_seq_cst); // clear up command flag, so any leftover is not confusing the processes below
     if (deadres == 0) {
 // so we can attach to process with gdb without sudo
 #ifdef GG_DEVEL
@@ -1358,6 +1379,7 @@ int main(int argc, char **argv)
             initfile (logn, 0700, run_user_id, proxy_grp_id);
         }
         islogging=1;
+        log_msg ("New process forked with [%ld] parent pid", opid);
 
         // Locking here to make sure only one resident server process remains, since this lock
         // doesn't propogate to children
@@ -1437,10 +1459,14 @@ int main(int argc, char **argv)
         }
         if (fg == 0) cli_getshm ("okay_started", 1); // nobody to communicate with unless forked first
         log_msg ("Golf Service Manager v%s successfully started", GG_PKGVERSION);
+        // if we could not get this reply from the original below (say it died), then we place it there to simulate success, because
+        // it may impact the following command (such as quit). We're clearly continuing, as the server has indeed started.
+        atomic_store_explicit (&(golfmem->command) , GG_DONESTARTUP, memory_order_seq_cst);
+        //
     } else if (deadres == -1) {
         exit_error (-1,"Could not start Golf Service Manager for [%s], [%s]", golfapp, GG_FERR);
     } else {
-#define GG_SRV_RUNNING "Golf Service Manager [%s] for [%s] is already running. If you want to restart it, stop it first (-m quit), then start it"
+        #define GG_SRV_RUNNING "Golf Service Manager [%s] for [%s] is already running. If you want to restart it, stop it first (-m quit), then start it"
 #define GG_SRV_STARTED "Golf Service Manager [%s] for [%s] successfully started"
 #define GG_SRV_NOSTART "Could not start Golf Service Manager for [%s],[%ld],[1], log file [%s]"
         // ORIGINAL PARENT FROM COMMAND LINE OR A SCRIPT, deadres is the PID of the child process (the resident process)

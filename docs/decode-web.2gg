@@ -30,3 +30,10 @@ decode-web str
 .EE
 .RE
 
+.SH SEE ALSO
+ Web encoding
+
+\fBdecode-web\fP  
+\fBencode-web\fP   
+See all 
+\fBdocumentation\fP

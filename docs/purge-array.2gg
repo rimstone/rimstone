@@ -33,3 +33,12 @@ purge-array arr
 .RE
 
 See \fBread-array\fP for more examples.
+.SH SEE ALSO
+ Array
+
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBwrite-array\fP   
+See all 
+\fBdocumentation\fP

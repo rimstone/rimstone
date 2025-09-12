@@ -147,3 +147,10 @@ Key [countries/country/state/] Value [Sinaloa]
 .EE
 .RE
 
+.SH SEE ALSO
+ XML parsing
+
+\fBread-xml\fP  
+\fBxml-doc\fP   
+See all 
+\fBdocumentation\fP

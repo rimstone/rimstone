@@ -107,3 +107,10 @@ end-if
 .EE
 .RE
 
+.SH SEE ALSO
+ Application information
+
+\fBget-app\fP  
+\fBset-app\fP   
+See all 
+\fBdocumentation\fP

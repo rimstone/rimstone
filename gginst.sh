@@ -92,6 +92,8 @@ sed -i '/#golf-setup\s*$/d' $HOME/.bashrc
 echo "if [ -f $HOME/.golf/lib/ggsetenv.sh ]; then . $HOME/.golf/lib/ggsetenv.sh; fi #golf-setup" >>$HOME/.bashrc
 #execute for this session in case it's sourced
 . $HOME/.golf/lib/ggsetenv.sh
+#setup vim highlighting
+gg -m
 
 #setup minimum permissions (inlcuding for Unix sockets)
 echo "Setting permissions..."

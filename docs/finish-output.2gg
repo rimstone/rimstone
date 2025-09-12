@@ -29,3 +29,14 @@ finish-output
 .EE
 .RE
 
+.SH SEE ALSO
+ Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
+See all 
+\fBdocumentation\fP

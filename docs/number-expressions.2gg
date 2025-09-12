@@ -71,3 +71,13 @@ set-number n = 1 + narr[1] * 2
 .EE
 .RE
 
+.SH SEE ALSO
+ Numbers
+
+\fBabs-number\fP  
+\fBnumber-expressions\fP  
+\fBnumber-string\fP  
+\fBset-number\fP  
+\fBstring-number\fP   
+See all 
+\fBdocumentation\fP

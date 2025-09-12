@@ -54,3 +54,14 @@ If you are building HTML forms, you can add a note with:
 See \fBrequest\fP for more on URL structure.
 
 If "new-line" clause is used, then a new line ("\\n") is output after the URL path.
+.SH SEE ALSO
+ Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
+See all 
+\fBdocumentation\fP

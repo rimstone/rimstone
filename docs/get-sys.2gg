@@ -81,3 +81,9 @@ get-sys os-name to os_name
 .EE
 .RE
 
+.SH SEE ALSO
+ System information
+
+\fBget-sys\fP   
+See all 
+\fBdocumentation\fP

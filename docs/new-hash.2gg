@@ -51,3 +51,14 @@ new-hash h hash-size 5000
 .RE
 
 See \fBread-hash\fP for more examples.
+.SH SEE ALSO
+ Hash
+
+\fBget-hash\fP  
+\fBnew-hash\fP  
+\fBpurge-hash\fP  
+\fBread-hash\fP  
+\fBresize-hash\fP  
+\fBwrite-hash\fP   
+See all 
+\fBdocumentation\fP

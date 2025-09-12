@@ -127,7 +127,8 @@ OPTIONS:
              --socket=\"socket path\"
              --arg=\"arguments\"
 -q       build application
-             --db=\"mariadb:<db name>|postgres:<db name> ...\" 
+             --db=\"mariadb:<db name>|postgres:<db name>|
+                 sqlite:<db name> ...\" 
              --lflag=<linker flags> 
              --cflag=<c flags> 
              --c-lines 

@@ -96,3 +96,12 @@ report-error "Too many input parameters for %s, encountered total of [%ld]", "cu
 .EE
 .RE
 
+.SH SEE ALSO
+ Error handling
+
+\fBdb-error\fP  
+\fBerror-code\fP  
+\fBerror-handling\fP  
+\fBreport-error\fP   
+See all 
+\fBdocumentation\fP

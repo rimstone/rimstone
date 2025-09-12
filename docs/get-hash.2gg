@@ -33,3 +33,14 @@ get-hash h length l hash-size s average-reads r
 .EE
 .RE
 
+.SH SEE ALSO
+ Hash
+
+\fBget-hash\fP  
+\fBnew-hash\fP  
+\fBpurge-hash\fP  
+\fBread-hash\fP  
+\fBresize-hash\fP  
+\fBwrite-hash\fP   
+See all 
+\fBdocumentation\fP

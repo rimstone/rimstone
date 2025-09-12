@@ -126,3 +126,11 @@ If you are a packaging developer, the following can be used to build a Golf pack
 .B - pacman packaging
 
 "PKGBUILD" file used to build a pacman package is \fBhere\fP.
+.SH SEE ALSO
+ Install golf
+
+\fBinstall-golf\fP  
+\fBinstall-package\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP
