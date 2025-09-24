@@ -1,0 +1,76 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+nextafter \-  (math-functions)
+.SH PURPOSE
+Next representable double function.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+nextafter( <var1>, <var2> )
+
+.EE
+.RE
+
+.SH DESCRIPTION
+nextafter returns return the next representable double following <var1> in the direction of <var2>.  If <var2> is less than <var1>, it returns the largest representable number less than <var1>. If <var1> and <var2> are equal, the functions return <var2>.
+
+<var1> and <var2> are a number or a double and the result is a double.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+set-double d = nextafter(1.2, 1.8) + 1
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Math functions
+
+\fBabd\fP  
+\fBabn\fP  
+\fBacos\fP  
+\fBacosh\fP  
+\fBasin\fP  
+\fBasinh\fP  
+\fBatan\fP  
+\fBatan2\fP  
+\fBatanh\fP  
+\fBcbrt\fP  
+\fBceil\fP  
+\fBcopysign\fP  
+\fBcos\fP  
+\fBcosh\fP  
+\fBdbl\fP  
+\fBerf\fP  
+\fBerfc\fP  
+\fBexp\fP  
+\fBexp2\fP  
+\fBfloor\fP  
+\fBfmod\fP  
+\fBhypot\fP  
+\fBisinf\fP  
+\fBisnan\fP  
+\fBldexp\fP  
+\fBlgamma\fP  
+\fBlog\fP  
+\fBlog10\fP  
+\fBlog2\fP  
+\fBmath-functions\fP  
+\fBnextafter\fP  
+\fBnum\fP  
+\fBpow\fP  
+\fBround\fP  
+\fBsin\fP  
+\fBsinh\fP  
+\fBsqrt\fP  
+\fBtan\fP  
+\fBtanh\fP  
+\fBtrunc\fP   
+See all 
+\fBdocumentation\fP

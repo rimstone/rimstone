@@ -44,6 +44,7 @@ GG_MAKE_I=8
 GG_PKGCONF_I=9
 GG_TAR_I=10
 GG_SEL_I=11
+GG_UBSAN_I=12
 
 
 #get libs existence and includes
@@ -88,6 +89,15 @@ function gotlib(){
             GG_SEL_EX=0 # declare installed for those that don't have SELinux
         fi
         return $((GG_SEL_EX))
+    elif [ "$1" == "$GG_UBSAN_I" ]; then
+        LDPATH=$(whereis -b ldconfig|sed 's/^.*:\s*\(.*\)$/\1/g')
+        ISUBSAN=$($LDPATH -p|grep libubsan|wc -l)||true
+        if [ "$ISUBSAN" == "0" ]; then
+           GG_UBSAN_EX=1
+        else
+            GG_UBSAN_EX=0 #installed
+        fi
+        return $((GG_UBSAN_EX))
     fi
 }
 
@@ -132,6 +142,7 @@ function discovery() {
     gotlib $GG_PCRE2_I || true
     gotlib $GG_CRYPTO_I || true
     gotlib $GG_XML_I || true
+    gotlib $GG_UBSAN_I || true
     #
 
     #set libs
@@ -251,6 +262,14 @@ function discovery() {
     else
         GG_SQLITE_PACKAGE="SQLite C Client development package"
     fi
+    #
+    #package name for UBSAN (undefined behaviour sanitization)
+    #
+    if [ "$GG_REL_NAME" == "debian" ]; then
+        GG_UBSAN_PACKAGE="libubsan1"
+    else
+        GG_UBSAN_PACKAGE="libubsan"
+    fi
 
     #installation instructions for toolkit packages
     GG_POSTGRES_INSTALL="$GG_REL_INSTALL $GG_POSTGRES_PACKAGE"
@@ -260,6 +279,7 @@ function discovery() {
     GG_XML_INSTALL="$GG_REL_INSTALL $GG_XML_PACKAGE"
     GG_CURL_INSTALL="$GG_REL_INSTALL $GG_CURL_PACKAGE"
     GG_PCRE2_INSTALL="$GG_REL_INSTALL $GG_PCRE2_PACKAGE"
+    GG_UBSAN_INSTALL="$GG_REL_INSTALL $GG_UBSAN_PACKAGE"
 }
 
 #get libs names from IDs
@@ -288,6 +308,8 @@ function namelib(){
         echo "tar"
     elif [ "$1" == "$GG_SEL_I" ]; then
         echo "SELinux-devel"
+    elif [ "$1" == "$GG_UBSAN_I" ]; then
+        echo "Math-checking"
     fi
 }
 
@@ -318,6 +340,8 @@ function display_install(){
         echo "$GG_TAR_INSTALL"
     elif [ "$1" == "$GG_SEL_I" ]; then
         echo "$GG_SEL_INSTALL"
+    elif [ "$1" == "$GG_UBSAN_I" ]; then
+        echo "$GG_UBSAN_INSTALL"
     fi
 }
 
@@ -327,7 +351,7 @@ function exec_install(){
     discovery
     FINST="0"
     echo "$1"|while IFS= read -r line; do 
-        case "$line" in $GG_MARIADB_I|$GG_POSTGRES_I|$GG_SQLITE_I|$GG_CURL_I|$GG_XML_I|$GG_PCRE2_I|$GG_CRYPTO_I|$GG_GCC_I|$GG_MAKE_I|$GG_PKGCONF_I|$GG_TAR_I|$GG_SEL_I) 
+        case "$line" in $GG_MARIADB_I|$GG_POSTGRES_I|$GG_SQLITE_I|$GG_CURL_I|$GG_XML_I|$GG_PCRE2_I|$GG_CRYPTO_I|$GG_GCC_I|$GG_MAKE_I|$GG_PKGCONF_I|$GG_TAR_I|$GG_SEL_I|$GG_UBSAN_I) 
                 if [ "$2" == "1" ]; then
                     E=0; gotlib $line||E=$?
                     if [ "$E" != "0" ]; then

@@ -9,13 +9,13 @@ Create array.
 .RS 4
 .EX
 
-new-array <array> [ max-size <max-size> ] [ process-scope ]  [ type string | number | bool ]
+new-array <array> [ max-size <max-size> ] [ process-scope ]  [ type string | number | double | bool ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
-new-array creates new <array>. An array is an indexed array, with a number as an index, and with a either a string, number or boolean as an element in the array. By default (without "type" clause), <array> is an array of strings. You can specify "string", "number" or "bool" in "type" clause, in which case <array> is an array of strings, numbers or booleans respectively.
+new-array creates new <array>. An array is an indexed array, with a number as an index, and with a either a string, number, double or boolean as an element in the array. By default (without "type" clause), <array> is an array of strings. You can specify "string", "number", "double" or "bool" in "type" clause, in which case <array> is an array of strings, numbers, doubles or booleans respectively.
 
 An array is flexible, which means that it will grow as needed. By default, an array allocates room for 256 elements that can grow up to 1,000,000 elements, unless <max-size> number (in "max-size" clause) is specified in which case it can grow up to <max-size> elements. <max-size> must be at least 256.
 

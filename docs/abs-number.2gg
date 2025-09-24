@@ -34,6 +34,7 @@ The result is 10.
  Numbers
 
 \fBabs-number\fP  
+\fBmixing-doubles-and-numbers\fP  
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  
 \fBset-number\fP  

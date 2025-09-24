@@ -61,6 +61,11 @@
 #define GG_KEYON "on"
 #define GG_KEYOFF "off"
 #define GG_KEYERRNO "errno"
+#define GG_KEYWIDTH "width "
+#define GG_KEYFORMATFLOATING "format-floating"
+#define GG_KEYFORMATSCIENTIFIC "format-scientific"
+#define GG_KEYFORMATCOMPACT "format-compact"
+#define GG_KEYPRECISION "precision "
 #define GG_KEYPREFIX "prefix "
 #define GG_KEYNAME "name "
 #define GG_KEYNAME0 "name"
@@ -256,6 +261,7 @@
 #define GG_KEYRESULT "result "
 #define GG_KEYNOTRIM "notrim"
 #define GG_KEYCASEINSENSITIVE "case-insensitive"
+#define GG_KEYERRORMARGIN "error-margin "
 #define GG_KEYUTF "utf"
 #define GG_KEYTEMPORARY "temporary"
 #define GG_KEYSINGLEMATCH "single-match"
@@ -607,7 +613,7 @@ char *opt_clause(char *clause, char *param, char *antiparam, gg_num type);
 void name_query (gg_gen_ctx *gen_ctx);
 void free_query (char *qryname, bool skip_data);
 void convert_puts(char *pline);
-void do_numstr (char *to, char *num0, char *base);
+void do_numstr (char *to, char *num0, char *base, bool isd, gg_num width, gg_num prec, char *format);
 void setup_internal_hash(char *fname, char *hash, bool is_req);
 void gg_report_warning (char *format, ...)  __attribute__ ((format (printf, 1, 2)));
 gg_num carve_stmt_obj (char **mtext, bool has_value, bool is_constant);
@@ -633,7 +639,7 @@ void run_service (char *mtext);
 gg_num check_var (char **v, gg_num type);
 void check_format(char *mtext, char *comma, char **list);
 gg_num is_constant_string (char *s, gg_num *size);
-gg_num is_len_format (char *s, char *f, gg_num flen);
+gg_num is_len_format (char *s, char *f, gg_num flen, bool isd);
 void check_level(char *prline);
 gg_num typeid (char *type);
 bool add_var (char *var, gg_num type, char *realname, bool watched_for_unused);
@@ -641,7 +647,7 @@ bool find_var (char *name, gg_num *type, gg_num *line, char **realname);
 void make_var (char **v, gg_num type, bool internal);
 void check_c (char *mtext);
 char *check_bool (char *e, bool *found);
-char *check_exp (char *e, bool *found);
+char *check_exp (char *e, bool *found, bool isd, bool comma);
 char *check_str (char *e, gg_num *type);
 void save_param (char *pname, gg_num type);
 bool check_sub (char *sub);
@@ -652,7 +658,7 @@ bool is_reserved (char *word);
 bool var_exists (char *name, gg_num type, gg_num *real_type, gg_num *lnum);
 char *process_bool_exp (char *v);
 char *process_string_exp (char *v, gg_num *type);
-char *process_number_exp (char *v);
+char *process_number_exp (char *v, bool isd);
 gg_num check_type(gg_num type, gg_num check_against);
 bool process_array (char **cur_exp, gg_num *type_exp);
 void find_cond (char *cm, char **eq, char **neq, char **less, char **lesseq, char **gr, char **greq, char **mod, char **notmod, char **cont, char **notcont);
@@ -665,6 +671,11 @@ bool can_write_line_number(gg_num linepos, gg_num linenum);
 void written_line_number(gg_num linepos, gg_num linenum);
 char *make_empty_const (gg_num sz);
 void mark_lib (char *lib);
+bool math_fun_n (char *name, gg_num *params);
+bool math_fun (char *name, gg_num *params);
+bool c_name (char *name);
+gg_num check_num_or_double (char *v, gg_num j);
+char *promote_double (char *v);
 
 //
 //
@@ -672,6 +683,112 @@ void mark_lib (char *lib);
 //
 //
 
+
+//
+// Replace / with /(double) in a double expression; this avoids integer divisions that round the result.
+// v is the expression; returns the substitute.
+// This is the only promotion needed to avoiding result rounding in number->double arithmetic. The rest are
+// automatically promoted. It of course will promote double variables and numbers; there is no run-time penalty
+// for that, and the compile time penaly is negligible.
+// The promotion avoids converting strings and characters, such as "/" or '/' of course.
+//
+char *promote_double (char *v)
+{
+    // for doubles, we promote anything that's on the right of / to (double), thus avoiding integer division catastrophy where
+    // 5/2 is 2 and not 2.5 in a double expression.
+    gg_num tot = gg_count_substring (v, "/", 1, 0); // how many of /? Count even quoted, not a problem.
+    if (tot != 0)
+    {
+        gg_num vlen = strlen (v);
+        gg_num rlen; // what's left to subst in
+        char *newv = gg_malloc (rlen = vlen + tot *(strlen("/(double)"))); // make string big enough
+        memcpy (newv, v, vlen+1); // now we work on newv
+        gg_num p = 0;
+        while (1)
+        {
+            char *div = gg_find_keyword0 (newv+p, "/", 0, 0); // skip any / that's quoted
+            if (div == NULL) break;
+            gg_replace_string (div, rlen-p, "/", "/(double)", 0, NULL, 0); // replace just that one (3rd 0 from the right)
+                                                                                  // we know this will succeed since we alloc'd enough
+            p = div - newv + 1;
+        }
+        v = newv;
+    }
+    return v;
+}
+
+
+// 
+// For a string v at byte j, check if this is a number or a double and then process this whole expression that starts with v
+// Returns type found
+//
+gg_num check_num_or_double (char *v, gg_num j)
+{
+    while (isdigit (v[j])) j++;
+    if (v[j] == '.' || v[j] == 'E' || v[j] == 'e')
+    {
+        return GG_DEFDOUBLE;
+    }
+    else
+    {
+        return GG_DEFNUMBER;
+    }
+}
+
+//
+// Returns true if name is a reserved word in C, cannot be a variable name
+//
+bool c_name (char *name)
+{
+    char *kwd[] = {
+        "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while"
+    };
+
+    size_t i;
+    for (i = 0; i < sizeof(kwd)/sizeof(kwd[0]); i++) 
+    {
+        if (strcmp(name, kwd[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+//
+// Return true if name is a math function. params is 1 or 2 (the number of input params). 
+// This is for numbers, params can be NULL
+// Note: pow() is a double function! Cannot have a function that's ambiguous as to what type it returns because
+// then we could not determine the type of the expression reliably.
+//
+bool math_fun_n (char *name, gg_num *params)
+{
+    if (!strcmp (name, "abn") || !strcmp (name, "num") || !strcmp (name, "isinf") || !strcmp (name, "isnan"))
+    {
+        if (params != NULL) *params = 1;
+        return true;
+    }
+    else return false;
+}
+
+//
+// Return true if name is a math function. params is 1 or 2 (the number of input params), 
+// This is for doubles; params can be NULL
+//
+bool math_fun (char *name, gg_num *params)
+{
+    if (!strcmp (name, "dbl") || !strcmp (name, "sin") || !strcmp (name, "cos") || !strcmp (name, "tan") || !strcmp (name, "asin") || !strcmp (name, "acos") || !strcmp (name, "atan") || !strcmp (name, "sinh") || !strcmp (name, "cosh") || !strcmp (name, "tanh") || !strcmp (name, "asinh") || !strcmp (name, "acosh") || !strcmp (name, "atanh") || !strcmp (name, "exp") || !strcmp (name, "exp2") || !strcmp (name, "log") || !strcmp (name, "log10") || !strcmp (name, "log2") || !strcmp (name, "sqrt") || !strcmp (name, "cbrt") || !strcmp (name, "abd") || !strcmp (name, "ceil") || !strcmp (name, "floor") || !strcmp (name, "round") || !strcmp (name, "trunc") || !strcmp (name, "erf") || !strcmp (name, "erfc") || !strcmp (name, "lgamma"))
+    {
+        if (params != NULL) *params = 1;
+        return true;
+    }
+    else if (!strcmp (name, "atan2") || !strcmp (name, "pow") || !strcmp (name, "hypot") || !strcmp (name, "fmod") || !strcmp (name, "copysign") || !strcmp (name, "ldexp") || !strcmp (name, "nextafter") )
+    {
+        if (params != NULL) *params = 2;
+        return true;
+    }
+    else return false;
+}
 
 //
 // Mark lib as used. Each file is appended to, guaranteeing data is there, and the order doesn't matter
@@ -795,9 +912,10 @@ char *check_input(char *inp)
         while (1)
         {
             // find each keyword, account for "" and '', start from wherever we're currently
-            char *d = find_keyword (inp, GG_KEYDOLLAR, 0);
-            char *p = find_keyword (inp, GG_KEYPOUND, 0);
-            char *b = find_keyword (inp, GG_KEYOPENANGLEBRACKET, 0);
+            // we search within parenthesis too, so #($x) would work
+            char *d = gg_find_keyword0 (inp, GG_KEYDOLLAR, 0, 0);
+            char *p = gg_find_keyword0 (inp, GG_KEYPOUND, 0, 0);
+            char *b = gg_find_keyword0 (inp, GG_KEYOPENANGLEBRACKET, 0, 0);
             // then conclude which comes first
             // dist_xxx is the position of the first char, or max integer if not found
             gg_num dist_d;
@@ -809,6 +927,11 @@ char *check_input(char *inp)
             gg_num first = MIN (dist_d, MIN(dist_b, dist_p));
             if (first != LLONG_MAX)
             {
+                // check if $$ for double, if so, ignore first $ and use just the second
+                if (first == dist_d && *(d+1) == '$') first++; 
+                // check if ## for double, if so, ignore first # and use just the second
+                if (first == dist_p && *(p+1) == '#') first++; 
+                //
                 gg_num lcopy = first+1;
                 memcpy (new_inp, inp,lcopy);
                 inp+=lcopy;
@@ -1109,7 +1232,7 @@ void do_print (char *mtext, gg_num backmode)
     {
         if (sfile != NULL || webe != NULL || urle != NULL) gg_report_error ("Cannot use source-line clause with other clauses");
         carve_stmt_obj (&mtext, false, false);
-        do_numstr (NULL, "__LINE__",  NULL);
+        do_numstr (NULL, "__LINE__",  NULL, false, -1, -1, NULL);
         if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
     }
     else
@@ -1127,7 +1250,14 @@ void do_print (char *mtext, gg_num backmode)
         {
             if (webe != NULL || sfile != NULL || sline != NULL || urle != NULL || length != NULL) gg_report_error ("Cannot use other clauses (except new-line) when outputting a number");
             carve_stmt_obj (&mtext, true, true);
-            do_numstr (NULL, mtext, NULL);
+            do_numstr (NULL, mtext, NULL, false, -1, -1, NULL);
+            if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
+        }
+        else if (cmp_type (t, GG_DEFDOUBLE))
+        {
+            if (webe != NULL || sfile != NULL || sline != NULL || urle != NULL || length != NULL) gg_report_error ("Cannot use other clauses (except new-line) when outputting a double");
+            carve_stmt_obj (&mtext, true, true);
+            do_numstr (NULL, mtext, NULL, true, -1, -1, "f");
             if (nl != NULL) oprintf("gg_puts (GG_NOENC, \"\\n\", 1, false);\n"); // output 1 byte non-alloc'd
         }
         else if (cmp_type (t, GG_DEFBOOL))
@@ -1329,17 +1459,18 @@ bool process_array (char **cur_exp, gg_num *type_exp)
         }
         bool arr_str = false;
         bool arr_num = false;
+        bool arr_dbl = false;
         bool arr_bool = false;
         bool hash = false;
-        bool is_eligible = ((arr_num = cmp_type (vtype, GG_DEFARRAYNUMBER)) || (arr_str = cmp_type (vtype, GG_DEFARRAYSTRING)) || (arr_bool = cmp_type (vtype, GG_DEFARRAYBOOL)) || (hash = cmp_type (vtype, GG_DEFHASH)));
+        bool is_eligible = ((arr_num = cmp_type (vtype, GG_DEFARRAYNUMBER)) || (arr_dbl = cmp_type (vtype, GG_DEFARRAYDOUBLE)) || (arr_str = cmp_type (vtype, GG_DEFARRAYSTRING)) || (arr_bool = cmp_type (vtype, GG_DEFARRAYBOOL)) || (hash = cmp_type (vtype, GG_DEFHASH)));
         //
         // check that index is a number or string (for hash)
         //
         bool sub_found; // subexpression within []
         char *hash_key = "GG_EMPTY_STRING";
         if (!hash)
-        { // if not hash, index is a number
-            check_exp (ind, &sub_found); // no check_input (), since it's not a top level call
+        { // if not hash, index is a number (not a double)
+            check_exp (ind, &sub_found, false, false); // no check_input (), since it's not a top level call
         }
         else
         { // if hash, index is a string
@@ -1355,6 +1486,10 @@ bool process_array (char **cur_exp, gg_num *type_exp)
             if (arr_num && !cmp_type (*type_exp, GG_DEFNUMBER)) 
             {
                 gg_report_error ("Expected number array element");
+            }
+            else if (arr_dbl && !cmp_type (*type_exp, GG_DEFDOUBLE)) 
+            {
+                gg_report_error ("Expected double array element");
             }
             else if (arr_str && !cmp_type (*type_exp, GG_DEFSTRING)) 
             {
@@ -1375,13 +1510,13 @@ bool process_array (char **cur_exp, gg_num *type_exp)
             static gg_num arr_exp = 0;
             oprintf ("gg_num _gg_st_arr_exp_%ld=0;\n", arr_exp);
             if (hash) snprintf (arrv, sizeof(arrv),"gg_hash_get (%s, %s);\n", cur, hash_key);
-            else snprintf (arrv, sizeof(arrv),"%s (%s, %s, &_gg_st_arr_exp_%ld);\n", arr_str?"gg_read_arraystring":(arr_num?"gg_read_arraynumber":"gg_read_arraybool"), cur, hash?hash_key:ind, arr_exp);
+            else snprintf (arrv, sizeof(arrv),"%s (%s, %s, &_gg_st_arr_exp_%ld);\n", arr_str?"gg_read_arraystring":(arr_num?"gg_read_arraynumber":(arr_dbl?"gg_read_arraydouble":"gg_read_arraybool")), cur, hash?hash_key:ind, arr_exp);
             // get internal _000 variable
             char *arrv_p = arrv;
             // this is the *only* instance of internal being true for make_var() - because we're creating regular variable that must remain internal,
             // i.e. never again be processed by Golf, or otherwise, since it's not in the format _gg_<type>... (see make_var()), then it wouldn't work
             // What's made here is next processed by gcc.
-            make_var (&arrv_p, *type_exp = arr_str?(vtype==GG_DEFARRAYSTRINGSTATIC?GG_DEFSTRINGSTATIC:GG_DEFSTRING):(arr_num?GG_DEFNUMBER:(arr_bool?GG_DEFBOOL:(vtype==GG_DEFHASHSTATIC?GG_DEFSTRINGSTATIC:GG_DEFSTRING))), true);
+            make_var (&arrv_p, *type_exp = arr_str?(vtype==GG_DEFARRAYSTRINGSTATIC?GG_DEFSTRINGSTATIC:GG_DEFSTRING):(arr_num?GG_DEFNUMBER:(arr_bool?GG_DEFBOOL:(arr_dbl?GG_DEFDOUBLE:(vtype==GG_DEFHASHSTATIC?GG_DEFSTRINGSTATIC:GG_DEFSTRING)))), true);
             oprintf ("if (_gg_st_arr_exp_%ld != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", arr_exp, GG_STMT_FAIL_CHECK, gg_valid_golf_name, lnum);
             // get total length of x[y] expression here (as a second param below in replace_var())
             replace_var (cur, close_p-cur+1, arrv_p);
@@ -1415,16 +1550,23 @@ bool process_array (char **cur_exp, gg_num *type_exp)
 // Emits messages if errors. 
 // cur is the expression, found is used internally (to make sure expressions are not empty)
 // level is 0 at the top call, and >0 and deeper calls
+// isd is true if this is a double expression, false if number. In Golf, you can't mix double with integer numbers, but you can do
+// comma is true if expression can legally end with a comma (,). This is useful when parsing functions with parameters that are separated by a comma.
+// do opposite, since a number is losslessly promoted to a double (which is 16 bytes on 64 bit linux).
 // Returns current point in parsing, not useful to caller, only err is useful.
+// Imagine $(#(something)), so getting a string from a number from a string. Since the bottom string cannot be known at compile time,
+// so we can't know if #(something) is a number or double at compile time. So # is always expecting a string that's a number, and $ is always expecting a
+// number. We'll use ## for a string that will return double and $$ for a double. To not differentiate can still be done, but it would involve run-time
+// type determination and we don't do that as it leads to performance issues.
 //
-char *check_exp (char *cur, bool *found)
+char *check_exp (char *cur, bool *found, bool isd, bool comma)
 {
     *found = false;
     while (isspace(*cur)) cur++;
     if (*cur == '(') 
     {
         // First find enclosed expressions
-        cur = check_exp (cur+1, found);
+        cur = check_exp (cur+1, found, isd, comma);
         if (!*found) gg_report_error ("Empty number expression");
         if (*cur != ')') gg_report_error ("Right parenthesis missing in number expression, found [%c]", *cur);
         cur++;
@@ -1437,8 +1579,17 @@ char *check_exp (char *cur, bool *found)
             // this is conversion from string to number
             *found = true;
             cur++;
+            if (*cur == '#') // this is ## for double
+            {
+                if (!isd) gg_report_error ("Cannot use ## for a number expression, use #");
+                cur++;
+            } else
+            {
+                if (isd) gg_report_error ("Cannot use # for a double expression, use ##");
+            }
             gg_num lname;
             char *name = upcoming_name (&cur, &lname);
+            gg_num adj_double = (isd?1:0); // if used $$ or ##, when substituting with _000 variable, below in replace_var we need extra byte for that
             if (name == NULL)
             {
                 char *inner_cur = cur;
@@ -1451,12 +1602,13 @@ char *check_exp (char *cur, bool *found)
                 //
                 char s2nvar[300];
                 char *s2n = s2nvar;
-                snprintf (s2n, sizeof (s2nvar), "gg_str2num (%s, 0, NULL)", res);
-                make_var (&s2n, GG_DEFNUMBER, true);
+                if (isd) snprintf (s2n, sizeof (s2nvar), "gg_str2dbl(%s, NULL)", res);
+                else snprintf (s2n, sizeof (s2nvar), "gg_str2num (%s, 0, NULL)", res);
+                make_var (&s2n, isd?GG_DEFDOUBLE:GG_DEFNUMBER, true);
                 //
                 // subst expression with var _000
                 // extra +1 is for trailing ")"
-                replace_var (inner_cur-lname-1, inner_len+lname+1+1, s2n);
+                replace_var (inner_cur-lname-1-adj_double, inner_len+lname+1+1+adj_double, s2n);
                 *end_par = ' '; // make space where ")" was
                 cur = end_par + 1; // continue right after ")"
             }
@@ -1466,50 +1618,139 @@ char *check_exp (char *cur, bool *found)
                 // replace cur (as name) with _000 variable and at convert string to number
                 char s2nvar[300];
                 char *s2n = s2nvar;
-                snprintf (s2n, sizeof (s2nvar), "gg_str2num (%s, 0, NULL)", name);
-                make_var (&s2n, GG_DEFNUMBER, true);
+                if (isd) snprintf (s2n, sizeof (s2nvar), "gg_str2dbl (%s, NULL)", name);
+                else snprintf (s2n, sizeof (s2nvar), "gg_str2num (%s,0, NULL)", name);
+                make_var (&s2n, isd?GG_DEFDOUBLE:GG_DEFNUMBER, true);
                 // get total length of x[y] expression here (as a second param below in replace_var())
                 // in this case, we're substituting the actual name, and we need to move one back to include #
-                replace_var (cur-lname-1, lname+1, s2n);
+                replace_var (cur-lname-1-adj_double, lname+1+adj_double, s2n);
             }
         }
-        else if (*cur == '-') 
+        else if (*cur == '+') // unary +
         {
-            cur = check_exp (cur+1, found);
+            cur = check_exp (cur+1, found, isd, comma);
             if (!*found) gg_report_error ("Empty number expression found");
         }
-        else if (*cur == '~') // bitwise not 
+        else if (*cur == '-')  // unary -
         {
-            cur = check_exp (cur+1, found);
+            cur = check_exp (cur+1, found, isd, comma);
+            if (!*found) gg_report_error ("Empty number expression found");
+        }
+        else if (!isd && *cur == '~') // bitwise not 
+        {
+            cur = check_exp (cur+1, found, isd, comma);
             if (!*found) gg_report_error ("Empty number expression found");
         }
         else if (isalpha(*cur) || *cur == '_') 
         {
             *found = true;
-            gg_num type_exp = GG_DEFNUMBER;
+            gg_num type_exp = isd?GG_DEFDOUBLE:GG_DEFNUMBER;
             if (!process_array (&cur, &type_exp))
             {
                 char *name = upcoming_name (&cur, NULL);
-                if (!var_exists (name, GG_DEFNUMBER, NULL, NULL)) gg_report_error ("Variable [%s] is not found or is not a number", name);
+                gg_num rtype;
+                if (!var_exists (name, GG_DEFNUMBER, &rtype, NULL)) 
+                {
+                    // first check if it's a function name, since those are reserved, and no variable name can be those
+                    gg_num params; // number of params expected for this function, we support up to 2 for now
+
+                    bool is_double_math;
+                    if ((is_double_math=math_fun (name, &params)) && !isd) 
+                    {
+                        // this is where function is present and it's not double. But check if this function is okay with number exp
+                        if (!math_fun_n (name, &params)) gg_report_error ("Function [%s] can only be used in a double expression. For instance use dbl() or num() function to promote variables, constants or expressions", name);
+                    }
+                    if (is_double_math || math_fun_n (name, &params)) // number functions can be used in either number or double exp
+                    {
+                        bool sub_isd = isd;
+                        // if dbl() or num(), then we change what we parse inside!!
+                        if (!strcmp (name, "dbl")) sub_isd = false; // so if converting to dbl, the subexpression must be number
+                        else if (!strcmp (name, "num") || !strcmp (name, "isinf") || !strcmp (name, "isnan")) sub_isd = true; // and vice versa
+                        //
+                        // this is a function, process it, we do it for doubles and numbers, up to 2 params, so far haven't seen one with 3
+                        // we can add our functions, and just implement it!
+                        while (isspace(*cur)) cur++;
+                        if (*cur == '(') 
+                        {
+                            // First find enclosed expressions
+                            cur = check_exp (cur+1, found, sub_isd, params == 2 ? true:false);
+                            if (!*found) gg_report_error ("Empty number expression");
+                            if (params == 2) // find second param if warranted
+                            {
+                                if (*cur != ',') gg_report_error ("Missing comma for a second parameter in function [%s]", name);
+                                cur = check_exp (cur+1, found, sub_isd, false);
+                                if (!*found) gg_report_error ("Empty number expression");
+                            }
+                            if (*cur != ')') gg_report_error ("Right parenthesis missing in function [%s]", name);
+                            cur++;
+                        } else gg_report_error ("Opening parenthesis '(' missing after function [%s]", name);
+                    }
+                    else
+                    {
+                        if (cmp_type (rtype , GG_DEFDOUBLE))
+                        {
+                            if (!isd) gg_report_error ("Variable [%s] is a double, but number expected. Use num(), dbl(), round(), floor(), ceil() etc.", name);
+                        }
+                        else gg_report_error ("Variable [%s] is not found or is not a number or double", name);
+                    }
+                }
+                else
+                {
+                    //We're okay with doubles mixed with numbers to produce double value, but not the other way around
+                    //(to produce number value with doubles mixed in)
+                    //if (isd) gg_report_error ("Variable [%s] is a number, but double expected", name);
+                }
             }
         }
-        else if (isdigit (*cur))
+        else if (isdigit (*cur) || (isd && *cur == '.')) // for double, it can start with a dot
         {
             *found = true;
+            bool dot_first = (*cur == '.'); // is dot the first one in a double?
             cur++;
-            // account for hex numbers as well, we're 1 offset ahead, so -1 is appropriate as an index
-            bool is_hex = false;
-            if (*(cur-1) == '0' && (*cur == 'x' || *cur == 'X')) {is_hex = true; cur+=1;} // continue syntax check after 0x
-            if (!is_hex)
+            if (!isd)
             {
-                while (isdigit(*cur)) cur++;
+                // account for hex numbers as well, we're 1 offset ahead, so -1 is appropriate as an index
+                bool is_hex = false;
+                if (*(cur-1) == '0' && (*cur == 'x' || *cur == 'X')) {is_hex = true; cur+=1;} // continue syntax check after 0x
+                if (!is_hex)
+                {
+                    while (isdigit(*cur)) cur++;
+                }
+                else
+                {
+                    while (isxdigit(*cur) ) cur++;
+                }
             }
             else
             {
-                while (isxdigit(*cur) ) cur++;
+                // HERE NEED TO CHECK FOR DOT, for e or E and for exponent which is <number> or -<number>
+                if (!dot_first)
+                {
+                    while (isdigit(*cur)) cur++; // first the leading part, we know we have one digit already since dot_first is false here
+                    if (*cur == '.') // can have some afterward, but it can just be 2.
+                    {
+                        cur++;
+                        while (isdigit(*cur)) cur++; // could be some digit or none (so 2.0 and 2. are both valid)
+                    }
+                }
+                else
+                {
+                    bool found_dig = false;
+                    while (isdigit(*cur)) { found_dig = true; cur++;} // after the first dot, we must have at least one digit
+                    if (!found_dig) gg_report_error ("No digits after a dot for a double");
+                }
+                if (*cur == 'e' || *cur == 'E')
+                {
+                    // this is exponent
+                    cur++;
+                    char *exp_beg;
+                    if (*cur == '-' || *cur == '+') exp_beg = ++cur; else exp_beg = cur;  // skip plus or minus
+                    while (isdigit(*cur)) cur++; // must be some digit, we enforce that below
+                    if (cur == exp_beg) gg_report_error ("Missing exponent in a double");
+                }
             }
         } 
-        else if (*cur == '\'')
+        else if (!isd && *cur == '\'')
         {
             cur++;
             if (*cur == 0) gg_report_error ("Incomplete character after single quote"); 
@@ -1528,15 +1769,16 @@ char *check_exp (char *cur, bool *found)
     while (isspace(*cur)) cur++;
 
     // Once token found, find if it's connected to another token
-    if (*cur == '+' || *cur == '-' || *cur == '*' || *cur == '/' || *cur == '%' || *cur == '&' || *cur == '|' || *cur == '^' ) 
+    if (*cur == '+' || *cur == '-' || *cur == '*' || *cur == '/' || (!isd && *cur == '%') || (!isd && *cur == '&') || (!isd && *cur == '|') || (!isd && *cur == '^') ) 
     {
-        if (!*found) gg_report_error ("No number expression found"); // something must have been found prior to operators
-        cur = check_exp(cur+1, found);
-        if (!*found) gg_report_error ("No number expression found");
+        if (!*found) gg_report_error ("No %s expression found", isd?"double":"number"); // something must have been found prior to operators
+        cur = check_exp(cur+1, found, isd, comma);
+        if (!*found) gg_report_error ("No %s expression found", isd?"double":"number");
     }
 
-    if (*found && *cur != ')' && *cur != 0) gg_report_error ("Unexpected character in number expression [%c]", *cur); // if there's something and it's not followed by an operator 
-                                                         // what follows must be either ) or nothing
+    // allow comma if asked for in function processing for a 2nd argument in fun(a,b)
+    if (*found && *cur != ')' && *cur != 0 && !(*cur == ',' && comma)) gg_report_error ("Unexpected character in %s expression [%c]", isd?"double":"number", *cur); 
+    // if there's something and it's not followed by an operator; what follows must be either ) or nothing or , (if comma is true)
 
     return cur;
     
@@ -1652,9 +1894,9 @@ char *rec_str (char *cur, gg_num *type, char **s_str, char **s_beg, char **s_len
         sub_str = check_str (sub_str, &type);
         // check out number expression for beg
         bool found;
-        check_exp (sub_beg, &found); 
+        check_exp (sub_beg, &found, false, false); 
         // check out number expression for length
-        check_exp (sub_len, &found); 
+        check_exp (sub_len, &found, false, false); 
         make_var (&sub_beg, GG_DEFNUMBER, true);
         make_var (&sub_len, GG_DEFNUMBER, true);
         *s_str = sub_str;
@@ -1665,6 +1907,8 @@ char *rec_str (char *cur, gg_num *type, char **s_str, char **s_beg, char **s_len
     else if (cur[0] == '$') // convert number to string
     {
         cur++;
+        bool isd = false;
+        if (cur[0] == '$') { isd = true; cur++; } // $$ is for string to double
         gg_num lname;
         char *fcur = cur; // don't update curr, we don't do that for string
         char *name = upcoming_name (&fcur, &lname);
@@ -1676,11 +1920,13 @@ char *rec_str (char *cur, gg_num *type, char **s_str, char **s_beg, char **s_len
             if (end_par == NULL) gg_report_error ("Missing right parenthesis in expression");
             *end_par = 0;
             gg_num inner_len = strlen (fcur+1);
-            check_exp (fcur+1, &found); 
+            check_exp (fcur+1, &found, isd?true:false, false); 
             //
             char s2nvar[300];
             char *s2n = s2nvar;
-            snprintf (s2n, sizeof (s2nvar), "gg_num2str (%s, NULL, 10)", fcur+1);
+            if (!isd) snprintf (s2n, sizeof (s2nvar), "gg_num2str (%s, NULL, 10)", fcur+1);
+            else snprintf (s2n, sizeof (s2nvar), "gg_dbl2str (%s, 'f', -1, -1, NULL)", promote_double(fcur+1)); // for double, promote any integer divisions
+                                                                                                                // to double, avoiding unexpected rounding
             make_var (&s2n, GG_DEFSTRING, true);
             //
             // subst expression with var _000
@@ -1691,11 +1937,19 @@ char *rec_str (char *cur, gg_num *type, char **s_str, char **s_beg, char **s_len
         }
         else
         {
-            if (!var_exists (name, GG_DEFNUMBER, NULL, NULL)) gg_report_error ("Variable [%s] is not found or is not a number", name);
+            gg_num rtype;
+            bool isd = false;
+            // check the variable to see if it's a number or double and convert accordingly
+            if (!var_exists (name, GG_DEFNUMBER, &rtype, NULL)) 
+            {
+                if (rtype != GG_DEFDOUBLE) gg_report_error ("Variable [%s] is not found or is not a number or double", name);
+                else isd = true;
+            }
             // replace fcur (as name) with _000 variable and at convert string to number
             char n2svar[300];
             char *n2s = n2svar;
-            snprintf (n2s, sizeof (n2svar), "gg_num2str (%s, NULL,10)", name);
+            if (!isd) snprintf (n2s, sizeof (n2svar), "gg_num2str (%s, NULL, 10)", name);
+            else snprintf (n2s, sizeof (n2svar), "gg_dbl2str (%s, 'f', -1, -1, NULL)", name);
             make_var (&n2s, GG_DEFSTRING, true);
             // get total length of x[y] expression here (as a second param below in replace_var())
             // in this case, we're substituting the actual name, and we need to move one back to include #
@@ -1918,6 +2172,8 @@ bool add_var (char *var, gg_num type, char *realname, bool watched_for_unused)
         if (((type == GG_DEFSTRING && ot == GG_DEFSTRINGSTATIC) || (type == GG_DEFSTRINGSTATIC && ot == GG_DEFSTRING))) gg_report_error ("Process-scope string variable [%s] can only be assigned with set-string, and can only be created with process-scope clause if it doesn't already exist", rname);
         return true;  
     }
+    // check if variable name reserved
+    if (math_fun (var, NULL) || math_fun_n (var, NULL) || c_name (var)) gg_report_error ("Cannot use name [%s] for a variable because it is reserved", var);
     // Add if not found, this is hash for exact variable scope
     char *decname=gg_malloc (GG_MAX_DECNAME+1);
     snprintf (decname, GG_MAX_DECNAME, "%ld_%ld+%s", gg_level, gg_resurr[gg_level], var);
@@ -1941,11 +2197,13 @@ gg_num typeid (char *type)
 {
     if (!strcmp (type, GG_KEY_T_STRING)) return GG_DEFSTRING; 
     else if (!strcmp (type, GG_KEY_T_NUMBER)) return GG_DEFNUMBER;
+    else if (!strcmp (type, GG_KEY_T_DOUBLE)) return GG_DEFDOUBLE;
     else if (!strcmp (type, GG_KEY_T_MESSAGE)) return GG_DEFMSG;
     else if (!strcmp (type, GG_KEY_T_SPLITSTRING)) return GG_DEFBROKEN;
     else if (!strcmp (type, GG_KEY_T_HASH)) return GG_DEFHASH;
     else if (!strcmp (type, GG_KEY_T_ARRAYSTRING)) return GG_DEFARRAYSTRING;
     else if (!strcmp (type, GG_KEY_T_ARRAYNUMBER)) return GG_DEFARRAYNUMBER;
+    else if (!strcmp (type, GG_KEY_T_ARRAYDOUBLE)) return GG_DEFARRAYDOUBLE;
     else if (!strcmp (type, GG_KEY_T_ARRAYBOOL)) return GG_DEFARRAYBOOL;
     else if (!strcmp (type, GG_KEY_T_JSON)) return GG_DEFJSON;
     else if (!strcmp (type, GG_KEY_T_XML)) return GG_DEFXML;
@@ -2038,14 +2296,21 @@ void check_level(char *prline)
 }
 
 //
-// Returns >0 if s is in the form of [0-9]*<f>, as in %40s where <f> is "s", or just <f>
+// Returns >0 if s is in the form of [0-9]*<f>, as in %40s where <f> is "s", or just <f>; flen is the length of f (so for "e" it's 1)
 // Returned number is such that s+<return> is the first byte after <f>, it returns 'true' in this case
 // If not in this form, returns 0 (i.e. false)
+// isd is true if looking for format for double, which can have . (dot)
 //
-gg_num is_len_format (char *s, char *f, gg_num flen)
+gg_num is_len_format (char *s, char *f, gg_num flen, bool isd)
 {
     char *os = s;
     while (*s && isdigit(*s)) s++;
+    if (isd && s[0] == '.')
+    {
+        s++;
+        // this is <some>.<some> or <some>. or .<some> or just . which are all valid for double type, but just for double
+        while (*s && isdigit(*s)) s++;
+    }
     if (!memcmp(s,f,flen)) {s+=flen; return (gg_num)(s-os);} else return 0;
 }
 
@@ -2194,15 +2459,24 @@ void check_format(char *mtext, char *comma, char **list)
         perc = false;
         fmt_len = 0; // since assignment of fmt_len below is in ||, meaning it may not execute
         if (*(next+1) == '%') { next+=2; perc = true; continue;} // this is printing out %, do not advance nc since %% doesn't use up parameter
-        else if (*(next+1) == 's' || (fmt_len = is_len_format(next+1, "s", 1)))
+        else if (*(next+1) == 's' || (fmt_len = is_len_format(next+1, "s", 1, false)))
         {
             // should be GG_DEFSTRING
             if (is_constant_string(par, NULL) != GG_CONST_OK &&  !cmp_type (check_var (&par, GG_DEFUNKN), GG_DEFSTRING)) gg_report_error ("Parameter #%ld in format should be of string type", pos);
             if (fmt_len == 0) next+=2; else next+=1+fmt_len;
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
+        // this supports f, e, g, %20f, %14e, %8g etc.
+        else if ((*(next+1) == 'f' || *(next+1) == 'e' || *(next+1) == 'g') || ((fmt_len = is_len_format(next+1, "f", 1, true)) || (fmt_len = is_len_format(next+1, "e", 1, true)) || (fmt_len = is_len_format(next+1, "g", 1, true))))
+        {
+            // should be GG_DEFDOUBLE
+            gg_num t = check_var (&par, GG_DEFUNKN);
+            if ((!cmp_type (t, GG_DEFDOUBLE))) gg_report_error ("Parameter #%ld in format should be of double type", pos);
+            if (fmt_len == 0) next+=2; else next+=1+fmt_len;
+            clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
+        }
         // this supports ld, lo, lx, %20ld, %14lo, %8lx etc.
-        else if ((*(next+1) == 'l' && (*(next+2) == 'd' || *(next+2) == 'o' || *(next+2) == 'x')) || ((fmt_len = is_len_format(next+1, "ld", 2)) || (fmt_len = is_len_format(next+1, "lo", 2)) || (fmt_len = is_len_format(next+1, "lx", 2))))
+        else if ((*(next+1) == 'l' && (*(next+2) == 'd' || *(next+2) == 'o' || *(next+2) == 'x')) || ((fmt_len = is_len_format(next+1, "ld", 2, false)) || (fmt_len = is_len_format(next+1, "lo", 2, false)) || (fmt_len = is_len_format(next+1, "lx", 2, false))))
         {
             // should be GG_DEFNUMBER
             gg_num t = check_var (&par, GG_DEFUNKN);
@@ -2211,7 +2485,7 @@ void check_format(char *mtext, char *comma, char **list)
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
         // support for h, meaning hd hu ho hx
-        else if ((*(next+1) == 'h' && (*(next+2) == 'd' || *(next+2) == 'u' || *(next+2) == 'o' || *(next+2) == 'x')) || ((fmt_len = is_len_format(next+1, "hd", 2)) || (fmt_len = is_len_format(next+1, "hu", 2)) || (fmt_len = is_len_format(next+1, "ho", 2)) || (fmt_len = is_len_format(next+1, "hx", 2))))
+        else if ((*(next+1) == 'h' && (*(next+2) == 'd' || *(next+2) == 'u' || *(next+2) == 'o' || *(next+2) == 'x')) || ((fmt_len = is_len_format(next+1, "hd", 2, false)) || (fmt_len = is_len_format(next+1, "hu", 2, false)) || (fmt_len = is_len_format(next+1, "ho", 2, false)) || (fmt_len = is_len_format(next+1, "hx", 2, false))))
         {
             // should be GG_DEFNUMBER
             gg_num t = check_var (&par, GG_DEFUNKN);
@@ -2220,7 +2494,7 @@ void check_format(char *mtext, char *comma, char **list)
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
         // support for hh, meaning hhd hho hhu hhx
-        else if ((*(next+1) == 'h' && *(next+2) == 'h' && (*(next+3) == 'd' || *(next+3) == 'u' || *(next+3) == 'o' || *(next+3) == 'x')) || ((fmt_len = is_len_format(next+1, "hhd", 3)) || (fmt_len = is_len_format(next+1, "hhu", 3)) || (fmt_len = is_len_format(next+1, "hho", 3)) || (fmt_len = is_len_format(next+1, "hhx", 3))))
+        else if ((*(next+1) == 'h' && *(next+2) == 'h' && (*(next+3) == 'd' || *(next+3) == 'u' || *(next+3) == 'o' || *(next+3) == 'x')) || ((fmt_len = is_len_format(next+1, "hhd", 3, false)) || (fmt_len = is_len_format(next+1, "hhu", 3, false)) || (fmt_len = is_len_format(next+1, "hho", 3, false)) || (fmt_len = is_len_format(next+1, "hhx", 3, false))))
         {
             // should be GG_DEFNUMBER
             gg_num t = check_var (&par, GG_DEFUNKN);
@@ -2236,7 +2510,7 @@ void check_format(char *mtext, char *comma, char **list)
             next+=2;
             clist += snprintf (*list+clist, mlist-clist, ", %s ",par);
         }
-        else gg_report_error ("Only %%s, %%<length>s, %%l[dox], %%<length>l[dox] and %%c are valid placeholders in format string, along with %%%% to output the percent sign, found [%s]", mtext);
+        else gg_report_error ("Only %%s, %%<length>s, %%l[dox], %%<length>l[dox], %%<length>.<prec><f|g|e> and %%c are valid placeholders in format string, along with %%%% to output the percent sign, found [%s]", mtext);
         par = nc;
     }
 }
@@ -2684,6 +2958,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
     char *cont = NULL;
     char *notcont = NULL;
     char *caseins = NULL;
+    char *errorm = NULL;
     char *len = NULL;
     char *or = NULL;
     char *and = NULL;
@@ -2727,9 +3002,10 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         // then find any relevant keywords in the first segment (which may be the only (remaining) one)
         find_cond (cm, &eq, &neq, &less, &lesseq, &gr, &greq, &mod, &notmod, &cont, &notcont);
         caseins = find_keyword (cm, GG_KEYCASEINSENSITIVE, 1);
+        errorm = find_keyword (cm, GG_KEYERRORMARGIN, 1);
         len = find_keyword (cm, GG_KEYLENGTH, 1);
 
-        if (eq == NULL && neq == NULL && less == NULL && lesseq == NULL && gr == NULL && mod == NULL && notmod == NULL && greq == NULL && cont == NULL && notcont == NULL && caseins == NULL && len == NULL) gg_report_error ("conditional clause is missing or empty");
+        if (eq == NULL && neq == NULL && less == NULL && lesseq == NULL && gr == NULL && mod == NULL && notmod == NULL && greq == NULL && cont == NULL && notcont == NULL && caseins == NULL && errorm == NULL && len == NULL) gg_report_error ("conditional clause is missing or empty");
 
         gg_num eq_pos = INT_MAX;
         gg_num neq_pos = INT_MAX;
@@ -2752,6 +3028,7 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         if (cont) cont_pos = cont - cm;
         if (notcont) notcont_pos = notcont - cm;
         if (caseins) carve_statement (&caseins, "if-true", GG_KEYCASEINSENSITIVE, 0, 0);  // carve it out, so it doesn't mess up other clauses
+        if (errorm) carve_statement (&errorm, "if-true", GG_KEYERRORMARGIN, 0, 1);  // carve it out, so it doesn't mess up other clauses
         if (len) carve_statement (&len, "if-true", GG_KEYLENGTH, 0, 1);  // carve it out, so it doesn't mess up other clauses
 
         check_var (&len, GG_DEFNUMBER);
@@ -2777,11 +3054,20 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
                 //
                 gg_num t1 = check_var (&n_cm, GG_DEFUNKN);
                 check_var (&eq, t1); 
+                if (!cmp_type (t1,GG_DEFSTRING) && len != NULL) gg_report_error ("length can be used with strings only");
+                if (!cmp_type (t1,GG_DEFSTRING) && caseins != NULL) gg_report_error ("case-insensitive can be used with strings only");
+                if (!cmp_type (t1,GG_DEFDOUBLE) && errorm != NULL) gg_report_error ("error-margin can be used with doubles only");
                 // Here now can call specific function based on type and there's no need for Generic()
                 if (cmp_type (t1,GG_DEFSTRING))
                 {
                     if (!len) oprintf("_gg_ifcond%ld = gg_cm_str%s((%s), gg_mem_get_len(%s),(%s), gg_mem_get_len(%s));\n", gvar, caseins?"_c":"", n_cm, n_cm, eq, eq);  
                     else oprintf("_gg_ifcond%ld = gg_cm_str%s_l((%s), gg_mem_get_len(%s), (%s), gg_mem_get_len(%s), (%s));\n",gvar, caseins?"_c":"", n_cm, n_cm, eq, eq, len);  
+                }
+                else if (cmp_type (t1, GG_DEFDOUBLE))
+                {
+                    check_var (&errorm, GG_DEFDOUBLE); // epsilon must be double 
+                    if (errorm != NULL) oprintf("_gg_ifcond%ld = gg_cm_dbl_eps((%s), (%s), (%s));\n", gvar, n_cm, eq, errorm);  
+                    else oprintf("_gg_ifcond%ld = gg_cm_dbl((%s), (%s));\n", gvar, n_cm, eq);  
                 }
                 else if (cmp_type (t1, GG_DEFNUMBER))
                 {
@@ -2818,6 +3104,12 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
                 {
                     oprintf("_gg_ifcond%ld = !gg_cm_num((%s), (%s));\n", gvar, n_cm, neq);  
                 }
+                else if (cmp_type (t1, GG_DEFDOUBLE))
+                {
+                    check_var (&errorm, GG_DEFDOUBLE); // epsilon must be double 
+                    if (errorm != NULL) oprintf("_gg_ifcond%ld = !gg_cm_dbl_eps((%s), (%s), (%s));\n", gvar, n_cm, neq, errorm);  
+                    else oprintf("_gg_ifcond%ld = !gg_cm_dbl((%s), (%s));\n", gvar, n_cm, neq);  
+                }
                 else if (cmp_type (t1, GG_DEFBOOL))
                 {
                     oprintf("_gg_ifcond%ld = !gg_cm_bool((%s), (%s));\n", gvar, n_cm, neq);  
@@ -2840,6 +3132,10 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
                 if (!len) oprintf("_gg_ifcond%ld = gg_cm_str_lesseq%s((%s),gg_mem_get_len(%s), (%s), gg_mem_get_len(%s));\n", gvar, caseins?"_c":"", n_cm, n_cm, lesseq, lesseq); 
                 else oprintf("_gg_ifcond%ld = gg_cm_str_lesseq%s_l((%s), gg_mem_get_len(%s), (%s),gg_mem_get_len(%s), (%s));\n", gvar, caseins?"_c":"", n_cm, n_cm, lesseq, lesseq, len); 
             }
+            else if (cmp_type (t1, GG_DEFDOUBLE))
+            {
+                oprintf("_gg_ifcond%ld = gg_cm_dbl_lesseq((%s), (%s));\n", gvar, n_cm, lesseq);  
+            }
             else if (cmp_type (t1, GG_DEFNUMBER))
             {
                 oprintf("_gg_ifcond%ld = gg_cm_num_lesseq((%s), (%s));\n", gvar, n_cm, lesseq);  
@@ -2861,6 +3157,10 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
                 if (!len) oprintf("_gg_ifcond%ld = gg_cm_str_greq%s((%s), gg_mem_get_len(%s), (%s), gg_mem_get_len(%s) );\n", gvar, caseins?"_c":"", n_cm, n_cm, greq, greq); 
                 else oprintf("_gg_ifcond%ld = gg_cm_str_greq%s_l((%s), gg_mem_get_len(%s), (%s), gg_mem_get_len(%s), (%s));\n", gvar, caseins?"_c":"", n_cm, n_cm, greq, greq, len); 
             }
+            else if (cmp_type (t1, GG_DEFDOUBLE))
+            {
+                oprintf("_gg_ifcond%ld = gg_cm_dbl_greq((%s), (%s));\n", gvar, n_cm, greq);  
+            }
             else if (cmp_type (t1, GG_DEFNUMBER))
             {
                 oprintf("_gg_ifcond%ld = gg_cm_num_greq((%s), (%s));\n", gvar, n_cm, greq);  
@@ -2881,6 +3181,10 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             {
                 if (!len) oprintf("_gg_ifcond%ld = gg_cm_str_less%s((%s), gg_mem_get_len(%s), (%s), gg_mem_get_len(%s));\n", gvar, caseins?"_c":"", n_cm, n_cm, less, less); 
                 else oprintf("_gg_ifcond%ld = gg_cm_str_less%s_l((%s), gg_mem_get_len(%s), (%s), gg_mem_get_len(%s), (%s));\n", gvar, caseins?"_c":"", n_cm, n_cm, less, less, len); 
+            }
+            else if (cmp_type (t1, GG_DEFDOUBLE))
+            {
+                oprintf("_gg_ifcond%ld = gg_cm_dbl_less((%s), (%s));\n", gvar, n_cm, less);  
             }
             else if (cmp_type (t1, GG_DEFNUMBER))
             {
@@ -2926,6 +3230,10 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
             {
                 if (!len) oprintf("_gg_ifcond%ld = gg_cm_str_gr%s((%s),gg_mem_get_len(%s), (%s), gg_mem_get_len(%s));\n", gvar, caseins?"_c":"", n_cm, n_cm, gr, gr); 
                 else oprintf("_gg_ifcond%ld = gg_cm_str_gr%s_l((%s), gg_mem_get_len(%s), (%s), gg_mem_get_len(%s), (%s));\n", gvar, caseins?"_c":"", n_cm, n_cm, gr, gr, len); 
+            }
+            else if (cmp_type (t1, GG_DEFDOUBLE))
+            {
+                oprintf("_gg_ifcond%ld = gg_cm_dbl_gr((%s), (%s));\n", gvar, n_cm, gr);  
             }
             else if (cmp_type (t1, GG_DEFNUMBER))
             {
@@ -3078,13 +3386,16 @@ void make_var (char **v, gg_num type, bool internal)
     // Make sure this isn't just a number, if so, all we need is to cast them as gg_num
     // otherwise they would be int, causing errors
     //
-    gg_num st;
-    gg_str2num (beg, 0, &st);
-    if (st == GG_OKAY) 
+    if (cmp_type (type , GG_DEFNUMBER) || cmp_type (type , GG_DEFDOUBLE))
     {
-        snprintf (var, GG_MAX_VEXP_LEN, "((gg_num)%s)", beg);
-        *v = var;
-        return;
+        gg_num st;
+        if (cmp_type (type , GG_DEFNUMBER)) gg_str2num (beg, 0, &st); else gg_str2dbl (beg, &st);
+        if (st == GG_OKAY) 
+        {
+            snprintf (var, GG_MAX_VEXP_LEN, "((%s)%s)",type==GG_DEFNUMBER?"gg_num":"gg_dbl", beg);
+            *v = var;
+            return;
+        }
     }
     //
     //
@@ -3106,6 +3417,7 @@ void make_var (char **v, gg_num type, bool internal)
     bool simple_type = true;
     if (cmp_type(GG_DEFSTRING, type)) strcpy (rtype, "char*");
     else if (cmp_type(GG_DEFNUMBER, type)) strcpy (rtype, "gg_num");
+    else if (cmp_type(GG_DEFDOUBLE, type)) strcpy (rtype, "gg_dbl");
     else if (cmp_type(GG_DEFBOOL, type)) strcpy (rtype, "bool");
     else { simple_type = false; snprintf(rtype, sizeof(rtype), "typeof (%s)", *v); }
     oprintf( "%s %s = %s;\n", rtype,  var, *v);
@@ -3153,13 +3465,14 @@ char *process_string_exp (char *v, gg_num *type)
 
 //
 // When we're sure v is string, we check it and either return string var to be used or error out
+// isd is true if double, 0 if number
 //
-char *process_number_exp (char *v)
+char *process_number_exp (char *v, bool isd)
 {
     bool found;
-    check_exp (v, &found);
-    if (!found) gg_report_error ("Expression is not a number");
-    make_var (&v, GG_DEFNUMBER, false); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
+    check_exp (v, &found, isd, false);
+    if (isd) v = promote_double (v);
+    make_var (&v, isd?GG_DEFDOUBLE:GG_DEFNUMBER, false); // create new variable to avoid double evaluation (say if *var is 'gg_strdup(..)'!)
     return v;
 }
 
@@ -3182,11 +3495,11 @@ gg_num check_type(gg_num type, gg_num check_against)
 }
 
 //
-// Make sure every object/clause argument is a variable of some type. String constants have been converted to variables at this point.
+// Make sure every object/clause argument is an expression of some type. String constants have been converted to variables at this point.
 // However, numbers are still possible here.
-// type if GG_DEFNUMBER, GG_DEFSTRING etc. in which case variable v is checked to be of this type and errors out if not
+// type if GG_DEFNUMBER, GG_DEFBOOL, GG_DEFDOUBLE, GG_DEFSTRING etc. in which case variable v is checked to be of this type and errors out if not
 // returns type of v
-// If type if GG_DEFUNKN, then return type found is returned and of course no check is performed
+// If type if GG_DEFUNKN, then return type found is returned as found. We always either find the type or error out.
 // If type is other than GG_DEFUNKN, then this variable *must* be of that type (or similar, such as STATIC version),
 // and if not, error is thrown.
 // check_var must be called after any define_statement, and it must be after any make_mem as it checks variables
@@ -3210,20 +3523,34 @@ gg_num check_var (char **var, gg_num type)
 
     // if the var has () around it, remove it. There's no need for it, other than to use the same name
     // for a variable or function as is a keyword. If really needed, use (()), so the inner ones remain
+    // This is for variable name only, because what of (a)+(b), the result is a)+(b ????; thus only for a string
+    // So we check this is just (<var name>) and if so, remove ()
     if (lv >= 3 && v[0] == '(' && v[lv-1] == ')')
     {
-        // remove trailing )
-        v[lv - 1] = 0;
-        // We check what's in (..) because it could be (gg_num)strlen(x), which starts with ( and ends with ) but isn't a variable!
-        // remove leading ( 
-        v++;
-        *var = v; // we altered the location of var, make it correct
+        gg_num j = 1;
+        bool is_just_name = true;
+        while (isspace (v[j])) j++; // clear any space after (
+        if (isalpha (v[j]))
+        {
+            j++;
+            for (; j < lv-1; j++) { if (!(isalnum(v[j]) || v[j] == '_')) {is_just_name = false; break; }}
+        } else is_just_name = false;
+        if (is_just_name)
+        {
+            // remove trailing )
+            v[lv - 1] = 0;
+            // We check what's in (..) because it could be (gg_num)strlen(x), which starts with ( and ends with ) but isn't a variable!
+            // remove leading ( 
+            v++;
+            *var = v; // we altered the location of var, make it correct
+        }
     }
 
 
     if (v[0] == '_' && v[1] == 'g' && v[2] == 'g')  
     {
         if (!strncmp (v, "_gg__", 5)) // this is internal variable with type encoded in name
+                                      // and it's always by itself, i.e. there's no expression here
         {
             char *tcode = v+5;
             char *ecode = strstr (tcode, "__");
@@ -3247,6 +3574,9 @@ gg_num check_var (char **var, gg_num type)
     //
     //
 
+    //
+    // we don't do check_type in these because we already do cmp_type() to assure the type returned is compatible with 'type'
+    //
     if (cmp_type (type, GG_DEFSTRING)) // we check this for internal too. We however, detect if the expression is in the 
                                        // form a+b+... where each is a string var, or just a string, or...
     {
@@ -3254,14 +3584,18 @@ gg_num check_var (char **var, gg_num type)
         *var = process_string_exp (v, &ftype);
         return ftype;
     }
-
     if (cmp_type (type, GG_DEFNUMBER))
     {
         // check if number expression
-        *var = process_number_exp (v);
+        *var = process_number_exp (v, false);
         return GG_DEFNUMBER;
     }
-
+    if (cmp_type (type, GG_DEFDOUBLE))
+    {
+        // check if number expression
+        *var = process_number_exp (v, true);
+        return GG_DEFDOUBLE;
+    }
     if (cmp_type(type, GG_DEFBOOL))
     {
         // or true false
@@ -3270,7 +3604,7 @@ gg_num check_var (char **var, gg_num type)
     }
 
     //
-    // Here, we now determine the type of expression
+    // Here, we now determine the type of expression if the caller doesn't know what kind of expression this is
     //
 
     // Get passed any left parenthesis
@@ -3278,125 +3612,203 @@ gg_num check_var (char **var, gg_num type)
     while (v[i] == '(') i++;
     gg_num ibeg = i; // beginning of something to check
 
-    if (v[ibeg] == '"') // check if starts with double quote, and interpret as string expression
+    // we have a loop currently just when the expression begins with - or +, and we aren't sure if it's number or double.
+    // It can be -(-(-(... until we reach the definitive answer and there are multiple combos that yield an answer after
+    // that, hence we'll peel it until we find the type.
+    while (1)
     {
-        if (is_constant_string(v, NULL) == GG_CONST_OK) { *var = v; return GG_DEFSTRING; } // must be string
-        else 
-        {
-            // could be "a"+"b", so a string expression
-            gg_num ftype;
-            *var = process_string_exp (v, &ftype);
-            return check_type (ftype, type); 
-        }
-    }
-    else if (v[ibeg] == '!') // this is partial recognition of boolean expression, just for negation
-    {
-        *var = process_bool_exp (v+ibeg);
-        return check_type (GG_DEFBOOL, type); 
-    }
-    else if (isdigit(v[ibeg]) || v[ibeg] == '\'' || v[ibeg] == '~' || v[ibeg] == '-' || v[ibeg] == '+' || v[ibeg] == '#') // check if starts with digit, #, + or -, and interpret as number expression, or if it start with numeric char literal (like 'a')
-    {
-        *var = process_number_exp (v);
-        return check_type (GG_DEFNUMBER, type); 
-    }
-    else if (v[ibeg] == '$' || v[ibeg] == '@') // check if starts with $ to convert number to string, or a substring
-    {
-        gg_num ftype;
-        *var = process_string_exp (v, &ftype);
-        return check_type (ftype, type); 
-    }
-    else if (isalpha(v[ibeg]))
-    {
-        i = ibeg;
-        i++; // we already know v[ibeg] is alpha
-        while (isalnum(v[i]) || v[i] == '_') i++; // advance to catch the name of variable, stop when anything else found
-                                                    // (such as [ or + or ) or whatever
 
-        char char_end = v[i]; // remember byte we temporarily nullify
-        v[i] = 0; // put the zero in ending to cap var name
-        char *firstn = gg_strdup (v+ibeg); // remember first variable name, so we don't have to save+nullify+restore a byte!
-        v[i] = char_end; // restore byte right after name
-        while (isspace(v[i])) i++; // advance character after the name to skip spaces
-        gg_num var_end = i; // and now var_end is position of whatever comes after name, after spaces skipped; and we have the name of variable
-                     // it may be the same as passed_end, or maybe a bit after it if there were spaces passed variable name
-        if (gg_is_valid_param_name (firstn, false, false) != 1) 
+        if (v[ibeg] == '"') // check if starts with double quote, and interpret as string expression
         {
-            gg_report_error ("Unknown variable or expression [%s]", firstn);
-        }
-        else
-        {
-            gg_num tp;
-            gg_num lnum;
-            // Start checking with string, it could be any type really, but string is probably the most common
-            if (var_exists (firstn, GG_DEFSTRING, &tp, &lnum)) 
+            if (is_constant_string(v, NULL) == GG_CONST_OK) { *var = v; return GG_DEFSTRING; } // must be string
+            else 
             {
-                // check if what follows is [, in which case it's a number
-                if (v[var_end] == '[')
+                // could be "a"+"b", so a string expression
+                gg_num ftype;
+                *var = process_string_exp (v, &ftype);
+                return check_type (ftype, type); 
+            }
+        }
+        else if (v[ibeg] == '!') // this is partial recognition of boolean expression, just for negation
+        {
+            *var = process_bool_exp (v+ibeg);
+            return check_type (GG_DEFBOOL, type); 
+        }
+        else if (v[ibeg] == '.' || (v[ibeg] == '#' && v[ibeg+1] == '#')) // double ONLY
+        {
+            *var = process_number_exp (v, true);
+            return check_type (GG_DEFDOUBLE, type); 
+        }
+        else if (v[ibeg] == '\'' || v[ibeg] == '~' || (v[ibeg] == '#' && v[ibeg+1] != '#')) // check if starts with digit, #, + or -, and interpret as number expression, or if it start with numeric char literal (like 'a') - these point to number ONLY
+        {
+            *var = process_number_exp (v, false);
+            return check_type (GG_DEFNUMBER, type); 
+        }
+        else if (isdigit(v[ibeg])) // this could be either number or a double
+        {
+            gg_num j = ibeg+1;
+            gg_num tf = check_num_or_double (v, j);
+            if (tf == GG_DEFNUMBER)
+            {
+                *var = process_number_exp (v, false);
+                return check_type (GG_DEFNUMBER, type); 
+            }
+            else
+            {
+                *var = process_number_exp (v, true);
+                return check_type (GG_DEFDOUBLE, type); 
+            }
+        }
+        else if (v[ibeg] == '-' || v[ibeg] == '+' ) // this could be either number or a double expression (not just a number)
+        {
+            gg_num j = ibeg+1;
+            while (isspace (v[j])) j++; // clear any space afterwards
+            if (isdigit (v[j])) 
+            {
+                gg_num tf = check_num_or_double (v, j);
+                if (tf == GG_DEFNUMBER)
                 {
-                    *var = process_number_exp (v);
+                    *var = process_number_exp (v, false);
                     return check_type (GG_DEFNUMBER, type); 
                 }
                 else
                 {
+                    *var = process_number_exp (v, true);
+                    return check_type (GG_DEFDOUBLE, type); 
+                }
+            }
+            else
+            {
+                ibeg = j;
+                continue; // we don't know enough to determine the type, start again until we do;
+                          // note: this does NOT parse, so it doesn't matter that ibeg changes, as long as "v" remains unchanged,
+                          // which is what's parsed. We're only looking for a first clue as to the type and then we parse v.
+            }
+        }
+        else if (v[ibeg] == '$' || v[ibeg] == '@') // check if starts with $ to convert number to string, or a substring
+        {
+            gg_num ftype;
+            *var = process_string_exp (v, &ftype);
+            return check_type (ftype, type); 
+        }
+        else if (isalpha(v[ibeg]))
+        {
+            i = ibeg;
+            i++; // we already know v[ibeg] is alpha
+            while (isalnum(v[i]) || v[i] == '_') i++; // advance to catch the name of variable, stop when anything else found
+                                                        // (such as [ or + or ) or whatever
+
+            char char_end = v[i]; // remember byte we temporarily nullify
+            v[i] = 0; // put the zero in ending to cap var name
+            char *firstn = gg_strdup (v+ibeg); // remember first variable name, so we don't have to save+nullify+restore a byte!
+            v[i] = char_end; // restore byte right after name
+            while (isspace(v[i])) i++; // advance character after the name to skip spaces
+            gg_num var_end = i; // and now var_end is position of whatever comes after name, after spaces skipped; and we have the name of variable
+                         // it may be the same as passed_end, or maybe a bit after it if there were spaces passed variable name
+            if (gg_is_valid_param_name (firstn, false, false) != 1) 
+            {
+                gg_report_error ("Unknown variable or expression [%s]", firstn);
+            }
+            else
+            {
+                gg_num tp;
+                gg_num lnum;
+                // Start checking with string, it could be any type really, but string is probably the most common
+                if (var_exists (firstn, GG_DEFSTRING, &tp, &lnum)) 
+                {
+                    // check if what follows is [, in which case it's a number
+                    if (v[var_end] == '[')
+                    {
+                        *var = process_number_exp (v, false);
+                        return check_type (GG_DEFNUMBER, type);
+                    }
+                    else
+                    {
+                        gg_num ftype;
+                        *var = process_string_exp (v, &ftype);
+                        return check_type (ftype, type); 
+                    }
+                }
+                else if (cmp_type (tp, GG_DEFBOOL))
+                {
+                    *var = process_bool_exp (v);
+                    return check_type (tp, type); 
+                }
+                else if (cmp_type (tp, GG_DEFNUMBER))
+                {
+                    *var = process_number_exp (v, false);
+                    return check_type (tp, type); 
+                }
+                else if (cmp_type (tp, GG_DEFDOUBLE))
+                {
+                    *var = process_number_exp (v, true);
+                    return check_type (tp, type); 
+                }
+                else if (cmp_type (tp, GG_DEFARRAYNUMBER) && v[var_end] == '[')
+                {
+                    // this is number array[]
+                    *var = process_number_exp (v, false);
+                    tp = GG_DEFNUMBER; // if we're here it's correct array[] expression
+                    return check_type (tp, type); 
+                }
+                else if (cmp_type (tp, GG_DEFARRAYDOUBLE) && v[var_end] == '[')
+                {
+                    // this is number array[]
+                    *var = process_number_exp (v, true);
+                    tp = GG_DEFDOUBLE; // if we're here it's correct array[] expression
+                    return check_type (tp, type); 
+                }
+                else if (cmp_type (tp, GG_DEFHASH) && v[var_end] == '[')
+                {
+                    // this is number array[]
                     gg_num ftype;
                     *var = process_string_exp (v, &ftype);
                     return check_type (ftype, type); 
                 }
-            }
-            else if (cmp_type (tp, GG_DEFBOOL))
-            {
-                *var = process_bool_exp (v);
-                return check_type (tp, type); 
-            }
-            else if (cmp_type (tp, GG_DEFNUMBER))
-            {
-                *var = process_number_exp (v);
-                return check_type (tp, type); 
-            }
-            else if (cmp_type (tp, GG_DEFARRAYNUMBER) && v[var_end] == '[')
-            {
-                // this is number array[]
-                *var = process_number_exp (v);
-                tp = GG_DEFNUMBER; // if we're here it's correct array[] expression
-                return check_type (tp, type); 
-            }
-            else if (cmp_type (tp, GG_DEFHASH) && v[var_end] == '[')
-            {
-                // this is number array[]
-                gg_num ftype;
-                *var = process_string_exp (v, &ftype);
-                return check_type (ftype, type); 
-            }
-            else if (cmp_type (tp, GG_DEFARRAYSTRING) && v[var_end] == '[')
-            {
-                // this is number array[]
-                gg_num ftype;
-                *var = process_string_exp (v, &ftype);
-                return check_type (ftype, type); 
-            }
-            else if (cmp_type (tp, GG_DEFARRAYBOOL) && v[var_end] == '[')
-            {
-                // this is number array[]
-                *var = process_bool_exp (v);
-                tp = GG_DEFBOOL; // if we're here it's correct array[] expression
-                return check_type (tp, type); 
-            }
-            else 
-            {
-                if (tp == GG_DEFUNKN) 
+                else if (cmp_type (tp, GG_DEFARRAYSTRING) && v[var_end] == '[')
                 {
-                    // after looking at variable, not found
-                    gg_report_error (GG_MSG_BAD_TYPE);
-                } 
+                    // this is number array[]
+                    gg_num ftype;
+                    *var = process_string_exp (v, &ftype);
+                    return check_type (ftype, type); 
+                }
+                else if (cmp_type (tp, GG_DEFARRAYBOOL) && v[var_end] == '[')
+                {
+                    // this is number array[]
+                    *var = process_bool_exp (v);
+                    tp = GG_DEFBOOL; // if we're here it's correct array[] expression
+                    return check_type (tp, type); 
+                }
                 else 
                 {
-                    return check_type (tp, type); // just return type found, other types do NOT have expressions (like trees, hashes etc)
+                    // since math function names cannot be used as variables, if anything starts with such a name, then it has to be 
+                    // an expression of that type
+                    if (math_fun (firstn, NULL))
+                    {
+                        *var = process_number_exp (v, true);
+                        return check_type (GG_DEFDOUBLE, type); 
+                    }
+                    if (math_fun_n (firstn, NULL)) 
+                    {
+                        *var = process_number_exp (v, false);
+                        return check_type (GG_DEFNUMBER, type); 
+                    }
+                    if (tp == GG_DEFUNKN) 
+                    {
+                        // after looking at variable, not found
+                        gg_report_error (GG_MSG_BAD_TYPE);
+                    } 
+                    else 
+                    {
+                        return check_type (tp, type); // just return type found, other types do NOT have expressions (like trees, hashes etc)
+                    }
                 }
             }
+        } else 
+        {
+             gg_report_error (GG_MSG_BAD_TYPE);
         }
-    } else 
-    {
-         gg_report_error (GG_MSG_BAD_TYPE);
+        gg_report_error (GG_MSG_BAD_TYPE); // never to be reached, just in case
     }
 
     return GG_DEFUNKN; //  will never get here, just for compiler sanity
@@ -3560,8 +3972,12 @@ void setup_internal_hash(char *fname, char *hash, bool is_req)
 // num0 is the number to convert to string. base is
 // the base, 2-36, default 10.
 // _gg_st is set to be the status of conversion on return
+// isd is true if this is double, otherwise number
+// width is the width of double (and also a number in the future), prec is the precision, as in %10.3f where 10 is width and 3 is prec
+// if width is -1, then it's not used; if prec is -1, then it's not used
+// format is NULL if none used, or for double it's 'e', 'f' or 'g'
 //
-void do_numstr (char *to, char *num0, char *base)
+void do_numstr (char *to, char *num0, char *base, bool isd, gg_num width, gg_num prec, char *format)
 {
     // to == NULL means print it out. 
     bool go_out = false;
@@ -3572,7 +3988,8 @@ void do_numstr (char *to, char *num0, char *base)
         to = "_gg_numstr";
     }
 
-    oprintf ("%s=gg_num2str (%s, &_gg_st, %s);\n", to,num0, base!=NULL?base:"10");
+    if (!isd) oprintf ("%s=gg_num2str (%s, &_gg_st, %s);\n", to,num0, base!=NULL?base:"10");
+    else oprintf ("%s=gg_dbl2str (%s, '%s', %ld, %ld, &_gg_st);\n", to,num0, format, width, prec);
     if (go_out) 
     {
         //_gg_st (i.e. the length of string) is never <0
@@ -4795,7 +5212,7 @@ gg_num define_statement (char **statement, gg_num type, bool always)
     // For static types within do-once, lower their gg_level, but only if current level is do_once_level+1 - see "do-once" handler elsewhere here in this file
     // Note that do-once CANNOT be nested, so it makes this simpler here.
     //
-    if (do_once_open && gg_level == do_once_level+1 && (type == GG_DEFSTRINGSTATIC || type == GG_DEFNUMBERSTATIC || type == GG_DEFHASHSTATIC || type == GG_DEFARRAYSTRINGSTATIC || type == GG_DEFARRAYNUMBERSTATIC || type == GG_DEFARRAYBOOLSTATIC || type == GG_DEFTREESTATIC || type == GG_DEFLISTSTATIC || type == GG_DEFBOOLSTATIC))
+    if (do_once_open && gg_level == do_once_level+1 && (type == GG_DEFSTRINGSTATIC || type == GG_DEFNUMBERSTATIC || type == GG_DEFDOUBLESTATIC || type == GG_DEFHASHSTATIC || type == GG_DEFARRAYSTRINGSTATIC || type == GG_DEFARRAYNUMBERSTATIC || type == GG_DEFARRAYDOUBLESTATIC || type == GG_DEFARRAYBOOLSTATIC || type == GG_DEFTREESTATIC || type == GG_DEFLISTSTATIC || type == GG_DEFBOOLSTATIC))
     {
         // make this variable in the same scope as do-once. All other vars are in +1 level. 
         // Note that generated C code is all the same level as do-once. We simulate higher level. The other variables
@@ -4821,7 +5238,9 @@ gg_num define_statement (char **statement, gg_num type, bool always)
         if (type == GG_DEFSTRING) oprintf ("char *%s = GG_EMPTY_STRING;\n", *statement); // GG_EMPTY_STRING cannot  be NULL in user execution
         else if (type == GG_DEFSTRINGSTATIC) oprintf ("static char *%s;\n", *statement); // cannot use GG_EMPTY_STRING b/c it's a variable
         else if (type == GG_DEFNUMBER) oprintf ("gg_num %s = 0;\n", *statement);
+        else if (type == GG_DEFDOUBLE) oprintf ("gg_dbl %s = 0;\n", *statement);
         else if (type == GG_DEFNUMBERSTATIC) oprintf ("static gg_num %s = 0;\n", *statement);
+        else if (type == GG_DEFDOUBLESTATIC) oprintf ("static gg_dbl %s = 0;\n", *statement);
         else if (type == GG_DEFMSG) oprintf ("gg_msg *%s = NULL;\n",*statement);
         else if (type == GG_DEFBROKEN) oprintf ("gg_split_str *%s = NULL;\n",*statement);
         else if (type == GG_DEFHASH) oprintf ("gg_hash *%s = NULL;\n", *statement);
@@ -4830,6 +5249,8 @@ gg_num define_statement (char **statement, gg_num type, bool always)
         else if (type == GG_DEFARRAYSTRINGSTATIC) oprintf ("static gg_arraystring *%s = NULL;\n", *statement);
         else if (type == GG_DEFARRAYNUMBER) oprintf ("gg_arraynumber *%s = NULL;\n", *statement);
         else if (type == GG_DEFARRAYNUMBERSTATIC) oprintf ("static gg_arraynumber *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAYDOUBLE) oprintf ("gg_arraydouble *%s = NULL;\n", *statement);
+        else if (type == GG_DEFARRAYDOUBLESTATIC) oprintf ("static gg_arraydouble *%s = NULL;\n", *statement);
         else if (type == GG_DEFARRAYBOOL) oprintf ("gg_arraybool *%s = NULL;\n", *statement);
         else if (type == GG_DEFARRAYBOOLSTATIC) oprintf ("static gg_arraybool *%s = NULL;\n", *statement);
         else if (type == GG_DEFJSON) oprintf ("gg_json *%s = NULL;\n", *statement);
@@ -5449,7 +5870,7 @@ gg_num recog_statement (char *cinp, gg_num pos, char *opt, char **mtext, gg_num 
             // and we check this isn't C code
             if (strcmp(opt, ".") && *msize>0 && (*mtext)[*msize-1] == ';') 
             {
-                gg_report_error( "Statement '%s' cannot end with semicolon.", opt);
+                gg_report_error( "Statement '%s' cannot end with semicolon", opt);
             }
             // if opt is empty, the whole golf marker is c code, just pass it back
             //
@@ -6783,7 +7204,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         else 
                         {
                             oprintf("{gg_num _gg_slen=gg_mem_get_len(%s);\n", mtext);
-                            do_numstr (NULL, "_gg_slen", NULL);
+                            do_numstr (NULL, "_gg_slen", NULL, false, -1, -1, NULL);
                             oprintf("}\n");
                         }
 
@@ -8232,6 +8653,24 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
+                    else if ((newI=recog_statement(line, i, "abs-double", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        char *to = find_keyword (mtext, GG_KEYTO, 1);
+
+                        carve_statement (&to, "abs-double", GG_KEYTO, 1, 1); 
+                        
+                        carve_stmt_obj (&mtext, true, true);
+                        define_statement (&to, GG_DEFDOUBLE, false);
+                        //
+                        check_var (&mtext, GG_DEFDOUBLE);
+
+                        oprintf ("%s=abd((double)(%s));\n", to, mtext);
+
+                        continue;
+                    }
                     else if ((newI=recog_statement(line, i, "abs-number", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
@@ -8247,6 +8686,29 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         check_var (&mtext, GG_DEFNUMBER);
 
                         oprintf ("%s=llabs((long long)(%s));\n", to, mtext);
+
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "string-double", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        char *to = find_keyword (mtext, GG_KEYTO, 1);
+                        char *st = find_keyword (mtext, GG_KEYSTATUS, 1);
+
+                        carve_statement (&to, "string-double", GG_KEYTO, 1, 1); 
+                        carve_statement (&st, "string-double", GG_KEYSTATUS, 0, 1);
+                        
+                        carve_stmt_obj (&mtext, true, true);
+                        define_statement (&to, GG_DEFDOUBLE, false);
+                        define_statement (&st, GG_DEFNUMBER, false);
+                        //
+                        check_var (&mtext, GG_DEFSTRING);
+
+                        oprintf ("%s=gg_str2dbl (%s, &_gg_st);\n", to, mtext);
+                        if (st != NULL) oprintf("%s=_gg_st;\n",st); else oprintf("if (_gg_st != GG_OKAY) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, _gg_st);\n", GG_STMT_FAIL_CHECK, gg_valid_golf_name, lnum);
+
 
                         continue;
                     }
@@ -8275,6 +8737,43 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                         continue;
                     }
+                    else if ((newI=recog_statement(line, i, "double-string", &mtext, &msize, 0, &gg_is_inline)) != 0)  
+                    {
+                        GG_GUARD
+                        i = newI;
+
+                        char *to = find_keyword (mtext, GG_KEYTO, 1);
+                        char *width = find_keyword (mtext, GG_KEYWIDTH, 1);
+                        char *prec = find_keyword (mtext, GG_KEYPRECISION, 1);
+                        char *ffloat = find_keyword (mtext, GG_KEYFORMATFLOATING, 1);
+                        char *fsci = find_keyword (mtext, GG_KEYFORMATSCIENTIFIC, 1);
+                        char *fcomp = find_keyword (mtext, GG_KEYFORMATCOMPACT, 1);
+                        carve_statement (&to, "double-string", GG_KEYTO, 0, 1);  
+                        carve_statement (&width, "double-string", GG_KEYWIDTH, 0, 1);  
+                        carve_statement (&prec, "double-string", GG_KEYPRECISION, 0, 1);  
+                        carve_statement (&ffloat, "double-string", GG_KEYFORMATFLOATING, 0, 0);  
+                        carve_statement (&fsci, "double-string", GG_KEYFORMATSCIENTIFIC, 0, 0);  
+                        carve_statement (&fcomp, "double-string", GG_KEYFORMATCOMPACT, 0, 0);  
+                        carve_stmt_obj (&mtext, true, false);
+                        define_statement (&to, GG_DEFSTRING, false); // exact length set in gg_num2str
+                        check_var (&mtext, GG_DEFDOUBLE);
+
+                        gg_num w, p;
+                        if (width != NULL) 
+                        {
+                            gg_num st;
+                            w =gg_str2num (width, 0, &st);
+                        } else w = -1;
+                        if (prec != NULL) 
+                        {
+                            gg_num st;
+                            p =gg_str2num (prec, 0, &st);
+                        } else p = -1;
+
+                        do_numstr (to, mtext, NULL, true, w, p, ffloat==NULL?(fsci==NULL?(fcomp==NULL?"f":"g"):"e"):"f"); // _gg_st is produced inside do_numstr(), it's 0 if failed
+
+                        continue;
+                    }
                     else if ((newI=recog_statement(line, i, "number-string", &mtext, &msize, 0, &gg_is_inline)) != 0)  
                     {
                         GG_GUARD
@@ -8298,7 +8797,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         char *num0 = mtext; // number to convert, cannot use 'num' for var name as it is a type (solved now with gg_num)
 
 
-                        do_numstr (to, num0, base); // _gg_st is produced inside do_numstr(), it's 0 if failed
+                        do_numstr (to, num0, base, false, -1, -1, NULL); // _gg_st is produced inside do_numstr(), it's 0 if failed
                         if (st!=NULL) oprintf("if (_gg_st==0) (%s)=GG_ERR_FAILED; else (%s)=GG_OKAY;\n", st, st);
                         else oprintf("if (_gg_st == 0) gg_report_error (\"%s\", \"%s\", (gg_num)%ld, (gg_num)GG_ERR_FAILED);\n", GG_STMT_FAIL_CHECK, gg_valid_golf_name, lnum);
 
@@ -8577,6 +9076,10 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                     make_mem(&defval);
                                     check_var (&defval, GG_DEFSTRING);
                                 }
+                                else if (cmp_type (t, GG_DEFDOUBLE))
+                                {
+                                    check_var (&defval, GG_DEFDOUBLE);
+                                }
                                 else if (cmp_type (t, GG_DEFNUMBER))
                                 {
                                     check_var (&defval, GG_DEFNUMBER);
@@ -8599,6 +9102,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                                     if (defval != NULL) oprintf ("(%s);\n", defval);
                                     else oprintf ("(gg_report_error (\"Trying to obtain value of parameter [%%s] that was not set\", _gg_sprm_par[_gg_aprm_%s].name),0);\n", mtext);
                                 }
+                                else if (cmp_type (t, GG_DEFDOUBLE))
+                                {
+                                    oprintf ("%s=_gg_sprm_par[_gg_aprm_%s].set ? _gg_sprm_par[_gg_aprm_%s].tval.dblval:", mtext,mtext,mtext);
+                                    if (defval != NULL) oprintf ("(%s);\n", defval);
+                                    else oprintf ("(gg_report_error (\"Trying to obtain value of parameter [%%s] that was not set\", _gg_sprm_par[_gg_aprm_%s].name),0);\n", mtext);
+                                }
                                 else if (cmp_type (t, GG_DEFBOOL)) 
                                 {
                                     oprintf ("%s=_gg_sprm_par[_gg_aprm_%s].set ? _gg_sprm_par[_gg_aprm_%s].tval.logic:", mtext,mtext,mtext);
@@ -8617,7 +9126,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             //
                             // Make vim recognize type names
                             //
-                            // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_ARRAYSTRING GG_KEY_T_ARRAYNUMBER GG_KEY_T_ARRAYBOOL GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
+                            // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_DOUBLE GG_KEY_T_MESSAGE GG_KEY_T_SPLITSTRING GG_KEY_T_HASH GG_KEY_T_ARRAYSTRING GG_KEY_T_ARRAYNUMBER GG_KEY_T_ARRAYBOOL GG_KEY_T_ARRAYDOUBLE GG_KEY_T_TREE GG_KEY_T_TREECURSOR GG_KEY_T_FIFO GG_KEY_T_LIFO GG_KEY_T_LIST GG_KEY_T_ENCRYPT GG_KEY_T_FILE GG_KEY_T_SERVICE 
 
                             // we used to forbid non-string/bool/number in non-call-handler. But we should be able to create say index in call-handler and pass it back
                             // to caller. In golfrt.c, we error out if such param with such type is not found.
@@ -8659,6 +9168,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             if (cmp_type(type, GG_DEFNUMBER)) 
                             {
                                 oprintf ("_gg_sprm_par[_gg_aprm_%s].tval.numval = %s;\n", mtext, eq);
+                                oprintf ("_gg_sprm_par[_gg_aprm_%s].set = true;\n", mtext);
+                            }
+                            else if (cmp_type(type, GG_DEFDOUBLE)) 
+                            {
+                                oprintf ("_gg_sprm_par[_gg_aprm_%s].tval.dblval = %s;\n", mtext, eq);
                                 oprintf ("_gg_sprm_par[_gg_aprm_%s].set = true;\n", mtext);
                             }
                             else if (cmp_type(type, GG_DEFBOOL)) 
@@ -8853,7 +9367,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             if (!is_cond) oprintf ("%s = %s;\n", mtext, eq);
                             else 
                             {
-                                // GG_KEYEVERY GG_KEYNOTEVERY GG_KEYEQUAL GG_KEYNOTEQUAL GG_KEYOR GG_KEYAND GG_KEYLESSERTHAN GG_KEYLESSEREQUAL GG_KEYGREATERTHAN GG_KEYGREATEREQUAL GG_KEYCONTAIN GG_KEYNOTCONTAIN GG_KEYCASEINSENSITIVE GG_KEYLENGTH
+                                // GG_KEYEVERY GG_KEYNOTEVERY GG_KEYEQUAL GG_KEYNOTEQUAL GG_KEYOR GG_KEYAND GG_KEYLESSERTHAN GG_KEYLESSEREQUAL GG_KEYGREATERTHAN GG_KEYGREATEREQUAL GG_KEYCONTAIN GG_KEYNOTCONTAIN GG_KEYCASEINSENSITIVE KEYERRORMARGIN GG_KEYLENGTH
                                 char ifs[300];
                                 snprintf(ifs, sizeof(ifs), "%s=(", mtext);
                                 parse_cond (eq, "", ifs, ");\n");
@@ -8868,19 +9382,20 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         }
                         continue;
                     }
-                    else if ((newI=recog_statement (line, i, "set-number", &mtext, &msize, 0, &gg_is_inline)) != 0)
+                    else if ((newI=recog_statement (line, i, "set-number", &mtext, &msize, 0, &gg_is_inline)) != 0
+                     || (newI1=recog_statement (line, i, "set-double", &mtext, &msize, 0, &gg_is_inline)) != 0)
                     {
                         GG_GUARD
-                        i = newI;
+                        i = newI+newI1;
                         char *eq = find_keyword (mtext, GG_KEYEQUALSHORT, 0);
                         char *ps = find_keyword (mtext, GG_KEYPROCESSSCOPE, 0);
-                        carve_statement (&eq, "set-number", GG_KEYEQUALSHORT, 0, 1); // not mandatory because when add/multiply-by used, there's no =
-                        carve_statement (&ps, "set-number", GG_KEYPROCESSSCOPE, 0, 0);
+                        carve_statement (&eq, newI?"set-number":"set-double", GG_KEYEQUALSHORT, 0, 1); // not mandatory because when add/multiply-by used, there's no =
+                        carve_statement (&ps, newI?"set-number":"set-double", GG_KEYPROCESSSCOPE, 0, 0);
                         carve_stmt_obj (&mtext, true, false);
                         gg_num is_def;
                         // by default always 0
-                        if (ps != NULL) is_def = define_statement (&mtext, GG_DEFNUMBERSTATIC, false);
-                        else is_def = define_statement (&mtext, GG_DEFNUMBER, false);
+                        if (ps != NULL) is_def = define_statement (&mtext, newI?GG_DEFNUMBERSTATIC:GG_DEFDOUBLESTATIC, false);
+                        else is_def = define_statement (&mtext, newI?GG_DEFNUMBER:GG_DEFDOUBLE, false);
 
 
                         // if not defined, default is 0
@@ -8888,7 +9403,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (eq == NULL) eq = empty;
 
                         //
-                        check_var (&eq, GG_DEFNUMBER);
+                        check_var (&eq, newI?GG_DEFNUMBER:GG_DEFDOUBLE);
 
 
                         if (ps && is_def != 1) gg_report_error ("process-scope can only be used when variable is created");
@@ -8912,7 +9427,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         // based on above exclusions, only one will fire
                         // this is in any case, with or without variable creation or if-true
                         // no assignment if process scope (static)
-                        oprintf ("%s = %s;\n", mtext, eq);
+                        oprintf ("%s = %s%s;\n", mtext, newI?"":"(double)",eq);
 
                         if (ps)
                         {
@@ -9002,7 +9517,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             // this is str[index]=number, so this expression needs
                             // to evaluate to number
                             bool sub_found;
-                            check_exp (mtext, &sub_found);
+                            check_exp (mtext, &sub_found, false, false);
                             *open_p = 0; // now mtext has lost [], so it can be checked below for type
                             ind = open_p + 1; // ind starts after leading [
                             // now remove last ] so that ind (index of string) is correct for code generation
@@ -9104,7 +9619,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (newI1+newI2 != 0 ) else_if = true; else is_if = true;
                         if (newI1 != 0) else_alone = true;
                         // NOTE:the following comment must not be deleted, it provides coloring information for vim plugin!!!!
-                        // GG_KEYEQUAL GG_KEYNOTEQUAL GG_KEYLESSERTHAN  GG_KEYLESSEREQUAL GG_KEYGREATERTHAN GG_KEYEVERY GG_KEYNOTEVERY GG_KEYGREATEREQUAL GG_KEYCONTAIN GG_KEYNOTCONTAIN GG_KEYCASEINSENSITIVE GG_KEYLENGTH
+                        // GG_KEYEQUAL GG_KEYNOTEQUAL GG_KEYLESSERTHAN  GG_KEYLESSEREQUAL GG_KEYGREATERTHAN GG_KEYEVERY GG_KEYNOTEVERY GG_KEYGREATEREQUAL GG_KEYCONTAIN GG_KEYNOTCONTAIN GG_KEYCASEINSENSITIVE GG_KEYERRORMARGIN GG_KEYLENGTH
 
                         // if if-string, then open_ifs is a +1 from previous if-string (or 0 if the first), so open_ifs is correct
                         if (is_if) { if_nest[open_ifs].else_done = false; }
@@ -9132,7 +9647,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                             char before_ifs[200];
                             snprintf(before_ifs, sizeof(before_ifs), "%s", else_if == 1 ? "} else { ":"");
                             // this comment needed for getvim to pick up these keywords
-                            // GG_KEYEVERY GG_KEYNOTEVERY GG_KEYEQUAL GG_KEYNOTEQUAL GG_KEYOR GG_KEYAND GG_KEYLESSERTHAN GG_KEYLESSEREQUAL GG_KEYGREATERTHAN GG_KEYGREATEREQUAL GG_KEYCONTAIN GG_KEYNOTCONTAIN GG_KEYCASEINSENSITIVE GG_KEYLENGTH
+                            // GG_KEYEVERY GG_KEYNOTEVERY GG_KEYEQUAL GG_KEYNOTEQUAL GG_KEYOR GG_KEYAND GG_KEYLESSERTHAN GG_KEYLESSEREQUAL GG_KEYGREATERTHAN GG_KEYGREATEREQUAL GG_KEYCONTAIN GG_KEYNOTCONTAIN GG_KEYCASEINSENSITIVE KEYERRORMARGIN GG_KEYLENGTH
                             parse_cond (cm, before_ifs, "if (", ") {\n");
                         }
                         else
@@ -9848,13 +10363,17 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         if (type != NULL) trimit (type); // type has to match
                         else type ="string";
                         gg_num at = typeid(type);
-                        if (!cmp_type (at, GG_DEFSTRING) && !cmp_type(at, GG_DEFNUMBER) && !cmp_type(at, GG_DEFBOOL)) gg_report_error("Unknown type [%s] in new-array", type);
-                        // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER  // see get-param if ever adding other types as arrays
+                        if (!cmp_type (at, GG_DEFSTRING) && !cmp_type(at, GG_DEFNUMBER) && !cmp_type(at, GG_DEFBOOL) && !cmp_type(at, GG_DEFDOUBLE)) gg_report_error("Unknown type [%s] in new-array", type);
+                        // GG_KEY_T_STRING GG_KEY_T_BOOL GG_KEY_T_NUMBER GG_KEY_T_DOUBLE  // see get-param if ever adding other types as arrays
                         carve_stmt_obj (&mtext, true, false);
                         // check 'type' clause
                         if (cmp_type(at, GG_DEFSTRING)) 
                         {
                             if (process) define_statement (&mtext, GG_DEFARRAYSTRINGSTATIC, true); else define_statement (&mtext, GG_DEFARRAYSTRING, true);
+                        }
+                        else if (cmp_type(at, GG_DEFDOUBLE)) 
+                        {
+                            if (process) define_statement (&mtext, GG_DEFARRAYDOUBLESTATIC, true); else define_statement (&mtext, GG_DEFARRAYDOUBLE, true);
                         }
                         else if (cmp_type(at, GG_DEFNUMBER)) 
                         {
@@ -9870,6 +10389,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf("gg_mem_process=%s;\n", process?"GG_MEM_PROCESS":"0");
                         if (cmp_type(at, GG_DEFSTRING)) oprintf("%s = gg_new_arraystring (%s, %s);\n", mtext, maxsize?maxsize:"0", process?"GG_MEM_PROCESS":"0");
                         else if (cmp_type(at, GG_DEFNUMBER)) oprintf("%s = gg_new_arraynumber (%s, %s);\n", mtext, maxsize?maxsize:"0", process?"GG_MEM_PROCESS":"0");
+                        else if (cmp_type(at, GG_DEFDOUBLE)) oprintf("%s = gg_new_arraydouble (%s, %s);\n", mtext, maxsize?maxsize:"0", process?"GG_MEM_PROCESS":"0");
                         else if (cmp_type(at, GG_DEFBOOL)) oprintf("%s = gg_new_arraybool (%s, %s);\n", mtext, maxsize?maxsize:"0", process?"GG_MEM_PROCESS":"0");
                         oprintf("gg_mem_process=0;\n");
                         continue;
@@ -9908,10 +10428,11 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         //
                         carve_stmt_obj (&mtext, true, false);
                         gg_num at = check_var (&mtext, GG_DEFUNKN);
-                        if (!cmp_type (at, GG_DEFARRAYSTRING) && !cmp_type(at, GG_DEFARRAYNUMBER) && !cmp_type(at, GG_DEFARRAYBOOL)) gg_report_error("Unknown type [%s] in write-array", typename(at));
+                        if (!cmp_type (at, GG_DEFARRAYSTRING) && !cmp_type(at, GG_DEFARRAYNUMBER) && !cmp_type(at, GG_DEFARRAYBOOL) && !cmp_type(at, GG_DEFARRAYDOUBLE)) gg_report_error("Unknown type [%s] in write-array", typename(at));
                         //
                         if (cmp_type (at, GG_DEFARRAYSTRING)) define_statement (&oldd, GG_DEFSTRING, false); // exact length okay this is just pointer aliasing in gg_add_hash with GG_EMPTY_STRING
                         else if (cmp_type (at, GG_DEFARRAYNUMBER)) define_statement (&oldd, GG_DEFNUMBER, false);
+                        else if (cmp_type (at, GG_DEFARRAYDOUBLE)) define_statement (&oldd, GG_DEFDOUBLE, false);
                         else if (cmp_type (at, GG_DEFARRAYBOOL)) define_statement (&oldd, GG_DEFBOOL, false);
                         //
                         //
@@ -9932,6 +10453,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
 
                             oprintf ("(%s)->str[%s] = (%s)==GG_STRING_NONE?GG_EMPTY_STRING:(%s);\n", mtext, key, val, val);
                             oprintf ("gg_mem_dec_process(_gg_str);\n");
+                        }
+                        else if (cmp_type (at, GG_DEFARRAYDOUBLE)) 
+                        {
+                            oprintf("gg_write_arraydouble (%s, %s, %s%s%s);\n", mtext, key, oldd==NULL?"":"&(", oldd==NULL?"NULL":oldd, oldd==NULL?"":")");
+                            check_var (&val, GG_DEFDOUBLE); // here old_val can be used in val expression
+                            oprintf ("(%s)->dbl[%s] = (%s);\n", mtext, key, val);
                         }
                         else if (cmp_type (at, GG_DEFARRAYNUMBER)) 
                         {
@@ -9957,11 +10484,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, false);
                         //
                         gg_num at = check_var (&mtext, GG_DEFUNKN);
-                        if (!cmp_type (at, GG_DEFARRAYSTRING) && !cmp_type(at, GG_DEFARRAYNUMBER) && !cmp_type(at, GG_DEFARRAYBOOL)) gg_report_error("Unknown type [%s] in purge-array", typename(at));
+                        if (!cmp_type (at, GG_DEFARRAYSTRING) && !cmp_type(at, GG_DEFARRAYNUMBER) && !cmp_type(at, GG_DEFARRAYBOOL) && !cmp_type(at, GG_DEFARRAYDOUBLE)) gg_report_error("Unknown type [%s] in purge-array", typename(at));
                         oprintf("gg_mem_process=(%s)->process;\n", mtext);
                         if (cmp_type (at, GG_DEFARRAYSTRING)) oprintf("gg_purge_arraystring (%s);\n", mtext);
                         else if (cmp_type (at, GG_DEFARRAYNUMBER)) oprintf("gg_purge_arraynumber (%s);\n", mtext);
                         else if (cmp_type (at, GG_DEFARRAYBOOL)) oprintf("gg_purge_arraybool (%s);\n", mtext);
+                        else if (cmp_type (at, GG_DEFARRAYDOUBLE)) oprintf("gg_purge_arraydouble (%s);\n", mtext);
                         oprintf("gg_mem_process=0;\n");
                         continue;
                     }
@@ -9985,11 +10513,12 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&st, GG_DEFNUMBER, false); 
 
                         gg_num at = check_var (&mtext, GG_DEFUNKN);
-                        if (!cmp_type (at, GG_DEFARRAYSTRING) && !cmp_type(at, GG_DEFARRAYNUMBER) && !cmp_type(at, GG_DEFARRAYBOOL)) gg_report_error("Unknown type [%s] in read-array", typename(at));
+                        if (!cmp_type (at, GG_DEFARRAYSTRING) && !cmp_type(at, GG_DEFARRAYNUMBER) && !cmp_type(at, GG_DEFARRAYBOOL) && !cmp_type(at, GG_DEFARRAYDOUBLE)) gg_report_error("Unknown type [%s] in read-array", typename(at));
 
                         char *delc = opt_clause(del, "true", "false", GG_DEFBOOL);
 
                         if (cmp_type (at, GG_DEFARRAYSTRING)) define_statement (&val, GG_DEFSTRING, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
+                        else if (cmp_type (at, GG_DEFARRAYDOUBLE)) define_statement (&val, GG_DEFDOUBLE, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
                         else if (cmp_type (at, GG_DEFARRAYNUMBER)) define_statement (&val, GG_DEFNUMBER, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
                         else if (cmp_type (at, GG_DEFARRAYBOOL)) define_statement (&val, GG_DEFBOOL, false); // exact length via pointer assignment as a return from gg_find_hash and value param from gg_next_hash
 
@@ -10007,6 +10536,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         oprintf ("gg_num _gg_st; ");
                         if (cmp_type (at, GG_DEFARRAYSTRING)) oprintf("char *_gg_afind = gg_read_arraystring (%s, %s, &_gg_st);\n", mtext, key);
                         else if (cmp_type (at, GG_DEFARRAYNUMBER)) oprintf("gg_num _gg_afind = gg_read_arraynumber (%s, %s, &_gg_st);\n", mtext, key);
+                        else if (cmp_type (at, GG_DEFARRAYDOUBLE)) oprintf("gg_dbl _gg_afind = gg_read_arraydouble (%s, %s, &_gg_st);\n", mtext, key);
                         else if (cmp_type (at, GG_DEFARRAYBOOL)) oprintf("bool _gg_afind = gg_read_arraybool (%s, %s, &_gg_st);\n", mtext, key);
                         // if asked to delete, generate code to delete (check for false because opt_clause will create it)
                         if (st == NULL)
@@ -10017,6 +10547,7 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                         {
                             if (cmp_type (at, GG_DEFARRAYSTRING)) oprintf ("if (%s) {gg_mem_dec_process(_gg_afind); %s->str[%s] = GG_STRING_NONE; }\n", delc, mtext, key);
                             else if (cmp_type (at, GG_DEFARRAYNUMBER))oprintf ("if (%s) {%s->num[%s] = GG_NUMBER_NONE; }\n", delc, mtext, key);
+                            else if (cmp_type (at, GG_DEFARRAYDOUBLE))oprintf ("if (%s) {%s->dbl[%s] = GG_DOUBLE_NONE; }\n", delc, mtext, key);
                             else if (cmp_type (at, GG_DEFARRAYBOOL)) oprintf ("if (%s) {%s->logic[%s] = GG_BOOL_NONE; }\n", delc, mtext, key);
 
                         }
@@ -11386,6 +11917,16 @@ void gg_gen_c_code (gg_gen_ctx *gen_ctx, char *file_name)
                 gg_report_error (GG_INST, pkg==NULL?"XML":pkg, ipkg==NULL?"unknown":ipkg ); 
             }
         }
+        //
+        char *gg_mod_fpe = getenv ("GG_C_FPE"); // --fpe used
+        char *has_fpe = getenv ("GG_UBSAN_EX"); // has installed libubsan (1 means it's not)
+        if ((gg_mod_fpe != NULL && gg_mod_fpe[0] == '1') && (has_fpe != NULL && has_fpe[0] == '1'))
+        {
+            char *pkg = getenv ("GG_UBSAN_PACKAGE");
+            char *ipkg = getenv ("GG_UBSAN_INSTALL");
+            gg_report_error (GG_INST, pkg==NULL?"UBSan":pkg, ipkg==NULL?"unknown":ipkg ); 
+        }
+        //
     }
 
 
@@ -12021,6 +12562,10 @@ int main (int argc, char* argv[])
         // We would check if -1 if we ever  do that.
         oprintf("#ifdef GG_DEVEL\n");
         oprintf ("prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY);\n");
+        oprintf("#endif\n");
+        // this is with -fpe option in gg
+        oprintf("#ifdef GG_C_FPE\n");
+        oprintf ("feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW);\n");
         oprintf("#endif\n");
         //
 

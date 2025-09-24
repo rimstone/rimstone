@@ -18,7 +18,7 @@ write-array <array> \\
 .RE
 
 .SH DESCRIPTION
-write-array will store a <value> (in "value" clause) under index <key> (in "key" clause) into <array>, which must be created with \fBnew-array\fP. <key> is a number from 0 up to (excluding) the currently allocated array size (see \fBnew-array\fP). The type of <value> is determined when <array> is created (see "type" clause), and can be either a string, number or a boolean.
+write-array will store a <value> (in "value" clause) under index <key> (in "key" clause) into <array>, which must be created with \fBnew-array\fP. <key> is a number from 0 up to (excluding) the currently allocated array size (see \fBnew-array\fP). The type of <value> is determined when <array> is created (see "type" clause), and can be either a string, number, double or a boolean.
 
 <key> and <value> are collectively called an "element". 
 
@@ -63,7 +63,7 @@ The following is an array service, where a process-scoped array is created. It p
     get-param op
     get-param key
     get-param data
-    // Convert string keye to number
+    // Convert string key to number
     string-number key to key_n
 
     if-true op equal "add" // Add data to array

@@ -18,6 +18,7 @@
 #include <malloc.h>
 
 typedef int64_t gg_num;
+typedef double gg_dbl; // future enhancement might include GMP (GNU Multiple Precision Arithmetic Lib) or MPFR
 
 #ifdef GG_GOLFMEM
 void *gg_malloc(size_t size);

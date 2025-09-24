@@ -1,0 +1,73 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+set-double \-  (doubles)
+.SH PURPOSE
+Set value of a double (floating point) variable.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+set-double <variable> [ = <double> ]  [ process-scope ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+Double variable <variable> is either assigned value <double> with "=" clause, or it is assigned 0.0 if equal clause ("=") is omitted. A number is a signed 64-bit floating point value (double precision) with a range of approximately +/- 1.7*10E-308 to 1.7*10E308.
+
+If "process-scope" clause is used, then double is of process scope, meaning its value will persist from one request to another for the life of the proces; in the statement where <variable> is created, the assignment will take place only once. This clause can only be used if <variable> did not already exist.
+
+.SH EXAMPLES
+Initialize double "my_dbl" to 0.0 and the value of this variable, however it changes, will persist through any number of requests in the same process:
+
+.RS 4
+.EX
+
+set-double my_dbl process-scope
+
+.EE
+.RE
+
+Initialize number "my_dbl" to 101.34:
+
+.RS 4
+.EX
+
+set-number my_dbl = 101.34
+
+.EE
+.RE
+
+Subtract 5:
+
+.RS 4
+.EX
+
+set-double my_dbl = my_dbl-5
+
+.EE
+.RE
+
+Assign an expression:
+
+.RS 4
+.EX
+
+set-double my_dbl = (some_dbl*3.4+1)/5
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Doubles
+
+\fBabs-double\fP  
+\fBdouble-expressions\fP  
+\fBdouble-string\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBset-double\fP  
+\fBstring-double\fP   
+See all 
+\fBdocumentation\fP

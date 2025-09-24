@@ -14,6 +14,14 @@
 #ifdef GG_ARR_STRING
 static void gg_init_array (gg_arraystring *arr, gg_num max_elem, unsigned char process);
 #endif
+#ifdef GG_ARR_DOUBLE
+static void gg_init_array (gg_arraydouble *arr, gg_num max_elem, unsigned char process);
+static inline void gg_set_dbl (gg_dbl *arr, gg_num tot, gg_dbl val)
+{
+    gg_num i;
+    for (i = 0; i < tot; i++) arr[i] = val;
+}
+#endif
 #ifdef GG_ARR_NUMBER
 static void gg_init_array (gg_arraynumber *arr, gg_num max_elem, unsigned char process);
 static inline void gg_set_num (gg_num *arr, gg_num tot, gg_num val)
@@ -40,6 +48,9 @@ static inline void gg_set_bool (char *arr, gg_num tot, char val)
 #ifdef GG_ARR_STRING
 static void gg_init_array (gg_arraystring *arr, gg_num max_elem, unsigned char process)
 #endif
+#ifdef GG_ARR_DOUBLE
+static void gg_init_array (gg_arraydouble *arr, gg_num max_elem, unsigned char process)
+#endif
 #ifdef GG_ARR_NUMBER
 static void gg_init_array (gg_arraynumber *arr, gg_num max_elem, unsigned char process)
 #endif
@@ -56,6 +67,10 @@ static void gg_init_array (gg_arraybool *arr, gg_num max_elem, unsigned char pro
     // make initial array
 #ifdef GG_ARR_STRING
     arr->str = gg_calloc (arr->alloc_elem = GG_ARRAY_INC, sizeof(char*)); // all values NULL, i.e. GG_STRING_NONE
+#endif
+#ifdef GG_ARR_DOUBLE
+    arr->dbl = gg_malloc ((arr->alloc_elem = GG_ARRAY_INC)*sizeof(gg_dbl));
+    gg_set_dbl (arr->dbl, arr->alloc_elem, GG_DOUBLE_NONE);
 #endif
 #ifdef GG_ARR_NUMBER
     arr->num = gg_malloc ((arr->alloc_elem = GG_ARRAY_INC)*sizeof(gg_num));
@@ -75,6 +90,9 @@ static void gg_init_array (gg_arraybool *arr, gg_num max_elem, unsigned char pro
 #ifdef GG_ARR_STRING
 gg_arraystring *gg_new_arraystring (gg_num max_elem, unsigned char process)
 #endif
+#ifdef GG_ARR_DOUBLE
+gg_arraydouble *gg_new_arraydouble (gg_num max_elem, unsigned char process)
+#endif
 #ifdef GG_ARR_NUMBER
 gg_arraynumber *gg_new_arraynumber (gg_num max_elem, unsigned char process)
 #endif
@@ -84,6 +102,9 @@ gg_arraybool *gg_new_arraybool (gg_num max_elem, unsigned char process)
 {
 #ifdef GG_ARR_STRING
     gg_arraystring *arr = gg_malloc (sizeof(gg_arraystring));
+#endif
+#ifdef GG_ARR_DOUBLE
+    gg_arraydouble *arr = gg_malloc (sizeof(gg_arraydouble));
 #endif
 #ifdef GG_ARR_NUMBER
     gg_arraynumber *arr = gg_malloc (sizeof(gg_arraynumber));
@@ -103,6 +124,9 @@ gg_arraybool *gg_new_arraybool (gg_num max_elem, unsigned char process)
 #ifdef GG_ARR_STRING
 void gg_purge_arraystring (gg_arraystring *arr)
 #endif
+#ifdef GG_ARR_DOUBLE
+void gg_purge_arraydouble (gg_arraydouble *arr)
+#endif
 #ifdef GG_ARR_NUMBER
 void gg_purge_arraynumber (gg_arraynumber *arr)
 #endif
@@ -121,6 +145,9 @@ void gg_purge_arraybool (gg_arraybool *arr)
 #ifdef GG_ARR_BOOL
     gg_mem_dec_process (arr->logic);
 #endif
+#ifdef GG_ARR_DOUBLE
+    gg_mem_dec_process (arr->dbl);
+#endif
 #ifdef GG_ARR_NUMBER
     gg_mem_dec_process (arr->num);
 #endif
@@ -135,6 +162,9 @@ void gg_purge_arraybool (gg_arraybool *arr)
 //
 #ifdef GG_ARR_STRING
 GG_ALWAYS_INLINE inline char *gg_write_arraystring (gg_arraystring *arr, gg_num key, char **old_val)
+#endif
+#ifdef GG_ARR_DOUBLE
+GG_ALWAYS_INLINE inline void gg_write_arraydouble (gg_arraydouble *arr, gg_num key, gg_num *old_val)
 #endif
 #ifdef GG_ARR_NUMBER
 GG_ALWAYS_INLINE inline void gg_write_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *old_val)
@@ -155,6 +185,10 @@ GG_ALWAYS_INLINE inline void gg_write_arraybool (gg_arraybool *arr, gg_num key, 
         arr->str = gg_realloc (gg_mem_get_id(arr->str), arr->alloc_elem * sizeof (char*));
         memset (&(arr->str[old_alloc]),0, sizeof(char*)*(arr->alloc_elem - old_alloc));
 #endif
+#ifdef GG_ARR_DOUBLE
+        arr->dbl = gg_realloc (gg_mem_get_id(arr->dbl), arr->alloc_elem * sizeof (gg_dbl));
+        gg_set_dbl (&(arr->dbl[old_alloc]), arr->alloc_elem - old_alloc, GG_DOUBLE_NONE);
+#endif
 #ifdef GG_ARR_NUMBER
         arr->num = gg_realloc (gg_mem_get_id(arr->num), arr->alloc_elem * sizeof (gg_num));
         gg_set_num (&(arr->num[old_alloc]), arr->alloc_elem - old_alloc, GG_NUMBER_NONE);
@@ -171,6 +205,9 @@ GG_ALWAYS_INLINE inline void gg_write_arraybool (gg_arraybool *arr, gg_num key, 
         char *cstr = arr->str[key]==GG_STRING_NONE?GG_EMPTY_STRING:arr->str[key];
         *old_val = cstr;
         return cstr;
+#endif
+#ifdef GG_ARR_DOUBLE
+        *old_val = isnan(arr->dbl[key])?0:arr->dbl[key];
 #endif
 #ifdef GG_ARR_NUMBER
         *old_val = arr->num[key]==GG_NUMBER_NONE?0:arr->num[key];
@@ -197,6 +234,9 @@ GG_ALWAYS_INLINE inline void gg_write_arraybool (gg_arraybool *arr, gg_num key, 
 #ifdef GG_ARR_STRING
 GG_ALWAYS_INLINE inline char *gg_read_arraystring (gg_arraystring *arr, gg_num key, gg_num *st)
 #endif
+#ifdef GG_ARR_DOUBLE
+GG_ALWAYS_INLINE inline gg_dbl gg_read_arraydouble (gg_arraydouble *arr, gg_num key, gg_num *st)
+#endif
 #ifdef GG_ARR_NUMBER
 GG_ALWAYS_INLINE inline gg_num gg_read_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *st)
 #endif
@@ -209,6 +249,9 @@ GG_ALWAYS_INLINE inline bool gg_read_arraybool (gg_arraybool *arr, gg_num key, g
         return 
 #ifdef GG_ARR_STRING
         GG_EMPTY_STRING;
+#endif
+#ifdef GG_ARR_DOUBLE
+        0.0;
 #endif
 #ifdef GG_ARR_NUMBER
         0;
@@ -227,6 +270,18 @@ GG_ALWAYS_INLINE inline bool gg_read_arraybool (gg_arraybool *arr, gg_num key, g
     {
         *st=GG_OKAY;
         return arr->str[key];
+    }
+#endif
+#ifdef GG_ARR_DOUBLE
+    if (__builtin_expect (isnan(arr->dbl[key]), 0)) // GG_DOUBLE_NONE is NAN!
+    {
+        *st=GG_ERR_EXIST;
+        return 0;
+    }
+    else
+    {
+        *st=GG_OKAY;
+        return arr->dbl[key];
     }
 #endif
 #ifdef GG_ARR_NUMBER

@@ -459,6 +459,9 @@ syn region gg_r_construct_new_array start="^[[:space:]]*new-array" skip="\\[[:sp
     syn match gg_h_clause_new_array " bool \@=" contained containedin=gg_r_construct_new_array
     syn match gg_h_clause_new_array " bool,\@=" contained containedin=gg_r_construct_new_array
     syn match gg_h_clause_new_array " bool$" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " double \@=" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " double,\@=" contained containedin=gg_r_construct_new_array
+    syn match gg_h_clause_new_array " double$" contained containedin=gg_r_construct_new_array
     syn match gg_h_clause_new_array " number \@=" contained containedin=gg_r_construct_new_array
     syn match gg_h_clause_new_array " number,\@=" contained containedin=gg_r_construct_new_array
     syn match gg_h_clause_new_array " number$" contained containedin=gg_r_construct_new_array
@@ -811,6 +814,9 @@ syn region gg_r_construct_else_if start="^[[:space:]]*else-if" skip="\\[[:space:
     syn match gg_h_clause_else_if " case-insensitive$" contained containedin=gg_r_construct_else_if
     syn match gg_h_clause_else_if " contain \@=" contained containedin=gg_r_construct_else_if
     syn match gg_h_clause_else_if " equal \@=" contained containedin=gg_r_construct_else_if
+    syn match gg_h_clause_else_if " error-margin \@=" contained containedin=gg_r_construct_else_if
+    syn match gg_h_clause_else_if " error-margin,\@=" contained containedin=gg_r_construct_else_if
+    syn match gg_h_clause_else_if " error-margin$" contained containedin=gg_r_construct_else_if
     syn match gg_h_clause_else_if " every \@=" contained containedin=gg_r_construct_else_if
     syn match gg_h_clause_else_if " greater-equal \@=" contained containedin=gg_r_construct_else_if
     syn match gg_h_clause_else_if " greater-than \@=" contained containedin=gg_r_construct_else_if
@@ -835,6 +841,9 @@ syn region gg_r_construct_if_true start="^[[:space:]]*if-true" skip="\\[[:space:
     syn match gg_h_clause_if_true " case-insensitive$" contained containedin=gg_r_construct_if_true
     syn match gg_h_clause_if_true " contain \@=" contained containedin=gg_r_construct_if_true
     syn match gg_h_clause_if_true " equal \@=" contained containedin=gg_r_construct_if_true
+    syn match gg_h_clause_if_true " error-margin \@=" contained containedin=gg_r_construct_if_true
+    syn match gg_h_clause_if_true " error-margin,\@=" contained containedin=gg_r_construct_if_true
+    syn match gg_h_clause_if_true " error-margin$" contained containedin=gg_r_construct_if_true
     syn match gg_h_clause_if_true " every \@=" contained containedin=gg_r_construct_if_true
     syn match gg_h_clause_if_true " greater-equal \@=" contained containedin=gg_r_construct_if_true
     syn match gg_h_clause_if_true " greater-than \@=" contained containedin=gg_r_construct_if_true
@@ -873,6 +882,17 @@ syn region gg_r_construct_new_string start="^[[:space:]]*new-string" skip="\\[[:
     hi def link gg_h_clause_output_new_string    golfClauseOutput
     hi def link gg_h_construct_new_string    golfConstruct
     hi def link gg_h_print_inline_new_string    golfConstruct
+syn region gg_r_construct_set_double start="^[[:space:]]*set-double" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_set_double,gg_r_inline_set_double,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_set_double,gg_r_inline_set_double,gg_r_at
+    syn match gg_h_construct_set_double "^[[:space:]]*set-double" contained containedin=gg_r_construct_set_double
+    syn match gg_h_clause_set_double " process-scope \@=" contained containedin=gg_r_construct_set_double
+    syn match gg_h_clause_set_double " process-scope,\@=" contained containedin=gg_r_construct_set_double
+    syn match gg_h_clause_set_double " process-scope$" contained containedin=gg_r_construct_set_double
+    hi def link gg_h_clause_set_double    golfClause
+    hi def link gg_h_clause_output_set_double    golfClauseOutput
+    hi def link gg_h_construct_set_double    golfConstruct
+    hi def link gg_h_print_inline_set_double    golfConstruct
 syn region gg_r_construct_set_number start="^[[:space:]]*set-number" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_set_number,gg_r_inline_set_number,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_set_number,gg_r_inline_set_number,gg_r_at
@@ -1010,6 +1030,9 @@ syn region gg_r_construct_get_param start="^[[:space:]]*get-param" skip="\\[[:sp
     syn match gg_h_clause_get_param " bool-array \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool-array,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool-array$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " double-array \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " double-array,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " double-array$" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " number-array \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " number-array,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " number-array$" contained containedin=gg_r_construct_get_param
@@ -1019,6 +1042,9 @@ syn region gg_r_construct_get_param start="^[[:space:]]*get-param" skip="\\[[:sp
     syn match gg_h_clause_get_param " bool \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " bool$" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " double \@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " double,\@=" contained containedin=gg_r_construct_get_param
+    syn match gg_h_clause_get_param " double$" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " encrypt-decrypt \@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " encrypt-decrypt,\@=" contained containedin=gg_r_construct_get_param
     syn match gg_h_clause_get_param " encrypt-decrypt$" contained containedin=gg_r_construct_get_param
@@ -1183,6 +1209,26 @@ syn region gg_r_construct_number_string start="^[[:space:]]*number-string" skip=
     hi def link gg_h_clause_output_number_string    golfClauseOutput
     hi def link gg_h_construct_number_string    golfConstruct
     hi def link gg_h_print_inline_number_string    golfConstruct
+syn region gg_r_construct_double_string start="^[[:space:]]*double-string" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_double_string,gg_r_inline_double_string,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_double_string,gg_r_inline_double_string,gg_r_at
+    syn match gg_h_construct_double_string "^[[:space:]]*double-string" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " format-compact \@=" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " format-compact,\@=" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " format-compact$" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " format-floating \@=" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " format-floating,\@=" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " format-floating$" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " format-scientific \@=" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " format-scientific,\@=" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " format-scientific$" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " precision \@=" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_output_double_string " to \@=" contained containedin=gg_r_construct_double_string
+    syn match gg_h_clause_double_string " width \@=" contained containedin=gg_r_construct_double_string
+    hi def link gg_h_clause_double_string    golfClause
+    hi def link gg_h_clause_output_double_string    golfClauseOutput
+    hi def link gg_h_construct_double_string    golfConstruct
+    hi def link gg_h_print_inline_double_string    golfConstruct
 syn region gg_r_construct_string_number start="^[[:space:]]*string-number" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_string_number,gg_r_inline_string_number,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_string_number,gg_r_inline_string_number,gg_r_at
@@ -1194,6 +1240,16 @@ syn region gg_r_construct_string_number start="^[[:space:]]*string-number" skip=
     hi def link gg_h_clause_output_string_number    golfClauseOutput
     hi def link gg_h_construct_string_number    golfConstruct
     hi def link gg_h_print_inline_string_number    golfConstruct
+syn region gg_r_construct_string_double start="^[[:space:]]*string-double" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_string_double,gg_r_inline_string_double,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_string_double,gg_r_inline_string_double,gg_r_at
+    syn match gg_h_construct_string_double "^[[:space:]]*string-double" contained containedin=gg_r_construct_string_double
+    syn match gg_h_clause_output_string_double " status \@=" contained containedin=gg_r_construct_string_double
+    syn match gg_h_clause_output_string_double " to \@=" contained containedin=gg_r_construct_string_double
+    hi def link gg_h_clause_string_double    golfClause
+    hi def link gg_h_clause_output_string_double    golfClauseOutput
+    hi def link gg_h_construct_string_double    golfConstruct
+    hi def link gg_h_print_inline_string_double    golfConstruct
 syn region gg_r_construct_abs_number start="^[[:space:]]*abs-number" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_abs_number,gg_r_inline_abs_number,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_abs_number,gg_r_inline_abs_number,gg_r_at
@@ -1203,6 +1259,15 @@ syn region gg_r_construct_abs_number start="^[[:space:]]*abs-number" skip="\\[[:
     hi def link gg_h_clause_output_abs_number    golfClauseOutput
     hi def link gg_h_construct_abs_number    golfConstruct
     hi def link gg_h_print_inline_abs_number    golfConstruct
+syn region gg_r_construct_abs_double start="^[[:space:]]*abs-double" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_abs_double,gg_r_inline_abs_double,gg_r_at
+    syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_abs_double,gg_r_inline_abs_double,gg_r_at
+    syn match gg_h_construct_abs_double "^[[:space:]]*abs-double" contained containedin=gg_r_construct_abs_double
+    syn match gg_h_clause_output_abs_double " to \@=" contained containedin=gg_r_construct_abs_double
+    hi def link gg_h_clause_abs_double    golfClause
+    hi def link gg_h_clause_output_abs_double    golfClauseOutput
+    hi def link gg_h_construct_abs_double    golfConstruct
+    hi def link gg_h_print_inline_abs_double    golfConstruct
 syn region gg_r_construct_get_req start="^[[:space:]]*get-req" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_get_req,gg_r_inline_get_req,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_get_req,gg_r_inline_get_req,gg_r_at
@@ -2005,6 +2070,11 @@ syn region gg_r_construct_print_out start="^[[:space:]]*print-out" skip="\\[[:sp
     syn match gg_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=gg_r_construct_print_out,gg_r_inline_print_out,gg_r_at
     syn match gg_h_other '[0-9]\+' contained containedin=gg_r_construct_print_out,gg_r_inline_print_out,gg_r_at
     syn match gg_h_construct_print_out "^[[:space:]]*print-out" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " , \@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " ,,\@=" contained containedin=gg_r_construct_print_out
+    syn match gg_h_clause_print_out " ,$" contained containedin=gg_r_construct_print_out
+    syn match gg_h_print_inline_print_out " ,\(>>\)\@=" contained containedin=gg_r_inline_print_out
+    syn match gg_h_print_inline_print_out " , \@=" contained containedin=gg_r_inline_print_out
     syn match gg_h_clause_print_out " length \@=" contained containedin=gg_r_construct_print_out
     syn match gg_h_print_inline_print_out " length \@=" contained containedin=gg_r_inline_print_out
     syn match gg_h_clause_print_out " new-line \@=" contained containedin=gg_r_construct_print_out

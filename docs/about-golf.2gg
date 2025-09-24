@@ -142,9 +142,9 @@ Golf goes a step further from memory safety. It also enforces status checking fo
 .B TYPES
 .LP
 
-Golf is a strongly-typed language, with only three primitive types (numbers, strings and booleans) and a number of structured types (array, message, split-string, hash, tree, tree-cursor, fifo, lifo, list, file and service). Golf is a declarative language, with a few lines of code implementing large functionalities. Golf is also very simple, as it's designed to achieve application goals with less coding.
+Golf is a strongly-typed language, with only three primitive types (numbers, doubles, strings and booleans) and a number of structured types (array, message, split-string, hash, tree, tree-cursor, fifo, lifo, list, file and service). Golf is a declarative language, with a few lines of code implementing large functionalities. Golf is also very simple, as it's designed to achieve application goals with less coding.
 
-The number type is a signed 64-bit integer (as a decimal, octal or hexadecimal C notation). The boolean type evaluates to true (non-zero) or false (zero). The string type evaluates to any sequence of bytes (binary or text) that is always trailed with a null character regardless, which is not counted in string's length. All constants follow C rules of formatting.
+The number type is a signed 64-bit integer (as a decimal, octal or hexadecimal C notation). The double type is a signed double precision 64-bit floating point numeric value. The boolean type evaluates to true (non-zero) or false (zero). The string type evaluates to any sequence of bytes (binary or text) that is always trailed with a null character regardless, which is not counted in string's length. All constants follow C rules of formatting.
 
 .LP
 .B STATEMENTS
@@ -158,7 +158,7 @@ Golf \fBstatements\fP are designed for safety, ease of use, and ability to write
 
 A variable is created the first time it's encountered in any given scope, and is never created again in the same or inner scopes, which avoids common bugs involving more than one variable with the same name in related scopes. You can still of course create variables with the same name in unrelated scopes. 
 
-Some structured types (hash, tree, list) as well as primitive types (numbers, strings and booleans) can be created with process-scope, meaning their value persists throughout any requests served by the same process. This is useful for making data-server services that allow keeping and fast querying of data (such as caches or data services).
+Some structured types (hash, tree, list) as well as primitive types (numbers, doubles, strings and booleans) can be created with process-scope, meaning their value persists throughout any requests served by the same process. This is useful for making data-server services that allow keeping and fast querying of data (such as caches or data services).
 
 Numbers and booleans are assigned by value, while strings are assigned by reference (for obvious reason to avoid unnecessary copying).
 

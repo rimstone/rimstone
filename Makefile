@@ -192,7 +192,7 @@ CFLAGS=$(CFLAGS_WARN_ERROR) -Wall -Wextra -Wuninitialized -Wmissing-declarations
 
 #linker flags. 
 LFLAGS_COMMON=-Wl,-z,relro
-LFLAGS=-Wl,-rpath=$(V_LIB)/$(GDEST) -Wl,--enable-new-dtags -L$(V_LIB)/$(GDEST) $(OPTIM_LINK) $(LFLAGS_COMMON) $(ASAN) $(PROF) $(LTO)
+LFLAGS=-Wl,-rpath=$(V_LIB)/$(GDEST) -Wl,--enable-new-dtags -L$(V_LIB)/$(GDEST) $(OPTIM_LINK) $(LFLAGS_COMMON) -lm $(ASAN) $(PROF) $(LTO)
 
 nothing: 
 	$(AT)echo "Golf $(PACKAGE_VERSION) development build complete."
@@ -426,7 +426,7 @@ $(GDEST)/libgolfxml.a: $(GDEST)/xml.o
 	$(AT)echo -n "."
 	$(AT)rm -f $@
 	$(AT)$(CCAR) $@ $^ 
-$(GDEST)/libgolfarr.a: $(GDEST)/arr_string.o  $(GDEST)/arr_number.o $(GDEST)/arr_bool.o
+$(GDEST)/libgolfarr.a: $(GDEST)/arr_string.o  $(GDEST)/arr_number.o $(GDEST)/arr_bool.o $(GDEST)/arr_double.o
 	$(AT)echo -n "."
 	$(AT)rm -f $@
 	$(AT)$(CCAR) $@ $^ 
@@ -529,6 +529,9 @@ $(GDEST)/xml.o: xml.c golf.h
 $(GDEST)/arr_string.o: arr.c golf.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS) -DGG_ARR_STRING
+$(GDEST)/arr_double.o: arr.c golf.h
+	$(AT)echo -n "."
+	$(AT)$(CC) -c -o $@ $< $(CFLAGS) -DGG_ARR_DOUBLE
 $(GDEST)/arr_number.o: arr.c golf.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS) -DGG_ARR_NUMBER

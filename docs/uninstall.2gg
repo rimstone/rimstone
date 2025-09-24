@@ -22,7 +22,7 @@ make uninstall
 .B APPLICATION FILES
 .LP
 
-Note that $HOME/.golf directory will not be removed, since it may contain application files; you may delete it if there's no data there you care about, or you backed it up.
+Note that $HOME/.golf/<app name> directory will not be removed for any application, since it may contain application files; you may delete it if there's no data there you care about, or you backed it up.
 .SH SEE ALSO
  Install golf
 

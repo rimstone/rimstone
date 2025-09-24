@@ -890,10 +890,12 @@ bool cmp_type (gg_num t1, gg_num t2)
 {
     if ((t1 == GG_DEFSTRING || t1 == GG_DEFSTRINGSTATIC) && (t2 == GG_DEFSTRING || t2 == GG_DEFSTRINGSTATIC)) return true;
     else if ((t1 == GG_DEFNUMBER || t1 == GG_DEFNUMBERSTATIC) && (t2 == GG_DEFNUMBER || t2 == GG_DEFNUMBERSTATIC)) return true;
+    else if ((t1 == GG_DEFDOUBLE || t1 == GG_DEFDOUBLESTATIC) && (t2 == GG_DEFDOUBLE || t2 == GG_DEFDOUBLESTATIC)) return true;
     else if ((t1 == GG_DEFBOOL || t1 == GG_DEFBOOLSTATIC) && (t2 == GG_DEFBOOL || t2 == GG_DEFBOOLSTATIC)) return true;
     else if ((t1 == GG_DEFHASH || t1 == GG_DEFHASHSTATIC) && (t2 == GG_DEFHASH || t2 == GG_DEFHASHSTATIC)) return true;
     else if ((t1 == GG_DEFARRAYSTRING || t1 == GG_DEFARRAYSTRINGSTATIC) && (t2 == GG_DEFARRAYSTRING || t2 == GG_DEFARRAYSTRINGSTATIC)) return true;
     else if ((t1 == GG_DEFARRAYNUMBER || t1 == GG_DEFARRAYNUMBERSTATIC) && (t2 == GG_DEFARRAYNUMBER || t2 == GG_DEFARRAYNUMBERSTATIC)) return true;
+    else if ((t1 == GG_DEFARRAYDOUBLE || t1 == GG_DEFARRAYDOUBLESTATIC) && (t2 == GG_DEFARRAYDOUBLE || t2 == GG_DEFARRAYDOUBLESTATIC)) return true;
     else if ((t1 == GG_DEFARRAYBOOL || t1 == GG_DEFARRAYBOOLSTATIC) && (t2 == GG_DEFARRAYBOOL || t2 == GG_DEFARRAYBOOLSTATIC)) return true;
     else if ((t1 == GG_DEFTREE || t1 == GG_DEFTREESTATIC) && (t2 == GG_DEFTREE || t2 == GG_DEFTREESTATIC)) return true;
     else if ((t1 == GG_DEFLIST || t1 == GG_DEFLISTSTATIC) && (t2 == GG_DEFLIST || t2 == GG_DEFLISTSTATIC)) return true;
@@ -1259,7 +1261,7 @@ char *gg_find_keyword0(char *str, char *find, gg_num has_spaces, gg_num paren)
 // path must be trimmed by the caller
 // if path is found, p is advanced to be on its last / so that parsing may continue (if there's /), or otherwise is NULL
 // The caller must advance p by 1 to continue, or do nothing if it's NULL
-// Returns 1 if hierarchical path found, 0 if not
+// Returns 1 if hierarchical path found, 0 if no request found
 //
 char gg_decorate_path (char *reqname, gg_num reqname_len, char **p, gg_num p_len)
 {
@@ -1310,6 +1312,44 @@ char gg_decorate_path (char *reqname, gg_num reqname_len, char **p, gg_num p_len
     return 1;
 }
 
+
+// 
+// Convert str to resulting double (return value), with *st being status (GG_OKAY if okay).
+// st can be NULL.
+//
+GG_ALWAYS_INLINE inline  gg_dbl gg_str2dbl (char *str, gg_num *st)
+{
+    char *numend;
+    gg_dbl val;
+
+    errno = 0;   // errno is used in strtod
+    val = strtod(str, &numend);
+
+
+    if (errno != 0) 
+    {
+       // ERANGE, overflow or underflow
+       if (st && errno == ERANGE) *st = GG_ERR_OVERFLOW;
+       else if (st) *st = GG_ERR_INVALID; // should not really happen, not sure what error is according man
+       return 0;
+    }
+
+    if (numend == str) 
+    {
+       // Empty or no digits seen
+       if (st) *st = GG_ERR_EXIST;
+       return 0;
+    }
+
+    if (*numend != 0)
+    {
+       //There were trailing invalid digits, we can still extract num
+       if (st) *st = GG_ERR_TOO_MANY;
+       return (gg_dbl)val;
+    }
+    if (st) *st = GG_OKAY;
+    return (gg_dbl)val;
+}
 
 // 
 // Convert str to resulting number (return value) in base 'base', with *st being status (GG_OKAY if okay).
@@ -1377,16 +1417,20 @@ char *typename (gg_num type)
     if (type == GG_DEFSTRING) return GG_KEY_T_STRING;
     else if (type == GG_DEFSTRINGSTATIC) return GG_KEY_T_STRING;
     else if (type == GG_DEFNUMBER) return GG_KEY_T_NUMBER;
+    else if (type == GG_DEFDOUBLE) return GG_KEY_T_DOUBLE;
     else if (type == GG_DEFNUMBERSTATIC) return GG_KEY_T_NUMBER;
+    else if (type == GG_DEFDOUBLESTATIC) return GG_KEY_T_DOUBLE;
     else if (type == GG_DEFMSG) return GG_KEY_T_MESSAGE;
     else if (type == GG_DEFBROKEN) return GG_KEY_T_SPLITSTRING;
     else if (type == GG_DEFHASH) return GG_KEY_T_HASH;
     else if (type == GG_DEFARRAYSTRING) return GG_KEY_T_ARRAYSTRING;
     else if (type == GG_DEFARRAYNUMBER) return GG_KEY_T_ARRAYNUMBER;
+    else if (type == GG_DEFARRAYDOUBLE) return GG_KEY_T_ARRAYDOUBLE;
     else if (type == GG_DEFARRAYBOOL) return GG_KEY_T_ARRAYBOOL;
     else if (type == GG_DEFHASHSTATIC) return GG_KEY_T_HASH;
     else if (type == GG_DEFARRAYSTRINGSTATIC) return GG_KEY_T_ARRAYSTRING;
     else if (type == GG_DEFARRAYNUMBERSTATIC) return GG_KEY_T_ARRAYNUMBER;
+    else if (type == GG_DEFARRAYDOUBLESTATIC) return GG_KEY_T_ARRAYDOUBLE;
     else if (type == GG_DEFARRAYBOOLSTATIC) return GG_KEY_T_ARRAYBOOL;
     else if (type == GG_DEFJSON) return GG_KEY_T_JSON;
     else if (type == GG_DEFXML) return GG_KEY_T_XML;
@@ -1464,4 +1508,58 @@ gg_num gg_topower(gg_num b,gg_num p)
                     
     return res;     
 } 
+
+
+//
+// Convert double to string. Uses snprintf but in the future it may use Ryu.
+// al is a double, prec is 1) for 'g' how many decimal digits maximum (not total can be less!), 2) for 'e' and 'f' how many after the dot
+// res_len is the length of string returned
+// if prec is -1, then it's not used.
+// width is the width of output. It's like '%20.12f' where 20 is width, 12 is precision.
+// otype is 'e', 'f' or 'g' depending on what we want in terms of formatting (e=scientific, f=floating point, g=one or the other more compact)
+// Returns output, allocated
+// Since this is always inline, much of the code below never actually executes at run-time (especially all those ifs), rather only the code
+// needed does; that's because we pass constants for many cases.
+//
+GG_ALWAYS_INLINE inline char *gg_dbl2str (gg_dbl al, char otype, int width, int prec, gg_num *res_len)
+{
+    char res[400]; // cannot be larger than 320ish at worst
+    int sres = (int)sizeof(res);
+    gg_num len = 0;
+    if (prec != -1) 
+    { 
+        prec = MIN(prec, 18); 
+        if (width != -1)
+        {
+            if (width >= sres) width = sres-1; // make sure there's no buffer overflow with too high a width
+            if (otype == 'f') len = snprintf (res, sres, "%*.*f", width, prec, al);
+            else if (otype == 'e') len = snprintf (res, sres, "%*.*e", width, prec, al);
+            else if (otype == 'g') len = snprintf (res, sres, "%*.*g", width, prec, al);
+        }
+        else 
+        {
+            if (otype == 'f') len = snprintf (res, sres, "%.*f", prec, al);
+            else if (otype == 'e') len = snprintf (res, sres, "%.*e", prec, al);
+            else if (otype == 'g') len = snprintf (res, sres, "%.*g", prec, al);
+        }
+    } 
+    else 
+    { 
+        if (width != -1)
+        {
+            if (width >= sres) width = sres-1; // make sure there's no buffer overflow with too high a width
+            if (otype == 'f') len = snprintf (res, sres, "%*f", width, al);
+            else if (otype == 'e') len = snprintf (res, sres, "%*e", width, al);
+            else if (otype == 'g') len = snprintf (res, sres, "%*g", width, al);
+        }
+        else 
+        {
+            if (otype == 'f') len = snprintf (res, sres, "%f", al);
+            else if (otype == 'e') len = snprintf (res, sres, "%e", al);
+            else if (otype == 'g') len = snprintf (res, sres, "%g", al);
+        }
+    }
+    if (res_len != NULL) *res_len = len;
+    return gg_strdupl (res, 0, len);
+}
 

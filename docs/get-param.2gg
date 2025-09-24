@@ -34,15 +34,15 @@ If parameter is a string, it is  trimmed for whitespaces (both on left and right
 .B TYPES
 .LP
 
-By default, <name> is a string variable, unless <type> (in "type" clause) is specified. <type> can be "string" for a string variable (the default), "bool" for a boolean variable, "number" for a number variable, "string-array" for an array of strings, "number-array" for an array of numbers, "bool-array" for an array of booleans, "message" for a \fBmessage\fP variable, "split-string" for a \fBsplit-string\fP variable, "hash" for an \fBhash\fP variable, "tree" for an \fBtree\fP variable, "tree-cursor" for an \fBtree cursor\fP variable, "fifo" for a \fBFIFO\fP variable, "lifo" for a \fBLIFO\fP variable, "list" for a \fBlist\fP variable, "file" for a \fBfile\fP variable, and "service" for a \fBservice\fP variable.
+By default, <name> is a string variable, unless <type> (in "type" clause) is specified. <type> can be "string" for a string variable (the default), "bool" for a boolean variable, "number" for a number variable, "double" for a double variable, "string-array" for an array of strings, "number-array" for an array of numbers, "double-array" for an array of doubles, "bool-array" for an array of booleans, "message" for a \fBmessage\fP variable, "split-string" for a \fBsplit-string\fP variable, "hash" for an \fBhash\fP variable, "tree" for an \fBtree\fP variable, "tree-cursor" for an \fBtree cursor\fP variable, "fifo" for a \fBFIFO\fP variable, "lifo" for a \fBLIFO\fP variable, "list" for a \fBlist\fP variable, "file" for a \fBfile\fP variable, and "service" for a \fBservice\fP variable.
 
-The value obtained with get-param is checked to be of the proper <type>, and if it isn't, your request will \fBerror out\fP. The exception to this is that a string parameter can be converted into a number or a boolean, assuming the string value represents a valid number or is "true"/"false"; this exception is for \fBrequest\fP URL parameters only.  Parameters of "number" and "bool" types are obtained by value, and others by reference. It means for instance, that you can pass a tree to call-handler and read and write nodes there, and such changes will be visible in the caller request.
+The value obtained with get-param is checked to be of the proper <type>, and if it isn't, your request will \fBerror out\fP. The exception to this is that a string parameter can be converted into a number, double or a boolean, assuming the string value represents a valid number, double or is "true"/"false"; this exception is for \fBrequest\fP URL parameters only.  Parameters of "number", "double" and "bool" types are obtained by value, and others by reference. It means for instance, that you can pass a tree to call-handler and read and write nodes there, and such changes will be visible in the caller request.
 
 .LP
 .B DEFAULT VALUE
 .LP
 
-If "default-value" clause is used, then <value> will be assigned to <name> variable if there is none provided. For example, if the caller does not specify the value for parameter <name>, then its value will be <value>; note that parameter must always have value so if none is provided and there is no default value specified, your program will \fBerror out\fP. "default-value" can only be used with strings, numbers and booleans.
+If "default-value" clause is used, then <value> will be assigned to <name> variable if there is none provided. For example, if the caller does not specify the value for parameter <name>, then its value will be <value>; note that parameter must always have value so if none is provided and there is no default value specified, your program will \fBerror out\fP. "default-value" can only be used with strings, numbers, doubles and booleans.
 
 .LP
 .B INPUT PARAMETERS FROM A CALLER

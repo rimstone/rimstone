@@ -788,6 +788,13 @@ static inline void gg_check_web_param_type (char *n, gg_num par_ind)
             if (st != GG_OKAY) gg_report_error ("Parameter [%s] is a number, but input data [%s] is not a number", n, sv);
             _gg_sprm_par[par_ind].set = true;
         }
+        else if (_gg_sprm_par[par_ind].type == GG_DEFDOUBLE) // type of param , check it
+        {
+            gg_num st;
+            _gg_sprm_par[par_ind].tval.dblval = gg_str2dbl (sv, &(st));
+            if (st != GG_OKAY) gg_report_error ("Parameter [%s] is a double, but input data [%s] is not a double", n, sv);
+            _gg_sprm_par[par_ind].set = true;
+        }
         else if (_gg_sprm_par[par_ind].type == GG_DEFBOOL)
         {
             if (!strcmp (sv, "true")) _gg_sprm_par[par_ind].tval.logic = true;
@@ -1554,9 +1561,10 @@ gg_num gg_get_input(gg_input_req *req, char *method, char *input)
         }
         else 
         {
-            // this really shouldn't happen. 
-             gg_bad_request();
-             gg_report_error ("URL path [%s] is incorrect", full_path);
+            // this means (when decres is 0), that in /req/x=2/..  request name (req) is missing
+            // in the future gg_decorate_path may return more than just 0 or 1!
+            gg_bad_request();
+            gg_report_error ("URL path [%s] is incorrect (request name is missing)", full_path);
         }
 
         // p is NULL here if no params with = in request path + params
@@ -3114,9 +3122,6 @@ void gg_exit (void)
 
 #ifdef DEBUG
     // Free program context, the VERY LAST thing before exit
-    free (pc->app.dbconf_dir);
-    free (pc->app.home_dir);
-    free (pc->app.file_dir);
     if (pc != NULL) free(pc); 
 #endif
 

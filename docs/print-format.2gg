@@ -78,6 +78,12 @@ print-format will format a string according to the <format> string and a list of
 .RS 4
 \[bu]    
 %<number>hhd for a number output with a width of at least <number> (any excess filled with spaces to the left). Use "hhu" for displaying as unsigned number, "hho" for displaying in octal notation and "hhx" for hexadecimal notation.
+
+.RE
+
+.RS 4
+\[bu]    
+%<width>f for a double output in fixed-point notation, with the 6 digits after decimal point ("format-floating" clause in \fBdouble-string\fP); %<width>e for scientific notation with one digit before the decimal point, along with the exponent ("format-scientific" clause in \fBdouble-string\fP); %<width>g displays either %f or %e format based on which is more compact ("format-compact" clause in \fBdouble-string\fP); in any case <width> represents the width of at least <width> bytes output. You can also use <widith>.<precision> to specify both width and precision, or ".<precision>" for just precision; for instance, "%10f" or "%12.4e" etc.
 .RE
 
 If "to-error" clause is used, the output is sent to "stderr", or standard output stream.

@@ -34,39 +34,57 @@ endif
 
 #ASAN (internal)
 ifeq ($(strip $(GG_C_ASAN)),1)
-	_ASAN:=-fsanitize=address -fsanitize-recover=address
-	ASAN_OPTIONS:=detect_leaks=0:log_path=asan:halt_on_error=1
+    _ASAN:=-fsanitize=address -fsanitize-recover=address
+    ASAN_OPTIONS:=detect_leaks=0:log_path=asan:halt_on_error=1
     export ASAN_OPTIONS
 else
-	_ASAN:=
+    _ASAN:=
 endif
 
 ifeq ($(strip $(GG_C_IGNORE_WARN)),1)
-	GG_IGNORE_WARN:=-ignore-warn
+    GG_IGNORE_WARN:=-ignore-warn
 else
-	GG_IGNORE_WARN:=
+    GG_IGNORE_WARN:=
 endif
 
 #internal debug
 ifeq ($(strip $(GG_C_DEBUG)),1)
-	GG_DEBUG:=-DDEBUG
+    GG_DEBUG:=-DDEBUG
 else
-	GG_DEBUG:=
+    GG_DEBUG:=
 endif
   
+#this is --fpe option in gg
+ifeq ($(strip $(GG_C_FPE)),1)
+    _FPE:=-DGG_C_FPE
+    #this version check should be removed at some point, probably around 2028-2032, as support for redhat 9 ends. Debian 12 also doesn't support it (13 does)
+    _GCCV:=$(shell gcc -dumpversion 2>&1 | cut -d'.' -f1)
+    #fsanitize-trap is available in 14 and up
+    GT_GCCV_14:=$(intcmp $(_GCCV), 14, false, true, true)
+    ifeq ($(GT_GCCV_14), true)
+        _NUMEXC:=-fsanitize=signed-integer-overflow -fno-sanitize-recover=signed-integer-overflow
+    else
+        _NUMEXC:=-fsanitize=signed-integer-overflow 
+    endif
+else
+    _FPE:=
+    _NUMEXC:=
+endif
 #Note: -rdynamic is necessary for libgcc to be loaded in order to get a backtrace when needed
 ifeq ($(strip $(GG_C_DEVEL)),1)
-	_OPTIM_COMP:=-g3 -O $(GG_DEBUG) -DGG_DEVEL -rdynamic 
-	_OPTIM_LINK:=-rdynamic
-	CFLAGS_WARN_ERROR:=-Werror 
-	_LTO:=
-	GDEST:=$(GG_DATA)/lib/devel
+    _OPTIM_COMP:=-g3 -O $(GG_DEBUG) -DGG_DEVEL $(_FPE) $(_NUMEXC) -rdynamic 
+    _OPTIM_LINK:=-rdynamic $(_NUMEXC)
+    CFLAGS_WARN_ERROR:=-Werror 
+    _LTO:=
+    GDEST:=$(GG_DATA)/lib/devel
+    GG_ALWAYS_INLINE:=
 else
-	_OPTIM_COMP:=-g -O3
-	_OPTIM_LINK:=
-	CFLAGS_WARN_ERROR:=
-	_LTO:=-flto=auto
-	GDEST:=$(GG_DATA)/lib/release
+    _OPTIM_COMP:=-g -O3
+    _OPTIM_LINK:=
+    CFLAGS_WARN_ERROR:=
+    _LTO:=-flto=auto
+    GDEST:=$(GG_DATA)/lib/release
+    GG_ALWAYS_INLINE:=__attribute__((always_inline))
 endif
 
 
@@ -76,39 +94,39 @@ GG_SERVICE_TARGET:=$(GG_BLD)/$(GG_C_NAME).srvc
 GG_TARGET:=$(GG_BLD)/$(GG_C_NAME)
 
 ifeq ($(strip $(_SYSTEMID)),opensuse)
-	GG_SERVICE_INCLUDE:=-I /usr/include/fastcgi
+    GG_SERVICE_INCLUDE:=-I /usr/include/fastcgi
 else
-	GG_SERVICE_INCLUDE:=
+    GG_SERVICE_INCLUDE:=
 endif
 
 
 #If --single-file is used, then each request handler must be in its own file and own directory as per request path
 #Without it, then each .golf file can have any number of request handlers, but they must start with file name, so still organized
 ifeq ($(strip $(GG_C_SINGLE_FILE)),1)
-	GG_SINGLE_FILE:=-single-file
+    GG_SINGLE_FILE:=-single-file
 else
-	GG_SINGLE_FILE:=
+    GG_SINGLE_FILE:=
 endif
 
 #If --public is used, then all request handlers are publicly accessible unless private
 #Without --public, they are all private unless public
 ifeq ($(strip $(GG_C_PUBLIC)),1)
-	GG_PUBLIC_FLAG:=-public
+    GG_PUBLIC_FLAG:=-public
 else
-	GG_PUBLIC_FLAG:=
+    GG_PUBLIC_FLAG:=
 endif
 
 #If c-lines is used, then show all diagnostics
 ifeq ($(strip $(GG_C_SKIPLINES)),1)
-	GG_X_FLAG:=-x
+    GG_X_FLAG:=-x
 else
-	GG_X_FLAG:=
+    GG_X_FLAG:=
 endif
 
 ifeq ($(strip $(GG_C_POSIXREGEX)),1)
-	GG_POSIXREGEX_FLAG:=-DGG_C_POSIXREGEX
+    GG_POSIXREGEX_FLAG:=-DGG_C_POSIXREGEX
 else
-	GG_POSIXREGEX_FLAG:=
+    GG_POSIXREGEX_FLAG:=
 endif
 
 #Note we don't strip executables anymore. The debug info does not appear to make much, if any, difference any more.
@@ -116,7 +134,7 @@ endif
 
 #ignoring char-subscripts (such as str[str[0]] is fine because golf checks for boundaries
 #GG_C_CFLAGS *must* be the last in order to override anything else by user action!
-_CFLAGS:=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_ALL_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -I $(CURDIR) -I $(GG_INCLUDE_PATH) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(_ASAN) $(_PROF) $(GG_C_CFLAGS) $(_LTO) -fno-diagnostics-show-caret
+_CFLAGS:=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_ALL_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -DGG_ALWAYS_INLINE='$(GG_ALWAYS_INLINE)' -I $(CURDIR) -I $(GG_INCLUDE_PATH) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(_ASAN) $(_PROF) $(GG_C_CFLAGS) $(_LTO) -fno-diagnostics-show-caret
 
 
 #clean before making target (server) at all
@@ -197,7 +215,7 @@ define make_source
 	ECODE=0; $(_CC) -c $(GG_BLD)/__$${TFILE##*/}.c  $(_CFLAGS) $$GG_ALL_INCL  -o $@ -I`pwd` 2>$(GG_BLD)/.comperr.$${TFILE##*/} 1>&2 || ECODE="$$?" 
 	if [ "$$ECODE" != "0" ]; then
 	    $(call calc_libs)
-	    sed 's/^/golf: /g' $(GG_BLD)/.comperr.$${TFILE##*/}| grep ' error: ' 1>&2
+	    sed 's/^/golf: /g' $(GG_BLD)/.comperr.$${TFILE##*/}| grep --text ' error: ' 1>&2
 	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.$${TFILE##*/}" 1>&2
 	    exit 1
 	fi
@@ -249,7 +267,7 @@ $(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
 	        echo "{.name=\"$$PNAME\", .type=$$PTYPE}">>$(GG_BLD)/gg_sparam.c.new
 	        if [ "$$PREV_PNAME" != "" ]; then 
 	            if [ "$$PREV_PNAME" == "$$PNAME" ]; then
-	                OCC=$$(grep -l "^$$PNAME+" $(GG_BLD)/.setparam/*||true)
+	                OCC=$$(grep --text -l "^$$PNAME+" $(GG_BLD)/.setparam/*||true)
 	                LIST_OCC=""; for k in $$OCC; do SINGLE_OCC=$$(basename $$k); SINGLE_OCC=$${SINGLE_OCC%.*}; SINGLE_OCC=$${SINGLE_OCC//__/\/}; LIST_OCC="$$SINGLE_OCC $$LIST_OCC"; done
 	                echo "golf: The type of parameter [$$PNAME] must be the same in all source files, occuring in files [$$LIST_OCC]"
 	                exit 1
@@ -299,7 +317,7 @@ _LFLAGS:=-Wl,--no-undefined -Wl,--rpath=$(GDEST) -Wl,--enable-new-dtags -L$(GDES
 $(GG_SERVICE_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
 	if [ "$$GG_C_SHOW" == "1" ]; then echo "golf: Making command-line executable"; fi
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
-	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(GG_EVENT_STUBS) -lsrvcgolf -lgolfbtrace -lggfcgi $$(cat $(GG_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(GG_BLD)/.all_libs) > $(GG_BLD)/.comperr.server.link 2>&1 || ECODE="$$?"
+	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(GG_EVENT_STUBS) -lsrvcgolf -lgolfbtrace -lggfcgi $$(cat $(GG_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(GG_BLD)/.all_libs) -lm > $(GG_BLD)/.comperr.server.link 2>&1 || ECODE="$$?"
 	if [ "$$ECODE" != "0" ]; then 
 	    sed 's/^/golf: /g' $(GG_BLD)/.comperr.server.link 1>&2
 	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.server.link" 1>&2
@@ -313,7 +331,7 @@ $(GG_SERVICE_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(
 $(GG_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
 	if [ "$$GG_C_SHOW" == "1" ]; then echo "golf: Making server executable"; fi
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
-	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(GG_EVENT_STUBS) -lgolf -lgolfbtrace $$(cat $(GG_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(GG_BLD)/.all_libs) > $(GG_BLD)/.comperr.link 2>&1 || ECODE="$$?"
+	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(GG_EVENT_STUBS) -lgolf -lgolfbtrace $$(cat $(GG_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(GG_BLD)/.all_libs) -lm > $(GG_BLD)/.comperr.link 2>&1 || ECODE="$$?"
 	if [ "$$ECODE" != "0" ]; then 
 	    sed 's/^/golf: /g' $(GG_BLD)/.comperr.link 1>&2
 	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.link" 1>&2

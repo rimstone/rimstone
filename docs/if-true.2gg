@@ -62,24 +62,26 @@ If "length" clause is used, only the first <length> bytes of the strings are com
 
 .RS 4
 \[bu]    
-For numbers:
+For numbers and doubles (<value> is a number of a double):
 
 .RS 4
 .EX
 
-<number> \\
+<value> \\
    ( equal | not-equal | \\
    lesser-than | lesser-equal | \\
    greater-than | greater-equal | \\
    every | not-every ) \\
-<check number>  ...
+<check value>  [ error-margin <error margin> ] ...
 
 .EE
 .RE
 
-If "equal", "not-equal", "lesser-than", "lesser-equal", "greater-than" or "greater-equal" clause is used, a comparison succeeds if <number> is equal, not equal, lesser, lesser or equal, greater or greater-or-equal than <check number>, respectively.
+If "equal", "not-equal", "lesser-than", "lesser-equal", "greater-than" or "greater-equal" clause is used, a comparison succeeds if <value> is equal, not equal, lesser, lesser or equal, greater or greater-or-equal than <check value>, respectively.
 
-If "every" is used, then the comparison succeeds if the modulo of <number> and <check number> is 0 - this is useful in executing some code every N times but not the ones in between; with "not-every" the comparison success is this modulo is not 0 which is useful to execute code all the times except every Nth.
+If "every" is used, then the comparison succeeds if the modulo of <value> and <check value> is 0 - this is useful in executing some code every N times but not the ones in between; with "not-every" the comparison success is this modulo is not 0 which is useful to execute code all the times except every Nth.
+
+"error-margin" is valid for "equal" or "not-equal" comparisions, and for double only. Since doubles may be difficult to compare for equality, you can specify the margin of error (i.e. 1E-7), so that comparisions succeed if the difference between two doubles is lesser than this value. For instance, to limit double comparison to two decimals, "error-margin" should be 1e-2. Unless you have a reason not to use "error-margin" when comparing doubles (such as if they are rounded, or if you know how they are calculated and thus what the internal representation would be), you should always use it.
 
 
 .RE
@@ -161,6 +163,19 @@ end-if
 set-number n1 = 20
 if-true n1+10 equal 30 and !b1 equal true and str1 equal "one"
     @It is true!
+end-if
+
+.EE
+.RE
+
+Check two doubles for equality with a margin of error - in this case they are considered equal as the margin of error is greater than the difference:
+
+.RS 4
+.EX
+
+set-double d = 62009.755529200672754
+if-true dl equal 62009.755529 error-margin 1E-4
+    @The doubles are equal
 end-if
 
 .EE

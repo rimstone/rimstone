@@ -1,0 +1,108 @@
+.TH GOLF 2gg $VERSION $DATE Development Tools
+.SH NAME
+mixing-doubles-and-numbers \- Golf documentation (doubles
+numbers)
+.SH DESCRIPTION
+Without conversion functions (see \fBmath-functions\fP), double and number expressions do not mix, as they are separate types. One exception to this is using numbers (i.e. whole numbers) in double expressions, since in that case they are automatically promoted; the reason for this is that this conversion is lossless.
+
+The opposite is not true; doubles would generally lose precision when promoted to numbers, and for this you can use floor(), ceil(), round() etc. 
+
+.LP
+.B USING NUMBERS IN DOUBLE EXPRESSIONS IS FINE
+.LP
+
+For example, the following is valid, because a number (3) is promoted to a double:
+
+.RS 4
+.EX
+
+set-double d = 4.5 + 3
+
+.EE
+.RE
+
+
+.LP
+.B USING DOUBLES IN NUMBER EXPRESSIONS IS NOT, HOWEVER...
+.LP
+
+In general, a double cannot be automatically promoted to a number without loss. In some languages, there is an automatic promotion of this kind, however it is a bad idea and a source of potential bugs since the method of demotion can vary and often the developer isn't aware of it:
+
+.RS 4
+.EX
+
+set-number n = 3 + 4.5  // this won't work
+
+.EE
+.RE
+
+Instead you can use functions like num(), round(), ceil(), floor() etc. (see \fBmath-functions\fP):
+
+.RS 4
+.EX
+
+set-number n = 3 + round(4.5)
+
+.EE
+.RE
+
+
+.LP
+.B COMPARISIONS
+.LP
+
+When it comes to comparisons, the type determination is performed from left to right. So the following works:
+
+.RS 4
+.EX
+
+if-true 3.5 > 3
+    @Yes
+end-if
+
+.EE
+.RE
+
+because a double (3.5) comes first and then a number (3) is promoted to a double. However, this will not compile:
+
+.RS 4
+.EX
+
+if-true 3 < 3.5
+    @Yes
+end-if
+
+.EE
+.RE
+
+because a number (3) comes first and then a double (3.5) cannot be automatically promoted to a number. When writing comparisons between the two, either use the appropriate conversion functions, or write double expressions first. For instance you can use dbl() function (see \fBmath-functions\fP):
+
+.RS 4
+.EX
+
+if-true dbl(3) < 3.5
+    @Yes
+end-if
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Doubles
+
+\fBabs-double\fP  
+\fBdouble-expressions\fP  
+\fBdouble-string\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBset-double\fP  
+\fBstring-double\fP   
+ Numbers
+
+\fBabs-number\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBnumber-expressions\fP  
+\fBnumber-string\fP  
+\fBset-number\fP  
+\fBstring-number\fP   
+See all 
+\fBdocumentation\fP

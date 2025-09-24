@@ -134,6 +134,7 @@ OPTIONS:
              --c-lines 
              --posix-regex
              --devel | --release
+             --fpe
              --maxupload=<max upload size>
              --client-timeout=<timeout>
              --path=\"/some/path\"
@@ -183,7 +184,7 @@ function main() {
 #list of Golf options for getop
 _OPT_STATUS="0"
 #do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
-_opts=$(getopt -a -n $0 -o k:e:,q,p:,a:,o,l,m,i,h,c,v,s,u,r --long verbose,ignore-warn,exclude-dir:,man:,single-file,public,parallel:,db:,lflag:,cflag:,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,prof,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,devel,release,req:,exec,method:,maxupload:,client-timeout:,max-errors:,version:,downgrade,all,force-user,include,link,safe -- "$@") || _OPT_STATUS=$?
+_opts=$(getopt -a -n $0 -o k:e:,q,p:,a:,o,l,m,i,h,c,v,s,u,r --long verbose,ignore-warn,exclude-dir:,man:,single-file,public,parallel:,db:,lflag:,cflag:,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,prof,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,devel,fpe,release,req:,exec,method:,maxupload:,client-timeout:,max-errors:,version:,downgrade,all,force-user,include,link,safe -- "$@") || _OPT_STATUS=$?
 if [ $_OPT_STATUS -ne 0 ]; then
     use_message 1>&2
     exit_s -1
@@ -242,6 +243,11 @@ _DO_QUICK=0
             ;;
         --devel  )
             export GG_C_DEVEL="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --fpe  )
+            export GG_C_FPE="1"
             _DEVOPT=1
             shift 
             ;;
@@ -509,6 +515,9 @@ _DO_QUICK=0
     if [ "$GG_C_DEVEL" == "1" ]; then
         GDEST="devel"
     else
+        if [ "$GG_C_FPE" == "1" ]; then
+            error "Cannot use --fpe with release build"
+        fi
         if [ "$GG_C_DEBUG" == "1" ]; then
             error "Cannot use --debug with release build"
         fi
@@ -692,28 +701,23 @@ function setup_highlighting() {
     mkdir -p $HOME/.vim/indent
     cp $GG_LIBRARY_PATH/golf.vim $HOME/.vim/syntax/golf.vim
     cp $GG_LIBRARY_PATH/golf_indent.vim $HOME/.vim/indent/golf.vim
+
+#make sure .vimrc exists
+    if [[ ! -f "$HOME/.vimrc" ]]; then echo "">"$HOME/.vimrc"; fi
+#delete old
+    sed -i '/"golf-lang/d' $HOME/.vimrc
+
+#make sure it's only if vim installed
+    echo "if has('syntax') \"golf-lang" >> $HOME/.vimrc
+
 #set .golf file type to use golf.vim above
-    _VICOMM="autocmd BufRead,BufNewFile *.golf set filetype=golf"
-    if [ ! -f "$HOME/.vimrc" ]; then
-        echo "$_VICOMM" > $HOME/.vimrc
-    else
-        E=0; grep -F "$_VICOMM" $HOME/.vimrc >/dev/null || E=$?
-        if [ "$E" != "0" ]; then
-            echo "$_VICOMM" >> $HOME/.vimrc
-        fi
-    fi
+    echo "  autocmd BufRead,BufNewFile *.golf set filetype=golf \"golf-lang" >> $HOME/.vimrc
+
 #make sure syntax is on
-    _VICOMM="filetype indent on"
-    E=0; grep -F "$_VICOMM" $HOME/.vimrc >/dev/null||E=$?
-    if [ "$E" != "0" ]; then
-        echo "$_VICOMM" >> $HOME/.vimrc
-    fi
+    echo "  filetype indent on \"golf-lang" >> $HOME/.vimrc
 #make sure syntax is on
-    _VICOMM="syntax on"
-    E=0; grep -F "$_VICOMM" $HOME/.vimrc >/dev/null||E=$?
-    if [ "$E" != "0" ]; then
-        echo "$_VICOMM" >> $HOME/.vimrc
-    fi
+    echo "  syntax on \"golf-lang" >> $HOME/.vimrc
+    echo "endif \"golf-lang" >> $HOME/.vimrc
 }
 
 
@@ -1008,6 +1012,9 @@ function unpackapp() {
     if [[ -f "libs/xml" && "$GG_XML_EX" != "0"  ]]; then
         DISP_LIB+="$GG_XML_I$NL";
     fi
+    if [[ "$GG_C_FPE" == "1" && "$GG_UBSAN_EX" != "0"  ]]; then
+        DISP_LIB+="$GG_UBSAN_I$NL";
+    fi
     if [ "$DISP_LIB" != "" ]; then
         echo "Some libraries are not installed and need to be installed for application to work. You can 1) install them now by entering 'yes' (in which case the commands below will execute), or 2) enter 'no', install them yourself and try again. In either scenario you will need sudo privileges."
         echo
@@ -1025,7 +1032,7 @@ function unpackapp() {
 
     echo "Checking for any unresolved libraries..."
     #check if any unresolved libs
-    E=0; NFS=$(ldd ./$APP.srvc 2>&1 | grep ' => not found') || E=$?
+    E=0; NFS=$(ldd ./$APP.srvc 2>&1 | grep --text ' => not found') || E=$?
     if [ "$NFS" != "" ]; then 
         error "Some libraries are still unresolved:\n$NFS"; 
     fi
@@ -1190,6 +1197,7 @@ GG_C_SHOW='$GG_C_SHOW'
 GG_C_GCC='$GG_C_GCC'
 GG_C_VERSION='$GG_VERSION$_BETA'
 GG_C_DEVEL='$GG_C_DEVEL'
+GG_C_FPE='$GG_C_FPE'
 GG_C_DEBUG='$GG_C_DEBUG'
 GG_C_PUBLIC='$GG_C_PUBLIC'
 GG_C_SINGLE_FILE='$GG_C_SINGLE_FILE'
@@ -1254,6 +1262,7 @@ function read_modules() {
 #
     #begin automatic libs discovery
     #release name
+    #This MUST be exported here, otherwise v1 will NOT see them, no matter the settings in gglib!!
     export GG_REL_NAME=
     #includes
     export GG_MARIADB_INC=
@@ -1272,6 +1281,7 @@ function read_modules() {
     export GG_CRYPTO_EX=
     export GG_POSTGRES_EX=
     export GG_XML_EX=
+    export GG_UBSAN_EX=
     #golf libs
     export GG_MARIADB_LIB_S=
     export GG_SQLITE_LIB_S=
@@ -1288,6 +1298,7 @@ function read_modules() {
     export GG_PCRE2_INSTALL=
     export GG_CRYPTO_INSTALL=
     export GG_POSTGRES_INSTALL=
+    export GG_UBSAN_INSTALL=
     #package names
     export GG_XML_PACKAGE=
     export GG_MARIADB_PACKAGE=
@@ -1304,6 +1315,7 @@ function read_modules() {
     export GG_PCRE2_LIB=
     export GG_CRYPTO_LIB=
     export GG_POSTGRES_LIB=
+    export GG_UBSAN_LIB=
     #determine library existance
     #make sure $1 is not passed to gglib
     eval set --
@@ -1411,7 +1423,7 @@ $OF"
     TNEW+="#$NL"
     TNEW+=$'\n'
     TNEW+="#Include files here:$NL"
-    _HFILES=$(grep -a -v golfapp.h <<<"$GG_HLIST" | xargs)
+    _HFILES=$(grep --text -a -v golfapp.h <<<"$GG_HLIST" | xargs)
     TNEW+="GG_HEADER_FILES=$_HFILES$NL"
     TNEW+=$NL
     TNEW+="#Source files here:$NL"
@@ -1770,7 +1782,8 @@ function build_app() {
         fi
     else
         #without || true here, our trap (see beginning of gg) will cause ugly (and useless) message
-        cat $GG_BLD/.make.output|grep 'golf: ' | grep -v "^make:" |sed 's/__/\//g' 1>&2 || true
+        #use --text, for instance if there's a binary stray char and the error message has it; without --text, all we get is 'binary file matches' (weird)
+        cat $GG_BLD/.make.output|grep --text 'golf: ' | grep --text -v "^make:" |sed 's/__/\//g' 1>&2 || true
         echo "There are errors in making your application (complete log at $GG_BLD/.make.output)."
     fi
     exit_s $ECODE

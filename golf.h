@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define GG_VERSION "3.3.0"
+#define GG_VERSION "3.4.0"
 
 // OS Name and Version
 #define GG_OS_NAME  GG_OSNAME
@@ -71,6 +71,9 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/prctl.h>
+#include <math.h>
+#include <fenv.h>
+#include <float.h>
 // param.h for min/max without side effects
 #include <sys/param.h>
 #include <stdint.h>
@@ -177,6 +180,12 @@ void _gg_report_error (char *format, ...) __attribute__ ((format (printf, 1, 2))
 gg_num gg_gen_write (bool is_error, char *s, gg_num nbyte);
 
 
+// Number double conversions, also implemented as functions in expressions
+#define num(x) ((gg_num)(x))
+#define dbl(x) ((gg_dbl)(x))
+#define abn(x) (llabs(x))
+#define abd(x) (fabs(x))
+
 //
 //
 // Golf memory
@@ -239,7 +248,8 @@ extern char* GG_EMPTY_STRING;
 #ifndef DEBUG
 #define gg_mem_get_id(ptr) ((gg_num)((gg_head*)((unsigned char*)(ptr)-GG_ALIGN))->id)
 #else
-static inline gg_num gg_mem_get_id (void *ptr)
+// in .h file, __atribute__((always_inline)) must be after the declaration
+GG_ALWAYS_INLINE static inline gg_num gg_mem_get_id (void *ptr)
 {
     if (ptr == NULL) gg_report_error ("Invalid memory detected");
     gg_head *h = (gg_head*)((unsigned char*)ptr-GG_ALIGN);
@@ -253,7 +263,7 @@ static inline gg_num gg_mem_get_id (void *ptr)
 //
 // Native malloc with a check
 //
-static inline void *gg_malloc0(gg_num len)
+GG_ALWAYS_INLINE static inline void *gg_malloc0(gg_num len) 
 {
     void *res = malloc (len);
     if (res == NULL) gg_report_error ("Cannot allocate memory of size [%ld]", len);
@@ -264,7 +274,7 @@ static inline void *gg_malloc0(gg_num len)
 // Memory in Golf is almost always sized exactly as needed
 // len is useful data plus 1 for nullbyte, so for "ab", it's 3
 //
-static inline void gg_mem_set_len(void *ptr,gg_num length) {((gg_head*)((unsigned char*)ptr-GG_ALIGN))->len = length;}
+GG_ALWAYS_INLINE static inline void gg_mem_set_len(void *ptr,gg_num length) {((gg_head*)((unsigned char*)ptr-GG_ALIGN))->len = length;}
 // Set memory length for C programmers
 #define gg_mem_set_length(str,len) gg_mem_set_len(str, len)
 
@@ -390,6 +400,7 @@ static inline void gg_mem_set_len(void *ptr,gg_num length) {((gg_head*)((unsigne
 #define GG_DEFNONE 0
 #define GG_DEFSTRING 1
 #define GG_DEFNUMBER 4
+#define GG_DEFDOUBLE 5
 #define GG_DEFBROKEN 8
 #define GG_DEFJSON 9
 #define GG_DEFHASH 10
@@ -416,16 +427,21 @@ static inline void gg_mem_set_len(void *ptr,gg_num length) {((gg_head*)((unsigne
 #define GG_DEFARRAYBOOLSTATIC 32
 #define GG_DEFARRAYNUMBER 33
 #define GG_DEFARRAYBOOL 34
+#define GG_DEFDOUBLESTATIC 35
+#define GG_DEFARRAYDOUBLE 36
+#define GG_DEFARRAYDOUBLESTATIC 37
 #define GG_DEFUNKN 1024
 // type names
 #define GG_KEY_T_STRING "string"
 #define GG_KEY_T_BOOL "bool"
 #define GG_KEY_T_NUMBER "number"
+#define GG_KEY_T_DOUBLE "double"
 #define GG_KEY_T_MESSAGE "message"
 #define GG_KEY_T_SPLITSTRING "split-string"
 #define GG_KEY_T_HASH "hash"
 #define GG_KEY_T_ARRAYSTRING "string-array"
 #define GG_KEY_T_ARRAYNUMBER "number-array"
+#define GG_KEY_T_ARRAYDOUBLE "double-array"
 #define GG_KEY_T_ARRAYBOOL "bool-array"
 #define GG_KEY_T_TREE "tree"
 #define GG_KEY_T_JSON "json"
@@ -448,6 +464,7 @@ static inline void gg_mem_set_len(void *ptr,gg_num length) {((gg_head*)((unsigne
 //
 #define GG_STRING_NONE NULL
 #define GG_NUMBER_NONE LLONG_MIN
+#define GG_DOUBLE_NONE NAN
 #define GG_BOOL_NONE 2
 //types of random data generation
 #define GG_RANDOM_NUM 0
@@ -534,6 +551,12 @@ typedef struct gg_arraybool_s {
     gg_num alloc_elem; // how many elements are actually allocated
     unsigned char process; // holds bits for process/const
 } gg_arraybool;
+typedef struct gg_arraydouble_s {
+    gg_dbl *dbl; // for numbers
+    gg_num max_elem; // how many total elements there can be - we don't allocate this before hand!
+    gg_num alloc_elem; // how many elements are actually allocated
+    unsigned char process; // holds bits for process/const
+} gg_arraydouble;
 typedef struct gg_arraynumber_s {
     gg_num *num; // for numbers
     gg_num max_elem; // how many total elements there can be - we don't allocate this before hand!
@@ -665,6 +688,7 @@ typedef struct s_gg_ipar
         void *value; // URL values for GET/POST request, or any param set with set-param
                  // which can be of any type, not just string
         gg_num numval; // number value, if type is number, used for set-param from number so we can get-param from it (using *value won't work as C is iffy on this).
+        gg_dbl dblval; // double value, if type is double, used for set-param from double so we can get-param from it (using *value won't work as C is iffy on this).
         bool logic; // bool value
     } tval; // it's either value or numval, both are 8 bytes
     bool set; // true if variable set, false otherwise
@@ -990,11 +1014,11 @@ typedef struct gg_tree_cursor_s {
 // the useful (actual) data, so it can never happen that comparison continues beyond either memory comparison operand.
 // Equality for string works for binary as well, b/c it uses memcmp.
 //
-static inline bool gg_cm_str (char *a, gg_num la, char *b, gg_num lb) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str (char *a, gg_num la, char *b, gg_num lb)  {
     if (la != lb) return false; // strings not equal if lengths not equal
     return !memcmp(a,b, (size_t) la);
 }
-static inline bool gg_cm_str_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_l (char *a, gg_num la, char *b, gg_num lb, gg_num l)  {
     if ((l > la || l > lb)) {
         if (la != lb) return false; else return !memcmp(a,b, (size_t) la);
     } else {
@@ -1002,11 +1026,11 @@ static inline bool gg_cm_str_l (char *a, gg_num la, char *b, gg_num lb, gg_num l
         return !memcmp(a,b, (size_t) l);
     }
 } 
-static inline bool gg_cm_str_c (char *a, gg_num la, char *b, gg_num lb) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_c (char *a, gg_num la, char *b, gg_num lb)  {
     if (la != lb) return false; // strings not equal if lengths not equal
     return !strcasecmp(a,b);
 }
-static inline bool gg_cm_str_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
     if ((l > la || l > lb)) {
         if (la != lb) return false; else return !strncasecmp(a,b, (size_t) la);
     } else {
@@ -1014,84 +1038,84 @@ static inline bool gg_cm_str_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num
         return !strncasecmp(a,b, (size_t) l);
     }
 } 
-static inline bool gg_cm_str_less (char *a, gg_num la, char *b, gg_num lb) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_less (char *a, gg_num la, char *b, gg_num lb)  {
     gg_num lmin = MIN(la,lb)+1; 
     return strncmp(a,b,lmin)<0;
 }
-static inline bool gg_cm_str_less_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_less_l (char *a, gg_num la, char *b, gg_num lb, gg_num l)  {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncmp(a,b,l)<0;
 } 
-static inline bool gg_cm_str_less_c (char *a, gg_num la, char *b, gg_num lb) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_less_c (char *a, gg_num la, char *b, gg_num lb) {
     gg_num lmin = MIN(la,lb)+1;
     return strncasecmp(a,b,lmin)<0;
 }
-static inline bool gg_cm_str_less_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_less_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncasecmp(a,b,l)<0;
 }
-static inline bool gg_cm_str_gr (char *a, gg_num la, char *b, gg_num lb) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_gr (char *a, gg_num la, char *b, gg_num lb)  {
     gg_num lmin = MIN(la,lb)+1; 
     return strncmp(a,b,lmin)>0;
 }
-static inline bool gg_cm_str_gr_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
+GG_ALWAYS_INLINE static inline  bool gg_cm_str_gr_l (char *a, gg_num la, char *b, gg_num lb, gg_num l)  {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncmp(a,b,l)>0;
 } 
-static inline bool gg_cm_str_gr_c (char *a, gg_num la, char *b, gg_num lb) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_gr_c (char *a, gg_num la, char *b, gg_num lb) {
     gg_num lmin = MIN(la,lb)+1;
     return strncasecmp(a,b,lmin)>0;
 }
-static inline bool gg_cm_str_gr_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_gr_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l)  {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncasecmp(a,b,l)>0;
 }
-static inline bool gg_cm_str_lesseq (char *a, gg_num la, char *b, gg_num lb) {
+GG_ALWAYS_INLINE static inline bool gg_cm_str_lesseq (char *a, gg_num la, char *b, gg_num lb)  {
     gg_num lmin = MIN(la,lb)+1; 
     return strncmp(a,b,lmin)<=0;
 }
-static inline bool gg_cm_str_lesseq_l (char *a, gg_num la, char *b, gg_num lb, gg_num l)
+GG_ALWAYS_INLINE static inline bool gg_cm_str_lesseq_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) 
 {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncmp(a,b,l)<=0;
 } 
-static inline bool gg_cm_str_lesseq_c (char *a, gg_num la, char *b, gg_num lb) 
+GG_ALWAYS_INLINE static inline bool gg_cm_str_lesseq_c (char *a, gg_num la, char *b, gg_num lb) 
 {
     gg_num lmin = MIN(la,lb)+1;
     return strncasecmp(a,b,lmin)<=0;
 }
-static inline bool gg_cm_str_lesseq_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) 
+GG_ALWAYS_INLINE static inline bool gg_cm_str_lesseq_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) 
 {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncasecmp(a,b,l)<=0;
 }
-static inline bool gg_cm_str_greq (char *a, gg_num la, char *b, gg_num lb) 
+GG_ALWAYS_INLINE static inline bool gg_cm_str_greq (char *a, gg_num la, char *b, gg_num lb) 
 {
     gg_num lmin = MIN(la,lb)+1; 
     return strncmp(a,b,lmin)>=0;
 }
-static inline bool gg_cm_str_greq_l (char *a,gg_num la, char *b, gg_num lb, gg_num l) 
+GG_ALWAYS_INLINE static inline bool gg_cm_str_greq_l (char *a,gg_num la, char *b, gg_num lb, gg_num l) 
 {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1;
     return strncmp(a,b,l)>=0;
 } 
-static inline bool gg_cm_str_greq_c (char *a, gg_num la, char *b, gg_num lb) 
+GG_ALWAYS_INLINE static inline bool gg_cm_str_greq_c (char *a, gg_num la, char *b, gg_num lb) 
 {
     gg_num lmin = MIN(la,lb)+1; // handles lesser/greater-or-equal and such. compare the lesser length +1
                              // +1 to avoid equality when they are not the same length
     return strncasecmp(a,b,lmin)>=0;
 }
-static inline bool gg_cm_str_greq_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) 
+GG_ALWAYS_INLINE static inline bool gg_cm_str_greq_c_l (char *a, gg_num la, char *b, gg_num lb, gg_num l) 
 {
     gg_num lmin = MIN(la,lb); if (lmin < l) l = lmin+1; // handles length clause, if length > lesser of lengths, use lesser+1
                                                      // +1 to avoid equality when they are not the same length
     return strncasecmp(a,b,l)>=0;
 }
-static inline char* gg_contain_str (char* a, gg_num la, char *b, gg_num lb) 
+GG_ALWAYS_INLINE static inline char* gg_contain_str (char* a, gg_num la, char *b, gg_num lb) 
 { // works for binary!
     return memmem(a,la,b,lb);
 }
-static inline char* gg_contain_str_c (char* a, gg_num la, char *b) 
+GG_ALWAYS_INLINE static inline char* gg_contain_str_c (char* a, gg_num la, char *b) 
 { 
     char save = a[la]; // this is when we use @(), which supplies length of string which is less than it's actual length
                        // it doesn't matter that we shorten a (in case b is a part of a); if b is beyond length la it's not a problem; if
@@ -1101,31 +1125,66 @@ static inline char* gg_contain_str_c (char* a, gg_num la, char *b)
     a[la]=save;
     return res;
 }
-static inline char* gg_contain_int (char* a, gg_num la, int b) {
+GG_ALWAYS_INLINE static inline char* gg_contain_int (char* a, gg_num la, int b)  
+{
     return memchr(a,b,la);
 }
-static inline char* gg_contain_int_c (char* a, gg_num la, int b) {
+GG_ALWAYS_INLINE static inline char* gg_contain_int_c (char* a, gg_num la, int b) 
+{
     char *res; res = memchr(a,b, la); if (res!=NULL) return res; else return memchr(a,isupper(b)?tolower(b):toupper(b),la);
 }
-static inline bool gg_cm_num (gg_num a,gg_num b) {
+//
+GG_ALWAYS_INLINE static inline bool gg_cm_dbl (gg_dbl a,gg_dbl b) 
+{
     return a==b;
 }
-static inline bool gg_cm_num_less (gg_num a,gg_num b) {
+GG_ALWAYS_INLINE static inline bool gg_cm_dbl_eps (gg_dbl a,gg_dbl b, gg_dbl eps) 
+{
+    return fabs(a-b)<eps;
+}
+GG_ALWAYS_INLINE static inline bool gg_cm_dbl_less (gg_dbl a,gg_dbl b) 
+{
     return a<b;
 }
-static inline bool gg_cm_num_gr (gg_num a,gg_num b) {
+GG_ALWAYS_INLINE static inline bool gg_cm_dbl_gr (gg_dbl a,gg_dbl b) 
+{
     return a>b;
 }
-static inline bool gg_cm_num_lesseq (gg_num a,gg_num b) {
+GG_ALWAYS_INLINE static inline bool gg_cm_dbl_lesseq (gg_dbl a,gg_dbl b) 
+{
     return a<=b;
 }
-static inline bool gg_cm_num_greq (gg_num a,gg_num b) {
+GG_ALWAYS_INLINE static inline bool gg_cm_dbl_greq (gg_dbl a,gg_dbl b) 
+{
     return a>=b;
 }
-static inline bool gg_cm_bool (bool a,bool b) {
+//
+GG_ALWAYS_INLINE static inline bool gg_cm_num (gg_num a,gg_num b) 
+{
     return a==b;
 }
-static inline bool gg_cm_err () {
+GG_ALWAYS_INLINE static inline bool gg_cm_num_less (gg_num a,gg_num b) 
+{
+    return a<b;
+}
+GG_ALWAYS_INLINE static inline bool gg_cm_num_gr (gg_num a,gg_num b) 
+{
+    return a>b;
+}
+GG_ALWAYS_INLINE static inline bool gg_cm_num_lesseq (gg_num a,gg_num b) 
+{
+    return a<=b;
+}
+GG_ALWAYS_INLINE static inline bool gg_cm_num_greq (gg_num a,gg_num b) 
+{
+    return a>=b;
+}
+GG_ALWAYS_INLINE static inline bool gg_cm_bool (bool a,bool b) 
+{
+    return a==b;
+}
+GG_ALWAYS_INLINE static inline bool gg_cm_err () 
+{
     gg_report_error("Wrong type in comparison"); return false;
 }
 //
@@ -1303,6 +1362,7 @@ void gg_delete_break_down (gg_split_str **broken_ptr);
 char * gg_get_tz ();
 gg_dbc *gg_execute_SQL (char *s,  gg_num *rows, char **er, char **err_message, gg_num returns_tuples, gg_num user_check, char is_prep, void **prep, gg_num paramcount, char **params, char erract);
 char *gg_num2str (gg_num al, gg_num *res_len, int base);
+char *gg_dbl2str (gg_dbl al, char otype, int width, int prec, gg_num *res_len);
 char *gg_time (time_t curr, char *timezone, char *format, gg_num year, gg_num month, gg_num day, gg_num hour, gg_num min, gg_num sec);
 gg_num gg_encode_base (gg_num enc_type, char *v, gg_num vLen, char **res, gg_num allocate_new);
 void gg_make_random (char **rnd, gg_num rnd_len, char type, bool crypto);
@@ -1369,6 +1429,7 @@ void gg_end_all_db();
 void gg_exit (void);
 char gg_decorate_path (char *reqname, gg_num reqname_len, char **p, gg_num p_len);
 gg_num gg_str2num (char *str, int base, gg_num *st);
+gg_dbl gg_str2dbl (char *str, gg_num *st);
 gg_num gg_read_msg(gg_msg *msg, char **key, char **val);
 void gg_write_msg(gg_msg *msg, char *key, char *val);
 void gg_del_msg(gg_msg *msg);
@@ -1379,14 +1440,18 @@ void gg_set_crash_handler(char *btrace);
 //
 gg_arraystring *gg_new_arraystring (gg_num max_elem, unsigned char process);
 gg_arraynumber *gg_new_arraynumber (gg_num max_elem, unsigned char process);
+gg_arraydouble *gg_new_arraydouble (gg_num max_elem, unsigned char process);
 gg_arraybool *gg_new_arraybool (gg_num max_elem, unsigned char process);
 void gg_purge_arraystring (gg_arraystring *arr);
+void gg_purge_arraydouble (gg_arraydouble *arr);
 void gg_purge_arraynumber (gg_arraynumber *arr);
 void gg_purge_arraybool (gg_arraybool *arr);
 char *gg_write_arraystring (gg_arraystring *arr, gg_num key, char **old_val);
+void gg_write_arraydouble (gg_arraydouble *arr, gg_num key, gg_num *old_val);
 void gg_write_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *old_val);
 void gg_write_arraybool (gg_arraybool *arr, gg_num key, bool *old_val);
 char *gg_read_arraystring (gg_arraystring *arr, gg_num key, gg_num *st);
+gg_dbl gg_read_arraydouble (gg_arraydouble *arr, gg_num key, gg_num *st);
 gg_num gg_read_arraynumber (gg_arraynumber *arr, gg_num key, gg_num *st);
 bool gg_read_arraybool (gg_arraybool *arr, gg_num key, gg_num *st);
 //

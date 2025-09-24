@@ -24,7 +24,7 @@
 #include "ggcommon.h"
 
 // Version+Release. We use major plus minor plus release, as in 1.3.34,2.1.11,3.7.41... 
-#define GG_VERSION "3.3.0"
+#define GG_VERSION "3.4.0"
 
 // Client error codes
 #define GG_OKAY 0 // success

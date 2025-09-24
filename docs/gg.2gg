@@ -114,6 +114,18 @@ During building of C code precompiled from .golf source code, gcc will emit a ma
 
 .RS 4
 \[bu]    
+--fpe
+"--fpe" will add floating point and signed integer checks that are designed to catch problems such as overflow, division by zero and illegal instructions; with this option such issues will cause your program to \fBerror out\fP. Note that division by zero is always checked for numbers; however for doubles, this option is needed to do so. For both numbers and doubles, this option is needed to detect overflows. 
+
+This option can only be used with "--devel" option, since it will affect performance and should not be used in release/production code. Use this option during the development and testing to catch potential bugs with floating point and signed number arithmetic. Note that if your gcc version is lower than 14, then overflows for signed integers may not error out your program, but rather the error message will display on standard error and the program will continue; to produce the behaviour described above, upgrade your gcc or the distribution you're running.
+
+Note: for some distributions, you may need to install libubsan package before you can use --fpe option; you will be prompted to do so during your program's compilation.
+
+
+.RE
+
+.RS 4
+\[bu]    
 --release
 This will include all optimizations, including LTO. Use when you wish to build release executables, for performance testing etc. Applications made with "--release" typically exibit better performance, sometimes 2 times faster or more. Note that compiler debugging information is still included regardless, because it enables basic debugging even for release executables and does not affect run-time performance. Making an application with "--release" can be considerably slower; because of that, during the development you'd probably not use this option.
 

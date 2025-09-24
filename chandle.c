@@ -69,6 +69,8 @@ static int bt_handle_info (void *data, uintptr_t pc, const char *srcfile, int ln
 static void gg_add_msg (char *add, gg_num *pos, char *to, gg_num avail);
 static void gg_itos (int n, char *s, gg_num avail);
 char *curr_err; // current error message from the caller
+static gg_num first_output = 1; // special output for the very first output of an error (meaning first in a list of lines 
+                                // output for a single error), but must be reset with each error
 
 
 // 
@@ -96,6 +98,7 @@ void gg_get_stack(char *err)
     // backtrace_full will get a full stack backtrace. Second parameter is the number of frames to skip; we could skip this function
     // but we do filtering ourselves. NULL is the 'data', which is the first parameter in the handlers; we can pass something along here.
     backtrace_full(bt_state, 0, bt_handle_info, bt_handle_error, NULL);
+    first_output = 1;
     //
     //
     //
@@ -198,7 +201,6 @@ static int bt_handle_info (void *data, uintptr_t pc, const char *srcfile, int ln
     GG_UNUSED(data);
     GG_UNUSED(pc);
     static gg_num sframes = 0; // how many stack frames we process?
-    static gg_num first_output = 1; // special output for the very first output
 
     if (srcfile != NULL && function != NULL && lnum != 0)  // sanity check
     {
@@ -283,7 +285,7 @@ static void signal_handler(int sig)
     switch(sig)
     {
         case SIGFPE:
-            expla= "Caught SIGFPE: math exception, such as divide by zero";
+            expla= "Caught SIGFPE: math exception, such as divide by zero, overflow or illegal instruction";
             break;
         case SIGILL:
             expla= "Caught SIGILL: illegal code";

@@ -4,12 +4,12 @@ documentation \- Golf documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR GOLF VERSION 3.2.0
+.B REFERENCE FOR GOLF VERSION 3.4.0
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
 
-Browse by topic:    API,   Application information,   Array,   Base64,   Booleans,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Encryption,   Error handling,   Examples,   FastCGI client,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   Install golf,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
+Browse by topic:    API,   Application information,   Array,   Base64,   Booleans,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Doubles,   Encryption,   Error handling,   Examples,   FastCGI client,   FIFO,   Files,   General,   Golf compiler and utility,   Hash,   Hex encoding,   Install golf,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Math functions,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
 
 
 
@@ -144,6 +144,20 @@ Distributed computing
 Documentation
 
 \fBdocumentation\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Doubles
+
+\fBabs-double\fP  
+\fBdouble-expressions\fP  
+\fBdouble-string\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBset-double\fP  
+\fBstring-double\fP   
 .RE
 
 
@@ -316,7 +330,7 @@ Language
 \[bu]    
 License
 
-\fBlicense\fP   
+\fBgolf-license\fP   
 .RE
 
 
@@ -353,6 +367,54 @@ Linked list
 
 .RS 4
 \[bu]    
+Math functions
+
+\fBabd\fP  
+\fBabn\fP  
+\fBacos\fP  
+\fBacosh\fP  
+\fBasin\fP  
+\fBasinh\fP  
+\fBatan\fP  
+\fBatan2\fP  
+\fBatanh\fP  
+\fBcbrt\fP  
+\fBceil\fP  
+\fBcopysign\fP  
+\fBcos\fP  
+\fBcosh\fP  
+\fBdbl\fP  
+\fBerf\fP  
+\fBerfc\fP  
+\fBexp\fP  
+\fBexp2\fP  
+\fBfloor\fP  
+\fBfmod\fP  
+\fBhypot\fP  
+\fBisinf\fP  
+\fBisnan\fP  
+\fBldexp\fP  
+\fBlgamma\fP  
+\fBlog\fP  
+\fBlog10\fP  
+\fBlog2\fP  
+\fBmath-functions\fP  
+\fBnextafter\fP  
+\fBnum\fP  
+\fBpow\fP  
+\fBround\fP  
+\fBsin\fP  
+\fBsinh\fP  
+\fBsqrt\fP  
+\fBtan\fP  
+\fBtanh\fP  
+\fBtrunc\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
 Memory
 
 \fBmemory-handling\fP   
@@ -378,6 +440,7 @@ Messages
 Numbers
 
 \fBabs-number\fP  
+\fBmixing-doubles-and-numbers\fP  
 \fBnumber-expressions\fP  
 \fBnumber-string\fP  
 \fBset-number\fP  
@@ -525,16 +588,20 @@ Strings
 \fBcopy-string\fP  
 \fBcount-substring\fP  
 \fBdelete-string\fP  
+\fBdouble-string\fP  
 \fBlower-string\fP  
 \fBmatch-regex\fP  
 \fBnew-string\fP  
+\fBnumber-string\fP  
 \fBread-split\fP  
 \fBreplace-string\fP  
 \fBscan-string\fP  
 \fBset-string\fP  
 \fBsplit-string\fP  
+\fBstring-double\fP  
 \fBstring-expressions\fP  
 \fBstring-length\fP  
+\fBstring-number\fP  
 \fBtrim-string\fP  
 \fBupper-string\fP  
 \fBwrite-string\fP   
