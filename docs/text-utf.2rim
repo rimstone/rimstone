@@ -1,0 +1,54 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+text-utf \-  (UTF)
+.SH PURPOSE
+Convert text to UTF-8 string. 
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+text-utf <text> \\
+    [ status <status> ] \\
+    [ error-text <error text> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+text-utf will convert string value <text> to UTF-8. <text> itself will hold the resulting UTF-8 string. If you don't wish <text> to be modified, make a copy of it first (see \fBcopy-string\fP). See \fButf-text\fP for the reverse conversion and data standards information.
+
+You can obtain <status> in "status" clause. <status> number is RIM_OKAY if successful, or RIM_ERR_UTF if there was an error, in which case <error text> string in "error-text" clause will contain the error message.
+
+Note that text-utf will process normal "\\u..." and "\\U..." UTF-8 characters, and in addition will also process surrogate "\\u...\\u..." characters (as used in JSON text). This is useful, as many languages and parsers won't do both (technically JSON's surrogate extension is not really UTF-8 but rather a historical throwback to UTF-16).
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+// Unicode value to encode to UTF-8 (including surrogate characters for JSON, for instance \\uD834\\uDD1E for G Clef symbol):
+set-string txt = "\\u0459\\\\\[char92]"Doc\\\\\[char92]"\\\\n\\\\t\\\\b\\\\f\\\\r\\\\t\\u21d7\\u21d8\\\\t\\u25b7\\u25ee\\uD834\\uDD1E\\u13eb\\u2ca0\\u0448\\\\n\\\\/\\\\\[char92]"()\\\\t\\U0001d11e"
+
+// Convert to UTF 
+text-utf txt status txt_status error-text txt_error
+
+// Expected UTF result
+set-string utf = "љ\[char92]"Doc\[char92]"\\n\\t\\b\\f\\r\\t⇗⇘\\t▷◮𝄞ᏫⲠш\\n/\[char92]"()\\t𝄞"
+
+// Make sure conversion was successful
+if-true utf not-equal txt or txt_status not-equal RIM_OKAY or txt_error not-equal ""
+    @Error in converting string to UTF
+end-if
+
+.EE
+.RE
+
+.SH SEE ALSO
+ UTF
+
+\fBtext-utf\fP  
+\fButf-text\fP   
+See all 
+\fBdocumentation\fP

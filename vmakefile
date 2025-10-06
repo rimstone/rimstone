@@ -1,12 +1,12 @@
 #SPDX-License-Identifier: Apache-2.0
 #Copyright 2018-2025 Gliim LLC. 
 #Licensed under Apache License v2. See LICENSE file.
-#On the web http://golf-lang.com/ - this file is part of Golf framework.
+#On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
 
-#variable names for Golf start with GG_ (GG_C_ being compiling-related) and _ (internal)
+#variable names for RimStone start with RIM_ (RIM_C_ being compiling-related) and _ (internal)
 
 # 
-# Golf  make file 
+# RimStone  make file 
 #
 
 #
@@ -17,23 +17,23 @@
 .ONESHELL:
 SHELL:=/bin/bash
 
-export GG_EXPLAIN
+export RIM_EXPLAIN
 
 
-_SYSTEMID:=$(shell $$GG_LIBRARY_PATH/sys showid)
+_SYSTEMID:=$(shell $$RIM_LIBRARY_PATH/sys showid)
 
 # c/linker flags
 _CC=gcc
 
 #PROF (internal)
-ifeq ($(strip $(GG_C_PROF)),1)
+ifeq ($(strip $(RIM_C_PROF)),1)
     _PROF=-pg
 else
     _PROF=
 endif
 
 #ASAN (internal)
-ifeq ($(strip $(GG_C_ASAN)),1)
+ifeq ($(strip $(RIM_C_ASAN)),1)
     _ASAN:=-fsanitize=address -fsanitize-recover=address
     ASAN_OPTIONS:=detect_leaks=0:log_path=asan:halt_on_error=1
     export ASAN_OPTIONS
@@ -41,22 +41,22 @@ else
     _ASAN:=
 endif
 
-ifeq ($(strip $(GG_C_IGNORE_WARN)),1)
-    GG_IGNORE_WARN:=-ignore-warn
+ifeq ($(strip $(RIM_C_IGNORE_WARN)),1)
+    RIM_IGNORE_WARN:=-ignore-warn
 else
-    GG_IGNORE_WARN:=
+    RIM_IGNORE_WARN:=
 endif
 
 #internal debug
-ifeq ($(strip $(GG_C_DEBUG)),1)
-    GG_DEBUG:=-DDEBUG
+ifeq ($(strip $(RIM_C_DEBUG)),1)
+    RIM_DEBUG:=-DDEBUG
 else
-    GG_DEBUG:=
+    RIM_DEBUG:=
 endif
   
-#this is --fpe option in gg
-ifeq ($(strip $(GG_C_FPE)),1)
-    _FPE:=-DGG_C_FPE
+#this is --fpe option in rim
+ifeq ($(strip $(RIM_C_FPE)),1)
+    _FPE:=-DRIM_C_FPE
     #this version check should be removed at some point, probably around 2028-2032, as support for redhat 9 ends. Debian 12 also doesn't support it (13 does)
     _GCCV:=$(shell gcc -dumpversion 2>&1 | cut -d'.' -f1)
     #fsanitize-trap is available in 14 and up
@@ -71,152 +71,153 @@ else
     _NUMEXC:=
 endif
 #Note: -rdynamic is necessary for libgcc to be loaded in order to get a backtrace when needed
-ifeq ($(strip $(GG_C_DEVEL)),1)
-    _OPTIM_COMP:=-g3 -O $(GG_DEBUG) -DGG_DEVEL $(_FPE) $(_NUMEXC) -rdynamic 
+ifeq ($(strip $(RIM_C_DEVEL)),1)
+    _OPTIM_COMP:=-g3 -O $(RIM_DEBUG) -DRIM_DEVEL $(_FPE) $(_NUMEXC) -rdynamic 
     _OPTIM_LINK:=-rdynamic $(_NUMEXC)
     CFLAGS_WARN_ERROR:=-Werror 
     _LTO:=
-    GDEST:=$(GG_DATA)/lib/devel
-    GG_ALWAYS_INLINE:=
+    RDEST:=$(RIM_DATA)/lib/devel
+    RIM_ALWAYS_INLINE:=
 else
     _OPTIM_COMP:=-g -O3
     _OPTIM_LINK:=
     CFLAGS_WARN_ERROR:=
     _LTO:=-flto=auto
-    GDEST:=$(GG_DATA)/lib/release
-    GG_ALWAYS_INLINE:=__attribute__((always_inline))
+    RDEST:=$(RIM_DATA)/lib/release
+    RIM_ALWAYS_INLINE:=__attribute__((always_inline))
 endif
 
 
-_APPMAKE:=-DGG_APPMAKE=1    
+_APPMAKE:=-DRIM_APPMAKE=1    
 
-GG_SERVICE_TARGET:=$(GG_BLD)/$(GG_C_NAME).srvc
-GG_TARGET:=$(GG_BLD)/$(GG_C_NAME)
+RIM_SERVICE_TARGET:=$(RIM_BLD)/$(RIM_C_NAME).srvc
+RIM_TARGET:=$(RIM_BLD)/$(RIM_C_NAME)
 
 ifeq ($(strip $(_SYSTEMID)),opensuse)
-    GG_SERVICE_INCLUDE:=-I /usr/include/fastcgi
+    RIM_SERVICE_INCLUDE:=-I /usr/include/fastcgi
 else
-    GG_SERVICE_INCLUDE:=
+    RIM_SERVICE_INCLUDE:=
 endif
 
 
 #If --single-file is used, then each request handler must be in its own file and own directory as per request path
-#Without it, then each .golf file can have any number of request handlers, but they must start with file name, so still organized
-ifeq ($(strip $(GG_C_SINGLE_FILE)),1)
-    GG_SINGLE_FILE:=-single-file
+#Without it, then each .rim file can have any number of request handlers, but they must start with file name, so still organized
+ifeq ($(strip $(RIM_C_SINGLE_FILE)),1)
+    RIM_SINGLE_FILE:=-single-file
 else
-    GG_SINGLE_FILE:=
+    RIM_SINGLE_FILE:=
 endif
 
 #If --public is used, then all request handlers are publicly accessible unless private
 #Without --public, they are all private unless public
-ifeq ($(strip $(GG_C_PUBLIC)),1)
-    GG_PUBLIC_FLAG:=-public
+ifeq ($(strip $(RIM_C_PUBLIC)),1)
+    RIM_PUBLIC_FLAG:=-public
 else
-    GG_PUBLIC_FLAG:=
+    RIM_PUBLIC_FLAG:=
 endif
 
 #If c-lines is used, then show all diagnostics
-ifeq ($(strip $(GG_C_SKIPLINES)),1)
-    GG_X_FLAG:=-x
+ifeq ($(strip $(RIM_C_SKIPLINES)),1)
+    RIM_X_FLAG:=-x
 else
-    GG_X_FLAG:=
+    RIM_X_FLAG:=
 endif
 
-ifeq ($(strip $(GG_C_POSIXREGEX)),1)
-    GG_POSIXREGEX_FLAG:=-DGG_C_POSIXREGEX
+ifeq ($(strip $(RIM_C_POSIXREGEX)),1)
+    RIM_POSIXREGEX_FLAG:=-DRIM_C_POSIXREGEX
 else
-    GG_POSIXREGEX_FLAG:=
+    RIM_POSIXREGEX_FLAG:=
 endif
 
 #Note we don't strip executables anymore. The debug info does not appear to make much, if any, difference any more.
 #-g (default with -O) doesn't create much of debug info, and it's not loaded into memory anyways.
 
-#ignoring char-subscripts (such as str[str[0]] is fine because golf checks for boundaries
-#GG_C_CFLAGS *must* be the last in order to override anything else by user action!
-_CFLAGS:=-fpic -fmax-errors=$(GG_C_MAXERRORS) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(GG_ALL_INCLUDE) $(GG_POSIXREGEX_FLAG) -DGG_ROOT="\"$(GG_ROOT)\"" -DGG_ALWAYS_INLINE='$(GG_ALWAYS_INLINE)' -I $(CURDIR) -I $(GG_INCLUDE_PATH) -I $(GG_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(_ASAN) $(_PROF) $(GG_C_CFLAGS) $(_LTO) -fno-diagnostics-show-caret
+#ignoring char-subscripts (such as str[str[0]] is fine because rimstone checks for boundaries
+#RIM_C_CFLAGS *must* be the last in order to override anything else by user action!
+#.rim must always be strictly UTF-8 (big mess otherwise)
+_CFLAGS:=-fpic -fmax-errors=$(RIM_C_MAXERRORS) $(CFLAGS_WARN_ERROR) -Wall -Wno-error=char-subscripts -Wuninitialized -Wmissing-declarations -Wformat -Werror=format-security -Wno-format-zero-length -funsigned-char -fno-semantic-interposition  $(RIM_ALL_INCLUDE) $(RIM_POSIXREGEX_FLAG) -DRIM_ROOT="\"$(RIM_ROOT)\"" -DRIM_ALWAYS_INLINE='$(RIM_ALWAYS_INLINE)' -I $(CURDIR) -I $(RIM_INCLUDE_PATH) -I $(RIM_BLD) $(_APPMAKE) $(_OPTIM_COMP) -Wdate-time -fno-stack-protector -fno-stack-clash-protection $(_ASAN) $(_PROF) $(RIM_C_CFLAGS) $(_LTO) -fno-diagnostics-show-caret -finput-charset=UTF-8 -fexec-charset=UTF-8
 
 
 #clean before making target (server) at all
 #the files are proof make was okay
 .PHONY: clean_build
 clean_build:
-	rm -f $(GG_BLD)/.succ.srv $(GG_BLD)/.succ
+	rm -f $(RIM_BLD)/.succ.srv $(RIM_BLD)/.succ
 
 
 #
 # Rules for building
 # 
 
-all: clean_build $(GG_SERVICE_TARGET)  $(GG_TARGET)
+all: clean_build $(RIM_SERVICE_TARGET)  $(RIM_TARGET)
 
-#clean files. *.golfo is produced by GOLF, the result is generated/object files
-#cleaning .all* is important because packing app in gg (-k option) depends on it existing as proof that app is compiled and not cleaned; because
+#clean files. produced by RIM, the result is generated/object files
+#cleaning .all* is important because packing app in rim (-k option) depends on it existing as proof that app is compiled and not cleaned; because
 #if it's cleaned then .mod.XXX files are gone too and we can't pack.
 clean:
-	if [ -d "$(GG_BLD)" ]; then find $(GG_BLD)/ -name "*" -type f \( -name "*.o" -or -name "*.c" -or -name "*.h" -or -name "*.mod.*" -or -name "*.inc.*" -or -name ".all*"  \) -exec rm -f {} \; ; fi
+	if [ -d "$(RIM_BLD)" ]; then find $(RIM_BLD)/ -name "*" -type f \( -name "*.o" -or -name "*.c" -or -name "*.h" -or -name "*.mod.*" -or -name "*.inc.*" -or -name ".all*"  \) -exec rm -f {} \; ; fi
 
 
-#include $(GG_BLD)/source.golf
-#obtain GG_SOURCE_FILES, GG_SOURCE_C_FILES and GG_HEADER_FILES from generated source.golf
+#include $(RIM_BLD)/source.rim
+#obtain RIM_SOURCE_FILES, RIM_SOURCE_C_FILES and RIM_HEADER_FILES from generated source.rim
 ifneq (clean,$(filter clean,$(MAKECMDGOALS)))
-    include $(GG_BLD)/source.golf
+    include $(RIM_BLD)/source.rim
 endif
-GG_HEADER_FILES:=$(GG_HEADER_FILES) 
+RIM_HEADER_FILES:=$(RIM_HEADER_FILES) 
 
-#string subst: short for $(patsubst %.golf,%.o,$(GG_SOURCE_FILES)) which finds whitespace-separated word in $(GG_SOURCE_FILES) that match %.golf and replaces them with %.o
-#the same for C files in GG_SOURCE_C_FILES
-_OBJ_FILES:=$(GG_SOURCE_FILES:%.golf=$(GG_BLD)/%.o) $(GG_SOURCE_C_FILES:%.c=$(GG_BLD)/%.oc)
+#string subst: short for $(patsubst %.rim,%.o,$(RIM_SOURCE_FILES)) which finds whitespace-separated word in $(RIM_SOURCE_FILES) that match %.rim and replaces them with %.o
+#the same for C files in RIM_SOURCE_C_FILES
+_OBJ_FILES:=$(RIM_SOURCE_FILES:%.rim=$(RIM_BLD)/%.o) $(RIM_SOURCE_C_FILES:%.c=$(RIM_BLD)/%.oc)
 
 define calc_libs
-	ALLSRC=(*.golf) >/dev/null || true
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o"; one_file="__$${i##*/}.c.mod.MARIADB"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.MARIADB; break; fi; done; 
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.POSTGRES"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.POSTGRES; break; fi; done; 
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.SQLITE"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.SQLITE; break; fi; done; 
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.CURL"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.CURL; break; fi; done; 
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.PCRE2"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.PCRE2; break; fi; done; 
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.CRYPTO"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.CRYPTO; break; fi; done ; 
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.XML"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.XML; break; fi; done; 
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.TREE"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.TREE; break; fi; done; 
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.ARRAY"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.ARRAY; break; fi; done; 
-	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.SERVICE"; if [ -f "$(GG_BLD)/$$one_file" ]; then echo "1">$(GG_BLD)/.mod.SERVICE; break; fi; done
-	if [[ ! -f $(GG_BLD)/.mod.MARIADB && ! -f $(GG_BLD)/.mod.POSTGRES && ! -f $(GG_BLD)/.mod.SQLITE ]]; then GG_DB_LIB_S="$(GDEST)/stub_gendb.o"; else  GG_DB_LIB_S="-lgolfdb"; fi
-	if [ -f $(GG_BLD)/.mod.MARIADB ]; then GGLIBS="$$GGLIBS $(GG_MARIADB_LIB)"; fi ; if [ -f $(GG_BLD)/.mod.POSTGRES ]; then GGLIBS="$$GGLIBS $(GG_POSTGRES_LIB)"; fi ; if [ -f $(GG_BLD)/.mod.SQLITE ]; then GGLIBS="$$GGLIBS $(GG_SQLITE_LIB)"; fi ; if [ -f $(GG_BLD)/.mod.XML ]; then GGLIBS="$$GGLIBS $(GG_XML_LIB)"; fi ; if [ -f $(GG_BLD)/.mod.PCRE2 ]; then GGLIBS="$$GGLIBS $(GG_PCRE2_LIB)"; fi ; if [ -f $(GG_BLD)/.mod.CRYPTO ]; then GGLIBS="$$GGLIBS $(GG_CRYPTO_LIB)"; fi ; if [ -f $(GG_BLD)/.mod.CURL ]; then GGLIBS="$$GGLIBS $(GG_CURL_LIB)"; fi; echo -n "$$GGLIBS" > $(GG_BLD)/.all_libs;
-	if [ -f $(GG_BLD)/.mod.MARIADB ]; then GGLIBS_S="$$GGLIBS_S $(GG_MARIADB_LIB_S)"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_mariadb.o"; fi ; if [ -f $(GG_BLD)/.mod.POSTGRES ]; then GGLIBS_S="$$GGLIBS_S $(GG_POSTGRES_LIB_S)"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_postgres.o"; fi ; if [ -f $(GG_BLD)/.mod.SQLITE ]; then GGLIBS_S="$$GGLIBS_S $(GG_SQLITE_LIB_S)"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_sqlite.o"; fi ; if [ -f $(GG_BLD)/.mod.XML ]; then GGLIBS_S="$$GGLIBS_S $(GG_XML_LIB_S)"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_xml.o"; fi ; if [ -f $(GG_BLD)/.mod.PCRE2 ]; then GGLIBS_S="$$GGLIBS_S $(GG_PCRE2_LIB_S)"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_pcre2.o"; fi ; if [ -f $(GG_BLD)/.mod.CRYPTO ]; then GGLIBS_S="$$GGLIBS_S $(GG_CRYPTO_LIB_S)"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_crypto.o"; fi ; if [ -f $(GG_BLD)/.mod.CURL ]; then GGLIBS_S="$$GGLIBS_S $(GG_CURL_LIB_S)"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_curl.o"; fi; if [ -f $(GG_BLD)/.mod.SERVICE ]; then GGLIBS_S="$$GGLIBS_S -lgolfscli"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_srvc.o"; fi ; if [ -f $(GG_BLD)/.mod.ARRAY ]; then GGLIBS_S="$$GGLIBS_S -lgolfarr"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_arr.o"; fi ; if [ -f $(GG_BLD)/.mod.TREE ]; then GGLIBS_S="$$GGLIBS_S -lgolftree"; else GGLIBS_S="$$GGLIBS_S $(GDEST)/stub_tree.o"; fi ; echo -n "$$GG_DB_LIB_S $$GGLIBS_S" > $(GG_BLD)/.all_libs_s
+	ALLSRC=(*.rim) >/dev/null || true
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o"; one_file="__$${i##*/}.c.mod.MARIADB"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.MARIADB; break; fi; done; 
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.POSTGRES"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.POSTGRES; break; fi; done; 
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.SQLITE"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.SQLITE; break; fi; done; 
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.CURL"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.CURL; break; fi; done; 
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.PCRE2"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.PCRE2; break; fi; done; 
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.CRYPTO"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.CRYPTO; break; fi; done ; 
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.XML"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.XML; break; fi; done; 
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.TREE"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.TREE; break; fi; done; 
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.ARRAY"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.ARRAY; break; fi; done; 
+	for i in "$${ALLSRC[@]}"; do i="$${i%.*}.o";one_file="__$${i##*/}.c.mod.SERVICE"; if [ -f "$(RIM_BLD)/$$one_file" ]; then echo "1">$(RIM_BLD)/.mod.SERVICE; break; fi; done
+	if [[ ! -f $(RIM_BLD)/.mod.MARIADB && ! -f $(RIM_BLD)/.mod.POSTGRES && ! -f $(RIM_BLD)/.mod.SQLITE ]]; then RIM_DB_LIB_S="$(RDEST)/stub_gendb.o"; else  RIM_DB_LIB_S="-lrimdb"; fi
+	if [ -f $(RIM_BLD)/.mod.MARIADB ]; then RRLIBS="$$RRLIBS $(RIM_MARIADB_LIB)"; fi ; if [ -f $(RIM_BLD)/.mod.POSTGRES ]; then RRLIBS="$$RRLIBS $(RIM_POSTGRES_LIB)"; fi ; if [ -f $(RIM_BLD)/.mod.SQLITE ]; then RRLIBS="$$RRLIBS $(RIM_SQLITE_LIB)"; fi ; if [ -f $(RIM_BLD)/.mod.XML ]; then RRLIBS="$$RRLIBS $(RIM_XML_LIB)"; fi ; if [ -f $(RIM_BLD)/.mod.PCRE2 ]; then RRLIBS="$$RRLIBS $(RIM_PCRE2_LIB)"; fi ; if [ -f $(RIM_BLD)/.mod.CRYPTO ]; then RRLIBS="$$RRLIBS $(RIM_CRYPTO_LIB)"; fi ; if [ -f $(RIM_BLD)/.mod.CURL ]; then RRLIBS="$$RRLIBS $(RIM_CURL_LIB)"; fi; echo -n "$$RRLIBS" > $(RIM_BLD)/.all_libs;
+	if [ -f $(RIM_BLD)/.mod.MARIADB ]; then RRLIBS_S="$$RRLIBS_S $(RIM_MARIADB_LIB_S)"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_mariadb.o"; fi ; if [ -f $(RIM_BLD)/.mod.POSTGRES ]; then RRLIBS_S="$$RRLIBS_S $(RIM_POSTGRES_LIB_S)"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_postgres.o"; fi ; if [ -f $(RIM_BLD)/.mod.SQLITE ]; then RRLIBS_S="$$RRLIBS_S $(RIM_SQLITE_LIB_S)"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_sqlite.o"; fi ; if [ -f $(RIM_BLD)/.mod.XML ]; then RRLIBS_S="$$RRLIBS_S $(RIM_XML_LIB_S)"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_xml.o"; fi ; if [ -f $(RIM_BLD)/.mod.PCRE2 ]; then RRLIBS_S="$$RRLIBS_S $(RIM_PCRE2_LIB_S)"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_pcre2.o"; fi ; if [ -f $(RIM_BLD)/.mod.CRYPTO ]; then RRLIBS_S="$$RRLIBS_S $(RIM_CRYPTO_LIB_S)"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_crypto.o"; fi ; if [ -f $(RIM_BLD)/.mod.CURL ]; then RRLIBS_S="$$RRLIBS_S $(RIM_CURL_LIB_S)"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_curl.o"; fi; if [ -f $(RIM_BLD)/.mod.SERVICE ]; then RRLIBS_S="$$RRLIBS_S -lrimscli"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_srvc.o"; fi ; if [ -f $(RIM_BLD)/.mod.ARRAY ]; then RRLIBS_S="$$RRLIBS_S -lrimarr"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_arr.o"; fi ; if [ -f $(RIM_BLD)/.mod.TREE ]; then RRLIBS_S="$$RRLIBS_S -lrimtree"; else RRLIBS_S="$$RRLIBS_S $(RDEST)/stub_tree.o"; fi ; echo -n "$$RIM_DB_LIB_S $$RRLIBS_S" > $(RIM_BLD)/.all_libs_s
 endef
 
 #use ECODE (as exit code) to make sure non-zero exit code doesn't stop the build rule. Also use basename of the source file in .comperr... in order not to mix up output from different source files when makefile runs in parallel 
 #calc_libs must be called when v1 fails in order to calculate all the toolkit libs needed up to this point. The same goes for gcc failure.
 define make_source
-	if [ "$$GG_C_SHOW" == "1" ]; then TFILE="$@"; TFILE=$${TFILE##*/}; TFILE=$${TFILE/\.o/.golf}; TFILE=$${TFILE//__/\/} ;echo "golf: Making $$TFILE"; fi
-	RMF=($(GG_BLD)/__$${TFILE##/}.c.inc.*) >/dev/null||true ; for i in "$${RMF[@]}"; do rm -f $$i; done
-	RMF=($(GG_BLD)/__$${TFILE##/}.c.mod.*) >/dev/null||true ; for i in "$${RMF[@]}"; do rm -f $$i; done
-	TFILE="$@"; SFILE="$<"; rm -f $(GG_BLD)/.setparam/$${SFILE##*/}.sp
-	ECODE=0; $(GG_LIBRARY_PATH)/v1 -srcdir '$(GG_CDIR)' $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_IGNORE_WARN) $(GG_SINGLE_FILE) -max-errors $(GG_C_MAXERRORS) -name "$(GG_C_NAME)" $< -out   $(GG_BLD)/__$${TFILE##*/}.c >$(GG_BLD)/.comperr.$${TFILE##*/} 2>&1 || ECODE=$$? 
+	if [ "$$RIM_C_SHOW" == "1" ]; then TFILE="$@"; TFILE=$${TFILE##*/}; TFILE=$${TFILE/\.o/.rim}; TFILE=$${TFILE//__/\/} ;echo "RimStone: Making $$TFILE"; fi
+	RMF=($(RIM_BLD)/__$${TFILE##/}.c.inc.*) >/dev/null||true ; for i in "$${RMF[@]}"; do rm -f $$i; done
+	RMF=($(RIM_BLD)/__$${TFILE##/}.c.mod.*) >/dev/null||true ; for i in "$${RMF[@]}"; do rm -f $$i; done
+	TFILE="$@"; SFILE="$<"; rm -f $(RIM_BLD)/.setparam/$${SFILE##*/}.sp
+	ECODE=0; $(RIM_LIBRARY_PATH)/v1 -srcdir '$(RIM_CDIR)' $(RIM_X_FLAG) $(RIM_PUBLIC_FLAG) $(RIM_IGNORE_WARN) $(RIM_SINGLE_FILE) -max-errors $(RIM_C_MAXERRORS) -name "$(RIM_C_NAME)" $< -out   $(RIM_BLD)/__$${TFILE##*/}.c >$(RIM_BLD)/.comperr.$${TFILE##*/} 2>&1 || ECODE=$$? 
 	if [ "$$ECODE" != "0" ]; then
 	    $(call calc_libs)
-		sed 's/^/golf: /g' $(GG_BLD)/.comperr.$${TFILE##*/} 1>&2
+		sed 's/^/RimStone: /g' $(RIM_BLD)/.comperr.$${TFILE##*/} 1>&2
 	    exit 1
 	fi 
 	PARAMS=""; 
-	if [ -f "$(GG_BLD)/.setparam/$${SFILE##*/}.sp" ]; then
-	    for i in $$(sort -k 1 $(GG_BLD)/.setparam/$${SFILE##*/}.sp|uniq); do
+	if [ -f "$(RIM_BLD)/.setparam/$${SFILE##*/}.sp" ]; then
+	    for i in $$(sort -k 1 $(RIM_BLD)/.setparam/$${SFILE##*/}.sp|uniq); do
 	        PNAME=$${i%+*}
 	        PTYPE=$${i#*+}
-	        PARAMS+="extern gg_num _gg_aprm_$$PNAME;\n"
+	        PARAMS+="extern rim_num _rim_aprm_$$PNAME;\n"
 	    done
-	    PARAMS+="extern void **_gg_sprm_run; extern gg_ipar _gg_sprm_par[];\n extern gg_num _gg_sprm_run_tot;"
-	    echo -e "$${PARAMS}">$(GG_BLD)/gg_sparam_$${SFILE##*/}.h 
+	    PARAMS+="extern void **_rim_sprm_run; extern rim_ipar _rim_sprm_par[];\n extern rim_num _rim_sprm_run_tot;"
+	    echo -e "$${PARAMS}">$(RIM_BLD)/rim_sparam_$${SFILE##*/}.h 
 	else
-	    >$(GG_BLD)/gg_sparam_$${SFILE##*/}.h
+	    >$(RIM_BLD)/rim_sparam_$${SFILE##*/}.h
 	fi
-	rm -f $(GG_BLD)/__$${TFILE##*/}.incf;INCF=($(GG_BLD)/__$${TFILE##*/}.c.inc.*) >/dev/null||true ; for i in "$${INCF[@]}"; do cat $$i >>$(GG_BLD)/__$${TFILE##*/}.incf; done
-	read -r GG_ALL_INCL < <(cat $(GG_BLD)/__$${TFILE##*/}.incf 2>/dev/null)
-	ECODE=0; $(_CC) -c $(GG_BLD)/__$${TFILE##*/}.c  $(_CFLAGS) $$GG_ALL_INCL  -o $@ -I`pwd` 2>$(GG_BLD)/.comperr.$${TFILE##*/} 1>&2 || ECODE="$$?" 
+	rm -f $(RIM_BLD)/__$${TFILE##*/}.incf;INCF=($(RIM_BLD)/__$${TFILE##*/}.c.inc.*) >/dev/null||true ; for i in "$${INCF[@]}"; do cat $$i >>$(RIM_BLD)/__$${TFILE##*/}.incf; done
+	read -r RIM_ALL_INCL < <(cat $(RIM_BLD)/__$${TFILE##*/}.incf 2>/dev/null)
+	ECODE=0; $(_CC) -c $(RIM_BLD)/__$${TFILE##*/}.c  $(_CFLAGS) $$RIM_ALL_INCL  -o $@ -I`pwd` 2>$(RIM_BLD)/.comperr.$${TFILE##*/} 1>&2 || ECODE="$$?" 
 	if [ "$$ECODE" != "0" ]; then
 	    $(call calc_libs)
-	    sed 's/^/golf: /g' $(GG_BLD)/.comperr.$${TFILE##*/}| grep --text ' error: ' 1>&2
-	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.$${TFILE##*/}" 1>&2
+	    sed 's/^/RimStone: /g' $(RIM_BLD)/.comperr.$${TFILE##*/}| grep --text ' error: ' 1>&2
+	    echo "RimStone: *** Full error report is at $(RIM_BLD)/.comperr.$${TFILE##*/}" 1>&2
 	    exit 1
 	fi
 endef
@@ -226,50 +227,50 @@ endef
 #dispatch has OBJ_FILES as dependents, not because they are need to be compiled as true dependencies, but 
 #because they must go first to populate the dispatcher source code, meaning hash table that will be in the main() of the
 #program (that routes requests). The main() file (command line or service) in turn depends on dispatch here. So it's about
-#generating the code that requires all .golf files to be processed first!
+#generating the code that requires all .rim files to be processed first!
 #do not change these
-$(GG_BLD)/gg_dispatch_request.o: $(GG_BLD)/.flatsrc/gg_dispatch_request.c $(GG_INCLUDE_PATH)/golf.h $(GG_HEADER_FILES) $(GG_BLD)/golfapp.h $(GG_BLD)/blds $(_OBJ_FILES)
-	$(_CC) -c $(GG_BLD)/.flatsrc/gg_dispatch_request.c  $(_CFLAGS) -o $@ -I`pwd` 
+$(RIM_BLD)/rim_dispatch_request.o: $(RIM_BLD)/.flatsrc/rim_dispatch_request.c $(RIM_INCLUDE_PATH)/rim.h $(RIM_HEADER_FILES) $(RIM_BLD)/rimapp.h $(RIM_BLD)/blds $(_OBJ_FILES)
+	$(_CC) -c $(RIM_BLD)/.flatsrc/rim_dispatch_request.c  $(_CFLAGS) -o $@ -I`pwd` 
 	$(call calc_libs)
 
-$(GG_BLD)/%.o: $(GG_BLD)/.flatsrc/%.golf $(GG_INCLUDE_PATH)/golf.h $(GG_HEADER_FILES) $(GG_BLD)/golfapp.h $(GG_BLD)/blds
+$(RIM_BLD)/%.o: $(RIM_BLD)/.flatsrc/%.rim $(RIM_INCLUDE_PATH)/rim.h $(RIM_HEADER_FILES) $(RIM_BLD)/rimapp.h $(RIM_BLD)/blds
 	$(call make_source)
 
-$(GG_BLD)/%.oc: %.c $(GG_INCLUDE_PATH)/golf.h $(GG_HEADER_FILES) $(GG_BLD)/golfapp.h $(GG_BLD)/blds
-	if [ "$$GG_C_SHOW" == "1" ]; then TFILE="$@"; TFILE=$${TFILE##*/}; TFILE=$${TFILE/\.oc/.c};echo "golf: Making $$TFILE"; fi
-	TFILE="$@"; GG_BN=$${TFILE##*/} ; $(_CC) -c $${GG_BN%.*}.c  $(_CFLAGS) -o $@ -I`pwd` 
+$(RIM_BLD)/%.oc: %.c $(RIM_INCLUDE_PATH)/rim.h $(RIM_HEADER_FILES) $(RIM_BLD)/rimapp.h $(RIM_BLD)/blds
+	if [ "$$RIM_C_SHOW" == "1" ]; then TFILE="$@"; TFILE=$${TFILE##*/}; TFILE=$${TFILE/\.oc/.c};echo "RimStone: Making $$TFILE"; fi
+	TFILE="$@"; RIM_BN=$${TFILE##*/} ; $(_CC) -c $${RIM_BN%.*}.c  $(_CFLAGS) -o $@ -I`pwd` 
 
-#does not need to depend on golfsrvcapp.c because it makes it. There's a dependency on params (blds) and list of files to be made (_OBJ_FILES)
-#because now we have hash list there that accounts for all request names. If we didn't have this, adding new .golf file would not be picked up until
-#the next next time something changes on the gg command line! /dev/null is used to suppress error message if there are no parameters in project.
-$(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
-	echo -e "#ifndef _GG_SPARAM\n#define _GG_SPARAM\n" >$(GG_BLD)/gg_sparam.h.new; echo "// Golf: Run-time parameters file"> $(GG_BLD)/gg_sparam.c.new
-	    GG_SPAR_LIST=$$(find $(GG_BLD)/.setparam -type f -name "*" -print0 |xargs -0 sort -k 1|uniq);  tot_sprm=0
-	    for i in $$GG_SPAR_LIST; do
+#does not need to depend on rimsrvcapp.c because it makes it. There's a dependency on params (blds) and list of files to be made (_OBJ_FILES)
+#because now we have hash list there that accounts for all request names. If we didn't have this, adding new .rim file would not be picked up until
+#the next next time something changes on the rim command line! /dev/null is used to suppress error message if there are no parameters in project.
+$(RIM_BLD)/rimsrvcapp.o: $(RIM_BLD)/blds $(RIM_BLD)/.reqlist $(_OBJ_FILES)
+	echo -e "#ifndef _RIM_SPARAM\n#define _RIM_SPARAM\n" >$(RIM_BLD)/rim_sparam.h.new; echo "// RimStone: Run-time parameters file"> $(RIM_BLD)/rim_sparam.c.new
+	    RIM_SPAR_LIST=$$(find $(RIM_BLD)/.setparam -type f -name "*" -print0 |xargs -0 sort -k 1|uniq);  tot_sprm=0
+	    for i in $$RIM_SPAR_LIST; do
 	        ((tot_sprm=tot_sprm+1))
 	    done
-	    echo "$$tot_sprm" > $(GG_BLD)/.gg_sparam
-	    for i in $$GG_SPAR_LIST; do
+	    echo "$$tot_sprm" > $(RIM_BLD)/.rim_sparam
+	    for i in $$RIM_SPAR_LIST; do
 	        PNAME=$${i%+*}
 	        PTYPE=$${i#*+}
-	        echo "$$PNAME" >> $(GG_BLD)/.gg_sparam
+	        echo "$$PNAME" >> $(RIM_BLD)/.rim_sparam
 	    done
-	    echo "extern gg_ipar _gg_sprm_par[];" >> $(GG_BLD)/gg_sparam.h.new; echo "gg_ipar _gg_sprm_par[$$tot_sprm] = {">>$(GG_BLD)/gg_sparam.c.new
+	    echo "extern rim_ipar _rim_sprm_par[];" >> $(RIM_BLD)/rim_sparam.h.new; echo "rim_ipar _rim_sprm_par[$$tot_sprm] = {">>$(RIM_BLD)/rim_sparam.c.new
 	    j=0
 	    PREV_PNAME=""
 	    PREV_PTYPE=""
-	    for i in $$GG_SPAR_LIST; do
+	    for i in $$RIM_SPAR_LIST; do
 	        PNAME=$${i%+*}
 	        PTYPE=$${i#*+}
 	        if [ "$$j" != "0" ]; then
-	            echo ",">>$(GG_BLD)/gg_sparam.c.new
+	            echo ",">>$(RIM_BLD)/rim_sparam.c.new
 	        fi
-	        echo "{.name=\"$$PNAME\", .type=$$PTYPE}">>$(GG_BLD)/gg_sparam.c.new
+	        echo "{.name=\"$$PNAME\", .type=$$PTYPE}">>$(RIM_BLD)/rim_sparam.c.new
 	        if [ "$$PREV_PNAME" != "" ]; then 
 	            if [ "$$PREV_PNAME" == "$$PNAME" ]; then
-	                OCC=$$(grep --text -l "^$$PNAME+" $(GG_BLD)/.setparam/*||true)
+	                OCC=$$(grep --text -l "^$$PNAME+" $(RIM_BLD)/.setparam/*||true)
 	                LIST_OCC=""; for k in $$OCC; do SINGLE_OCC=$$(basename $$k); SINGLE_OCC=$${SINGLE_OCC%.*}; SINGLE_OCC=$${SINGLE_OCC//__/\/}; LIST_OCC="$$SINGLE_OCC $$LIST_OCC"; done
-	                echo "golf: The type of parameter [$$PNAME] must be the same in all source files, occuring in files [$$LIST_OCC]"
+	                echo "RimStone: The type of parameter [$$PNAME] must be the same in all source files, occuring in files [$$LIST_OCC]"
 	                exit 1
 	            fi
 	        fi
@@ -277,66 +278,66 @@ $(GG_BLD)/golfsrvcapp.o: $(GG_BLD)/blds $(GG_BLD)/.reqlist $(_OBJ_FILES)
 	        PREV_PTYPE=$$PTYPE
 	        ((j=j+1))
 	    done
-	    echo "};">>$(GG_BLD)/gg_sparam.c.new
+	    echo "};">>$(RIM_BLD)/rim_sparam.c.new
 	    j=0
-	    for i in $$GG_SPAR_LIST; do
+	    for i in $$RIM_SPAR_LIST; do
 	        PNAME=$${i%+*}
 	        PTYPE=$${i#*+}
-	        echo "gg_num _gg_aprm_$$PNAME=$$j;">>$(GG_BLD)/gg_sparam.c.new; echo "extern gg_num _gg_aprm_$$i;">>$(GG_BLD)/gg_sparam.h.new
+	        echo "rim_num _rim_aprm_$$PNAME=$$j;">>$(RIM_BLD)/rim_sparam.c.new; echo "extern rim_num _rim_aprm_$$i;">>$(RIM_BLD)/rim_sparam.h.new
 	        ((j=j+1))
 	    done
-	echo "void *_gg_sprm_run[$$j];">>$(GG_BLD)/gg_sparam.c.new; echo "gg_num _gg_sprm_run_tot=$$j;">>$(GG_BLD)/gg_sparam.c.new
-	echo "extern void *_gg_sprm_run[];">>$(GG_BLD)/gg_sparam.h.new; echo "extern gg_num _gg_sprm_run_tot;">>$(GG_BLD)/gg_sparam.h.new
-	echo "#endif" >> $(GG_BLD)/gg_sparam.h.new 
-	_ISDIFFC=$$(diff $(GG_BLD)/gg_sparam.c.new $(GG_BLD)/gg_sparam.c 2>/dev/null) || true ; if [[ "$$_ISDIFFC" != "" || ! -f $(GG_BLD)/gg_sparam.c ]]; then mv $(GG_BLD)/gg_sparam.c.new $(GG_BLD)/gg_sparam.c ; else rm -rf $(GG_BLD)/gg_sparam.c.new; fi 
-	_ISDIFFH=$$(diff $(GG_BLD)/gg_sparam.h.new $(GG_BLD)/gg_sparam.h 2>/dev/null) || true ; if [[ "$$_ISDIFFH" != "" || ! -f $(GG_BLD)/gg_sparam.h ]]; then mv $(GG_BLD)/gg_sparam.h.new $(GG_BLD)/gg_sparam.h ; else rm -rf $(GG_BLD)/gg_sparam.h.new; fi
-	ECODE=0; $(GG_LIBRARY_PATH)/v1 -srcdir '$(GG_CDIR)' $(GG_X_FLAG) $(GG_PUBLIC_FLAG) $(GG_IGNORE_WARN) $(GG_SINGLE_FILE) -max-errors $(GG_C_MAXERRORS) -main -name "$(GG_C_NAME)" -max-upload "$(GG_C_MAXUPLOAD)" -client-timeout "$(GG_C_CLIENT_TOUT)" -app-path "$(GG_C_RESTPATH)" -out $(GG_BLD)/golfsrvcapp.c >$(GG_BLD)/.comperr.main 2>&1 || ECODE=$$? 
+	echo "void *_rim_sprm_run[$$j];">>$(RIM_BLD)/rim_sparam.c.new; echo "rim_num _rim_sprm_run_tot=$$j;">>$(RIM_BLD)/rim_sparam.c.new
+	echo "extern void *_rim_sprm_run[];">>$(RIM_BLD)/rim_sparam.h.new; echo "extern rim_num _rim_sprm_run_tot;">>$(RIM_BLD)/rim_sparam.h.new
+	echo "#endif" >> $(RIM_BLD)/rim_sparam.h.new 
+	_ISDIFFC=$$(diff $(RIM_BLD)/rim_sparam.c.new $(RIM_BLD)/rim_sparam.c 2>/dev/null) || true ; if [[ "$$_ISDIFFC" != "" || ! -f $(RIM_BLD)/rim_sparam.c ]]; then mv $(RIM_BLD)/rim_sparam.c.new $(RIM_BLD)/rim_sparam.c ; else rm -rf $(RIM_BLD)/rim_sparam.c.new; fi 
+	_ISDIFFH=$$(diff $(RIM_BLD)/rim_sparam.h.new $(RIM_BLD)/rim_sparam.h 2>/dev/null) || true ; if [[ "$$_ISDIFFH" != "" || ! -f $(RIM_BLD)/rim_sparam.h ]]; then mv $(RIM_BLD)/rim_sparam.h.new $(RIM_BLD)/rim_sparam.h ; else rm -rf $(RIM_BLD)/rim_sparam.h.new; fi
+	ECODE=0; $(RIM_LIBRARY_PATH)/v1 -srcdir '$(RIM_CDIR)' $(RIM_X_FLAG) $(RIM_PUBLIC_FLAG) $(RIM_IGNORE_WARN) $(RIM_SINGLE_FILE) -max-errors $(RIM_C_MAXERRORS) -main -name "$(RIM_C_NAME)" -max-upload "$(RIM_C_MAXUPLOAD)" -client-timeout "$(RIM_C_CLIENT_TOUT)" -app-path "$(RIM_C_RESTPATH)" -out $(RIM_BLD)/rimsrvcapp.c >$(RIM_BLD)/.comperr.main 2>&1 || ECODE=$$? 
 	if [ "$$ECODE" != "0" ]; then
-	    sed 's/^/golf: /g' $(GG_BLD)/.comperr.main 1>&2
-	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.main" 1>&2
+	    sed 's/^/RimStone: /g' $(RIM_BLD)/.comperr.main 1>&2
+	    echo "RimStone: *** Full error report is at $(RIM_BLD)/.comperr.main" 1>&2
 	    exit 1
 	fi 
-	ECODE=0; $(_CC) -c $(GG_BLD)/golfsrvcapp.c  $(_CFLAGS) $$GG_INIT_USED -DCMOD -o $@ -I`pwd` >$(GG_BLD)/.comperr.main 2>&1 || ECODE=$$? 
+	ECODE=0; $(_CC) -c $(RIM_BLD)/rimsrvcapp.c  $(_CFLAGS) $$RIM_INIT_USED -DCMOD -o $@ -I`pwd` >$(RIM_BLD)/.comperr.main 2>&1 || ECODE=$$? 
 	if [ "$$ECODE" != "0" ]; then
-	    sed 's/^/golf: /g' $(GG_BLD)/.comperr.main 1>&2
-	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.main" 1>&2
+	    sed 's/^/RimStone: /g' $(RIM_BLD)/.comperr.main 1>&2
+	    echo "RimStone: *** Full error report is at $(RIM_BLD)/.comperr.main" 1>&2
 	    exit 1
 	fi 
 
-#GG_C_LFLAGS *must* be the last in order to override anything else by user action!
-_LFLAGS:=-Wl,--no-undefined -Wl,--rpath=$(GDEST) -Wl,--enable-new-dtags -L$(GDEST) $(_OPTIM_LINK) -Wl,-z,relro  $(_ASAN) $(_PROF) $(GG_C_LFLAGS) $(_LTO) 
+#RIM_C_LFLAGS *must* be the last in order to override anything else by user action!
+_LFLAGS:=-Wl,--no-undefined -Wl,--rpath=$(RDEST) -Wl,--enable-new-dtags -L$(RDEST) $(_OPTIM_LINK) -Wl,-z,relro  $(_ASAN) $(_PROF) $(RIM_C_LFLAGS) $(_LTO) 
 
 
 #libs are always specified *after* the object where they're needed. Link flags (including -L) go first.
-#$@ is a file generated to hold all input files, and passed to gcc as "in file" via @. Since $@ is already in GG_BLD, can't prefix with $GG_BLD
+#$@ is a file generated to hold all input files, and passed to gcc as "in file" via @. Since $@ is already in RIM_BLD, can't prefix with $RIM_BLD
 #as it would be inaccurate (double path). gcc requires file with each item on a single line, hence foreach. This avoids 2-4000 files limit for
-#a Golf application, and makes it effectively unlimited.
-#Note below: we force static linking for Golf libs; that's the only one available; but if you have older Golf libs, they would have had
+#a RimStone application, and makes it effectively unlimited.
+#Note below: we force static linking for RimStone libs; that's the only one available; but if you have older RimStone libs, they would have had
 #dynamic libs cause lots of trouble (they are old and incompatible). We revert to dynamic libs when it's time to link external libs
 #.succ serves as proof of okay build
-$(GG_SERVICE_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
-	if [ "$$GG_C_SHOW" == "1" ]; then echo "golf: Making command-line executable"; fi
+$(RIM_SERVICE_TARGET): $(RIM_BLD)/rimsrvcapp.o $(RIM_BLD)/rim_dispatch_request.o $(_OBJ_FILES) 
+	if [ "$$RIM_C_SHOW" == "1" ]; then echo "RimStone: Making command-line executable"; fi
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
-	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(GG_EVENT_STUBS) -lsrvcgolf -lgolfbtrace -lggfcgi $$(cat $(GG_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(GG_BLD)/.all_libs) -lm > $(GG_BLD)/.comperr.server.link 2>&1 || ECODE="$$?"
+	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(RIM_EVENT_STUBS) -lsrvcrim -lrimbtrace -lrimfcgi $$(cat $(RIM_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(RIM_BLD)/.all_libs) -lm > $(RIM_BLD)/.comperr.server.link 2>&1 || ECODE="$$?"
 	if [ "$$ECODE" != "0" ]; then 
-	    sed 's/^/golf: /g' $(GG_BLD)/.comperr.server.link 1>&2
-	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.server.link" 1>&2
+	    sed 's/^/RimStone: /g' $(RIM_BLD)/.comperr.server.link 1>&2
+	    echo "RimStone: *** Full error report is at $(RIM_BLD)/.comperr.server.link" 1>&2
 	    exit 1
 	fi
-	echo "1"> $(GG_BLD)/.succ
+	echo "1"> $(RIM_BLD)/.succ
 
-#Note below: we force static linking for Golf libs; that's the only one available; but if you have older Golf libs, they would have had
+#Note below: we force static linking for RimStone libs; that's the only one available; but if you have older RimStone libs, they would have had
 #dynamic libs cause lots of trouble (they are old and incompatible). We revert to dynamic libs when it's time to link external libs
 #.succ.srv serves as proof of okay build
-$(GG_TARGET): $(GG_BLD)/golfsrvcapp.o $(GG_BLD)/gg_dispatch_request.o $(_OBJ_FILES) 
-	if [ "$$GG_C_SHOW" == "1" ]; then echo "golf: Making server executable"; fi
+$(RIM_TARGET): $(RIM_BLD)/rimsrvcapp.o $(RIM_BLD)/rim_dispatch_request.o $(_OBJ_FILES) 
+	if [ "$$RIM_C_SHOW" == "1" ]; then echo "RimStone: Making server executable"; fi
 	$(file >$@.inarg) $(foreach F,$^,$(file >>$@.inarg,$F))
-	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(GG_EVENT_STUBS) -lgolf -lgolfbtrace $$(cat $(GG_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(GG_BLD)/.all_libs) -lm > $(GG_BLD)/.comperr.link 2>&1 || ECODE="$$?"
+	ECODE=0; $(_CC) -o $@ @$@.inarg $(_LFLAGS) -Wl,-Bstatic $(RIM_EVENT_STUBS) -lrim -lrimbtrace $$(cat $(RIM_BLD)/.all_libs_s) -Wl,-Bdynamic $$(cat $(RIM_BLD)/.all_libs) -lm > $(RIM_BLD)/.comperr.link 2>&1 || ECODE="$$?"
 	if [ "$$ECODE" != "0" ]; then 
-	    sed 's/^/golf: /g' $(GG_BLD)/.comperr.link 1>&2
-	    echo "golf: *** Full error report is at $(GG_BLD)/.comperr.link" 1>&2
+	    sed 's/^/RimStone: /g' $(RIM_BLD)/.comperr.link 1>&2
+	    echo "RimStone: *** Full error report is at $(RIM_BLD)/.comperr.link" 1>&2
 	    exit 1
 	fi
-	echo "1"> $(GG_BLD)/.succ.srv
+	echo "1"> $(RIM_BLD)/.succ.srv
 
 

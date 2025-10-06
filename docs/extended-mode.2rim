@@ -1,0 +1,43 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+extended-mode \-  (C-language)
+.SH PURPOSE
+Use external libraries or C code with RimStone.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+extended-mode
+
+.EE
+.RE
+
+.SH DESCRIPTION
+extended-mode, when specified as a very first statement in .rim source file, allows for use of \fBcall-extended\fP statement.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+extended-mode 
+
+begin-handler /my-handler public
+    ...
+    call-extended factorial (10, &fact)
+    ...
+end-handler
+
+.EE
+.RE
+
+.SH SEE ALSO
+ C language
+
+\fBcall-extended\fP  
+\fBextended-mode\fP  
+\fBweb-framework-for-C-programming-language\fP   
+See all 
+\fBdocumentation\fP

@@ -1,0 +1,53 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+delete-tree \-  (tree)
+.SH PURPOSE
+Delete a node from a tree.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+delete-tree <tree> key <key> \\
+    [ status <status> ] \\
+    [ value <value> ] \\
+
+.EE
+.RE
+
+.SH DESCRIPTION
+delete-tree will search <tree> for string <key> and if found, delete its node (including the key in it), set <value> (in "value" clause) to node's value, and set <status> number (in "status" clause) to RIM_OKAY. If <key> is not found, <status> will be RIM_ERR_EXIST. If <status> is not RIM_OKAY, <value> is unchanged.
+
+.SH EXAMPLES
+Delete node with key "123", and obtain its value:
+
+.RS 4
+.EX
+
+set-string k = "123"
+delete-tree mytree key k value val status st
+if-true st not-equal RIM_OKAY
+   @Could not find key <<print-out k>>
+   exit-handler
+end-if
+// display key/value deleted
+@Deleted key <<print-out k>> with value <<print-out val>>
+// delete the original value
+delete-string val
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Tree
+
+\fBdelete-tree\fP  
+\fBget-tree\fP  
+\fBnew-tree\fP  
+\fBpurge-tree\fP  
+\fBread-tree\fP  
+\fBuse-cursor\fP  
+\fBwrite-tree\fP   
+See all 
+\fBdocumentation\fP

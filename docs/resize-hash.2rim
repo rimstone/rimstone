@@ -1,0 +1,44 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+resize-hash \-  (hash)
+.SH PURPOSE
+Resize hash table.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+resize-hash <hash> hash-size <new size>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+resize-hash will resize <hash> table (created by \fBnew-hash\fP) to size <new size>, which refers to the number of "buckets", or possible hash codes derived from keys stored.
+
+When a number of elements stored grows, the search performance may decline if hash size remains the same. Consequently, if the number of elements shrinks, the memory allocated by the hash may be wasted. Use \fBget-hash\fP to obtain its current hash-size, its length (the number of elements currently stored in it) and the statistics (such as average reads) to determine if you need to resize it.
+
+Resizing is generally expensive, so it should not be done too often, and only when needed. The goal is to amortize this expense through future gain of lookup performance. For that reason it may be better to resize proportionally (i.e. by a percentage), unless you have a specific application reason to do otherwise, or to avoid exponential growth.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+resize-hash h hash-size 100000
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Hash
+
+\fBget-hash\fP  
+\fBnew-hash\fP  
+\fBpurge-hash\fP  
+\fBread-hash\fP  
+\fBresize-hash\fP  
+\fBwrite-hash\fP   
+See all 
+\fBdocumentation\fP

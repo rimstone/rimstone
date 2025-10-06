@@ -1,0 +1,103 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+output-statement \-  (output)
+.SH PURPOSE
+Output text.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+@<text>
+
+!<verbatim text>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+Outputting free form text is done by starting the line with "@" or "!". The text is output unencoded with a new line appended.
+
+With "@" statement, any \fBinline-code\fP executes and any output from those statements is output.
+
+With "!" statement, all text is output verbatim, and any inline code is not executed. This is useful when the text printed out should not be checked for any \fBinline-code\fP.
+
+All trailing whitespaces are trimmed from each source code line. If you need to write trailing whitespaces, with "@" statement you can use \fBprint-out\fP as \fBinline-code\fP. Maximum line length is 8KB - this is the source code line length, the actual run-time output length is unlimited.
+
+Note that all characters are output as they are written, including the escape character (\\). If you wish to output characters requiring an escape character, such as new line and tab (as is done in C by using \\n, \\t etc.), use \fBprint-out\fP as \fBinline-code\fP.
+
+.SH EXAMPLES
+Outputting "Hello there": 
+
+.RS 4
+.EX
+
+@Hello there
+
+.EE
+.RE
+
+You can use other RimStone statements inlined and mixed with the text you are outputting:
+
+.RS 4
+.EX
+
+set-string weatherType="sunny"
+@Today's weather is <<print-out weatherType>>
+
+.EE
+.RE
+
+which would output 
+
+.RS 4
+.EX
+
+Today's weather is sunny
+
+.EE
+.RE
+
+With "!" statement, the text is also output, and this example produces the same "Hello there" output as "@":
+
+.RS 4
+.EX
+
+!Hello there
+
+.EE
+.RE
+
+In contrast to "@" statement, "!" statement outputs all texts verbatim  and does not execute any inline code:
+
+.RS 4
+.EX
+
+set-string weatherType="sunny"
+!Today's weather is <<print-out weatherType>>
+
+.EE
+.RE
+
+which would output 
+
+.RS 4
+.EX
+
+Today's weather is <<print-out weatherType>>
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
+See all 
+\fBdocumentation\fP

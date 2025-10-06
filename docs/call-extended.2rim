@@ -1,0 +1,167 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+call-extended \-  (C-language)
+.SH PURPOSE
+Call external function or macro (extended mode only).
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+call-extended <function> "( " [ & ]<variable>  [ , ... ]  " )" 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+call-extended calls <function> (which can be a function or macro) with a list of parameter variables. The <function> is defined either in:
+
+.RS 4
+\[bu]    
+a library with C interop - note that such library can be written in many different languages. Most compiled languages can produce such libraries (such as Rust, C/C++ and others),
+
+.RE
+
+.RS 4
+\[bu]    
+a ".c" file residing in the directory that contains application source code - again such a C file can in turn call code from libraries produced by any language that supports C interop (most do).
+
+.RE
+
+.RS 4
+\[bu]    
+if a macro, in a ".h" file residing in the directory that contains application source code.
+.RE
+
+The <function> must be declared via C-style declaration in a ".h" file residing in the application source code directory. You can use "--lflag" and "--cflag" options of \fBrim\fP to supply libraries used. In addition, if you need to, you can also have any number of ".c" and ".h" files which will be automatically included in your project. A macro must be defined in ".h" file.
+
+call-extended statement can only be used in extended mode (see \fBextended-mode\fP). By default, RimStone code runs in safe mode which does not allow use of call-extended statement. Note that using call-extended statement does not automatically make your application unsafe; rather, extended code can be written in a memory-safe language (such as Rust), or even if written in C it can be made in such a way not to cause out-of-band memory reads and writes. 
+
+.LP
+.B C SIGNATURE, INPUT/OUTPUT VARIABLES, TYPES
+.LP
+
+Each <variable> can be of C type (or a pointer to C type):
+
+.RS 4
+\[bu]    
+"rim_num" which is a signed integer 8 bytes in length (int64_t type). This represents RimStone number.
+
+.RE
+
+.RS 4
+\[bu]    
+"char *" which is a pointer to an array of characters. This represents RimStone string value.
+
+.RE
+
+.RS 4
+\[bu]    
+"bool" which is a boolean variable. This represents RimStone boolean.
+.RE
+
+A <function> should not return a value. Rather, use a variable passed as a pointer if you wish to pass the function's output back to your RimStone code.
+
+For more on using C in <function>s, see \fBServer-API\fP.
+
+.LP
+.B CHANGING CURRENT WORKING DIRECTORY
+.LP
+
+If you change current working directory from your C code (such as with C chmod() function), you must set RimStone internal boolean variable "rim_path_changed" to true.
+
+.LP
+.B WEB FRAMEWORK FOR C PROGRAMMING LANGUAGE
+.LP
+
+Note that when you use call-extended, RimStone becomes a \fBweb-framework-for-C-programming-language\fP.
+
+.SH EXAMPLES
+For instance, consider C file "calc.c":
+
+.RS 4
+.EX
+
+\[char35]include "rim.h"
+
+// Compute factorial of f, and store result into res
+void factorial(rim_num f, rim_num *res)
+{
+    *res = 1;
+    rim_num i;
+    for (i = 2; i <= f; i++) {
+        *res *= i;
+    }
+}
+
+.EE
+.RE
+
+Declare this C function in a header file, for instance "calc.h":
+
+.RS 4
+.EX
+
+void factorial(rim_num f, rim_num *res);
+
+.EE
+.RE
+
+You can also have macros in a header file, so for example "calc.h" could be:
+
+.RS 4
+.EX
+
+void factorial(rim_num f, rim_num *res);
+
+\[char35]define mod10(n, m) m=(n)%10
+
+.EE
+.RE
+
+In this case you have defined a macro that calculates the moduo of 10 and stores a result into another variable.
+
+Use these in your RimStone code with call-extended statement, for instance to use a function "factorial()":
+
+.RS 4
+.EX
+
+extended-mode
+
+begin-handler /fact public
+    set-number fact
+    call-extended factorial (10, &fact)
+    print-out fact
+end-handler
+
+.EE
+.RE
+
+In the above example, number "fact" is passed by reference (as a pointer), and it will contain the value of factorial of 10 on return. The result printed out is "3628800".
+
+To use macro "mod10()":
+
+.RS 4
+.EX
+
+extended-mode
+
+begin-handler /mod public
+    set-number mod
+    call-extended mod10(103, mod)
+    print-out mod
+end-handler
+
+.EE
+.RE
+
+In this example, you are using a C macro, so number "fact" is assigned a value directly, per C language rules. The result printed out is "3".
+.SH SEE ALSO
+ C language
+
+\fBcall-extended\fP  
+\fBextended-mode\fP  
+\fBweb-framework-for-C-programming-language\fP   
+See all 
+\fBdocumentation\fP

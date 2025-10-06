@@ -1,0 +1,43 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+abs-number \-  (numbers)
+.SH PURPOSE
+Get absolute value of a number.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+abs-number <number> to <absolute number>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+abs-number will store absolute value of <number> to <absolute number>. For example, absolute value of -3 is 3, and absolute value of 3 is 3.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+set-number my_num = -10
+abs-number my_num to abs_num
+print-out abs_num new-line
+
+.EE
+.RE
+
+The result is 10.
+.SH SEE ALSO
+ Numbers
+
+\fBabs-number\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBnumber-expressions\fP  
+\fBnumber-string\fP  
+\fBset-number\fP  
+\fBstring-number\fP   
+See all 
+\fBdocumentation\fP

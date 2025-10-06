@@ -1,0 +1,755 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+documentation \- RimStone documentation (documentation)
+.SH DESCRIPTION
+
+.LP
+.B REFERENCE FOR RIMSTONE VERSION 4.0.0
+.LP
+
+Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
+
+Browse by topic:    API,   Application information,   Array,   Base64,   Booleans,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Doubles,   Encryption,   Error handling,   Examples,   FastCGI client,   FIFO,   Files,   General,   Hash,   Hex encoding,   Install rimstone,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Math functions,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Rimstone compiler and utility,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
+
+
+
+.RS 4
+\[bu]    
+API
+
+\fBClient-API\fP  
+\fBServer-API\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Application information
+
+\fBget-app\fP  
+\fBset-app\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Array
+
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBwrite-array\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Base64
+
+\fBdecode-base64\fP  
+\fBencode-base64\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Booleans
+
+\fBboolean-expressions\fP  
+\fBset-bool\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+C language
+
+\fBcall-extended\fP  
+\fBextended-mode\fP  
+\fBweb-framework-for-C-programming-language\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Cookies
+
+\fBdelete-cookie\fP  
+\fBget-cookie\fP  
+\fBset-cookie\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Database
+
+\fBbegin-transaction\fP  
+\fBcommit-transaction\fP  
+\fBcurrent-row\fP  
+\fBdatabase-config-file\fP  
+\fBdb-error\fP  
+\fBmariadb-database\fP  
+\fBpostgresql-database\fP  
+\fBrollback-transaction\fP  
+\fBrun-query\fP  
+\fBsqlite-database\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Debugging
+
+\fBdebugging\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Directories
+
+\fBchange-dir\fP  
+\fBchange-mode\fP  
+\fBdelete-dir\fP  
+\fBdirectories\fP  
+\fBnew-dir\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Distributed computing
+
+\fBcall-remote\fP  
+\fBnew-remote\fP  
+\fBread-remote\fP  
+\fBrun-remote\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Documentation
+
+\fBdocumentation\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Doubles
+
+\fBabs-double\fP  
+\fBdouble-expressions\fP  
+\fBdouble-string\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBset-double\fP  
+\fBstring-double\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Encryption
+
+\fBdecrypt-data\fP  
+\fBderive-key\fP  
+\fBencrypt-data\fP  
+\fBhash-string\fP  
+\fBhmac-string\fP  
+\fBrandom-crypto\fP  
+\fBrandom-string\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Error handling
+
+\fBdb-error\fP  
+\fBerror-code\fP  
+\fBerror-handling\fP  
+\fBreport-error\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Examples
+
+\fBexamples\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+FastCGI client
+
+\fBrimcli\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+FIFO
+
+\fBdelete-fifo\fP  
+\fBnew-fifo\fP  
+\fBpurge-fifo\fP  
+\fBread-fifo\fP  
+\fBrewind-fifo\fP  
+\fBwrite-fifo\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Files
+
+\fBchange-mode\fP  
+\fBclose-file\fP  
+\fBcopy-file\fP  
+\fBdelete-file\fP  
+\fBfile-position\fP  
+\fBfile-storage\fP  
+\fBfile-uploading\fP  
+\fBget-upload\fP  
+\fBlock-file\fP  
+\fBopen-file\fP  
+\fBread-file\fP  
+\fBread-line\fP  
+\fBrename-file\fP  
+\fBstat-file\fP  
+\fBtemporary-file\fP  
+\fBuniq-file\fP  
+\fBunlock-file\fP  
+\fBwrite-file\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+General
+
+\fBabout-rimstone\fP  
+\fBdevel-versus-release\fP  
+\fBdirectories\fP  
+\fBpermissions\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Hash
+
+\fBget-hash\fP  
+\fBnew-hash\fP  
+\fBpurge-hash\fP  
+\fBread-hash\fP  
+\fBresize-hash\fP  
+\fBwrite-hash\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Hex encoding
+
+\fBdecode-hex\fP  
+\fBencode-hex\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Install rimstone
+
+\fBinstall-package\fP  
+\fBinstall-rimstone\fP  
+\fBuninstall\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+JSON parsing
+
+\fBjson-doc\fP  
+\fBread-json\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Language
+
+\fBinline-code\fP  
+\fBstatements\fP  
+\fBsyntax-highlighting\fP  
+\fBunused-var\fP  
+\fBvariable-scope\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+License
+
+\fBrimstone-license\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+LIFO
+
+\fBdelete-lifo\fP  
+\fBget-lifo\fP  
+\fBnew-lifo\fP  
+\fBpurge-lifo\fP  
+\fBread-lifo\fP  
+\fBrewind-lifo\fP  
+\fBwrite-lifo\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Linked list
+
+\fBdelete-list\fP  
+\fBget-list\fP  
+\fBnew-list\fP  
+\fBposition-list\fP  
+\fBpurge-list\fP  
+\fBread-list\fP  
+\fBwrite-list\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Math functions
+
+\fBabd\fP  
+\fBabn\fP  
+\fBacos\fP  
+\fBacosh\fP  
+\fBasin\fP  
+\fBasinh\fP  
+\fBatan\fP  
+\fBatan2\fP  
+\fBatanh\fP  
+\fBcbrt\fP  
+\fBceil\fP  
+\fBcopysign\fP  
+\fBcos\fP  
+\fBcosh\fP  
+\fBdbl\fP  
+\fBerf\fP  
+\fBerfc\fP  
+\fBexp\fP  
+\fBexp2\fP  
+\fBfloor\fP  
+\fBfmod\fP  
+\fBhypot\fP  
+\fBisinf\fP  
+\fBisnan\fP  
+\fBldexp\fP  
+\fBlgamma\fP  
+\fBlog\fP  
+\fBlog10\fP  
+\fBlog2\fP  
+\fBmath-functions\fP  
+\fBnextafter\fP  
+\fBnum\fP  
+\fBpow\fP  
+\fBround\fP  
+\fBsin\fP  
+\fBsinh\fP  
+\fBsqrt\fP  
+\fBtan\fP  
+\fBtanh\fP  
+\fBtrunc\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Memory
+
+\fBmemory-handling\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Messages
+
+\fBget-message\fP  
+\fBnew-message\fP  
+\fBread-message\fP  
+\fBSEMI\fP  
+\fBwrite-message\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Numbers
+
+\fBabs-number\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBnumber-expressions\fP  
+\fBnumber-string\fP  
+\fBset-number\fP  
+\fBstring-number\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Program execution
+
+\fBexec-program\fP  
+\fBexit-status\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Program flow
+
+\fBbreak-loop\fP  
+\fBcall-handler\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBquit-process\fP  
+\fBreturn-handler\fP  
+\fBstart-loop\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Quick start
+
+\fB123-hello-world\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Regex
+
+\fBmatch-regex\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Request data
+
+\fBget-param\fP  
+\fBrequest-body\fP  
+\fBset-param\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Request information
+
+\fBget-req\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Requests
+
+\fBrequest\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Rimstone compiler and utility
+
+\fBrim\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Running application
+
+\fBapplication-setup\fP  
+\fBCGI\fP  
+\fBcommand-line\fP  
+\fBservice\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+SELinux
+
+\fBSELinux\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Service manager
+
+\fBmrim\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Service processing
+
+\fBafter-handler\fP  
+\fBbefore-handler\fP  
+\fBbegin-handler\fP  
+\fBcall-handler\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBdouble-string\fP  
+\fBlower-string\fP  
+\fBmatch-regex\fP  
+\fBnew-string\fP  
+\fBnumber-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBscan-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-double\fP  
+\fBstring-expressions\fP  
+\fBstring-length\fP  
+\fBstring-number\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+System information
+
+\fBget-sys\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Time
+
+\fBget-time\fP  
+\fBpause-program\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Tree
+
+\fBdelete-tree\fP  
+\fBget-tree\fP  
+\fBnew-tree\fP  
+\fBpurge-tree\fP  
+\fBread-tree\fP  
+\fBuse-cursor\fP  
+\fBwrite-tree\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+URL encoding
+
+\fBdecode-url\fP  
+\fBencode-url\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+UTF
+
+\fBtext-utf\fP  
+\fButf-text\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Web
+
+\fBcall-web\fP  
+\fBout-header\fP  
+\fBsend-file\fP  
+\fBsilent-header\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Web encoding
+
+\fBdecode-web\fP  
+\fBencode-web\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+Web servers
+
+\fBconnect-apache-tcp-socket\fP  
+\fBconnect-apache-unix-socket\fP  
+\fBconnect-haproxy-tcp-socket\fP  
+\fBconnect-nginx-tcp-socket\fP  
+\fBconnect-nginx-unix-socket\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+XML parsing
+
+\fBread-xml\fP  
+\fBxml-doc\fP   
+.RE
+
+
+
+
+.LP
+.B MAN PAGES
+.LP
+
+RimStone documentation is available online, and also as man pages (i.e. manual pages). You can use 'man' to get help (if man program is available on your system), for instance:
+
+.RS 4
+.EX
+
+man read-file
+
+.EE
+.RE
+
+RimStone uses section 2rim of man, so you can also use (in case of conflicts):
+
+.RS 4
+.EX
+
+man 2rim read-file
+
+.EE
+.RE
+
+If man program is not available on your system, you can also view topics with 'rim --man <topic>', for example:
+
+.RS 4
+.EX
+
+rim --man run-query
+
+.EE
+.RE
+
+To show all topics, type:
+
+.RS 4
+.EX
+
+rim --man all
+
+.EE
+.RE
+

@@ -1,30 +1,30 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2018-2025 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://golf-lang.com/ - this file is part of Golf framework.
+// On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
 
 // 
 // Regex (pcre2)-related module
 //
 
 
-#include "golf.h"
+#include "rim.h"
 #include <dlfcn.h>
 #include <gnu/lib-names.h>
 
 static bool pcre2_resolved = false; // used for both pcre2 and libc regex.
 // These are dlopen-loaded for both pcre2 and libc regex
-static int (*gg_pcre2_regcomp)(regex_t *preg, const char *regex, int cflags);
-static int (*gg_pcre2_regexec)(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags);
-static size_t (*gg_pcre2_regerror)(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size);
-static void (*gg_pcre2_regfree)(regex_t *preg);
+static int (*rim_pcre2_regcomp)(regex_t *preg, const char *regex, int cflags);
+static int (*rim_pcre2_regexec)(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags);
+static size_t (*rim_pcre2_regerror)(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size);
+static void (*rim_pcre2_regfree)(regex_t *preg);
 
 
 // Free preg for regex, this is because for pcre2 vs glibc, it's called from v1 parser and it must be 
-// compiled into 2 different so libs (golfpcre2 and golfpcre2glibc), and the implementations are different.
-void gg_regfree(regex_t *preg)
+// compiled into 2 different so libs (rimpcre2 and rimpcre2glibc), and the implementations are different.
+void rim_regfree(regex_t *preg)
 {
-    gg_pcre2_regfree (preg); 
+    rim_pcre2_regfree (preg); 
 }
 
 //
@@ -38,22 +38,22 @@ void gg_regfree(regex_t *preg)
 // If utf is 1, then characters are treated as UTF
 // cached is a compiled regex_t. If NULL, it's not used. If *cached is NULL, it's assigned. If *cached is not-NULL, it's used.
 //
-gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_num utf, gg_num case_insensitive, gg_num single_match, regex_t **cached)
+rim_num rim_regex(char *look_here, char *find_this, char *replace, char **res, rim_num utf, rim_num case_insensitive, rim_num single_match, regex_t **cached)
 {
-    gg_num reg_ret=0;
+    rim_num reg_ret=0;
     regex_t *reg;
     regex_t lreg; // local compiled regex_t used when cache is not used
 
     // If not using glibc-regex, load symbols with dlopen
-#ifndef GG_C_GLIBC_REGEX
+#ifndef RIM_C_GLIBC_REGEX
     // Since PCRE2 in earlier days used the same symbols as glibc regex, you could never know which library will
     // be used, resulting in a guaranteed SIGSEGV. We will use pcre2_ names in pcre2 version greater than 10.37
     if (!pcre2_resolved) 
     {
-        gg_pcre2_regcomp = pcre2_regcomp;
-        gg_pcre2_regexec = pcre2_regexec;
-        gg_pcre2_regerror = pcre2_regerror;
-        gg_pcre2_regfree = pcre2_regfree;
+        rim_pcre2_regcomp = pcre2_regcomp;
+        rim_pcre2_regexec = pcre2_regexec;
+        rim_pcre2_regerror = pcre2_regerror;
+        rim_pcre2_regfree = pcre2_regfree;
         pcre2_resolved = true; // do this only once per process
     }
 #else
@@ -63,26 +63,26 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
     if (!pcre2_resolved) 
     {
         void *lposix = dlopen(LIBC_SO, RTLD_NOW);
-        if (lposix == NULL) gg_report_error ("Cannot find libc library [%s]", dlerror());
+        if (lposix == NULL) rim_report_error ("Cannot find libc library [%s]", dlerror());
         // Get symbols for libc regex
-        gg_pcre2_regcomp = dlsym(lposix, "regcomp");
-        gg_pcre2_regexec = dlsym(lposix, "regexec");
-        gg_pcre2_regerror = dlsym(lposix, "regerror");
-        gg_pcre2_regfree = dlsym(lposix, "regfree");
+        rim_pcre2_regcomp = dlsym(lposix, "regcomp");
+        rim_pcre2_regexec = dlsym(lposix, "regexec");
+        rim_pcre2_regerror = dlsym(lposix, "regerror");
+        rim_pcre2_regfree = dlsym(lposix, "regfree");
         // Check we got them all
-        if (gg_pcre2_regcomp == NULL || gg_pcre2_regexec == NULL || gg_pcre2_regerror == NULL || gg_pcre2_regfree == NULL) gg_report_error ("Cannot resolve libc regex library symbols");
+        if (rim_pcre2_regcomp == NULL || rim_pcre2_regexec == NULL || rim_pcre2_regerror == NULL || rim_pcre2_regfree == NULL) rim_report_error ("Cannot resolve libc regex library symbols");
         pcre2_resolved = true; // do this only once per process
     }
 #endif
 
-#if defined(GG_C_GLIBC_REGEX)
-    gg_num rflags = REG_EXTENDED;
+#if defined(RIM_C_GLIBC_REGEX)
+    rim_num rflags = REG_EXTENDED;
 #else
-    gg_num rflags = REG_EXTENDED|REG_DOTALL|REG_UCP|REG_NEWLINE;
+    rim_num rflags = REG_EXTENDED|REG_DOTALL|REG_UCP|REG_NEWLINE;
 #endif
     if (case_insensitive) rflags |= REG_ICASE;
-#if defined(GG_C_GLIBC_REGEX)
-    GG_UNUSED(utf);
+#if defined(RIM_C_GLIBC_REGEX)
+    RIM_UNUSED(utf);
 #else
     if (utf) rflags |= REG_UTF;
 #endif
@@ -91,17 +91,17 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
     if (cached == NULL)
     {
         reg = &lreg;
-        reg_ret = gg_pcre2_regcomp(reg, find_this, rflags);
+        reg_ret = rim_pcre2_regcomp(reg, find_this, rflags);
     }
     // make compiled regex and cache it
     else if (cached != NULL && *cached == NULL)
     {
         //
-        // Allocating cached regex CANNOT be gg_malloc as it MUST survive cross-request caching!
+        // Allocating cached regex CANNOT be rim_malloc as it MUST survive cross-request caching!
         // It is only released when the program ends
         //
-        reg = (regex_t*) gg_malloc0 (sizeof(regex_t));
-        reg_ret = gg_pcre2_regcomp(reg, find_this, rflags);
+        reg = (regex_t*) rim_malloc0 (sizeof(regex_t));
+        reg_ret = rim_pcre2_regcomp(reg, find_this, rflags);
         *cached = reg;
     }
     // this is using cached compiled regex, no need to do anything other than use it
@@ -114,7 +114,7 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
     // see if regex 'compiled' structure can be done
     if(!reg_ret) {
         // get the number of () subexpressions in the pattern
-        gg_num sub_num = (gg_num)(reg->re_nsub); 
+        rim_num sub_num = (rim_num)(reg->re_nsub); 
 
         // regmatch_t is used for subexpressions, i.e. () expressions
         regmatch_t subexp[sub_num + 1];
@@ -123,15 +123,15 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
 
         // this is used to build current replacement
         char *replace_res;
-        gg_num replace_res_len = 0; // track length of replacing, it's faster than strcat and such
-        gg_num replace_res_offset = 0; // offset in *res where the above replacing ended (and new will begin), but because we will re-alloc
+        rim_num replace_res_len = 0; // track length of replacing, it's faster than strcat and such
+        rim_num replace_res_offset = 0; // offset in *res where the above replacing ended (and new will begin), but because we will re-alloc
                                     // *res, we need this offset to get a correct pointer to where to continue again after the realloc
-        gg_num res_allocated = 0; // how many bytes allocated for the result
-        gg_num res_needed = 0; // how many bytes actually currently needed for the result
+        rim_num res_allocated = 0; // how many bytes allocated for the result
+        rim_num res_needed = 0; // how many bytes actually currently needed for the result
         if (replace != NULL) 
         {
             // start with some minimal memory for replacement, more than we need, but okay
-            replace_res = (char *)gg_malloc(res_allocated = res_needed = 1 );
+            replace_res = (char *)rim_malloc(res_allocated = res_needed = 1 );
             *replace_res= 0;
             // res is the final result
             *res = replace_res;
@@ -145,9 +145,9 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
         // and \1 from look_here (as directed by find_this) could be a big chunk of look_here.
         // So it could go at least square in size. The only way to allocate
         // enough but not go crazy with memory is something like this.
-#define GG_ALLOC_REPLACE(addlen) {res_needed+=((addlen)+1); if (res_allocated <= res_needed) { replace_res_offset = replace_res-*res; *res = (char*)gg_realloc (gg_mem_get_id(*res), res_allocated=(res_needed+512)); /* **8** */ replace_res = *res+replace_res_offset; /* **9** */ } }
+#define RIM_ALLOC_REPLACE(addlen) {res_needed+=((addlen)+1); if (res_allocated <= res_needed) { replace_res_offset = replace_res-*res; *res = (char*)rim_realloc (rim_mem_get_id(*res), res_allocated=(res_needed+512)); /* **8** */ replace_res = *res+replace_res_offset; /* **9** */ } }
 
-        gg_num tot_match = 0; // total number of matches
+        rim_num tot_match = 0; // total number of matches
         char *last_look_here = (char*)look_here; // this is what we currently look at (a substring of original look_here)
 
         //
@@ -167,7 +167,7 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
         // it's the current place where we search for the next match.
         //
         //
-        while (*last_look_here != 0 && gg_pcre2_regexec(reg, last_look_here, sub_num + 1, subexp, 0) == 0) 
+        while (*last_look_here != 0 && rim_pcre2_regexec(reg, last_look_here, sub_num + 1, subexp, 0) == 0) 
         {
             tot_match++; 
             if (replace == NULL) // just search, no replace
@@ -183,7 +183,7 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
             // Copy from look_for to replace everything from the end of the previous match right up until the 
             // beginning of the next match
             // rm_so is offsets to where \1, \2 etc. are
-            GG_ALLOC_REPLACE(subexp[0].rm_so);
+            RIM_ALLOC_REPLACE(subexp[0].rm_so);
             strncpy(replace_res+replace_res_len, last_look_here, subexp[0].rm_so); // copy from current search point to where match is 
             replace_res[replace_res_len += subexp[0].rm_so] = 0;
 
@@ -192,7 +192,7 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
             // We stop at each subexpression, and we copy matches for them
             // and if some not used, that's fine
             //
-            // HERE is how Golf statement is stacked up here:
+            // HERE is how RimStone statement is stacked up here:
             //
             // pattern-match 'find_this' in 'look_here' replace-with 'replace'
             //
@@ -225,7 +225,7 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
             // We allow for any of it.
             //
             char sdig; // single digit backreference, 1 if yes 0 if not
-            gg_num actsub; // the actual subexpression backreference (1-23), if 0 there's no backreference
+            rim_num actsub; // the actual subexpression backreference (1-23), if 0 there's no backreference
             // 
             // we do not count how many subexpressions are here, nor compare to the total, because the same one can be repeated
             // many times i.e. ab\1cd\1ef\2gh\1 etc.
@@ -269,7 +269,7 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
                 }
                 if (*head_replace == 0) // we reached the end of replace string 
                 {
-                    GG_ALLOC_REPLACE(head_replace - current_replace);
+                    RIM_ALLOC_REPLACE(head_replace - current_replace);
                     // copy all from previous subexpression to the end of replace to result, or the whole thing if no subexpressions
                     strncpy(replace_res+replace_res_len, current_replace, head_replace - current_replace); 
                     replace_res[replace_res_len+=head_replace - current_replace] = 0;
@@ -277,14 +277,14 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
                 }
                 if (actsub != 0) // we found a subexpression within this particular match
                 {
-                    GG_ALLOC_REPLACE(head_replace - current_replace);
+                    RIM_ALLOC_REPLACE(head_replace - current_replace);
                     // first copy from the previous end of subexpression (or the beginning) to the beginning of this new subexpression
                     strncpy(replace_res+replace_res_len, current_replace, head_replace - current_replace); 
                     replace_res[replace_res_len+=head_replace - current_replace] = 0;
                     // now copy the actual subexpression found in the last_look_here to result
                     // rm_eo is offset of first char after found subexpression, 
                     // rm_so is where it starts, rm_eo-rm_so is the length of found subexpression
-                    GG_ALLOC_REPLACE(subexp[actsub].rm_eo - subexp[actsub].rm_so);
+                    RIM_ALLOC_REPLACE(subexp[actsub].rm_eo - subexp[actsub].rm_so);
                     strncpy(replace_res+replace_res_len, last_look_here + subexp[actsub].rm_so, subexp[actsub].rm_eo - subexp[actsub].rm_so); // **4**
                     replace_res[replace_res_len+=subexp[actsub].rm_eo - subexp[actsub].rm_so] = 0;
                     head_replace += (sdig == 1 ? 2:3); // advance properly based on whether it's \X or \XY, so 2 or 3 chars
@@ -299,16 +299,16 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
         if (replace != NULL) // do this if we're replacing
         {
             // whatever is left over after the last match must be copied over to the result
-            gg_num len_of_reminder;
-            GG_ALLOC_REPLACE(len_of_reminder = strlen(last_look_here));
+            rim_num len_of_reminder;
+            RIM_ALLOC_REPLACE(len_of_reminder = strlen(last_look_here));
             memcpy(replace_res+replace_res_len, last_look_here, len_of_reminder+1); // +1 in memcpy is to copy null-char
                                                                                     // which we don't count in string length
-            gg_mem_set_len (*res, replace_res_len+len_of_reminder+1);
+            rim_mem_set_len (*res, replace_res_len+len_of_reminder+1);
         }
 
         // DONE with replacement
 
-        if (cached == NULL) gg_pcre2_regfree (reg); // free gg_pcre2_regcomp() resources, but only if not cached
+        if (cached == NULL) rim_pcre2_regfree (reg); // free rim_pcre2_regcomp() resources, but only if not cached
         return tot_match; 
         
     }
@@ -316,19 +316,19 @@ gg_num gg_regex(char *look_here, char *find_this, char *replace, char **res, gg_
     {
         if (replace != NULL) 
         {
-            *res = GG_EMPTY_STRING; // just in case there's attempt to free it
+            *res = RIM_EMPTY_STRING; // just in case there's attempt to free it
         }
         // this means the patterns was not syntactically correct
         char regmsg[400];
-        gg_pcre2_regerror(reg_ret, reg, regmsg, sizeof(regmsg)); // get error message and error out
-        // free reg *after* gg_pcre2_regerror
+        rim_pcre2_regerror(reg_ret, reg, regmsg, sizeof(regmsg)); // get error message and error out
+        // free reg *after* rim_pcre2_regerror
         if (cached != NULL) *cached = NULL; // if tried to cache, invalidate as it is ... invalid
         // Should not free it if it's a failure. This is different from stdlibc's regex, where you do need to.
-#ifdef GG_C_GLIBC_REGEX
-        gg_pcre2_regfree (reg); // do not free gg_pcre2_regcomp resources when it's an error, unless glibc regex
+#ifdef RIM_C_GLIBC_REGEX
+        rim_pcre2_regfree (reg); // do not free rim_pcre2_regcomp resources when it's an error, unless glibc regex
 #endif
         if (cached != NULL) free (reg); // if tried to cache, dealloc it
-        gg_report_error ("Error in regular expression [%ld], message [%s]", reg_ret, regmsg);
+        rim_report_error ("Error in regular expression [%ld], message [%s]", reg_ret, regmsg);
         return -1; // will never actually get here; just to satisfy pedantic compiler
     }
 }

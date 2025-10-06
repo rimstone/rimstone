@@ -1,0 +1,308 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+write-string \-  (strings)
+.SH PURPOSE
+Create complex strings.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+write-string <string>
+
+<any code>
+
+end-write-string [ notrim ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+Output of any RimStone code can be written into <string> with write-string. In between write-string and end-write-string you can write <any RimStone code>. For instance you can use database queries, comparison statements etc., just as you would for any other RimStone code. 
+
+.LP
+.B SHORTCUT CODE
+.LP
+
+Note that instead of write-string you can also use a shortcut "(("  (and instead of end-write-string you can use "))"  ), for example here a string "fname" holds a full path of a file named "config-install.rim" under the application home directory (see \fBdirectories\fP):
+
+.RS 4
+.EX
+
+get-app directory to home_dir
+(( fname
+@<<print-out home_dir>>/config-install.rim
+))
+
+.EE
+.RE
+
+
+.LP
+.B TRIMMING
+.LP
+
+Just like with all other RimStone code, the text of every statement is trimmed both on left and write, so this:
+
+.RS 4
+.EX
+
+(( mystr
+@Some string
+))
+
+.EE
+.RE
+
+is the same as:
+
+.RS 4
+.EX
+
+(( mystr
+        @Some string <whitespaces>
+))
+
+.EE
+.RE
+
+write-string (or "((") statement must always be on a line by itself (and so does end-write-string, or "))" statement). The string being built starts with the line following write-string, and ends with the line immediately prior to end-write-string. 
+
+All trailing whitespaces (including new lines) are removed, for example:
+
+.RS 4
+.EX
+
+(( mystr
+        @My string
+        @
+        @
+))
+
+.EE
+.RE
+
+the above string would have two trailing empty lines, however they will be removed. If you want to skip trimming the trailing whitespaces, use "notrim" clause in end-write-string.
+
+.SH EXAMPLES
+
+.B - Simple
+
+A simple example:
+
+.RS 4
+.EX
+
+set-string my_str="world"
+set-string my_str1="and have a nice day too!"
+
+write-string result_str
+@Hello <<print-out my_str>> (<<print-out my_str1>>)
+end-write-string
+
+print-out result_str
+
+.EE
+.RE
+
+The output is 
+
+.RS 4
+.EX
+
+Hello world (and have a nice day too!)
+
+.EE
+.RE
+
+
+
+.B - Using code inside
+
+Here is using RimStone code inside write-string, including database query and comparison statements to produce different strings at run-time:
+
+.RS 4
+.EX
+
+get-param selector
+
+set-string my_str="world"
+
+write-string result_str
+    if-true selector equal "simple"
+        @Hello <<print-out my_string>> (and have a nice day too!)
+    else-if selector equal "database"
+        run-query @db="select name from employee" output name
+            @Hello <<print-out name>>
+            @<br/>
+        end-query
+    else-if
+        @No message
+    end-if
+end-write-string
+
+print-out result_str
+
+.EE
+.RE
+
+If selector variable is "simple", as in URL 
+
+.RS 4
+.EX
+
+https://mysite.com/<app name>/some-service?selector=simple
+
+.EE
+.RE
+
+the result is 
+
+.RS 4
+.EX
+
+Hello world (and have a nice day too!)
+
+.EE
+.RE
+
+If selector variable is "database", as in URL 
+
+.RS 4
+.EX
+
+https://mysite.com/<app name>/some-service?selector=database
+
+.EE
+.RE
+
+the result may be (assuming "Linda" and "John" are the two employees selected):
+
+.RS 4
+.EX
+
+Hello Linda
+<br/>
+Hello John
+<br/>
+
+.EE
+.RE
+
+If selector variable is anything else, as in URL 
+
+.RS 4
+.EX
+
+https://mysite.com/<app name>/some-service?selector=something_else
+
+.EE
+.RE
+
+the result is 
+
+.RS 4
+.EX
+
+No message
+
+.EE
+.RE
+
+
+.B - Using call-handlers calls inside
+
+The following uses a call-handler inside write-string:
+
+.RS 4
+.EX
+
+set-string result_str=""
+write-string result_str
+    @<<print-out "Result from other-service">> is <<call-handler "/other-service">>
+end-write-string
+print-out result_str
+
+.EE
+.RE
+
+The "other-service" may be:
+
+.RS 4
+.EX
+
+begin-handler /other-service public
+    @"Hello from other service"
+end-handler
+
+.EE
+.RE
+
+The output:
+
+.RS 4
+.EX
+
+Result from other-service is Hello from other service
+
+.EE
+.RE
+
+
+
+.B - Nesting
+
+An example to nest write-strings:
+
+.RS 4
+.EX
+
+write-string str1
+    @Hi!
+    write-string str2
+        @Hi Again!
+   end-write-string
+   print-out str2
+end-write-string
+print-out str1
+
+.EE
+.RE
+
+The result is 
+
+.RS 4
+.EX
+
+Hi!
+Hi Again!
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBdouble-string\fP  
+\fBlower-string\fP  
+\fBmatch-regex\fP  
+\fBnew-string\fP  
+\fBnumber-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBscan-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-double\fP  
+\fBstring-expressions\fP  
+\fBstring-length\fP  
+\fBstring-number\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

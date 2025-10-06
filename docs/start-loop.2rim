@@ -1,0 +1,84 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+start-loop \-  (program-flow)
+.SH PURPOSE
+Loop execution based on a condition.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+start-loop  [ repeat <repeat> ] \\
+    [ use <loop counter> \\
+        [ start-with <start with> ] [ add <add> ] ] 
+
+    <any code>
+    
+end-loop
+
+.EE
+.RE
+
+.SH DESCRIPTION
+start-loop will execute code between start-loop and "end-loop" clauses certain number of times based on a condition specified and the usage of \fBcontinue-loop\fP and \fBbreak-loop\fP, which can be used in-between the two.
+
+<repeat> number (in "repeat" clause) specifies how many times to execute the loop (barring use of \fBcontinue-loop\fP and \fBbreak-loop\fP). 
+
+<loop counter> (in "use" clause) is a number that by default starts with value of 1, and is incremented by 1 each time execution loops back to start-loop, unless "start-with" and/or "add" clauses are used. The end value of <loop counter> (just outside "end-loop") is the first value past the last loop.
+
+If <start with> (in "start-with" clause) is used, that's the initial value for <loop counter> (instead of the default 1), and if <add> is specified (in "add" clause), then <loop counter> is incremented by <add> each time execution loops back to start-loop (instead of the default 1). <add> can be positive or negative.
+
+If either of "start-with" or "add" clauses is used, then "use" must be specified. 
+
+.SH EXAMPLES
+Print numbers 0 through 19:
+
+.RS 4
+.EX
+
+start-loop repeat 20 use p start-with 0
+    print-out p
+    @
+end-loop
+
+.EE
+.RE
+
+A loop that is controlled via \fBcontinue-loop\fP and \fBbreak-loop\fP statements, displaying numbers from 1 through 30 but omitting those divisible with 3:
+
+.RS 4
+.EX
+
+set-number n
+set-number max = 30
+start-loop
+    set-number n add 1    
+    if-true n every 3
+        continue-loop
+    end-if
+    if-true n greater-than max
+        break-loop
+    end-if
+    print-out n
+end-loop
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Program flow
+
+\fBbreak-loop\fP  
+\fBcall-handler\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBquit-process\fP  
+\fBreturn-handler\fP  
+\fBstart-loop\fP   
+See all 
+\fBdocumentation\fP

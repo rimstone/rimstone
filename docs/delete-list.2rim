@@ -1,0 +1,45 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+delete-list \-  (linked-list)
+.SH PURPOSE
+Delete current linked list element.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+delete-list <list> [ status <status> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+delete-list will delete current element in linked <list> created with \fBnew-list\fP. A current list element is the one that will be subject to statements like \fBread-list\fP and \fBwrite-list\fP. See \fBposition-list\fP for more details on the current element.
+
+<status> (in "status" clause) is RIM_OKAY if element is deleted, or RIM_ERR_EXIST if could not delete element (this can happen if the list is empty, or if current list element is beyond the last element, such as for instance if "end" clause is used in position-list statement).
+
+Once an element is deleted, the current element becomes either the next one (if the current element wasn't the last one), or the previous one (if the current element was the last one).
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+delete-list mylist status st 
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Linked list
+
+\fBdelete-list\fP  
+\fBget-list\fP  
+\fBnew-list\fP  
+\fBposition-list\fP  
+\fBpurge-list\fP  
+\fBread-list\fP  
+\fBwrite-list\fP   
+See all 
+\fBdocumentation\fP

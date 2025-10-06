@@ -1,0 +1,200 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+database-config-file \- RimStone documentation (database)
+.SH DESCRIPTION
+RimStone application can use any number of databases, with each specified by a database configuration file. This file provides database name, login and connection settings and preferences.
+
+When making a RimStone application, you specify a database vendor and the database configuration file for each database your application uses (see \fBrim\fP), for instance:
+
+.RS 4
+.EX
+
+rim ... --db="mariadb:db1 postgres:db2 sqlite:db3"  ...
+
+.EE
+.RE
+
+in which case there are three database configuration files (db1, db2 and db3), with db1 being MariaDB, db2 being PostgreSQL and db3 being SQLite database.
+
+You must create a database configuration file for each database your application uses, and this file must be placed with your source code. Such file will be copied to locations specified and used by RimStone to connect to database(s) (see \fBdirectories\fP). 
+
+Each such file contains connection information and authentication to a database, which RimStone uses to login. The names of these configuration files are used in queries. There is no limit on how many databases can be used in your application and those from different vendors can be used in the same application.
+
+An example of database configuration file (in this case MariaDB):
+
+.RS 4
+.EX
+
+[client]
+user=mydbuser
+password=somepwd
+database=mydbname
+protocol=TCP
+host=127.0.0.1
+port=3306
+
+.EE
+.RE
+
+
+.LP
+.B USING IN YOUR QUERIES
+.LP
+
+Database statements that perform queries (such as \fBrun-query\fP) must specify the database configuration file used, unless your application uses only a single database. Such configuration is given by "@<database config file>" (for instance in \fBrun-query\fP or \fBbegin-transaction\fP). For example, in:
+
+.RS 4
+.EX
+
+run-query @mydb="select name from employees"
+\[char46]..
+end-query
+
+.EE
+.RE
+
+the query is performed on a database specified by the configuration file "mydb", as in (assuming it's PostgreSQL database):
+
+.RS 4
+.EX
+
+rim ... --db="postgres:mydb"  ...
+
+.EE
+.RE
+
+You do not need to manually connect to the database; when your application uses it for the first time, a connection is automatically established, and lost connection is automatically re-established when needed. 
+
+If a database is the only one used by your application, you can omit it, as in:
+
+.RS 4
+.EX
+
+run-query ="select name from employees"
+\[char46]..
+end-query
+
+.EE
+.RE
+
+
+.LP
+.B CONNECTION SETTINGS
+.LP
+
+The contents of a configuration file depends on the database used:
+
+.RS 4
+\[bu]    
+MariaDB: see \fBmariadb-database\fP
+
+.RE
+
+.RS 4
+\[bu]    
+Postgres: see \fBpostgresql-database\fP
+
+.RE
+
+.RS 4
+\[bu]    
+SQLite: see \fBsqlite-database\fP
+
+.RE
+
+
+.LP
+.B SUBSTITUTING ENVIRONMENT VARIABLES
+.LP
+
+You can use environment variables in database configuration files by means of substitution, in the form of "${VAR_NAME}". For example in file "mydb":
+
+.RS 4
+.EX
+
+[client]
+user=${DB_USER}
+password=${DB_PWD}
+database=${DB_NAME}
+protocol=TCP
+host=127.0.0.1
+port=${DB_PORT}
+
+.EE
+.RE
+
+Here, environment variables DB_USER, DB_PWD, DB_NAME and DB_PORT are used. They must be defined in the shell environment prior to calling \fBrim\fP to make your application (if not defined the value will be empty):
+
+.RS 4
+.EX
+
+\[char35]Define environment variables for a configuration file
+export DB_USER="my_user"
+export DB_PWD="my_password"
+export DB_NAME="my_database"
+export DB_PORT="3307"
+
+\[char35]Make application using the above database configuration file with the environment variables specified
+rim -q --db=mariadb:mydb
+
+.EE
+.RE
+
+which results in file $HOME/.rimstone/apps/<app name>/app/db/mydb:
+
+.RS 4
+.EX
+
+[client]
+user=my_user
+password=my_password
+database=my_database
+protocol=TCP
+host=127.0.0.1
+port=3307
+
+.EE
+.RE
+
+Besides making application deployment easier, this also adds to its security as the information such as above (including the database password) does not need to be a part of source code and reside in source code control system (such as git).
+
+Your environment variables can have any names, except that they cannot start with an underscore ("_") or be prefixed by "RIM_" or "RIM_", because those variable names are reserved by RimStone.
+
+Note that if your data actually has a dollar sign and is a part of the configuration file, then you can create a variable for it:
+
+.RS 4
+.EX
+
+export DOLLAR_SIGN='$'
+
+.EE
+.RE
+
+and in the configuration file:
+
+.RS 4
+.EX
+
+\[char46].
+database=my${DOLLAR_SIGN}database
+\[char46].
+
+.EE
+.RE
+
+In this case the database name is "my$database".
+.SH SEE ALSO
+ Database
+
+\fBbegin-transaction\fP  
+\fBcommit-transaction\fP  
+\fBcurrent-row\fP  
+\fBdatabase-config-file\fP  
+\fBdb-error\fP  
+\fBmariadb-database\fP  
+\fBpostgresql-database\fP  
+\fBrollback-transaction\fP  
+\fBrun-query\fP  
+\fBsqlite-database\fP   
+See all 
+\fBdocumentation\fP

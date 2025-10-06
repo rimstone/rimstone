@@ -1,0 +1,77 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+set-param \-  (request-data)
+.SH PURPOSE
+Set or create a parameter.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+set-param ( <name> [ = <value> ] ) , ...
+
+.EE
+.RE
+
+.SH DESCRIPTION
+set-param sets or creates parameter <name> (see \fBget-param\fP). 
+
+If parameter <name> does not exist, it's created with <value>. If it does exist, its value is replaced with <value>. Note that <value> can be of any type. 
+
+If equal sign ("=") and <value> are omitted, then <value> is the same as <name>, so:
+
+.RS 4
+.EX
+
+set-param something
+
+.EE
+.RE
+
+is the same as:
+
+.RS 4
+.EX
+
+set-param something = something
+
+.EE
+.RE
+
+where the first "something" is the parameter set/created, and the second "something" is an actual variable in your code. In this example, the two just happen to have the same name; this generally happens often, so this form is a shortcut for that.
+
+You can specify any number of parameters separated by a comma, for instance in this case par1 is a boolean, par2 is a number and par3 is a string:
+
+.RS 4
+.EX
+
+set-number par2 = 10
+set-param par1=true, par, par3="hi"
+
+.EE
+.RE
+
+
+.SH EXAMPLES
+Set the value of parameter "quantity" to "10", which is also the output:
+
+.RS 4
+.EX
+
+set-param quantity = "10"
+\[char46]..
+get-param quantity
+print-out quantity
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Request data
+
+\fBget-param\fP  
+\fBrequest-body\fP  
+\fBset-param\fP   
+See all 
+\fBdocumentation\fP

@@ -1,0 +1,53 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+decrypt-data \-  (encryption)
+.SH PURPOSE
+Decrypt data.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+decrypt-data <data> to <result> \\
+    [ input-length <input length> ] \\
+    [ binary [ <binary> ] ] \\
+    ( password <password> \\
+        [ salt <salt> [ salt-length <salt length> ] ] \\
+        [ iterations <iterations> ] \\
+        [ cipher <cipher algorithm> ] \\
+        [ digest <digest algorithm> ]
+        [ cache ]
+        [ clear-cache <clear cache> ) \\
+    [ init-vector <init vector> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+decrypt-data will decrypt <data> which must have been encrypted with \fBencrypt-data\fP, or other software using the same algorithms and clauses as specified. 
+
+If "input-length" clause is not used, then the number of bytes decrypted is the length of <data> (see \fBstring-length\fP); if "input-length" is specified, then exactly <input length> bytes are decrypted. Password used for decryption is string <password> (in "password" clause) and it must match the password used in \fBencrypt-data\fP. If "salt" clause is used, then string <salt> must match the salt used in encryption. If "init-vector" clause is used, then string <init vector> must match the IV (initialization vector) used in encryption. If "iterations" clause is used, then <iterations> must match the number used in encryption.
+
+The result of decryption is in <result> (in "to" clause).
+
+If data was encrypted in binary mode (see \fBencrypt-data\fP), you must decrypt it with the same, and if it wasn't, then you must not use it in decrypt-data either. The reason for this is obvious - binary mode of encryption is encrypted data in its shortest form, and character mode (without "binary" or if <binary> evaluates to false) is the same data converted to a hexadecimal string - thus decryption must first convert such data back to binary before decrypting.
+
+The cipher and digest algorithms (if specified as <cipher algorithm> and <digest algorithm> in "cipher" and "digest" clauses respectively) must match what was used in \fBencrypt-data\fP.
+
+"cache" clause is used to cache the result of key computation, so it is not computed each time decryption takes place, while "clear-cache" allows key to be re-computed every time <clear cache> evaluates to boolean true; re-computation of a key, if used, must match the usage during encryption. For more on "cache" and "clear-cache" clauses, as well as safety of encrypting/decrypting, see "Caching key" and "Safety" in \fBencrypt-data\fP.
+
+.SH EXAMPLES
+See \fBencrypt-data\fP.
+.SH SEE ALSO
+ Encryption
+
+\fBdecrypt-data\fP  
+\fBderive-key\fP  
+\fBencrypt-data\fP  
+\fBhash-string\fP  
+\fBhmac-string\fP  
+\fBrandom-crypto\fP  
+\fBrandom-string\fP   
+See all 
+\fBdocumentation\fP

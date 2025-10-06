@@ -1,0 +1,113 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+string-number \-  (strings
+numbers)
+.SH PURPOSE
+Convert string to number.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+string-number <string> [ to <number> ] \\
+    [ base <base> ] \\
+    [ status <status> ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+<string> is converted to <number> in "to" clause, using <base> in "base" clause, where <base> is by default either 10, or 16 (if number is prefixed with "0x" or "0X", excluding any leading minus or plus sign) or 8 (if number is prefixed with "0", excluding any leading minus or plus sign). 
+
+<base> can be between 2 and 36, inclusive. <number> can be positive or negative (i.e. signed) and can be up to 64-bit in length. If <base> is 0, it is the same as if it is not specified, i.e. default behavior applies.
+
+<status> number (in "status" clause) is RIM_OKAY if conversion was successful. If it wasn't successful, <number> is 0 and <status> is RIM_ERR_OVERFLOW if <string> represents a number that requires over 64 bits of storage, RIM_ERR_INVALID if <base> is incorrect or invalid conversion, RIM_ERR_EXIST if <string> is empty or no digits specified. If there are trailing invalid characters (for instance "182xy" for base 10), <number> is the result of conversion up to the first invalid character and <status> is RIM_ERR_TOO_MANY. In this example, <number> would be 182.
+
+.LP
+.B SHORTCUT
+.LP
+
+For convenience, you can use a shortcut for converting a string to a number, by prepending a "#" sign to the variable name, for example:
+
+.RS 4
+.EX
+
+set-string s = "-10"
+set-number n = #s + 10
+
+.EE
+.RE
+
+The above is the same as:
+
+.RS 4
+.EX
+
+set-string s = "-10"
+string-number s to val
+set-number n = val + 10
+
+.EE
+.RE
+
+Effectively, # in front of a string variable is the same as string-number that converts it to a number with the base being the default (see above). If a string cannot be converted to a number, your program will \fBerror out\fP. To check values with a status, use string-number.
+
+You can use # for an expression, in which case the expression must be within parenthesis:
+
+.RS 4
+.EX
+
+set-string s1 = "-10"
+set-string s2 = "2"
+set-number n = #(s1+s2) + 10
+
+.EE
+.RE
+
+In this case number "n" will have value of -92, because strings "s1" and "s2" concatenate to produce "-102", which is then converted to a number and finally 10 added to it, producing -92.
+
+.SH EXAMPLES
+In this example, number "n" would be 49 and status "st" would be RIM_OKAY:
+
+.RS 4
+.EX
+
+string-number "49" to n base 10 status st
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Numbers
+
+\fBabs-number\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBnumber-expressions\fP  
+\fBnumber-string\fP  
+\fBset-number\fP  
+\fBstring-number\fP   
+ Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBdouble-string\fP  
+\fBlower-string\fP  
+\fBmatch-regex\fP  
+\fBnew-string\fP  
+\fBnumber-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBscan-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-double\fP  
+\fBstring-expressions\fP  
+\fBstring-length\fP  
+\fBstring-number\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

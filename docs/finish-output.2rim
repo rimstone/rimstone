@@ -1,0 +1,42 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+finish-output \-  (output)
+.SH PURPOSE
+Finish the output.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+finish-output
+
+.EE
+.RE
+
+.SH DESCRIPTION
+finish-output will flush out and conclude all output (see \fBoutput-statement\fP). Any such output afterwards will silently fail to do so. As far as the client is concerned, all the output is complete.
+
+This statement is useful when you need to continue work after the output is complete. For example, if the task performed is a long-running one, you can inform the client that the job has started, and then take any amount of time to actually complete the job, without worrying about client timeouts. The client can inquire about the job status via a different request, or be informed via email etc.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+finish-output
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
+See all 
+\fBdocumentation\fP

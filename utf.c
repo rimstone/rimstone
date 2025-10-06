@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2018-2025 Gliim LLC. 
 // Licensed under Apache License v2. See LICENSE file.
-// On the web http://golf-lang.com/ - this file is part of Golf framework.
+// On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
 
 // 
 // UTF-related module
@@ -11,12 +11,12 @@
 // Based on UTF standard: https://www.rfc-editor.org/rfc/rfc3629
 //
 
-#include "golf.h"
+#include "rim.h"
 
 //
 // get original unicode from two surrogates. Return that value.
 //
-gg_num32 gg_make_from_utf_surrogate (gg_num32 u0, gg_num32 u1)
+RIM_ALWAYS_INLINE inline rim_num32 rim_make_from_utf_surrogate (rim_num32 u0, rim_num32 u1)
 {
     return (u0 << 10) + u1 + (0x10000 - (0xD800 << 10) - 0xDC00);
 }
@@ -25,13 +25,13 @@ gg_num32 gg_make_from_utf_surrogate (gg_num32 u0, gg_num32 u1)
 // Encode binary UTF string 'r' to unicode value 'u'. Return number of bytes of UTF picked up (1,2,3 or 4) or -1 if error
 // 'e' is error text
 //
-gg_num gg_encode_utf (char *r, gg_num32 *u, char **e)
+RIM_ALWAYS_INLINE inline rim_num rim_encode_utf (char *r, rim_num32 *u, char **e)
 {
-    *e = GG_EMPTY_STRING;
+    *e = RIM_EMPTY_STRING;
     if ((r[0] & 128) == 0) 
     {
         // single byte, ascii
-        *u = (gg_num32) r[0];
+        *u = (rim_num32) r[0];
         return 1;
     }
     // These 3 else if must be in this order, because checking for 192 is true for both 224 and 240
@@ -41,11 +41,11 @@ gg_num gg_encode_utf (char *r, gg_num32 *u, char **e)
         // four byte
         *u = (r[0] & 7) << 18;
         if ((r[1] & 128) == 128) *u += ((r[1] & 63)<<12);
-        else { *e = gg_strdup(GG_UTF_ERR_SECOND_BYTE); return -1;}
+        else { *e = rim_strdup(RIM_UTF_ERR_SECOND_BYTE); return -1;}
         if ((r[2] & 128) == 128) *u += ((r[2] & 63)<<6);
-        else { *e = gg_strdup(GG_UTF_ERR_THIRD_BYTE); return -1;}
+        else { *e = rim_strdup(RIM_UTF_ERR_THIRD_BYTE); return -1;}
         if ((r[3] & 128) == 128) *u += (r[3] & 63);
-        else { *e = gg_strdup(GG_UTF_ERR_FOURTH_BYTE); return -1;}
+        else { *e = rim_strdup(RIM_UTF_ERR_FOURTH_BYTE); return -1;}
         return 4;
     }
     else if ((r[0] & 224) == 224)
@@ -53,9 +53,9 @@ gg_num gg_encode_utf (char *r, gg_num32 *u, char **e)
         // three byte
         *u = (r[0] & 15) << 12;
         if ((r[1] & 128) == 128) *u += ((r[1] & 63)<<6);
-        else { *e = gg_strdup(GG_UTF_ERR_SECOND_BYTE); return -1;}
+        else { *e = rim_strdup(RIM_UTF_ERR_SECOND_BYTE); return -1;}
         if ((r[2] & 128) == 128) *u += (r[2] & 63);
-        else { *e = gg_strdup(GG_UTF_ERR_THIRD_BYTE); return -1;}
+        else { *e = rim_strdup(RIM_UTF_ERR_THIRD_BYTE); return -1;}
         return 3;
     }
     else if ((r[0] & 192) == 192)
@@ -63,12 +63,12 @@ gg_num gg_encode_utf (char *r, gg_num32 *u, char **e)
         // two byte
         *u = (r[0] & 31) << 6;
         if ((r[1] & 128) == 128) *u += (r[1] & 63);
-        else { *e = gg_strdup(GG_UTF_ERR_SECOND_BYTE); return -1;}
+        else { *e = rim_strdup(RIM_UTF_ERR_SECOND_BYTE); return -1;}
         return 2;
     }
     else
     {
-        *e = gg_strdup(GG_UTF_INVALID); return -1;
+        *e = rim_strdup(RIM_UTF_INVALID); return -1;
     }
 }
 
@@ -76,7 +76,7 @@ gg_num gg_encode_utf (char *r, gg_num32 *u, char **e)
 // Break unicode u into surrogate u0 and u1. 
 // 
 //
-void gg_get_utf_surrogate (gg_num32 u, gg_num32 *u0, gg_num32 *u1)
+RIM_ALWAYS_INLINE inline void rim_get_utf_surrogate (rim_num32 u, rim_num32 *u0, rim_num32 *u1)
 {
     *u0 = (0xD800 - (0x10000 >> 10)) + (u>>10);
     *u1 = 0xDC00 + (u&0x3FF);
@@ -89,9 +89,9 @@ void gg_get_utf_surrogate (gg_num32 u, gg_num32 *u0, gg_num32 *u1)
 // 'e' is error message. 
 // returns -1 on error, number of bytes (excluding 0) if okay
 //
-gg_num gg_decode_utf (gg_num32 u, unsigned char *r, char **e)
+RIM_ALWAYS_INLINE inline rim_num rim_decode_utf (rim_num32 u, unsigned char *r, char **e)
 {
-    *e = GG_EMPTY_STRING;
+    *e = RIM_EMPTY_STRING;
     if (u <= 0x7F) { r[0] = (unsigned char)u; return 1; } // single byte (ASCII)
     else if (u >= 0x80 && u <= 0x7FF) 
     { 
@@ -102,7 +102,7 @@ gg_num gg_decode_utf (gg_num32 u, unsigned char *r, char **e)
     }
     else if (u >= 0x800 && u <= 0xFFFF) 
     {
-        if (u == 0xFEFF) {*e = gg_strdup(GG_UTF_ERR_ILLEGAL_CHARACTER_FEFF); return -1;}
+        if (u == 0xFEFF) {*e = rim_strdup(RIM_UTF_ERR_ILLEGAL_CHARACTER_FEFF); return -1;}
         // 224 = 11100000
         r[0] = 224+(u>>12); // get top 4 (out of 16) bits
         r[1] = 128+((u>>6)&63); // get middle 6 from 4+6+6 group of bits
@@ -118,59 +118,76 @@ gg_num gg_decode_utf (gg_num32 u, unsigned char *r, char **e)
         r[3] = 128+(u&63); // get lower 6 bits
         return 4;
     }
-    else { *e = gg_strdup(GG_UTF_ERR_OUT_OF_RANGE); return -1; }
+    else { *e = rim_strdup(RIM_UTF_ERR_OUT_OF_RANGE); return -1; }
     return -1; // just to satisfy compiler
 }
 
 
 //
-// Get value of string representing hex in 4 digits at 'v'. If error, err will be filled and returns 0.
+// Get value of string representing hex in 4/8 digits at 'v'. If error, err will be filled and returns 0.
 // Return value of hex.
+// if bytes is 4, then it's 4 bytes, if it's 8 then it's 8 bytes
 //
-gg_num32 gg_get_hex(char *v, char **err)
+RIM_ALWAYS_INLINE inline rim_num32 rim_get_hex(char *v, char **err, char bytes)
 {
-    gg_num k;
-    gg_num r = 0;
-    for (k = 0; k < 4; k++)
+    rim_num k;
+    rim_num r = 0;
+    for (k = 0; k < bytes; k++)
     {
-        if (*v >= '0' && *v <= '9') r += (*v - '0')*gg_topower(16,3-k);
-            else if (*v >= 'a' && *v <= 'f') r += (*v - 'a' + 10)*gg_topower(16,3-k);
-            else if (*v >= 'A' && *v <= 'F') r += (*v - 'A' + 10)*gg_topower(16,3-k);
-            else { *err = GG_ERR_UTF_BADUTF; return 0;} // not a hex value
+        if (*v >= '0' && *v <= '9') r += (*v - '0')*rim_topower(16,bytes-1-k);
+            else if (*v >= 'a' && *v <= 'f') r += (*v - 'a' + 10)*rim_topower(16,bytes-1-k);
+            else if (*v >= 'A' && *v <= 'F') r += (*v - 'A' + 10)*rim_topower(16,bytes-1-k);
+            else { *err = rim_strdup(RIM_ERR_UTF_BADUTF); return 0;} // not a hex value
         v++;
     }
     return r;
 }
 
 //
-// Given UTF text val, starting with *ubeg byte, compute the actual 32 bit number that is the unicode for 
-// this utf (either by itself or with a surrogate, which follows as \u.... right afterwards).
+// Given Unicode text val \U (8 hex), starting with *ubeg byte, compute the actual 32 bit number that is the UTF8 for 
+// this 
 // Return -1 and set o_errm. Otherwise return the unicode.
 //
-GG_ALWAYS_INLINE inline gg_num gg_utf_get_code (char *val, gg_num *ubeg, gg_num *totjv, char **o_errm)
+RIM_ALWAYS_INLINE inline rim_num rim_utf_get_code8 (char *val, rim_num *ubeg, rim_num *totjv, char **o_errm)
 {
-    gg_num c = *ubeg;
+    rim_num c = *ubeg;
+    *totjv = 10;
+    c++;
+    rim_num r = rim_get_hex (val + c, o_errm, 8);
+    if ((*o_errm)[0] != 0) return -1;
+    // if in surrogate range, that's invalid for \U unicode (valid for \u)
+    if (r >= 0xD800 && r <= 0xDFFF)  { *o_errm = rim_strdup (RIM_UTF_INVALID); return -1; }
+    return r;
+}
+
+//
+// Given Unicode text val \u (4 hex), starting with *ubeg byte, compute the actual 32 bit number that is the UTF8 for 
+// this (either by itself or with a surrogate, which follows as \u.... right afterwards).
+// Return -1 and set o_errm. Otherwise return the unicode.
+//
+RIM_ALWAYS_INLINE inline rim_num rim_utf_get_code (char *val, rim_num *ubeg, rim_num *totjv, char **o_errm)
+{
+    rim_num c = *ubeg;
     *totjv = 6;
     c++;
-    gg_num r = gg_get_hex (val + c, o_errm);
+    rim_num r = rim_get_hex (val + c, o_errm, 4);
     if ((*o_errm)[0] != 0) return -1;
-    gg_num32 rtot;
+    rim_num32 rtot;
     if (r >= 0xD800 && r <= 0xDFFF)  
-    { 
+    {  // this is when surrogate is needed, so another 6 bytes (as in \uxyzw)
         *totjv += 6;
         c+=4; // get passed XXXX\u
         if (val[c] != '\\' || val[c+1] != 'u')
         {
-            GG_ERR0;
-            *o_errm = gg_strdup(GG_ERR_UTF_SURROGATE); return -1;
+            RIM_ERR0;
+            *o_errm = rim_strdup(RIM_ERR_UTF_SURROGATE); return -1;
         }
-        gg_num r1 = gg_get_hex (val + c + 2 , o_errm); // c+2 to skip \u
+        rim_num r1 = rim_get_hex (val + c + 2 , o_errm, 4); // c+2 to skip \u
         if ((*o_errm)[0] != 0) return -1;
-        rtot = gg_make_from_utf_surrogate (r, r1);
+        rtot = rim_make_from_utf_surrogate (r, r1);
     } else rtot = r;
     return rtot;
 }
-
 
 
 

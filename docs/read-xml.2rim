@@ -1,0 +1,57 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+read-xml \-  (XML-parsing)
+.SH PURPOSE
+Read data elements from XML document.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+read-xml <xml> \\
+    [ key <key> ] \\
+    [ value <value> ] \\
+    [ status <status> ] \\
+    [ next ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+read-xml reads data elements from <xml> variable, which is created with \fBxml-doc\fP. A data element is a string <key>/<value> pair, where key (in "key" clause) is a normalized key name, which is the current name preceded with the names of all elements leading up to it, separated by a forward slash ("/"). Node that attribute elements end with "@".
+
+The actual <value> is obtained with "value" clause, and the <status> can be obtained with "status" clause. <status> is RIM_OKAY if key/value is obtained, and RIM_ERR_EXIST if there are no more to get. 
+
+Use "next" clause to move to the next sequential key/value pair in the document, from top down as available. Typically, you would get a key first, examine if it's of interest to you, and then obtain value. You can use also use "key", "value" and "next" at the same time if you're going through all elements.
+
+<key> in "key" clause is a normalized name of any given element in XML text. This means every non-leaf element is included, separated by a forward slash ("/"), and arguments end with "@". An example would be, if "onclick" is a element of "menuitem":
+
+.RS 4
+.EX
+
+menu/popup/menuitem/onclick
+
+.EE
+.RE
+
+or if "onclick" is an attribute of "menuitem":
+
+.RS 4
+.EX
+
+menu/popup/menuitem/onclick/@
+
+.EE
+.RE
+
+
+.SH EXAMPLES
+See \fBxml-doc\fP.
+.SH SEE ALSO
+ XML parsing
+
+\fBread-xml\fP  
+\fBxml-doc\fP   
+See all 
+\fBdocumentation\fP

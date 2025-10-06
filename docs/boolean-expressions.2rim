@@ -1,0 +1,41 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+boolean-expressions \- RimStone documentation (booleans)
+.SH DESCRIPTION
+A boolean expression uses operators "!" (not), "&&" (and) and "||" (or), as well as parenthesis (). For example:
+
+.RS 4
+.EX
+
+set-bool b1 = ! (b2 && b3) || b4
+
+.EE
+.RE
+
+You can use boolean expressions anywhere a boolean is expected as an input to any statement. 
+
+You can use boolean variables as well as constants such as "true" and "false" in boolean expressions.
+
+.LP
+.B SUBSCRIPTION SHORTCUT
+.LP
+
+You can reference boolean arrays elements (see \fBnew-array\fP) by using subscription operator ([]), for instance:
+
+.RS 4
+.EX
+
+new-array barr type boolean
+write-array barr key 0 value true
+set-bool bv = !barr[0] 
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Booleans
+
+\fBboolean-expressions\fP  
+\fBset-bool\fP   
+See all 
+\fBdocumentation\fP

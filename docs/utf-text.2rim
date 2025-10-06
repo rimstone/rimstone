@@ -1,0 +1,66 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+utf-text \-  (UTF)
+.SH PURPOSE
+Convert UTF-8 string to text.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+utf-text <utf> \\
+    [ to <text> ] \\
+    [ length <length> ] \\
+    [ status <status> ] \\
+    [ error-text <error text> ] \\
+    [ for-json ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+utf-text will convert <utf> text to <text> (specified with "to" clause). If <text> is omitted, then the result of conversion is output.
+
+<utf> is a string that may contain UTF characters (as 2, 3 or 4 bytes representing a Unicode character). Encoding creates a string that can be used as a value where text representation of UTF-8 is required. utf-text is performed according to \fBRFC7159\fP and \fBRFC3629\fP (UTF standard).
+
+Note that hexadecimal characters used for Unicode (such as \\u21d7) are always lowercase. Solidus character ("/") is not escaped, although \fBtext-utf\fP will correctly process it if the input has it escaped.
+
+The number of bytes in <utf> to be converted can be specified with <length> in "length" clause. If <length> is not specified, it is the length of string <utf>. Note that a single UTF-8 character can be anywhere between 1 to 4 bytes. For example "љ" is 2 bytes in length. 
+
+The status of encoding can be obtained in number <status>. <status> is the string length of the result in <text> (or the number of bytes output if <text> is omitted), or -1 if error occurred (meaning <utf> is an invalid UTF-8) in which case <text> (if specified) is an empty string and the error text can be obtained in <error text> in "error-text" clause.
+
+"for-json" clause will produce a JSON suitable text representation of <utf> - it means 32 bit values (that cannot be represented with "\\uXXXX" notation) will be represented as surrogate pairs (as JSON standard prescribes). Without this clause, a standard "\\UXXXXXXXX" notation will be used. For example, a G clef character (𝄞) will be "\\ud834\\udd1e" when "for-json" clause is used, otherwise it will be "\\U0001d11e".
+
+.SH EXAMPLES
+Convert UTF-8 string to text and verify the expected result:
+
+.RS 4
+.EX
+
+// UTF string 
+set-string utf_str = "\[char92]"Doc\[char92]"\\n\\t\\b\\f\\r\\t⇗⇘\\t▷◮𝄞ᏫⲠш\\n/\[char92]"()\\t"
+
+// Convert UTF string to text
+utf-text utf_str status encstatus to text_text for-json
+
+// This is the text expected
+(( expected_result
+@\[char92]"Doc\[char92]"\\n\\t\\b\\f\\r\\t\\u21d7\\u21d8\\t\\u25b7\\u25ee\\ud834\\udd1e\\u13eb\\u2ca0\\u0448\\n/\[char92]"()\\t
+))
+
+// Make sure conversion was okay, decs is the length of the result (encj string)
+if-true text_text equal expected_result and encstatus not-equal -1
+    @decode-text worked okay
+end-if
+
+.EE
+.RE
+
+.SH SEE ALSO
+ UTF
+
+\fBtext-utf\fP  
+\fButf-text\fP   
+See all 
+\fBdocumentation\fP

@@ -1,0 +1,33 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+rewind-lifo \-  (LIFO)
+.SH PURPOSE
+Rewind LIFO list.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+rewind-lifo <list>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+rewind-lifo will position at the very last data element put into <list> which was created with \fBnew-lifo\fP. Each time \fBread-lifo\fP is used, the internal position moves to the previous element in the reverse order they were put in.
+
+.SH EXAMPLES
+See \fBread-lifo\fP.
+.SH SEE ALSO
+ LIFO
+
+\fBdelete-lifo\fP  
+\fBget-lifo\fP  
+\fBnew-lifo\fP  
+\fBpurge-lifo\fP  
+\fBread-lifo\fP  
+\fBrewind-lifo\fP  
+\fBwrite-lifo\fP   
+See all 
+\fBdocumentation\fP

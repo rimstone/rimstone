@@ -1,0 +1,86 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+inline-code \-  (language)
+.SH PURPOSE
+Inline RimStone code in an output statement.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+<<RimStone code>>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+You can write RimStone statements within an \fBoutput-statement\fP by using them between << and >> delimiters. 
+
+The following statements can be inlined: \fBprint-out\fP,\fBprint-format\fP, \fBcurrent-row\fP, \fBnumber-string\fP, \fBstring-length\fP, \fBcall-handler\fP.
+
+.SH EXAMPLES
+\fBprint-out\fP statement displays a string, and in the following code it's used to display a result within an \fBoutput-statement\fP (i.e. within "@" statement):
+
+.RS 4
+.EX
+
+run-query ="select firstName, lastName from people" output firstName, lastName
+   @<tr>
+   @    <td>
+   @        First name is <<print-out  firstName>>
+   @    </td>
+   @    <td>
+   @        Last name is <<print-out lastName>>
+   @    </td>
+   @</tr>
+end-query
+
+.EE
+.RE
+
+In the code below, "some_req" is a request handler that outputs some text, and it's used inline to output "Hello world":
+
+.RS 4
+.EX
+
+@Hello <<call-handler "/some-req">> 
+
+.EE
+.RE
+
+\fBcall-handler\fP "some-req" would simply output "world":
+
+.RS 4
+.EX
+
+%% /some-req public
+    @world 
+%%
+
+.EE
+.RE
+
+A \fBwrite-string\fP is typically used with output statements; in this case we print the value of another string, resulting in "There is 42 minutes left!":
+
+.RS 4
+.EX
+
+set-string mins="42"
+(( my_string
+@There is <<print-out mins>> minutes left!
+))
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Language
+
+\fBinline-code\fP  
+\fBstatements\fP  
+\fBsyntax-highlighting\fP  
+\fBunused-var\fP  
+\fBvariable-scope\fP   
+See all 
+\fBdocumentation\fP

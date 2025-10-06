@@ -1,0 +1,84 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+run-remote \-  (distributed-computing)
+.SH PURPOSE
+Call a remote service in a single statement.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+run-remote <service> \\
+    ( local <app name> ) | ( location <location> ) \\
+    url-path <service URL> |
+        ( \\
+        app-path <app path> \\
+        request-path <request path> \\
+        [ url-params <url params> ] \\
+        ) \\
+    [ request-body content <content> \\
+        [ content-length <content length> ] \\
+        [ content-type <content type> ] ] \\
+    [ method <request method> ] \\
+    [ environment <name>=<value> [ , ... ] ] \\
+    [ timeout <timeout> ]\\
+    [ status <status> ]  \\
+    [ started <started> ] \\
+    [ finished-okay <finished okay> ]\\
+    [ data <data> ] \\
+    [ error <error> ] \\
+    [ status <status> ] \\
+    [ status-text <status text> ] \\
+    [ exit-status <service status> ]
+
+.EE
+.RE
+`
+.SH DESCRIPTION
+run-remote is a combination of \fBnew-remote\fP, \fBcall-remote\fP and \fBread-remote\fP in one. Clauses for each of those can be specified in any order. Only a single <service> can be used. If a call to <service> succeeds, its results are read. Use either:
+
+.RS 4
+\[bu]    
+<status> (in "status" clause) to check if there are results to be read: if it is RIM_OKAY, then you can use the results.
+
+.RE
+
+.RS 4
+\[bu]    
+<finished okay> (in "finished-okay" clause) to check if service call executed: if it's 1, then it has.
+.RE
+
+See details for each clause in \fBnew-remote\fP (for "local" through "timeout" clauses), \fBcall-remote\fP (for "status" through "finished-okay" clauses) and \fBread-remote\fP (for "data" through "exit-status" clauses).
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+begin-handler /serv public
+    run-remote nf local "hash-server-yey" \\
+        url-path "/hash-server-yey/server/op=add/key=sb_XYZ/data=sdb_123" \\
+        finished-okay sfok \\
+        data rdata error edata  \\
+        status st exit-status rstatus
+    if-true sfok  not-equal  1 or st  not-equal  RIM_OKAY
+        @Call did not succeed
+    else-if
+        @Result is <<print-out rdata> and (any) error is <<print-out edata>>
+    end-if
+
+end-handler
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Distributed computing
+
+\fBcall-remote\fP  
+\fBnew-remote\fP  
+\fBread-remote\fP  
+\fBrun-remote\fP   
+See all 
+\fBdocumentation\fP

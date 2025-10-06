@@ -1,0 +1,60 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+do-once \-  (program-flow)
+.SH PURPOSE
+Execute statements only once in a process.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+ do-once 
+    <any statements>
+    ...
+ end-do-once
+
+.EE
+.RE
+
+.SH DESCRIPTION
+do-once will execute <any statements> only once in a single process regardless of how many requests that process serves. <any statements> end with end-do-once. The first time a process reaches do-once, <any statements> will execute; in all subsequent cases the program control will skip to immediately after end-do-once.
+
+do-once cannot be nested, but otherwise can be used any number of times. 
+
+Typical use of do-once may be making any calls that need to be performed only once per process, or it may be a one-time setup of process-scoped variables, or anything else that needs to execute just once for all requests served by the same process.
+
+<any statements> execute in the nested scope relative to the code surrounding do-once/end-do-once, except that any process-scoped variables are created in the same scope as the code surrounding do-once/end-do-once; this simplifies creation of process-scoped variables, if needed.
+
+.SH EXAMPLES
+In this example, a process-scoped hash (that is available to multiple requests of a single process) is created in the very first request a process serves and data is written to it; the subsequent requests do not create a new hash but rather just write to it.
+
+.RS 4
+.EX
+
+\[char46]..
+ do-once 
+    new-hash my_hash hash-size 1024 process-scope
+ end-do-once
+ write-hash my_hash key my_key value my_data 
+ ...
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Program flow
+
+\fBbreak-loop\fP  
+\fBcall-handler\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBquit-process\fP  
+\fBreturn-handler\fP  
+\fBstart-loop\fP   
+See all 
+\fBdocumentation\fP

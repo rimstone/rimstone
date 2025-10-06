@@ -1,0 +1,46 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+new-fifo \-  (FIFO)
+.SH PURPOSE
+Create FIFO list.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+new-fifo <list>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+new-fifo initializes new FIFO <list> (First In First Out). 
+
+<list> contains data stored on a first-in, first out basis. Note that a list is accessible to the current process only.
+
+Information is retrieved (possibly many times, see \fBrewind-fifo\fP) in the same order in which it was stored.
+
+The internal positions for \fBwrite-fifo\fP and \fBread-fifo\fP actions are separate so you can keep writing data to the list, and read it independently of writes in any number of retrieval passes by using \fBrewind-fifo\fP.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+new-fifo nf
+
+.EE
+.RE
+
+.SH SEE ALSO
+ FIFO
+
+\fBdelete-fifo\fP  
+\fBnew-fifo\fP  
+\fBpurge-fifo\fP  
+\fBread-fifo\fP  
+\fBrewind-fifo\fP  
+\fBwrite-fifo\fP   
+See all 
+\fBdocumentation\fP

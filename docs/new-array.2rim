@@ -1,0 +1,53 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+new-array \-  (array)
+.SH PURPOSE
+Create array.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+new-array <array> [ max-size <max-size> ] [ process-scope ]  [ type string | number | double | bool ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+new-array creates new <array>. An array is an indexed array, with a number as an index, and with a either a string, number, double or boolean as an element in the array. By default (without "type" clause), <array> is an array of strings. You can specify "string", "number", "double" or "bool" in "type" clause, in which case <array> is an array of strings, numbers, doubles or booleans respectively.
+
+An array is flexible, which means that it will grow as needed. By default, an array allocates room for 256 elements that can grow up to 1,000,000 elements, unless <max-size> number (in "max-size" clause) is specified in which case it can grow up to <max-size> elements. <max-size> must be at least 256.
+
+Note that max-size specifies only the upper limit of allocation. The actual amount of memory allocated can vary.
+
+You do not need to pre-size the array; rather when you write an element, it will resize automatically. For instance, you can set an array element arr[0] and then arr[1000] (with nothing in-between), the array will be automatically extended to accommodate. Note that it will not automatically contract when tailing elements are deleted. Use \fBpurge-array\fP to delete all elements in the array and shrink its memory footprint when your processing is done.
+
+.LP
+.B SCOPE
+.LP
+
+Note that an array is accessible to the current request only, unless "process-scope" clause is used, in which case all requests served by a process can use it (see \fBdo-once\fP for a typical way to do this).
+
+If "process-scope" is used, then <array> will keep its data across all requests in a given process. See \fBwrite-array\fP for an example of a process-scoped array.
+
+.SH EXAMPLES
+Create a new array:
+
+.RS 4
+.EX
+
+new-array arr 
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Array
+
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBwrite-array\fP   
+See all 
+\fBdocumentation\fP

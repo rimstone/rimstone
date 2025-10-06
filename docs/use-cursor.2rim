@@ -1,0 +1,75 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+use-cursor \-  (tree)
+.SH PURPOSE
+Iterate to a lesser or greater key in a tree.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+use-cursor <cursor> ( current | get-lesser | get-greater ) \\
+    [ key <key> ] \\
+    [ value <value> ] \\
+    [ update-value <update value> ] \\
+    [ status <status> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+use-cursor uses <cursor> previously created (see \fBread-tree\fP, \fBwrite-tree\fP) for iteration over tree nodes with lesser or greater key values. It can also obtain keys and values for such nodes, as well as update their values.
+
+.LP
+.B CURRENT NODE
+.LP
+
+A <cursor> has a current node, which is first computed by using "current", "get-lesser" or "get-greater" clauses, and then any other clauses are applied to it (such as "key", "value" and "update-value"). 
+
+The computation of a current node is performed by using a <cursor>'s "previous current node", i.e. the current node just before use-cursor executes. If "current" clause is used, the current node remains the same as previous current node. If "get-lesser" clause is used, a node with a key that is the next lesser from the previous current will become the new current. If "get-greater" clause is used, a node with a key that is the next greater from the previous current will become the new current. 
+
+If the new current node can be found, then other use-cursor clauses are applied to it, such as to obtain a <key> or <value>, or to <update value>. If, as a result of either of these clauses, the new current node cannot be found (for instance there is no lesser or greater key in the tree), the current node will be unchanged and <status> (in "status" clause) will be RIM_ERR_EXIST.
+
+.LP
+.B KEY, VALUE, UPDATING VALUE, STATUS
+.LP
+
+"key" clause will obtain the key in a current node into <key> string. The value of current node can be obtained in <value> in "value" clause; <value> is a string. The value of current node can be updated to <update value> in "update-value" clause; <update value> is a string. This update is performed after <value> has been retrieved, allowing you to obtain the previous value in the same statement. 
+
+"status" clause can be used to obtain <status> number, which is RIM_ERR_EXIST if the new current node cannot be found, in which case the current node, <key> and <value> are unchanged. Otherwise, <status> is RIM_OKAY.
+
+.SH EXAMPLES
+The following will find a value with key "999", and then iterate in the tree to find all lesser values (in descending order):
+
+.RS 4
+.EX
+
+set-string k = "999"
+read-tree mytree equal k status st \\
+    value val new-cursor cur
+start-loop
+    if-true st equal RIM_OKAY
+        @Value found is [<<print-out val>>] for key [<<print-out k>>]
+        use-cursor cur get-lesser status st value val key k
+    else-if
+        break-loop
+    end-if
+end-loop
+
+.EE
+.RE
+
+For more examples, see \fBnew-tree\fP.
+.SH SEE ALSO
+ Tree
+
+\fBdelete-tree\fP  
+\fBget-tree\fP  
+\fBnew-tree\fP  
+\fBpurge-tree\fP  
+\fBread-tree\fP  
+\fBuse-cursor\fP  
+\fBwrite-tree\fP   
+See all 
+\fBdocumentation\fP

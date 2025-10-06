@@ -1,0 +1,30 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+sqlite-database \- RimStone documentation (database)
+.SH DESCRIPTION
+SQLite database configuration file should contain a single line of text, and it must be the full path to the SQLite database file used, for example (if you keep it in RimStone's application directory):
+
+.RS 4
+.EX
+
+/home/myuser/.rimstone/apps/<app name>/app/<db name>.db
+
+.EE
+.RE
+
+Note that you can use tilde (~) as the first character of the path to signify user's home directory, so in the above example it could be "~/.rimstone/apps/<app name>/app/<db name>.db".
+.SH SEE ALSO
+ Database
+
+\fBbegin-transaction\fP  
+\fBcommit-transaction\fP  
+\fBcurrent-row\fP  
+\fBdatabase-config-file\fP  
+\fBdb-error\fP  
+\fBmariadb-database\fP  
+\fBpostgresql-database\fP  
+\fBrollback-transaction\fP  
+\fBrun-query\fP  
+\fBsqlite-database\fP   
+See all 
+\fBdocumentation\fP

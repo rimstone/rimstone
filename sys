@@ -2,10 +2,10 @@
 #SPDX-License-Identifier: Apache-2.0
 #Copyright 2018-2025 Gliim LLC. 
 #Licensed under Apache License v2. See LICENSE file.
-#On the web http://golf-lang.com/ - this file is part of Golf framework.
+#On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
 
 
-# Set variables for building and installing a Golf application. 
+# Set variables for building and installing a RimStone application. 
 # If your system doesn't conform, you can change these variables to fit
 
 function lowest_version() { 
@@ -20,7 +20,7 @@ if [ "$1" == "greater_than_eq" ]; then
 fi
 
 #do not do all twice if already done
-if [ "$GG_SYSTEM_DONE" != "1" ]; then
+if [ "$RIM_SYSTEM_DONE" != "1" ]; then
 
 #determine operating system, some don't have /etc/os-release (or it isn't linked), try the alternative
     if [ -f "/etc/os-release" ]; then
@@ -34,18 +34,18 @@ if [ "$GG_SYSTEM_DONE" != "1" ]; then
         ID="unknown"
         VERSION_ID="unknown"
     fi
-    export GG_PLATFORM_ID="$ID"
-    export GG_PLATFORM_VERSION="$VERSION_ID"
+    export RIM_PLATFORM_ID="$ID"
+    export RIM_PLATFORM_VERSION="$VERSION_ID"
 
 
 #the following three should not be changed manually, make tools set them
-    export GG_LIBRARY_PATH=$HOME/.golf/lib
-    export GG_INCLUDE_PATH=$HOME/.golf/include
-    export GG_BIN_PATH=$HOME/.golf/bin
-    export GG_VERSION=100.100
+    export RIM_LIBRARY_PATH=$HOME/.rimstone/lib
+    export RIM_INCLUDE_PATH=$HOME/.rimstone/include
+    export RIM_BIN_PATH=$HOME/.rimstone/bin
+    export RIM_VERSION=100.100
 
 #do not execute again if already done
-    export GG_SYSTEM_DONE=1
+    export RIM_SYSTEM_DONE=1
 fi 
 
 
@@ -69,7 +69,7 @@ if [ "$1" == "pgconf" ]; then
 fi
 
 if [ "$1" == "showid" ]; then
-    echo $GG_PLATFORM_ID
+    echo $RIM_PLATFORM_ID
     exit 0
 fi
 

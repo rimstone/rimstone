@@ -1,0 +1,39 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+syntax-highlighting \- RimStone documentation (language)
+.SH DESCRIPTION
+For syntax highlighting of RimStone programs in Vim, do this once:
+
+.RS 4
+.EX
+
+rim -m
+
+.EE
+.RE
+
+The above will create a syntax file in your local Vim syntax directory:
+
+.RS 4
+.EX
+
+$HOME/.vim/syntax/rim.vim
+
+.EE
+.RE
+
+and also update your local $HOME/.vimrc file to use this syntax for files with .rim extension. All files updated are local, i.e. they affect only the current user. Each user who wants this feature must issue the above command.
+
+You can then change the color scheme to anything you like by using ":colorscheme" directly in editor, or by specifying "colorscheme" in your ".vimrc" file for a persistent change.
+
+The RimStone highlighting syntax is tested with Vim 8.1.
+.SH SEE ALSO
+ Language
+
+\fBinline-code\fP  
+\fBstatements\fP  
+\fBsyntax-highlighting\fP  
+\fBunused-var\fP  
+\fBvariable-scope\fP   
+See all 
+\fBdocumentation\fP

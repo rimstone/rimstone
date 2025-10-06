@@ -1,0 +1,54 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+copy-file \-  (files)
+.SH PURPOSE
+Copies one file to another.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+copy-file <source file> to <target file> [ status <status> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+File <source file> is copied into <target file>, which is created if it does not exist. 
+
+Status can be obtained in <status> variable, which is RIM_ERR_OPEN if cannot open source file, RIM_ERR_CREATE if cannot create target file, RIM_ERR_READ if cannot read source file, RIM_ERR_WRITE if cannot write target file, or number of bytes copied (including 0) on success. 
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+copy-file "/home/user/source_file" to "/home/user/target_file" status st
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Files
+
+\fBchange-mode\fP  
+\fBclose-file\fP  
+\fBcopy-file\fP  
+\fBdelete-file\fP  
+\fBfile-position\fP  
+\fBfile-storage\fP  
+\fBfile-uploading\fP  
+\fBget-upload\fP  
+\fBlock-file\fP  
+\fBopen-file\fP  
+\fBread-file\fP  
+\fBread-line\fP  
+\fBrename-file\fP  
+\fBstat-file\fP  
+\fBtemporary-file\fP  
+\fBuniq-file\fP  
+\fBunlock-file\fP  
+\fBwrite-file\fP   
+See all 
+\fBdocumentation\fP

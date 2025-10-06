@@ -1,0 +1,45 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+new-lifo \-  (LIFO)
+.SH PURPOSE
+Create LIFO list.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+new-lifo <list>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+new-lifo initializes new LIFO <list> (Last In First Out).
+
+<list> contains data stored on a last-in, first-out basis. Note that a list is accessible to the current process only.
+
+Information is retrieved (possibly many times, see \fBrewind-lifo\fP) in the opposite order in which it was stored.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+new-lifo mylifo
+
+.EE
+.RE
+
+.SH SEE ALSO
+ LIFO
+
+\fBdelete-lifo\fP  
+\fBget-lifo\fP  
+\fBnew-lifo\fP  
+\fBpurge-lifo\fP  
+\fBread-lifo\fP  
+\fBrewind-lifo\fP  
+\fBwrite-lifo\fP   
+See all 
+\fBdocumentation\fP

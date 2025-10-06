@@ -1,0 +1,129 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+SELinux \- RimStone documentation (SELinux)
+.SH DESCRIPTION
+If you do not use SELinux, you can ignore this. 
+
+SELinux is MAC (Mandatory Access Control) system, which means anything that isn't allowed is prohibited. This is as opposed to DAC, Discretionary Access Control, where everything is allowed except what's prohibited. MAC generally works on top of DAC, and they are expected to work in a complementary fashion. RimStone deploys both methods for enhanced security.
+
+RimStone comes with a SELinux policy out-of-the-box, which covers its general functioning. However, you can write any code with RimStone, and if you are using SELinux, you may run afoul of its other policies, which may not be conducive to your code. In that case, use temporarily a permissive mode (via setenforce), and then audit2allow to get a clue on what is the issue and then take action to allow what's requested.
+
+Note that OpenSUSE package does not come with SELinux policy as of this release, because OpenSUSE at this time does not come with a default base policy and SELinux installation.
+
+
+.LP
+.B GENERAL
+.LP
+
+RimStone policy files (including .te files) can be found here:
+
+.RS 4
+.EX
+
+ls $(rim -l)/selinux/
+
+.EE
+.RE
+
+As a part of installing RimStone, the following SELinux types will be installed:
+
+.RS 4
+\[bu]    
+rrfile_t: all files within RimStone directory ($HOME/.rimstone) are labeled with this type.
+
+.RE
+
+.RS 4
+\[bu]    
+rim_t: domain type (process type) of all RimStone executables that communicate with other processes (be it Unix or TCP sockets). Only files labeled rrfile_t can run as this process type.
+
+.RE
+
+.RS 4
+\[bu]    
+rrport_t: port type that any RimStone process is allowed to bind to, accept and listen. No other process types are allowed to do so.
+RimStone policy:
+
+.RS 4
+\[bu]    
+allows RimStone processes unconfined access. This is expected as RimStone is a general purpose framework. It means you do not have to do anything to connect to database, use files, connect to other servers etc.
+
+.RE
+
+.RS 4
+\[bu]    
+allows web servers (httpd_t domain type) to connect to sockets labeled with rrfile_t, but does not allow any other access. This allows communication between reverse-proxy web servers and RimStone applications.
+
+.RE
+
+.RS 4
+\[bu]    
+allows web servers to connect to any RimStone process that is listening on a TCP port (see \fBrim\fP), but does not allow any other access (i.e. to any other ports).
+RimStone policy allows normal functioning of RimStone features only, but does not introduce any unnecessary privileges to the rest of the system.
+
+Note: RimStone installation does not distribute .pp (compile) policy files, because it is not currently part of distro repos. Due to changes in SELinux and difference in versions installed across derived distros, RimStone will compile source .te files during the installation, ensuring the best possibility of successful SELinux policy setup.
+
+.LP
+.B UNIX DOMAIN SOCKETS
+.LP
+
+Using Unix domain sockets for RimStone processes to communicate with a web server (see \fBrim\fP) is the default method and no further action is needed.
+
+.LP
+.B UNIX TCP SOCKETS
+.LP
+
+Using TCP sockets for RimStone processes to communicate with a web server (see \fBrim\fP) requires you to label such ports as rrport_t, for example if you plan to use port 2109:
+
+.RS 4
+.EX
+
+sudo semanage port -a -t rrport_t -p tcp  2109
+
+.EE
+.RE
+
+When you no longer need a port, for example if you are switching to another port (for instance 2209), remove the old one and add the new one:
+
+.RS 4
+.EX
+
+sudo semanage port -d -t rrport_t -p tcp  2109
+sudo semanage port -a -t rrport_t -p tcp  2209
+
+.EE
+.RE
+
+
+.LP
+.B CHANGING OR ADDING DIRECTORIES
+.LP
+
+If you are adding directories to be used by RimStone program, or changing a directory, for example using a different storage instead of "$HOME/.rimstone" (see \fBdirectories\fP), you need to label files in new directories:
+
+.RS 4
+.EX
+
+sudo semanage fcontext -a -t rrfile_t "/your/new/dir(/.*)?"
+sudo restorecon -R /your/new/dir
+
+.EE
+.RE
+
+To remove context from such directories (if you are not using them anymore), use:
+
+.RS 4
+.EX
+
+sudo semanage fcontext -d -t rrfile_t "/your/new/dir(/.*)?"
+sudo restorecon -R /your/new/dir
+
+.EE
+.RE
+
+.SH SEE ALSO
+ SELinux
+
+\fBSELinux\fP   
+See all 
+\fBdocumentation\fP

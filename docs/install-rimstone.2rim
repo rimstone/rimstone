@@ -1,0 +1,137 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+install-rimstone \- RimStone documentation (install-rimstone)
+.SH DESCRIPTION
+
+.LP
+.B HOW TO INSTALL RIMSTONE
+.LP
+
+There are three ways to install RimStone, pick one that works for you:
+
+.RS 4
+\[bu]    
+From a zipped file (.tar.gz):
+
+.RS 4
+.EX
+
+wget "https://github.com/rimstone/rimstone/archive/refs/heads/main.tar.gz" -O main.tar.gz
+tar xvfz main.tar.gz
+cd rimstone-main
+\[char46]/riminst.sh
+\[char46] $HOME/.bashrc
+
+.EE
+.RE
+
+.RE
+
+
+.RS 4
+\[bu]    
+If you use git, from its official GitHub repo (depth is 1 for performance and to save space):
+
+.RS 4
+.EX
+
+git clone --depth 1 git clone --depth 1 https://github.com/rimstone/rimstone.git
+cd rimstone
+\[char46]/riminst.sh
+\[char46] $HOME/.bashrc
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+If there's a RimStone package installed on your system, from a package. First, \fBinstall-package\fP, then:
+
+.RS 4
+.EX
+
+cp /usr/share/rimstone/rimstone.tar.gz .
+tar xvfz rimstone.tar.gz
+cd rimstone
+\[char46]/riminst.sh
+\[char46] $HOME/.bashrc
+
+.EE
+.RE
+
+.RE
+
+
+Note that $HOME/.bashrc is run at the end so you can use RimStone in the current session without re-logging.
+
+.LP
+.B NOTES ABOUT INSTALLATION
+.LP
+
+
+.B - Permissions and install script
+
+RimStone is installed in a home directory (either in a separate user account or in your own home directory). Minimum permissions (required and set by the installation) for home directory are 711 (allowing access to specific sockets but no read, write or directory listing permissions). 
+
+
+.B - sudo privilege
+
+RimStone itself does not require sudo as it installs in a local ".rimstone" folder. You may however need sudo privilege to install standard Open Source toolkit libraries (such as MariaDB, SQLite, PostgreSQL, XML, Regex, Curl, OpenSSL etc), base libraries (such as gcc, make etc.; and only if not installed already, which they usually are), or SELinux support (if you use it). They are system-wide by nature and require sudo.
+
+
+.B - Installing toolkit libraries
+
+The default installation (above) will ask you if you'd like to install the above toolkit packages, You can install them if and when you need them, or you can install them now; you will need sudo privilege to do that. If you'd like to install all base and toolkit packages automatically now, then use the following (instead of just ./riminst.sh above):
+
+.RS 4
+.EX
+
+\[char46]/riminst.sh all
+
+.EE
+.RE
+
+
+
+.B - SELinux
+
+If you have SELinux enabled then you'll need to install SELinux support for RimStone. This requires sudo privilege because it involves setting Operating System permissions for RimStone. This will be done automatically during the installation.
+
+If you don't want or need SELinux support, you can set permissive mode before installing RimStone with:
+
+.RS 4
+.EX
+
+sudo setenforce 0
+
+.EE
+.RE
+
+in which case you won't need to install SELinux support.
+
+
+.B - Upgrading/downgrading RimStone
+
+To either upgrade or downgrade RimStone, first \fBuninstall\fP and then install (see above). Look for release notes for any given version at RimStone \fBblog\fP for more information about any changes that may affect your RimStone application(s).
+
+
+.B - Uninstall RimStone
+
+Here's how to \fBuninstall\fP.
+
+.LP
+.B TRY RIMSTONE
+.LP
+
+Go to \fB123-hello-world\fP for your Hello World.
+.SH SEE ALSO
+ Install rimstone
+
+\fBinstall-package\fP  
+\fBinstall-rimstone\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP

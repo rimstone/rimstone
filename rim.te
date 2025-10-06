@@ -1,0 +1,27 @@
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2018-2025 Gliim LLC. 
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
+
+module rim 1.0;
+
+require {
+    type httpd_t;
+    type rrfile_t;
+    type rim_t;
+    type rrport_t;
+    type unconfined_t;
+    class sock_file write;
+    class unix_stream_socket connectto;
+    type unreserved_port_t;
+    class tcp_socket { name_bind name_connect };
+}
+
+
+
+#allow web server to connect to rim_t rmstone process
+allow httpd_t rim_t:unix_stream_socket connectto;
+#allow web server to write to rimstone socket (must also be allow by DAC, which sockets are, but nothing else)
+allow httpd_t rrfile_t:sock_file write;
+#allow web server to connect to rimstone processes only
+allow httpd_t rrport_t:tcp_socket name_connect;

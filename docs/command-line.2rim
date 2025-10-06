@@ -1,0 +1,164 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+command-line \- RimStone documentation (running-application)
+.SH DESCRIPTION
+A RimStone application can run as a web application or a command-line program, or both - such as when some requests can be either fulfilled through web interface or executed otherwise (such as on the command line). Note that RimStone produces two separate executables: a \fBservice\fP one and a command-line one - they are different because command-line program does not need the service library and thus is smaller. 
+
+The name of the command-line executable is the same as the application name, and its path is (assuming <app name> is the application name):
+
+.RS 4
+.EX
+
+$HOME/.rimstone/apps/<app name>/.bld/<app name>
+
+.EE
+.RE
+
+
+.LP
+.B OUTPUT
+.LP
+
+A command-line program works the same way as a service executable, and the output is the same, except that it is directed to stdout (standard output) and stderr (standard error). 
+
+.LP
+.B EXIT CODE
+.LP
+
+To specify the exit code of a command-line program, use \fBexit-status\fP. To exit the program, use \fBexit-handler\fP, or otherwise the program will exit when it reaches the end of a \fBrequest\fP.
+
+.LP
+.B EXECUTING A REQUEST
+.LP
+
+Here is how to execute a request "add-stock" in application "stock" with parameters "name" having a value of "ABC" and "price" a value of "300":
+
+.RS 4
+.EX
+
+rim -r --app="/stock" --req="/add-stock?name=ABC&price=300" --exec
+
+.EE
+.RE
+
+Note that you if specify parameters as part of the path, you could write the above the same way as in a URL:
+
+.RS 4
+.EX
+
+rim -r --app="/stock" --req="/add-stock/name=ABC/price=300" --exec
+
+.EE
+.RE
+
+You can generate the shell code to execute the above without using \fBrim\fP by omitting "--exec" option, for instance:
+
+.RS 4
+.EX
+
+rim -r --app="/stock" --req="/add-stock/name=ABC/price=300" 
+
+.EE
+.RE
+
+
+.LP
+.B INCLUDING A REQUEST BODY
+.LP
+
+You can include a request body when executing a singe-run program. It is always included as the standard input (stdin) to the program. 
+
+You must provide the length of this input and the type of input, as well as a request method (such as POST, PUT, PATCH, GET, DELETE or any other).
+
+Here is an example of using a request body to make a POST request on the command line - the application name is "json" and request name is "process". File "prices.json" is sent as request body:
+
+.RS 4
+.EX
+
+rim -r --app=/json --req='/process?act=get_total&period=YTD' --method=POST --content=prices.json --content-type=application/json --exec
+
+.EE
+.RE
+
+You can generate the shell code for the above by omitting "--exec" option of \fBrim\fP utility.
+
+Note that you can also include any other headers as environment variables by using the "HTTP_" convention, where custom headers are capitalized with use of underscore for dashes and prefixed with "HTTP_", for example header "RimStone-Header" would be set as:
+
+.RS 4
+.EX
+
+export HTTP_RIM_HEADER="some value"
+
+.EE
+.RE
+
+You would set the "HTTP_" variable(s) prior to executing the program.
+
+.LP
+.B SUPPRESSING HTTP HEADER OUTPUT FOR THE ENTIRE APPLICATION
+.LP
+
+If you wish to suppress the output of HTTP headers for all requests, use "--silent-header" option in "rim -r":
+
+.RS 4
+.EX
+
+rim -r --app="/stock" --req="/add-stock/name=ABC/price=300" --exec --silent-header
+
+.EE
+.RE
+
+This will suppress the output of HTTP headers (either the default or with \fBout-header\fP), or for any other case where headers are output. This has the same effect as \fBsilent-header\fP, the only difference is that the environment variable applies to the entire application.
+
+.LP
+.B URL-ENCODING THE INPUT
+.LP
+
+Any data in "--req" option (and consequently in PATH_INFO or QUERY_STRING environment vairables if calling directly from shell) must be formatted to be a valid URL; for example, data that contains special characters (like "&" or "?") must be URL-encoded, for instance:
+
+.RS 4
+.EX
+
+rim -r --app="/stock" --req="/add-stock/name=ABC%3F/price=300" 
+
+.EE
+.RE
+
+In this case, parameter "name" has value of "ABC?", where special character "?" is encoded as "%3F". 
+
+To make sure all your input parameters are properly URL-encoded, you can use RimStone's v1 code processor:
+
+.RS 4
+.EX
+
+$($(rim -l)/v1 -urlencode '<your data>')
+
+.EE
+.RE
+
+For instance, to encode "a?=b" as a parameter:
+
+.RS 4
+.EX
+
+rim -r --app="/stock" --req="/add-stock/name=$($(rim -l)/v1 -urlencode 'AB?')/price=300" 
+
+.EE
+.RE
+
+If your parameters do not contain characters that need URL encoding, then you can skip this.
+
+.LP
+.B CGI
+.LP
+
+You can also use a command-line program with \fBCGI\fP (Common Gateway Interface). 
+.SH SEE ALSO
+ Running application
+
+\fBapplication-setup\fP  
+\fBCGI\fP  
+\fBcommand-line\fP  
+\fBservice\fP   
+See all 
+\fBdocumentation\fP

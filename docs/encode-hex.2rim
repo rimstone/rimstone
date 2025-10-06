@@ -1,0 +1,52 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+encode-hex \-  (hex-encoding)
+.SH PURPOSE
+Encode data into hexadecimal string.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+encode-hex <data> to <output> \\
+    [ input-length <input length> ] \\
+    [ prefix <prefix> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+encode-hex will encode string <data> to hexadecimal string <output> given in "to" clause which consists of digits "0"-"9" and letters "a"-"f". 
+
+The length of <data> to encode may be given with <input length> number in "input-length" clause; if not the whole string <data> is used. If you wish to prefix the output with a string <prefix>, you can specify it in "prefix" clause with <prefix>; otherwise no prefix is prepended.
+
+.SH EXAMPLES
+Create hexadecimal string from binary data "mydata" of length 7, prefixed with string "\\\\\\\\x" (which is typically needed for PostgreSQL binary input to queries). The output string "hexout" is created:
+
+.RS 4
+.EX
+
+set-string mydata = "\\x00""A""\\x00""\\x0F""AB""\\x00""\\x04"
+encode-hex mydata to hexout input-length 7 prefix "\\\\\\\\x"
+
+.EE
+.RE
+
+The value of "hexout" will be:
+
+.RS 4
+.EX
+
+\\\\x0041000F414200
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Hex encoding
+
+\fBdecode-hex\fP  
+\fBencode-hex\fP   
+See all 
+\fBdocumentation\fP

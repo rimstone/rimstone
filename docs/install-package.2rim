@@ -1,0 +1,136 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+install-package \- RimStone documentation (install-rimstone)
+.SH DESCRIPTION
+
+.LP
+.B RIMSTONE PACKAGE
+.LP
+
+You can install RimStone source code from a RimStone package, available for popular Linux distributions. These packages contain source code only. Once a package is installed, you still need to \fBinstall RimStone\fP from the source code provided by the package.
+
+Why use a package? For one, if you have multiple developers working on the same machine, they can use the same RimStone source code provided by the RimStone package, and the version control is easier. And secondly, a RimStone package will install all the RimStone's base and toolkit dependencies (such as database drivers, XML library, make sure gcc/make are installed etc).
+
+Since the packages do not contain any binaries, they can be installed on a wide variety of versions (for any given distro), and even on distros not mentioned here (such as on derived ones). Note that only the latest versions are actually tested with each release, so whether a package would work with a particular distro and version you're using is a matter of trying it out. Here are the packages available (all available can be found \fBhere\fP). Download the package and then install it:
+
+.RS 4
+\[bu]    
+Debian and similar
+
+.RS 4
+.EX
+
+wget "https://github.com/rimstone/rimstone/releases/latest/download/rimstone_main_deb_any.deb" -O rimstone_main_deb_any.deb
+sudo apt install ./rimstone_main_deb_any.deb
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+Ubuntu and similar
+
+.RS 4
+.EX
+
+wget "https://github.com/rimstone/rimstone/releases/latest/download/rimstone_main_ubuntu_any.deb" -O rimstone_main_ubuntu_any.deb
+sudo apt install ./rimstone_main_ubuntu_any.deb
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+Fedora and similar
+
+.RS 4
+.EX
+
+wget "https://github.com/rimstone/rimstone/releases/latest/download/rimstone-main-fc.noarch.rpm" -O rimstone-main-fc.noarch.rpm
+sudo dnf install ./rimstone-main-fc.noarch.rpm
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+Redhat and similar
+
+.RS 4
+.EX
+
+wget "https://github.com/rimstone/rimstone/releases/latest/download/rimstone-main-redhat.noarch.rpm" -O rimstone-main-redhat.noarch.rpm
+sudo dnf install ./rimstone-main-redhat.noarch.rpm
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+OpenSUSE and similar
+
+.RS 4
+.EX
+
+wget "https://github.com/rimstone/rimstone/releases/latest/download/rimstone-main-opensuse.noarch.rpm" -O rimstone-main-opensuse.noarch.rpm
+sudo zypper --no-gpg-checks install ./rimstone-main-opensuse.noarch.rpm
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+Arch Linux and similar
+
+.RS 4
+.EX
+
+wget "https://github.com/rimstone/rimstone/releases/latest/download/rimstone-main-arch-any.pkg.tar.zst" -O rimstone-main-arch-any.pkg.tar.zst
+sudo pacman -U ./rimstone-main-arch-any.pkg.tar.zst
+
+.EE
+.RE
+
+.RE
+
+
+.LP
+.B BUILDING PACKAGES
+.LP
+
+If you are a packaging developer, the following can be used to build a RimStone package. All of these use \fBrimstone_4.0.0.orig.tar.gz\fP source archive; the naming convention is obviously for Debian, but all other packages have been made to conform for simplicity.
+
+.B - apt packaging
+
+"debian" folder containing package build files (control, copyright, rules etc.) is \fBhere\fP.
+
+.B - rpm packaging
+
+"rimstone.spec" file used to build an rpm package is \fBhere\fP.
+
+.B - pacman packaging
+
+"PKGBUILD" file used to build a pacman package is \fBhere\fP.
+.SH SEE ALSO
+ Install rimstone
+
+\fBinstall-package\fP  
+\fBinstall-rimstone\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP

@@ -1,0 +1,64 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+count-substring \-  (strings)
+.SH PURPOSE
+Count substrings.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+count-substring <substring> in <string> to <count> [ case-insensitive [ <case insensitive> ] ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+count-substring counts the number of occurrences of <substring> in <string> and stores the result in <count> (specified in "to" clause). By default, search is case-sensitive. If you use "case-insensitive" clause without boolean variable <case insensitive>, or if <case insensitive> evaluates to true, then the search is case-insensitive.
+
+If <substring> is empty (""), <count> is 0.
+
+.SH EXAMPLES
+In the following example, 1 occurrence will be found after the first count-substring, and 2 after the second (since case insensitive search is used there):
+
+.RS 4
+.EX
+
+set-string sub = "world"
+set-string str = "Hello world and hello World!"
+
+count-substring sub in str to num_occ
+print-format "Found %ld occurrences!\\n", num_occ
+
+count-substring sub in str to num_occ case-insensitive
+print-format "Found %ld occurrences!\\n", num_occ
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBdouble-string\fP  
+\fBlower-string\fP  
+\fBmatch-regex\fP  
+\fBnew-string\fP  
+\fBnumber-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBscan-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-double\fP  
+\fBstring-expressions\fP  
+\fBstring-length\fP  
+\fBstring-number\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

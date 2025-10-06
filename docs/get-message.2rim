@@ -1,0 +1,63 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+get-message \-  (messages)
+.SH PURPOSE
+Get string produced by writing a message.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+get-message <message> to <string>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+get-message will create a <string> from <message> which must have been created with \fBnew-message\fP. <string> can then be used elsewhere, for instance sent with a remote call (see \fBrun-remote\fP), written to a file etc.
+
+Once get-message is called, <message> is initialized as if it was just created with \fBnew-message\fP without the "from" clause.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+// Create a message
+new-message msg
+// Write data
+write-message msg key "key1" value "value1"
+// Get string from message
+get-message msg to str
+\[char46]..
+// Create a new message from string
+new-message new from str
+// Read data
+read-message new key k value v
+// Display  data
+print-format "[%s] [%s]\\n", k,v
+
+.EE
+.RE
+
+The result is:
+
+.RS 4
+.EX
+
+[key1] [value1]
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Messages
+
+\fBget-message\fP  
+\fBnew-message\fP  
+\fBread-message\fP  
+\fBSEMI\fP  
+\fBwrite-message\fP   
+See all 
+\fBdocumentation\fP

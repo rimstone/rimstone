@@ -1,0 +1,32 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+rewind-fifo \-  (FIFO)
+.SH PURPOSE
+Rewind FIFO list to the beginning.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+rewind-fifo <list>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+rewind-fifo will position at the very first data element put into <list> which was created with \fBnew-fifo\fP. Each time \fBread-fifo\fP is used, the internal position moves to the next element in the order they were put in. rewind-fifo rewinds back to the very first one.
+
+.SH EXAMPLES
+See \fBread-fifo\fP.
+.SH SEE ALSO
+ FIFO
+
+\fBdelete-fifo\fP  
+\fBnew-fifo\fP  
+\fBpurge-fifo\fP  
+\fBread-fifo\fP  
+\fBrewind-fifo\fP  
+\fBwrite-fifo\fP   
+See all 
+\fBdocumentation\fP

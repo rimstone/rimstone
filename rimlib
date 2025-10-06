@@ -1,0 +1,549 @@
+#!/bin/bash
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2018-2025 Gliim LLC.  
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
+
+if [ $EUID -eq 0 ]; then echo "You cannot run this as sudo or root"; exit 1;  fi
+#determine library existance for RimStone compilation process (both produce and apps)
+
+#
+# Get the based-on name for a current distro
+#
+. /etc/os-release
+if [[ -f /etc/debian_version ||  "$ID" == "debian" || "$ID" == "ubuntu" || "$ID_LIKE" == *"debian"* || "$ID_LIKE" == *"ubuntu"* ]]; then
+    RIM_REL_NAME="debian"
+    RIM_REL_INSTALL="sudo apt -y install "
+elif [[ -f /etc/fedora-release ||  "$ID" == "fedora" || "$ID" == "redhat" || "$ID_LIKE" == *"redhat"* || "$ID_LIKE" == *"fedora"*  ]]; then
+    RIM_REL_NAME="fedora"
+    RIM_REL_INSTALL="sudo dnf -y install "
+    if [[ "$ID" == "redhat" || "$ID_LIKE" == *"redhat"* ]]; then RIM_REL_NAME_SUB="redhat"; fi
+elif [[ -f /etc/mageia-release ||  "$ID" == "mageia" || "$ID_LIKE" == *"mageia"*  ]]; then
+    RIM_REL_NAME="mageia"
+    RIM_REL_INSTALL="sudo dnf -y install "
+elif [[ -f /etc/arch-release ||  "$ID" == "arch" || "$ID_LIKE" == *"arch"* ]]; then
+    RIM_REL_NAME="arch"
+    RIM_REL_INSTALL="sudo pacman --noconfirm -Sy "
+elif [[ "$ID_LIKE" == *"opensuse"* || "$ID_LIKE" == *"suse"* ]]; then
+    RIM_REL_NAME="opensuse"
+    RIM_REL_INSTALL="sudo zypper --non-interactive install "
+else
+    RIM_REL_NAME="unknown"
+    RIM_REL_INSTALL="Use package installer for your system to install "
+fi
+
+RIM_MARIADB_I=0
+RIM_POSTGRES_I=1
+RIM_SQLITE_I=2
+RIM_CURL_I=3
+RIM_PCRE2_I=4
+RIM_XML_I=5
+RIM_CRYPTO_I=6
+RIM_GCC_I=7
+RIM_MAKE_I=8
+RIM_PKGCONF_I=9
+RIM_TAR_I=10
+RIM_SEL_I=11
+RIM_UBSAN_I=12
+
+
+#get libs existence and includes
+function gotlib(){
+    if [ "$1" == "$RIM_MARIADB_I" ]; then
+        RIM_MARIADB_EX=0; RIM_MARIADB_INC=$(pkgconf --silence-errors  --cflags libmariadb)|| RIM_MARIADB_EX=$?
+        return $((RIM_MARIADB_EX))
+    elif [ "$1" == "$RIM_POSTGRES_I" ]; then
+        RIM_POSTGRES_EX=0; RIM_POSTGRES_INC=$(pkgconf --silence-errors  --cflags libpq)|| RIM_POSTGRES_EX=$?
+        return $((RIM_POSTGRES_EX))
+    elif [ "$1" == "$RIM_SQLITE_I" ]; then
+        RIM_SQLITE_EX=0; RIM_SQLITE_INC=$(pkgconf --silence-errors  --cflags sqlite3)|| RIM_SQLITE_EX=$?
+        return $((RIM_SQLITE_EX))
+    elif [ "$1" == "$RIM_CURL_I" ]; then
+        RIM_CURL_EX=0; RIM_CURL_INC=$(pkgconf --silence-errors  --cflags libcurl)|| RIM_CURL_EX=$?
+        return $((RIM_CURL_EX))
+    elif [ "$1" == "$RIM_PCRE2_I" ]; then
+        RIM_PCRE2_EX=0; RIM_PCRE2_INC=$(pkgconf --silence-errors  --cflags libpcre2-posix)|| RIM_PCRE2_EX=$?
+        return $((RIM_PCRE2_EX))
+    elif [ "$1" == "$RIM_CRYPTO_I" ]; then
+        RIM_CRYPTO_EX=0; RIM_CRYPTO_INC=$(pkgconf --silence-errors  --cflags libcrypto libssl)|| RIM_CRYPTO_EX=$?
+        return $((RIM_CRYPTO_EX))
+    elif [ "$1" == "$RIM_XML_I" ]; then
+        RIM_XML_EX=0; RIM_XML_INC=$(pkgconf --silence-errors  --cflags libxml-2.0)|| RIM_XML_EX=$?
+        return $((RIM_XML_EX))
+    elif [ "$1" == "$RIM_GCC_I" ]; then
+        RIM_GCC_EX=0; which gcc >/dev/null 2>&1|| RIM_GCC_EX=$?
+        return $((RIM_GCC_EX))
+    elif [ "$1" == "$RIM_MAKE_I" ]; then
+        RIM_MAKE_EX=0; which make >/dev/null 2>&1|| RIM_MAKE_EX=$?
+        return $((RIM_MAKE_EX))
+    elif [ "$1" == "$RIM_PKGCONF_I" ]; then
+        RIM_PKGCONF_EX=0; which pkgconf >/dev/null 2>&1|| RIM_PKGCONF_EX=$?
+        return $((RIM_PKGCONF_EX))
+    elif [ "$1" == "$RIM_TAR_I" ]; then
+        RIM_TAR_EX=0; which tar >/dev/null 2>&1|| RIM_TAR_EX=$?
+        return $((RIM_TAR_EX))
+    elif [ "$1" == "$RIM_SEL_I" ]; then
+        if [ -f /etc/selinux/config ]; then
+           if [ -f "/usr/share/selinux/devel/Makefile" ]; then RIM_SEL_EX=0; else RIM_SEL_EX=1; fi
+        else
+            RIM_SEL_EX=0 # declare installed for those that don't have SELinux
+        fi
+        return $((RIM_SEL_EX))
+    elif [ "$1" == "$RIM_UBSAN_I" ]; then
+        LDPATH=$(whereis -b ldconfig|sed 's/^.*:\s*\(.*\)$/\1/g')
+        ISUBSAN=$($LDPATH -p|grep libubsan|wc -l)||true
+        if [ "$ISUBSAN" == "0" ]; then
+           RIM_UBSAN_EX=1
+        else
+            RIM_UBSAN_EX=0 #installed
+        fi
+        return $((RIM_UBSAN_EX))
+    fi
+}
+
+function discovery() {
+    #
+    # The names of toolkit packages used in pkgconfg are *different* from the actual apt, dnf etc. package names. Confusing but true.
+    # At least that allows us to get include/lib flags once installed without needed to reference all the fragmented package names.
+    #
+    # Must first check base package, because other depend on them
+    # Base:
+    gotlib $RIM_GCC_I || true
+    gotlib $RIM_PKGCONF_I || true
+    gotlib $RIM_MAKE_I || true
+    gotlib $RIM_TAR_I || true
+    gotlib $RIM_SEL_I || true
+    RIM_GCC_INSTALL="$RIM_REL_INSTALL gcc"
+    RIM_MAKE_INSTALL="$RIM_REL_INSTALL make"
+    RIM_PKGCONF_INSTALL="$RIM_REL_INSTALL pkgconf"
+    RIM_TAR_INSTALL="$RIM_REL_INSTALL tar"
+    #
+    #package name for selinux
+    #
+    if [ "$RIM_REL_NAME" == "fedora" ]; then
+        if [ "$RIM_REL_NAME_SUB" == "redhat" ]; then RIM_SEL_PACKAGE="policycoreutils-python-utils policycoreutils policycoreutils-devel libselinux-utils"; 
+        else RIM_SEL_PACKAGE="policycoreutils policycoreutils-devel libselinux-utils"; fi
+    elif [ "$RIM_REL_NAME" == "opensuse" ]; then
+        RIM_SEL_PACKAGE="selinux-policy-devel"
+    else
+        #not supported otherwise
+        RIM_SEL_PACKAGE="SELinux development package"
+    fi
+    RIM_SEL_INSTALL="$RIM_REL_INSTALL $RIM_SEL_PACKAGE"
+    if [[ "$RIM_PKGCONF_EX" != "0" || "$RIM_GCC_EX" != "0" || "$RIM_MAKE_EX" != "0" || "$RIM_TAR_EX" != "0" ]]; then
+        #this is okay since we always first check for base packages either in riminst.sh or gg
+        return 
+    fi
+    # Others:
+    gotlib $RIM_MARIADB_I || true
+    gotlib $RIM_POSTGRES_I || true
+    gotlib $RIM_SQLITE_I || true
+    gotlib $RIM_CURL_I || true
+    gotlib $RIM_PCRE2_I || true
+    gotlib $RIM_CRYPTO_I || true
+    gotlib $RIM_XML_I || true
+    gotlib $RIM_UBSAN_I || true
+    #
+
+    #set libs
+    if [ "$RIM_MARIADB_EX" == "0" ]; then RIM_MARIADB_LIB_S="-lrimmys"; RIM_MARIADB_LIB=$(pkgconf --silence-errors  --libs libmariadb); fi
+    if [ "$RIM_POSTGRES_EX" == "0" ]; then RIM_POSTGRES_LIB_S="-lrimpg"; RIM_POSTGRES_LIB=$(pkgconf --silence-errors  --libs libpq); fi
+    if [ "$RIM_SQLITE_EX" == "0" ]; then RIM_SQLITE_LIB_S="-lrimlite"; RIM_SQLITE_LIB=$(pkgconf --silence-errors  --libs sqlite3); fi
+    if [ "$RIM_XML_EX" == "0" ]; then RIM_XML_LIB_S="-lrimxml"; RIM_XML_LIB=$(pkgconf --silence-errors  --libs libxml-2.0); fi
+    if [ "$RIM_CURL_EX" == "0" ]; then RIM_CURL_LIB_S="-lrimcurl"; RIM_CURL_LIB=$(pkgconf --silence-errors  --libs libcurl); fi
+    if [ "$RIM_PCRE2_EX" == "0" ]; then RIM_PCRE2_LIB_S="-lrimpcre2"; RIM_PCRE2_LIB=$(pkgconf --silence-errors  --libs libpcre2-posix); fi
+    if [ "$RIM_CRYPTO_EX" == "0" ]; then RIM_CRYPTO_LIB_S="-lrimcrypto"; RIM_CRYPTO_LIB=$(pkgconf --silence-errors  --libs libcrypto libssl); fi
+
+
+#show install instructions, $1 is 1 if 
+
+    #
+    #package name for mariadb
+    #
+    if [ "$RIM_REL_NAME" == "debian" ]; then
+        RIM_MARIADB_PACKAGE="libmariadb-dev"
+    elif [ "$RIM_REL_NAME" == "fedora" ]; then
+        RIM_MARIADB_PACKAGE="mariadb-connector-c-devel"
+    elif [ "$RIM_REL_NAME" == "mageia" ]; then
+        RIM_MARIADB_PACKAGE="mariadb-devel"
+    elif [ "$RIM_REL_NAME" == "arch" ]; then
+        RIM_MARIADB_PACKAGE="mariadb-libs"
+    elif [ "$RIM_REL_NAME" == "opensuse" ]; then
+        RIM_MARIADB_PACKAGE="libmariadb-devel"
+    else
+        RIM_MARIADB_PACKAGE="MariaDB C Client (LGPL) development package"
+    fi
+    #
+    #package name for postgres
+    #
+    if [ "$RIM_REL_NAME" == "debian" ]; then
+        RIM_POSTGRES_PACKAGE="libpq-dev"
+    elif [ "$RIM_REL_NAME" == "fedora" ]; then
+        RIM_POSTGRES_PACKAGE="libpq-devel"
+    elif [ "$RIM_REL_NAME" == "mageia" ]; then
+        RIM_POSTGRES_PACKAGE="postgresql-devel"
+    elif [ "$RIM_REL_NAME" == "arch" ]; then
+        RIM_POSTGRES_PACKAGE="postgresql-libs"
+    elif [ "$RIM_REL_NAME" == "opensuse" ]; then
+        RIM_POSTGRES_PACKAGE="postgresql-devel"
+    else
+        RIM_POSTGRES_PACKAGE="Postgres C Client development package"
+    fi
+    #
+    #package name for crypto
+    #
+    if [ "$RIM_REL_NAME" == "debian" ]; then
+        RIM_CRYPTO_PACKAGE="libssl-dev"
+    elif [[ "$RIM_REL_NAME" == "fedora" || "$RIM_REL_NAME" == "mageia" ]]; then
+        RIM_CRYPTO_PACKAGE="openssl-devel"
+    elif [ "$RIM_REL_NAME" == "arch" ]; then
+        RIM_CRYPTO_PACKAGE="openssl"
+    elif [ "$RIM_REL_NAME" == "opensuse" ]; then
+        #provides either libressl or openssl
+        RIM_CRYPTO_PACKAGE="ssl-devel"
+    else
+        RIM_CRYPTO_PACKAGE="OpenSSL C Client development package"
+    fi
+    #
+    #package name for curl
+    #
+    if [ "$RIM_REL_NAME" == "debian" ]; then
+        RIM_CURL_PACKAGE="libcurl4-openssl-dev"
+    elif [[ "$RIM_REL_NAME" == "fedora" || "$RIM_REL_NAME" == "mageia" ]]; then
+        RIM_CURL_PACKAGE="libcurl-devel"
+    elif [ "$RIM_REL_NAME" == "arch" ]; then
+        RIM_CURL_PACKAGE="curl"
+    elif [ "$RIM_REL_NAME" == "opensuse" ]; then
+        RIM_CURL_PACKAGE="libcurl-devel"
+    else
+        RIM_CURL_PACKAGE="Curl C Client development package"
+    fi
+    #
+    #package name for xml
+    #
+    if [ "$RIM_REL_NAME" == "debian" ]; then
+        RIM_XML_PACKAGE="libxml2-dev"
+    elif [[ "$RIM_REL_NAME" == "fedora" || "$RIM_REL_NAME" == "mageia" ]]; then
+        RIM_XML_PACKAGE="libxml2-devel"
+    elif [ "$RIM_REL_NAME" == "arch" ]; then
+        RIM_XML_PACKAGE="libxml2"
+    elif [ "$RIM_REL_NAME" == "opensuse" ]; then
+        RIM_XML_PACKAGE="libxml2-devel"
+    else
+        RIM_XML_PACKAGE="libXML2 C Client development package"
+    fi
+    #
+    #package name for pcre2
+    #
+    if [ "$RIM_REL_NAME" == "debian" ]; then
+        RIM_PCRE2_PACKAGE="libpcre2-dev"
+    elif [[ "$RIM_REL_NAME" == "fedora" || "$RIM_REL_NAME" == "mageia" ]]; then
+        RIM_PCRE2_PACKAGE="pcre2-devel"
+    elif [ "$RIM_REL_NAME" == "arch" ]; then
+        RIM_PCRE2_PACKAGE="pcre2"
+    elif [ "$RIM_REL_NAME" == "opensuse" ]; then
+        RIM_PCRE2_PACKAGE="pcre2-devel"
+    else
+        RIM_PCRE2_PACKAGE="PCRE2 C Client development package"
+    fi
+    #
+    #package name for sqlite
+    #
+    if [ "$RIM_REL_NAME" == "debian" ]; then
+        RIM_SQLITE_PACKAGE="libsqlite3-dev"
+    elif [ "$RIM_REL_NAME" == "fedora" ]; then
+        RIM_SQLITE_PACKAGE="sqlite-devel"
+    elif [ "$RIM_REL_NAME" == "fedora" ]; then
+        RIM_SQLITE_PACKAGE="sqlite3-devel"
+    elif [ "$RIM_REL_NAME" == "arch" ]; then
+        RIM_SQLITE_PACKAGE="sqlite3"
+    elif [ "$RIM_REL_NAME" == "opensuse" ]; then
+        RIM_SQLITE_PACKAGE="sqlite3-devel"
+    else
+        RIM_SQLITE_PACKAGE="SQLite C Client development package"
+    fi
+    #
+    #package name for UBSAN (undefined behaviour sanitization)
+    #
+    if [ "$RIM_REL_NAME" == "debian" ]; then
+        RIM_UBSAN_PACKAGE="libubsan1"
+    else
+        RIM_UBSAN_PACKAGE="libubsan"
+    fi
+
+    #installation instructions for toolkit packages
+    RIM_POSTGRES_INSTALL="$RIM_REL_INSTALL $RIM_POSTGRES_PACKAGE"
+    RIM_MARIADB_INSTALL="$RIM_REL_INSTALL $RIM_MARIADB_PACKAGE"
+    RIM_SQLITE_INSTALL="$RIM_REL_INSTALL $RIM_SQLITE_PACKAGE"
+    RIM_CRYPTO_INSTALL="$RIM_REL_INSTALL $RIM_CRYPTO_PACKAGE"
+    RIM_XML_INSTALL="$RIM_REL_INSTALL $RIM_XML_PACKAGE"
+    RIM_CURL_INSTALL="$RIM_REL_INSTALL $RIM_CURL_PACKAGE"
+    RIM_PCRE2_INSTALL="$RIM_REL_INSTALL $RIM_PCRE2_PACKAGE"
+    RIM_UBSAN_INSTALL="$RIM_REL_INSTALL $RIM_UBSAN_PACKAGE"
+}
+
+#get libs names from IDs
+function namelib(){
+    if [ "$1" == "$RIM_MARIADB_I" ]; then
+        echo "$RIM_MARIADB_PACKAGE"
+    elif [ "$1" == "$RIM_POSTGRES_I" ]; then
+        echo "$RIM_POSTGRES_PACKAGE"
+    elif [ "$1" == "$RIM_SQLITE_I" ]; then
+        echo "$RIM_SQLITE_PACKAGE"
+    elif [ "$1" == "$RIM_CURL_I" ]; then
+        echo "$RIM_CURL_PACKAGE"
+    elif [ "$1" == "$RIM_PCRE2_I" ]; then
+        echo "$RIM_PCRE2_PACKAGE"
+    elif [ "$1" == "$RIM_CRYPTO_I" ]; then
+        echo "$RIM_CRYPTO_PACKAGE"
+    elif [ "$1" == "$RIM_XML_I" ]; then
+        echo "$RIM_XML_PACKAGE"
+    elif [ "$1" == "$RIM_GCC_I" ]; then
+        echo "gcc"
+    elif [ "$1" == "$RIM_MAKE_I" ]; then
+        echo "make"
+    elif [ "$1" == "$RIM_PKGCONF_I" ]; then
+        echo "pkgconf"
+    elif [ "$1" == "$RIM_TAR_I" ]; then
+        echo "tar"
+    elif [ "$1" == "$RIM_SEL_I" ]; then
+        echo "SELinux-devel"
+    elif [ "$1" == "$RIM_UBSAN_I" ]; then
+        echo "Math-checking"
+    fi
+}
+
+
+#display the actual install statement based on $1 which is the ID of a lib
+function display_install(){
+    if [ "$1" == "$RIM_MARIADB_I" ]; then
+        echo "$RIM_MARIADB_INSTALL"
+    elif [ "$1" == "$RIM_POSTGRES_I" ]; then
+        echo "$RIM_POSTGRES_INSTALL"
+    elif [ "$1" == "$RIM_SQLITE_I" ]; then
+        echo "$RIM_SQLITE_INSTALL"
+    elif [ "$1" == "$RIM_CURL_I" ]; then
+        echo "$RIM_CURL_INSTALL"
+    elif [ "$1" == "$RIM_PCRE2_I" ]; then
+        echo "$RIM_PCRE2_INSTALL"
+    elif [ "$1" == "$RIM_CRYPTO_I" ]; then
+        echo "$RIM_CRYPTO_INSTALL"
+    elif [ "$1" == "$RIM_XML_I" ]; then
+        echo "$RIM_XML_INSTALL"
+    elif [ "$1" == "$RIM_GCC_I" ]; then
+        echo "$RIM_GCC_INSTALL"
+    elif [ "$1" == "$RIM_MAKE_I" ]; then
+        echo "$RIM_MAKE_INSTALL"
+    elif [ "$1" == "$RIM_PKGCONF_I" ]; then
+        echo "$RIM_PKGCONF_INSTALL"
+    elif [ "$1" == "$RIM_TAR_I" ]; then
+        echo "$RIM_TAR_INSTALL"
+    elif [ "$1" == "$RIM_SEL_I" ]; then
+        echo "$RIM_SEL_INSTALL"
+    elif [ "$1" == "$RIM_UBSAN_I" ]; then
+        echo "$RIM_UBSAN_INSTALL"
+    fi
+}
+
+#execute or display install, $1 is list of lib IDs, $2 is 1 if exec or otherwise display
+#before each install we check if installed, because it can as a dependency of one of the previous installs!
+function exec_install(){
+    discovery
+    FINST="0"
+    echo "$1"|while IFS= read -r line; do 
+        case "$line" in $RIM_MARIADB_I|$RIM_POSTGRES_I|$RIM_SQLITE_I|$RIM_CURL_I|$RIM_XML_I|$RIM_PCRE2_I|$RIM_CRYPTO_I|$RIM_GCC_I|$RIM_MAKE_I|$RIM_PKGCONF_I|$RIM_TAR_I|$RIM_SEL_I|$RIM_UBSAN_I) 
+                if [ "$2" == "1" ]; then
+                    E=0; gotlib $line||E=$?
+                    if [ "$E" != "0" ]; then
+                        INST=$(display_install $line)
+echo "$INST"
+                        if [[ "$INST" =~ ^sudo.*$ ]]; then
+                            if [ "$RIM_REL_NAME" == "debian" ]; then
+                                #for debian/ubuntu etc, run apt update prior to the first install
+                                if [ "$FINST" == "0" ]; then
+                                    FINST=1
+                                    echo "Updating repository..."
+                                    sudo DEBIAN_FRONTEND=noninteractive apt update >/dev/null 2>&1
+                                fi
+                            fi
+                            echo "Installing [$(namelib $line)]..."
+                            if [ "$RIM_REL_NAME" == "debian" ]; then
+                                INST=$(sed 's/^sudo /sudo DEBIAN_FRONTEND=noninteractive /g'<<<"$INST")
+                            fi
+                            eval $INST >/dev/null 2>&1
+                            E=0; gotlib $line||E=$?
+                            if [ "$E" != "0" ]; then
+                                echo "Could not install [$(namelib $line)]."
+                            fi
+                        fi
+                    fi
+                else
+                    display_install $line
+                fi
+                ;;
+            *) ;;
+        esac
+    done
+}
+
+#
+#show install of all toolkit packages
+#$1 is 1 if we should show the install command line, otherwise display library ID and return 1 if there's some missing (otherwise 0)
+#
+function show_install() {
+    discovery
+    LIST=$1
+    RET=0
+    if [[ "$LIST" == "1" || "$RIM_POSTGRES_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_POSTGRES_I; RET=1; else display_install $RIM_POSTGRES_I; fi
+    fi
+    if [[ "$LIST" == "1" ||  "$RIM_MARIADB_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_MARIADB_I; RET=1; else display_install $RIM_MARIADB_I;  fi
+    fi
+    if [[ "$LIST" == "1" ||  "$RIM_SQLITE_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_SQLITE_I; RET=1; else display_install $RIM_SQLITE_I;  fi
+    fi
+    if [[ "$LIST" == "1" ||  "$RIM_CRYPTO_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_CRYPTO_I; RET=1; else display_install $RIM_CRYPTO_I;  fi
+    fi
+    if [[ "$LIST" == "1" ||  "$RIM_XML_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_XML_I; RET=1; else display_install $RIM_XML_I;  fi
+    fi
+    if [[ "$LIST" == "1" ||  "$RIM_CURL_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_CURL_I; RET=1; else display_install $RIM_CURL_I;  fi
+    fi
+    if [[ "$LIST" == "1" ||  "$RIM_PCRE2_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_PCRE2_I; RET=1; else display_install $RIM_PCRE2_I;  fi
+    fi
+    exit $RET
+}
+
+
+#
+#show min app toolkit package install for <app> 
+#
+function need_install() {
+    discovery
+    _RIM_TMP_BLD=$HOME/.rimstone/apps/$1/.bld
+    if [ ! -d "$_RIM_TMP_BLD" ]; then
+        echo "Directory [$_RIM_TMP_BLD] not found"
+    fi
+    RET=0
+    if [[ -f "$_RIM_TMP_BLD/.mod.MARIADB" && "$RIM_MARIADB_EX" != "0" ]]; then
+        echo "$RIM_REL_INSTALL $RIM_MARIADB_PACKAGE"
+        RET=1
+    fi
+    if [[ -f "$_RIM_TMP_BLD/.mod.POSTGRES" && "$RIM_POSTGRES_EX" != "0" ]]; then
+        echo "$RIM_REL_INSTALL $RIM_POSTGRES_PACKAGE"
+        RET=1
+    fi
+    if [[ -f "$_RIM_TMP_BLD/.mod.CRYPTO" && "$RIM_CRYPTO_EX" != "0" ]]; then
+        echo "$RIM_REL_INSTALL $RIM_CRYPTO_PACKAGE"
+        RET=1
+    fi
+    if [[ -f "$_RIM_TMP_BLD/.mod.XML" && "$RIM_XML_EX" != "0" ]]; then
+        echo "$RIM_REL_INSTALL $RIM_XML_PACKAGE"
+        RET=1
+    fi
+    if [[ -f "$_RIM_TMP_BLD/.mod.SQLITE" && "$RIM_SQLITE_EX" != "0" ]]; then
+        echo "$RIM_REL_INSTALL $RIM_SQLITE_PACKAGE"
+        RET=1
+    fi
+    if [[ -f "$_RIM_TMP_BLD/.mod.PCRE2" && "$RIM_PCRE2_EX" != "0" ]]; then
+        echo "$RIM_REL_INSTALL $RIM_PCRE2_PACKAGE"
+        RET=1
+    fi
+    if [[ -f "$_RIM_TMP_BLD/.mod.CURL" && "$RIM_CURL_EX" != "0" ]]; then
+        echo "$RIM_REL_INSTALL $RIM_CURL_PACKAGE"
+        RET=1
+    fi
+    exit $RET
+}
+
+#show install for base packages
+function base_install(){
+    discovery
+    LIST=$1
+    RET=0
+    if [[ "$LIST" == "1" || "$RIM_GCC_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_GCC_I; RET=1; else display_install $RIM_GCC_I; fi
+    fi
+    if [[ "$LIST" == "1" || "$RIM_MAKE_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_MAKE_I; RET=1; else display_install $RIM_MAKE_I; fi
+    fi
+    if [[ "$LIST" == "1" || "$RIM_PKGCONF_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_PKGCONF_I; RET=1; else display_install $RIM_PKGCONF_I; fi
+    fi
+    if [[ "$LIST" == "1" || "$RIM_TAR_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_TAR_I; RET=1; else display_install $RIM_TAR_I; fi
+    fi
+    if [[ "$LIST" == "1" || "$RIM_SEL_EX" != "0" ]]; then
+        if [ "$LIST" != "1" ]; then echo $RIM_SEL_I; RET=1; else display_install $RIM_SEL_I; fi
+    fi
+    exit $RET
+}
+
+
+
+#
+# Main interface for command-line use
+#
+function use_message() {
+    echo "Usage: rimlib [ -a ] [ -r <app> ] [ -l ] [ -b ] [ -h ]"
+    echo "-a         shows installation instructions for all toolkit packages RimStone may use that are not installed."
+    echo "r <app>    shows installation instructions for all required toolkit packages for <app> that are not installed."
+    echo "-b         shows base packages installation instructions for all base packages that are not installed."
+    echo "-l         shows installation instructions for all toolkit packages RimStone may use, whether they are installed or not."
+    echo "Exit code is 0 if all packages are installed, or 1 otherwise."
+}
+
+OPT_STATUS=0
+opts=$(getopt -a -n $0 -o ar:bhls --long none -- "$@") || OPT_STATUS=$? 
+if [ $OPT_STATUS -ne 0 ]; then
+    use_message 1>&2
+    exit 1
+fi
+
+eval set -- "$opts"
+
+while true; do 
+case "$1" in                         
+    -h | --help )
+        use_message
+        exit
+        ;;
+    -b )
+        base_install
+        shift 1
+        ;;
+    -l )
+        show_install 1
+        shift 1
+        ;;
+    -a )
+        show_install 0
+        shift 1
+        ;;
+    -r )
+        need_install $2
+        shift 2
+        ;;
+    -- ) 
+        shift 
+        break
+        ;;
+    * ) 
+        use_message 1>&2
+        exit -1
+    esac
+done
+#after processing, there should be no more params
+if [ "$1" != "" ]; then
+    use_message 1>&2
+    exit -5
+fi
+
+#if called without params, run its main purpose
+discovery 
+
+

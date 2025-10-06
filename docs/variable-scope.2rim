@@ -1,0 +1,17 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+variable-scope \- RimStone documentation (language)
+.SH DESCRIPTION
+RimStone uses scope rules for variables that are similar to other programming languages. Variables are defined within \fBcode-blocks\fP and their scope is determined by such blocks.
+
+Note that a variable with the same name will not be defined again in a sub-block (see \fBcode-blocks\fP); rather the same variable will be used. Of course, variable with the same name in two separate blocks (i.e. not nested and within separate code blocks) will be indeed separate variables.
+.SH SEE ALSO
+ Language
+
+\fBinline-code\fP  
+\fBstatements\fP  
+\fBsyntax-highlighting\fP  
+\fBunused-var\fP  
+\fBvariable-scope\fP   
+See all 
+\fBdocumentation\fP

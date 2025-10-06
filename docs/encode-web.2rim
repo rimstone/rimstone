@@ -1,0 +1,42 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+encode-web \-  (web-encoding)
+.SH PURPOSE
+Web(HTML)-encode string.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+encode-web <string> to <encoded string> \\
+    [ input-length <length> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+encode-web encodes <string> so it can be used in a HTML-like markup text (such as a web page or an XML/XHTML document), and stores the result in <encoded string>. 
+
+You can encode only the first <length> bytes, given by "input-length" clause.
+
+.SH EXAMPLES
+In this example, a string "str" will be web-encoded and the result is in "result" variable:
+
+.RS 4
+.EX
+
+set-string str="  x<y>z&\[char92]"'  "
+encode-web str to result 
+
+.EE
+.RE
+
+The "result" is "   x&lt;y&gt;z&amp;&quot;&apos;  ".
+.SH SEE ALSO
+ Web encoding
+
+\fBdecode-web\fP  
+\fBencode-web\fP   
+See all 
+\fBdocumentation\fP

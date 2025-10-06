@@ -1,0 +1,28 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+double-expressions \- RimStone documentation (doubles)
+.SH DESCRIPTION
+A double expression uses operators plus (+), minus (-), multiply (*), divide (/), parenthesis () and \fBmath-functions\fP. For example:
+
+.RS 4
+.EX
+
+set-double d1 = 10.331+(4*n2-5)/3.5+exp(3)
+
+.EE
+.RE
+
+You can use double expressions anywhere double is expected as an input to any statement. Read about \fBmixing-doubles-and-numbers\fP.
+
+Note that no checks are performed to catch overflows, underflows and division by zero. With double expressions, such events may produce NAN, +/-INF or otherwise incorrect results but the program will continue, and represent bugs in your code. Use "--fpe" option in \fBrim\fP during debugging and testing to catch such problems.
+.SH SEE ALSO
+ Doubles
+
+\fBabs-double\fP  
+\fBdouble-expressions\fP  
+\fBdouble-string\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBset-double\fP  
+\fBstring-double\fP   
+See all 
+\fBdocumentation\fP

@@ -1,0 +1,52 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+error-handling \- RimStone documentation (error-handling)
+.SH DESCRIPTION
+
+.LP
+.B WHEN YOUR PROGRAM ERRORS OUT
+.LP
+
+"Erroring out" means a process handling a request has encountered a difficulty that cannot be handled and it will either:
+
+.RS 4
+\[bu]    
+Skip the rest of the request, and move on quickly to handle the next request without exiting. Most errors are like this, for example your program has attempted to access memory outside of what's allocated, or you have called \fBreport-error\fP statement.
+
+.RE
+
+.RS 4
+\[bu]    
+Stop and exit, and it may be automatically restarted if it's a \fBservice\fP. For instance, the process could be out of memory, or the database is permanently down and connection cannot be re-established, or there is an internal error.
+.RE
+. 
+Note that if your program is \fBcommand-line\fP, it will exit in any case since it handles a single request anyway.
+.RE
+
+
+.LP
+.B WHEN THERE IS A PROBLEM IN RIMSTONE
+.LP
+
+If there is a fatal internal error (i.e. error in RimStone code itself that cannot be handled), it will be caught by RimStone, and the process will end. If your process is started with \fBmrim\fP, it may be automatically restarted.
+
+.LP
+.B LOGGING THE ERROR
+.LP
+
+Regardless of the type of error and regardless of whether the process exits or not, the error is output to the standard error stream along with the error details: cause of error and full stack trace (including source file names and line numbers); note that for \fBreport-error\fP error details are not output since you're providing your own details.
+
+.LP
+.B OUTPUT WHEN ERROR HAPPENS
+.LP
+
+When your program errors out, a generic message is output to the standard output, i.e. to the client, that indicates that error has occurred, and to check the error log. The actual details are output to standard error stream, see details above. Note that in case of fatal error (such as RimStone internal error), no message is sent to the client; rather the program ends. On how to view the error log (including the stack traces), see \fBdebugging\fP.
+.SH SEE ALSO
+ Error handling
+
+\fBdb-error\fP  
+\fBerror-code\fP  
+\fBerror-handling\fP  
+\fBreport-error\fP   
+See all 
+\fBdocumentation\fP

@@ -1,0 +1,46 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+purge-hash \-  (hash)
+.SH PURPOSE
+Purge a hash.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+purge-hash <hash> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+purge-hash deletes all elements from <hash> that was created with \fBnew-hash\fP. 
+
+After purge-hash, you can use it without calling \fBnew-hash\fP again. Note however, that "average-reads" statistics (see \fBget-hash\fP) is not reset - it keeps being computed and remains for the life of the hash.
+
+.SH EXAMPLES
+Create a hash, put some data in it and then delete the data:
+
+.RS 4
+.EX
+
+new-hash h 
+write-hash h key "mykey" value "myvalue"
+purge-hash h
+
+.EE
+.RE
+
+See \fBread-hash\fP for more examples.
+.SH SEE ALSO
+ Hash
+
+\fBget-hash\fP  
+\fBnew-hash\fP  
+\fBpurge-hash\fP  
+\fBread-hash\fP  
+\fBresize-hash\fP  
+\fBwrite-hash\fP   
+See all 
+\fBdocumentation\fP

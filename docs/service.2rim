@@ -1,0 +1,83 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+service \- RimStone documentation (running-application)
+.SH DESCRIPTION
+You can run a RimStone application as a service by using \fBmrim\fP program manager. Your application can then use commonly used web servers or load balancers (such as Apache, Nginx or HAProxy) so it becomes available on the web.
+
+You can access your server application by means of:
+
+.RS 4
+\[bu]    
+A web server (which is probably the most common way). You need to setup a reverse proxy, i.e. a web server that will forward requests and send replies back to clients; see below.
+
+.RE
+
+.RS 4
+\[bu]    
+The command line, in which case you can use \fBrim\fP (see -r option). 
+
+.RE
+
+.RS 4
+\[bu]    
+\fBClient-API\fP, which allows any application in any programming language to access your server, as long as it has C linkage (by far most do). This method allows for MT (multithreaded) access to your application, where many client requests can be made in parallel.
+RimStone server runs as a number of (zero or more) background processes in parallel, processing requests simultaneously.
+
+.LP
+.B SETTING UP REVERSE PROXY (WEB SERVER)
+.LP
+
+To access your application via a reverse proxy (i.e. web server), generally you need to add a proxy directive and restart the web server. 
+
+If you use Apache, you need to connect it to your application, see \fBconnect-apache-tcp-socket\fP (for using TCP sockets) and \fBconnect-apache-unix-socket\fP (for using Unix sockets). If you use Nginx, you need to connect it to your application, see \fBconnect-nginx-tcp-socket\fP (for using TCP sockets) and \fBconnect-nginx-unix-socket\fP (for using Unix sockets). For HAProxy, see \fBconnect-haproxy-tcp-socket\fP. Virtually all web servers/proxies support FastCGI protocol used by RimStone; please see your server's documentation.
+
+.LP
+.B STARTING RIMSTONE SERVER PROCESSES
+.LP
+
+Use \fBmrim\fP, for example:
+
+.RS 4
+.EX
+
+mrim <app name>
+
+.EE
+.RE
+
+which in general will (based on the request load) start zero or more background resident process(es) (daemons) that process requests in parallel, or for instance:
+
+.RS 4
+.EX
+
+mrim -w 20 <app name>
+
+.EE
+.RE
+
+which will start 20 processes.
+
+.LP
+.B CONNECTION TIMEOUT
+.LP
+
+In a heavy-load environment, a client's connection may be rejected by the server. This may happen if the client runs very slowly due to swapping perhaps. Once a client establishes a connection, it has up to 5 seconds by default to send data; if it doesn't, the server will close the connection. Typically, clients send data right away, but due to a heavy load, this time may be longer. To set the connection timeout in seconds, use "--client-timeout" option in rim when making the application:
+
+.RS 4
+.EX
+
+rim -q --client-timeout=8 
+
+.EE
+.RE
+
+In this case, the timeout is set to 8 seconds.
+.SH SEE ALSO
+ Running application
+
+\fBapplication-setup\fP  
+\fBCGI\fP  
+\fBcommand-line\fP  
+\fBservice\fP   
+See all 
+\fBdocumentation\fP

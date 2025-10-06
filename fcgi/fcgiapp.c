@@ -12,10 +12,10 @@
  */
 // Modifications Copyright 2018-2025 Gliim LLC. 
 // Modifications in this file licensed under Apache License v2. See LICENSE file in the main directory.
-// On the web http://golf-lang.com/ - this file is part of Golf framework.
+// On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
 
 
-#include "../golf.h"
+#include "../rim.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>      /* for fcntl */
@@ -32,15 +32,15 @@
 #include <unistd.h>
 #include <limits.h>
 #include "fastcgi.h"
-#include "ggsock.h"
+#include "rimsock.h"
 #include "fcgiapp.h"
 #define LONG_DOUBLE long double
 #define TRUE 1
 #define FALSE 0
 
 //
-// Golf's variables
-extern gg_num gg_client_timeout;
+// RimStone's variables
+extern rim_num rim_client_timeout;
 //
 //
 
@@ -64,7 +64,7 @@ static int FCGX_GetChar(FCGX_Stream *stream);
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE static inline int FCGX_GetChar(FCGX_Stream *stream)
+RIM_ALWAYS_INLINE static inline int FCGX_GetChar(FCGX_Stream *stream)
 {
     if (stream->isClosed || ! stream->isReader)
         return EOF;
@@ -211,10 +211,10 @@ int FCGX_FPrintF(FCGX_Stream *stream, const char *format, ...)
 #else
     char buff[4096]; // use reasonably sized stack buffer to print out most messages, or allocate if not enough later
 #endif
-    gg_num tot_written = vsnprintf (buff, sizeof(buff), format, ap);
-    if (tot_written >= (gg_num)sizeof(buff))
+    rim_num tot_written = vsnprintf (buff, sizeof(buff), format, ap);
+    if (tot_written >= (rim_num)sizeof(buff))
     {
-        char *dbuff = gg_malloc0 (tot_written+2); // +1 should work
+        char *dbuff = rim_malloc0 (tot_written+2); // +1 should work
         va_end (ap);
         va_start (ap, format);
         tot_written = vsnprintf (dbuff, tot_written+2, format, ap);
@@ -248,7 +248,7 @@ int FCGX_FPrintF(FCGX_Stream *stream, const char *format, ...)
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline int FCGX_FFlush(FCGX_Stream *stream)
+RIM_ALWAYS_INLINE inline int FCGX_FFlush(FCGX_Stream *stream)
 {
     if(stream->isClosed || stream->isReader)
         return 0;
@@ -273,7 +273,7 @@ GG_ALWAYS_INLINE inline int FCGX_FFlush(FCGX_Stream *stream)
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline int FCGX_FClose(FCGX_Stream *stream)
+RIM_ALWAYS_INLINE inline int FCGX_FClose(FCGX_Stream *stream)
 {
     if (stream == NULL) return 0;
 
@@ -303,7 +303,7 @@ GG_ALWAYS_INLINE inline int FCGX_FClose(FCGX_Stream *stream)
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE static inline void SetError(FCGX_Stream *stream, int FCGI_errno)
+RIM_ALWAYS_INLINE static inline void SetError(FCGX_Stream *stream, int FCGI_errno)
 {
     /*
      * Preserve only the first error.
@@ -325,7 +325,7 @@ GG_ALWAYS_INLINE static inline void SetError(FCGX_Stream *stream, int FCGI_errno
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline int FCGX_GetError(FCGX_Stream *stream) {
+RIM_ALWAYS_INLINE inline int FCGX_GetError(FCGX_Stream *stream) {
     return stream->FCGI_errno;
 }
 
@@ -384,11 +384,11 @@ typedef Params *ParamsPtr;
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline static inline ParamsPtr NewParams(int length)
+RIM_ALWAYS_INLINE inline static inline ParamsPtr NewParams(int length)
 {
     ParamsPtr result;
-    result = (Params *)gg_malloc0(sizeof(Params));
-    result->vec = (char **)gg_malloc0(length * sizeof(char *));
+    result = (Params *)rim_malloc0(sizeof(Params));
+    result->vec = (char **)rim_malloc0(length * sizeof(char *));
     result->length = length;
     result->cur = result->vec;
     *result->cur = NULL;
@@ -407,7 +407,7 @@ GG_ALWAYS_INLINE inline static inline ParamsPtr NewParams(int length)
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline static inline void FreeParams(ParamsPtr *paramsPtrPtr)
+RIM_ALWAYS_INLINE inline static inline void FreeParams(ParamsPtr *paramsPtrPtr)
 {
     ParamsPtr paramsPtr = *paramsPtrPtr;
     char **p;
@@ -437,7 +437,7 @@ GG_ALWAYS_INLINE inline static inline void FreeParams(ParamsPtr *paramsPtrPtr)
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline static void PutParam(ParamsPtr paramsPtr, char *nameValue)
+RIM_ALWAYS_INLINE inline static void PutParam(ParamsPtr paramsPtr, char *nameValue)
 {
     int size;
 
@@ -464,7 +464,7 @@ GG_ALWAYS_INLINE inline static void PutParam(ParamsPtr paramsPtr, char *nameValu
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline char *FCGX_GetParam(const char *name, FCGX_ParamArray envp)
+RIM_ALWAYS_INLINE inline char *FCGX_GetParam(const char *name, FCGX_ParamArray envp)
 {
     int len;
     char **p;
@@ -542,7 +542,7 @@ static int ReadParams(Params *paramsPtr, FCGX_Stream *stream)
          * nameLen and valueLen are now valid; read the name and value
          * from stream and construct a standard environment entry.
          */
-        nameValue = (char *)gg_malloc0(nameLen + valueLen + 2);
+        nameValue = (char *)rim_malloc0(nameLen + valueLen + 2);
         if(FCGX_GetStr(nameValue, nameLen, stream) != nameLen) {
             SetError(stream, FCGX_PARAMS_ERROR);
             free(nameValue);
@@ -668,7 +668,7 @@ static unsigned char *AlignPtr8(unsigned char *p) {
 typedef struct FCGX_Stream_Data {
     unsigned char *buff;      /* buffer after alignment */
     int bufflen;              /* number of bytes buff can store */
-    unsigned char *mBuff;     /* buffer as returned by gg_malloc0 */
+    unsigned char *mBuff;     /* buffer as returned by rim_malloc0 */
     unsigned char *buffStop;  /* reader: last valid byte + 1 of entire buffer.
                                * stop generally differs from buffStop for
                                * readers because of record structure.
@@ -731,12 +731,12 @@ static void WriteCloseRecords(struct FCGX_Stream *stream)
 
 
 
-GG_ALWAYS_INLINE inline static inline int write_it_all(int fd, char *buf, int len)
+RIM_ALWAYS_INLINE inline static inline int write_it_all(int fd, char *buf, int len)
 {
     int wrote;
 
     while (len) {
-        wrote = gg_fcgi_write(fd, buf, len);
+        wrote = rim_fcgi_write(fd, buf, len);
         if (wrote < 0)
             return wrote;
         len -= wrote;
@@ -1010,7 +1010,7 @@ static void FillBuffProc(FCGX_Stream *stream)
          * If data->buff is empty, do a read.
          */
         if(stream->rdNext == data->buffStop) {
-            count = gg_fcgi_read(data->reqDataPtr->ipcFd, (char *)data->buff,
+            count = rim_fcgi_read(data->reqDataPtr->ipcFd, (char *)data->buff,
                             data->bufflen);
             if(count <= 0) {
                 SetError(stream, (count == 0 ? FCGX_PROTOCOL_ERROR : OS_Errno));
@@ -1139,12 +1139,12 @@ static FCGX_Stream *NewStream(
      * but also data->buff and data->buffStop.  This has implications
      * for procs that want to swap buffers, too.
      */
-    FCGX_Stream *stream = (FCGX_Stream *)gg_malloc0(sizeof(FCGX_Stream));
-    FCGX_Stream_Data *data = (FCGX_Stream_Data *)gg_malloc0(sizeof(FCGX_Stream_Data));
+    FCGX_Stream *stream = (FCGX_Stream *)rim_malloc0(sizeof(FCGX_Stream));
+    FCGX_Stream_Data *data = (FCGX_Stream_Data *)rim_malloc0(sizeof(FCGX_Stream_Data));
     data->reqDataPtr = reqDataPtr;
     bufflen = AlignInt8(MIN(MAX(bufflen, 32), FCGI_MAX_LENGTH + 1));
     data->bufflen = bufflen;
-    data->mBuff = (unsigned char *)gg_malloc0(bufflen);
+    data->mBuff = (unsigned char *)rim_malloc0(bufflen);
     data->buff = AlignPtr8(data->mBuff);
     if(data->buff != data->mBuff) {
         data->bufflen -= 8;
@@ -1241,7 +1241,7 @@ static FCGX_Stream *SetReaderType(FCGX_Stream *stream, int streamType)
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline static FCGX_Stream *NewReader(FCGX_Request *reqDataPtr, int bufflen, int streamType)
+RIM_ALWAYS_INLINE inline static FCGX_Stream *NewReader(FCGX_Request *reqDataPtr, int bufflen, int streamType)
 {
     return NewStream(reqDataPtr, bufflen, TRUE, streamType);
 }
@@ -1257,7 +1257,7 @@ GG_ALWAYS_INLINE inline static FCGX_Stream *NewReader(FCGX_Request *reqDataPtr, 
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline static FCGX_Stream *NewWriter(FCGX_Request *reqDataPtr, int bufflen, int streamType)
+RIM_ALWAYS_INLINE inline static FCGX_Stream *NewWriter(FCGX_Request *reqDataPtr, int bufflen, int streamType)
 {
     return NewStream(reqDataPtr, bufflen, FALSE, streamType);
 }
@@ -1274,13 +1274,13 @@ GG_ALWAYS_INLINE inline static FCGX_Stream *NewWriter(FCGX_Request *reqDataPtr, 
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline FCGX_Stream *FCGX_CreateWriter(
+RIM_ALWAYS_INLINE inline FCGX_Stream *FCGX_CreateWriter(
         int ipcFd,
         int requestId,
         int bufflen,
         int streamType)
 {
-    FCGX_Request *reqDataPtr = (FCGX_Request *)gg_malloc0(sizeof(FCGX_Request));
+    FCGX_Request *reqDataPtr = (FCGX_Request *)rim_malloc0(sizeof(FCGX_Request));
     reqDataPtr->ipcFd = ipcFd;
     reqDataPtr->requestId = requestId;
     /*
@@ -1317,7 +1317,7 @@ GG_ALWAYS_INLINE inline FCGX_Stream *FCGX_CreateWriter(
  *----------------------------------------------------------------------
  */
 
-GG_ALWAYS_INLINE inline void FCGX_Finish(void)
+RIM_ALWAYS_INLINE inline void FCGX_Finish(void)
 {
     FCGX_Finish_r(&the_request);
 }
@@ -1341,7 +1341,7 @@ GG_ALWAYS_INLINE inline void FCGX_Finish(void)
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline void FCGX_Finish_r(FCGX_Request *reqDataPtr)
+RIM_ALWAYS_INLINE inline void FCGX_Finish_r(FCGX_Request *reqDataPtr)
 {
     int close;
 
@@ -1362,7 +1362,7 @@ GG_ALWAYS_INLINE inline void FCGX_Finish_r(FCGX_Request *reqDataPtr)
     FCGX_Free(reqDataPtr, close);
 }
 
-GG_ALWAYS_INLINE inline void FCGX_Free(FCGX_Request * request, int close)
+RIM_ALWAYS_INLINE inline void FCGX_Free(FCGX_Request * request, int close)
 {
     if (request == NULL) 
         return;
@@ -1373,14 +1373,14 @@ GG_ALWAYS_INLINE inline void FCGX_Free(FCGX_Request * request, int close)
     FreeParams(&request->paramsPtr);
 
     if (close) {
-        gg_fcgi_close(request->ipcFd, ! request->detached);
+        rim_fcgi_close(request->ipcFd, ! request->detached);
         request->ipcFd = -1;
         request->detached = 0;
     }
 }
 
 
-GG_ALWAYS_INLINE inline int FCGX_InitRequest(FCGX_Request *request, int sock, int flags)
+RIM_ALWAYS_INLINE inline int FCGX_InitRequest(FCGX_Request *request, int sock, int flags)
 {
     memset(request, 0, sizeof(FCGX_Request));
 
@@ -1408,7 +1408,7 @@ GG_ALWAYS_INLINE inline int FCGX_InitRequest(FCGX_Request *request, int sock, in
  *
  *----------------------------------------------------------------------
  */
-GG_ALWAYS_INLINE inline int FCGX_Init(void)
+RIM_ALWAYS_INLINE inline int FCGX_Init(void)
 {
 
     if (libInitialized) {
@@ -1449,7 +1449,7 @@ GG_ALWAYS_INLINE inline int FCGX_Init(void)
  *----------------------------------------------------------------------
  */
 
-GG_ALWAYS_INLINE inline int FCGX_Accept(
+RIM_ALWAYS_INLINE inline int FCGX_Accept(
         FCGX_Stream **in,
         FCGX_Stream **out,
         FCGX_Stream **err,
@@ -1517,7 +1517,7 @@ int FCGX_Accept_r(FCGX_Request *reqDataPtr)
          * return -1 to the caller, who should exit.
          */
         if (reqDataPtr->ipcFd < 0) {
-            reqDataPtr->ipcFd = gg_fcgi_accept(reqDataPtr->listen_sock, gg_client_timeout);
+            reqDataPtr->ipcFd = rim_fcgi_accept(reqDataPtr->listen_sock, rim_client_timeout);
             if (reqDataPtr->ipcFd < 0) {
                 return (errno > 0) ? (0 - errno) : -9999;
             }
@@ -1594,7 +1594,7 @@ TryAgain:
  *----------------------------------------------------------------------
  */
 
-GG_ALWAYS_INLINE inline void FCGX_SetExitStatus(int status, FCGX_Stream *stream)
+RIM_ALWAYS_INLINE inline void FCGX_SetExitStatus(int status, FCGX_Stream *stream)
 {
     FCGX_Stream_Data *data = (FCGX_Stream_Data *)stream->data;
     data->reqDataPtr->appStatus = status;

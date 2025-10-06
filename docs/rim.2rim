@@ -1,0 +1,484 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+rim \-  (rimstone-compiler-and-utility)
+.SH PURPOSE
+RimStone general purpose utility: build, test, run, miscellaneous.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+rim <options> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+
+.LP
+.B COMMAND-LINE OPTIONS
+.LP
+
+
+.RS 4
+\[bu]    
+-k <app name>
+Create RimStone application <app name> with default settings (see \fBmrim\fP with "-i" option on creating applications with non-default settings). The default settings mean that your application is owned by the currently-logged on Operating System user (see "-u" option in mrim), and that a Unix socket connecting to your application server isn't restricted by any group (see "-r" option in mrim). You must have sudo privilege to create an application. This option does nothing if the application already exists. You can combine this option with "-q" to create and then build an application in the same step.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-q Build RimStone application from source code in the current directory. \fBmrim\fP must run first in this directory with "-i" option to create the application. You must have at least one RimStone source file (.rim file), with each such file implementing a single \fBrequest\fP handler. All application source files must be contained in a flat directory; however, each request handler can handle any hierarchical path, so your API can be fully hierarchical. On rare occassions when C compiler version changes, you'll need sudo privileges to recompile and install RimStone's LTO objects.
+
+The following options can be used when building an application:
+
+
+.RS 4
+\[bu]    
+--db="<database vendor>:<db config file> ..."
+Specify a list of databases used in your application. Each element of the list is <database vendor> (which is 'mariadb', 'postgres' or 'sqlite'), followed by a colon (:) and then <db config file>, where <db config file> is used to refer to a database in \fBstatements\fP such as \fBrun-query\fP. 
+
+Each <database vendor>:<db config file> is separated by a space. You can list any number of databases for use in your application. A file in current directory with name <db config file> must exist and contain the connection parameters for database access, and is copied to RimStone's database configuration directory (see \fBdirectories\fP). See \fBdatabase-config-file\fP for more details on the content of this file.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--lflag=<linker flags>
+If you wish to add any additional linker flags (such as any non-RimStone libraries), specify them quoted under this option. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+--cflag=<C flags>
+If you wish to add any additional C compiler (gcc) flags, specify them quoted under this option. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+--path=<application path>
+This option lets you specify the \fBapplication path\fP for your request URLs. It is a leading path of a URL prior to request name and any parameters. If empty, the default is the application name preceded by a forward slash:
+
+.RS 4
+.EX
+
+/<app name>
+
+.EE
+.RE
+
+.RE
+
+.RS 4
+\[bu]    
+--maxupload=<max upload size>
+Specify maximum upload size for a file (in bytes). The default is approximately 25MB. 
+
+
+.EE
+.RE
+
+.RE
+
+.RS 4
+\[bu]    
+--client-timeout=<timeout>
+Specify number of seconds that RimStone server will wait for first data to arrive from a client after it connected. If the client doesn't send any data within <timeout> seconds after establishing the connection to RimStone server, it will be disconnected.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--max-errors=<max errors>
+During building of C code precompiled from .rim source code, gcc will emit a maximum of <max errors> diagnostic messages per .rim source file. The default is 5. Note that RimStone precompiler stops after the first error in most cases and this setting doesn't apply to it.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--devel
+"--devel" will not use all of the compile-time optimizations and will not use any link-time optimizations (LTO). This is the default when developing applications. Use "--release" option when you want to create release executables, which typically exhibit considerably higher performance (thus always use "--release" when testing performance or for release). Note that compiler debugging information is always included, though with this option more of it is present.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--fpe
+"--fpe" will add floating point and signed integer checks that are designed to catch problems such as overflow, division by zero and illegal instructions; with this option such issues will cause your program to \fBerror out\fP. Note that division by zero is always checked for numbers; however for doubles, this option is needed to do so. For both numbers and doubles, this option is needed to detect overflows. 
+
+This option can only be used with "--devel" option, since it will affect performance and should not be used in release/production code. Use this option during the development and testing to catch potential bugs with floating point and signed number arithmetic. Note that if your gcc version is lower than 14, then overflows for signed integers may not error out your program, but rather the error message will display on standard error and the program will continue; to produce the behaviour described above, upgrade your gcc or the distribution you're running.
+
+Note: for some distributions, you may need to install libubsan package before you can use --fpe option; you will be prompted to do so during your program's compilation.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--release
+This will include all optimizations, including LTO. Use when you wish to build release executables, for performance testing etc. Applications made with "--release" typically exibit better performance, sometimes 2 times faster or more. Note that compiler debugging information is still included regardless, because it enables basic debugging even for release executables and does not affect run-time performance. Making an application with "--release" can be considerably slower; because of that, during the development you'd probably not use this option.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--c-lines
+Skip generating line information when compiling .rim files. By default line information is included, which allows errors to be reported with line numbers in .rim files. If you want only generated C code line numbers to be used, use this option. This is mostly useful if you think you found a bug in RimStone in order to pinpoint the issue.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--public
+Change the default behavior of request handler safety so that request handlers without "public" or "private" clause are by default "public"; see \fBbegin-handler\fP for more details.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--single-file
+A request handler is written in a source file whose path matches fully or partially that of the \fBrequest\fP, and such a file can contain any number of request handlers that match, see \fBrequest\fP. If, however "--single-file" is used, each request has to be in its own file whose path matches fully the request path, and no other request can be implemented in such file. For example, with "--single-file", request "/myreq" has to be in file "myreq.rim" in the source directory, while request "/other/newreq" has to be in file "other/newreq.rim" (meaning in file "newreq.rim" in subdirectory "other" in the source directory).
+
+
+.RE
+
+.RS 4
+\[bu]    
+--exclude-dir
+By default, all ".rim" files (including in all subdirectories regardless of how many levels there may be), are picked up for compilation. If "--exclude-dir" is used, then you can specify any number of subdirectories, separated by commas, to be excluded. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+--ignore-warn
+Do not display any warnings during compilation of a RimStone application.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--verbose
+Display more detailed information about the making of your application.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--parallel=<threads>
+Use <threads> number of threads to compile application. By default, the number of threads is equal to the number of CPUs (including virtual), allowing each CPU to compile one source files at a time; this is usually the fastest way. You can serialize compilation with "--parallel=1"; or you can set <threads> to any number between 1 and three time the number of CPUs in order to reach your performance and CPU utilization goals.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--posix-regex
+Use ERE (Extended Regular Expression) POSIX regex library built into Linux instead of default PCRE2, see \fBmatch-regex\fP. While the two are largely compatible, you can use either one depending on your needs.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-c,--clean 
+Clean all object and other intermediate files, so that consequent application build is a full recompilation. Use it alone and prior to rebuilding the application.
+.RE
+
+
+Note that when any rim compilation options change, the application is rebuilt (i.e. the change has the effect of "--clean").
+
+
+.RE
+
+.RS 4
+\[bu]    
+-i
+Display both include and linking flags for an application that uses \fBClient-API\fP to connect to RimStone \fBservice\fP. The flags are for C compiler (gcc). If "--include" option is used in addition, then only include flags are displayed. If "--link" option is used in addition, then only linking flags are displayed. Use this to automate building of client applications with tools like Makefile.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-v
+Display RimStone version as well as the Operating System version. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+-s
+Trace the execution of rim utility and display all the steps in making your application. 
+
+
+.RE
+
+.RS 4
+\[bu]    
+-e <number of stack traces>
+Display the last <number of stack traces>, i.e. the most recent stack trace files, which receive stack traces when program errors out, such as for instance due to your program attempting to access memory outside of it (but not for \fBreport-error\fP statement). See \fBerror-handling\fP.
+
+
+
+.RE
+
+.RS 4
+\[bu]    
+-o
+Show documentation directory - web page documentation is located here in the form of a rimstonedoc.html file.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-g
+Show RimStone root directory (i.e. where RimStone is installed, see \fBdirectories\fP). 
+
+
+.RE
+
+.RS 4
+\[bu]    
+-l
+Show library directory - RimStone's libraries and v1 code processor are located there.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-p <app name> --version <version> [ --force-user ]
+Create application package file for application <app name>, which can be used to install the application on a different computer; such computer must have a compatible Operating System (the same Linux distribution and the same or higher minor version number) and the compatible version of RimStone must be installed (the same major and the same or higher minor version number). <version> is your application's version number, which is assigned by you. If "--force-user" is used, then this application, when installed elsewhere, must be installed into Operating System user account with the same user name as the current user when package is created. 
+Note that packaging an application will transfer all that's necessary for your application to run elsewhere (executables, database configuration files, the information about which libraries are required etc.). It does not (and cannot) deal with your own infrastructure, such as for example your own actual databases; those external dependencies are your responsibility. 
+If you have client applications built (see \fBClient-API\fP), you can copy their built executables as-is to a target machine, provided above versioning rules are observed and no extra libraries were linked with it. This is because RimStone client executables do not have any external dependencies, other than any that you introduce (by linking with additional external libraries).
+Note that if your application uses databases, check database files (specified in "--db" option when your application is built), and blank out any database passwords you do not wish packaged. You should use passwordless database authentication or "dummy" passwords on the development and testing sites and never actual production passwords.
+The result of packaging is a file <app name>.tar.gz which you can use elsewhere with "-a" option to install the application; you can rename this file as long as it remains with ".tar.gz" extension.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-a <packaged .tar.gz file> [ --downgrade ] [ --all ]
+Installs your application on a different computer from a file created with "-p" option (i.e. <packaged .tar.gz file>). If "-all" is used, then all required tool kit libraries are installed automatically; otherwise you'd need to install them yourself. If "--downgrade" is used, then the installer will allow you to install a lower version of your application; normally that's not allowed. Note that same version of RimStone must be installed prior to installing any applications (see "-p" option). 
+If you do not plan to build any other RimStone applications on this target computer, you can uninstall gcc and make after RimStone is installed.
+Note that if your application uses databases, check database files located in $HOME/.rimstone/apps/<app name>/db/ (where <app name> is your application name), and review/update them for the application deployment site.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-r [ --req="/<request name>[<url parameters>]" 
+    [ --app="application path" ] 
+    [ --service [ --remote="server:port" ] [ --socket="socket path" ] ] 
+    [ --method="<request method>" ] 
+    [ --content="<input file>" --content-type="<content type>" ] 
+    [ --silent-header ] 
+    [ --arg="<arguments>" ] 
+    [ --exec ] 
+Run a \fBcommand-line\fP program, or make a \fBservice\fP request, or display bash code to do the same for use in scripts. 
+
+If you are not in application's source code directory, then you must specify "--app" option to supply the application path (typically "/<application name>", see \fBrequest\fP). You can use "--req" option to specify the request name and optional URL parameters (see \fBrequest\fP), for example it may be:
+
+.RS 4
+.EX
+
+rim -r --req="/encrypt" --exec
+
+.EE
+.RE
+
+to execute request "encrypt", or
+
+.RS 4
+.EX
+
+rim -r --req="/encrypt/data=somedata?method=aes256" --exec
+
+.EE
+.RE
+
+where "/encrypt" is the request name, and "/data=somedata?method=aes256" represents the URL parameters. 
+
+Use --method to specify the HTTP request method, for instance:
+
+.RS 4
+.EX
+
+rim -r --req="/encrypt/data=somedata?method=aes256" --method=POST --exec
+
+.EE
+.RE
+
+If not specified, the default method is "GET". 
+
+If "--service" is not used, then \fBcommand-line\fP program will execute and you can specify program arguments with "--arg" option, in which case "<arguments>" is a string (double or single quoted) that contains any number of program arguments. To specify arguments for a service see "-a" option in \fBmrim\fP.
+
+If "--service" is used, then application server will be contacted to execute a service; in this case if "--remote" is not specified, a local Unix socket is used to contact the server; otherwise "server:port" specified in "--remote" is the IP/name and port of the server to call, separated by a colon (":"). In case of a local Unix socket, for the default location of the socket path see "socket-file" clause in \fBget-app\fP; otherwise the socket path is given by "--socket" option. 
+
+By default, the output in any case will have the HTTP headers. If you don't want those to appear, use "--silent-header" option.
+
+If "--content" is used, then file <input file> is either piped to the standard input of a command-line program (if "--service" is not used), or sent as a content to the application server (if "--service" is used). You can also specify content type with "--content-type". For example:
+
+.RS 4
+.EX
+
+rim -r -app="/my_app" --req="/some_request?par1=val1&par2=20&par3=4" --method=PATCH --content=something.json --content-type=application/json --exec
+
+.EE
+.RE
+
+Examples of using "-r" option to execute \fBcommand-line\fP program or to call a \fBservice\fP:
+
+.RS 4
+.EX
+
+\[char35]Execute current application as a command-line program, request "json"
+rim -r --req="/json" --exec
+
+\[char35]Execute application "app_name", service "json" by calling the application server running with a Unix socket
+rim -r --req="/json" --app="/app_name" --service  --exec
+
+\[char35]Execute application "app_name", service "json" by calling the application server running with a Unix socket (specified explicitly)
+\[char35]Request has input parameter "act" with value "perf"
+rim -r --req="/json?act=perf" --app="/app_name" --service --socket="/sock_path/sock"  --exec
+
+\[char35]Execute application "app_name", service "json" by calling the application server running with a TCP socket on port 2301
+\[char35]Request has input parameter "act" with value "perf"
+rim -r --req="/json/act=perf" --app="/app_name" --service --remote="192.168.0.21:2301"  --exec
+
+.EE
+.RE
+
+
+.B - Performance
+
+"rim -r" can be used both for testing and in production, however for maximum performance, skip "--exec" option to display direct bash code that you can copy and paste to use in production. This direct code is about 300% faster than using "rim -r"; keep this in mind if performance of using "rim -r" is important. When "--exec" is not used, the output may look like this:
+
+.RS 4
+.EX
+
+export CONTENT_TYPE=
+export CONTENT_LENGTH=
+unset RIM_SILENT_HEADER
+export RIM_SILENT_HEADER
+export REQUEST_METHOD=GET
+export SCRIPT_NAME="/app_name"
+export PATH_INFO="/json/act=perf"
+export QUERY_STRING=""
+/home/os-user/.rimstone/lib/rimcli "192.168.0.21:2301"
+
+.EE
+.RE
+
+If you copy the above and paste into bash shell, it will execute the command line program which handles the request specified (which rim would do when "--exec" is specified, but not as fast). Note that SCRIPT_NAME will be set to whatever application path you use (i.e. the default or if set with "--path" option when making the application; or with "--app" option here), see \fBrequest\fP. 
+
+.RE
+
+.RS 4
+\[bu]    
+-u 
+Read stdin (standard input) and substitute any environment variables in the form of ${<var name>} with their values, and output to stdout (stdout). This is useful in processing configuration files that do not have parameter values hardcoded, but rather take them from the environment.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-m
+Add RimStone syntax and keyword highlighting rules for files with .rim extension to Vim editor for the currently logged on user. Note that you must have Vim installed; vi alone will not work.
+
+
+.RE
+
+.RS 4
+\[bu]    
+--man <topic|all>
+Display list of all man pages for RimStone (if '--man all' is used), or display manual page for a particular topic (for instance '--man read-file'). If man program is available on your system, you can als use 'man <topic>' directly to get help.
+
+
+.RE
+
+.RS 4
+\[bu]    
+-h
+Display help. 
+.RE
+
+
+.LP
+.B EXAMPLES
+.LP
+
+
+.RS 4
+\[bu]    
+Make application (-q), use three databases (--db) named mdb (MariaDB database), pdb (PostgreSQL) and sdb (SQLite):
+
+.RS 4
+.EX
+
+rim -q --db="mariadb:mdb postgres:pdb sqlite:sdb" 
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+make application, use MariaDB database db (--db), specify linker and C compilation flags, specify maximum upload size of about 18M:
+
+.RS 4
+.EX
+
+rim -q --db="mariadb:db" --lflag "-Wl,-z,defs" --cflag "-DXYZ123" --maxupload 18000000
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+Make application that doesn't use any databases:
+
+.RS 4
+.EX
+
+rim -q
+
+.EE
+.RE
+
+.RE
+
+.SH SEE ALSO
+ Rimstone compiler and utility
+
+\fBrim\fP   
+See all 
+\fBdocumentation\fP

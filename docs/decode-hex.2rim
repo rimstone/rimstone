@@ -1,0 +1,51 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+decode-hex \-  (hex-encoding)
+.SH PURPOSE
+Decode hexadecimal string into data.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+decode-hex <data> to <output> \\
+    [ input-length <input length> ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+decode-hex will decode hexadecimal string <data> to string <output> given in "to" clause. 
+
+<data> must consist of an even number of digits 0-9 and letters A-F or a-f. The length of <data> may be given by <input length> number in "input-length" clause, otherwise it is assumed to be the string length of <data>. 
+
+.SH EXAMPLES
+Get the original binary data from a hexadecimal string "hexdata". The output string "binout" is created:
+
+.RS 4
+.EX
+
+set-string hexdata = "0041000F414200"
+decode-hex hexdata to binout 
+
+.EE
+.RE
+
+The value of "binout" will be binary data equal to this C literal:
+
+.RS 4
+.EX
+
+"\\x00""A""\\x00""\\x0F""AB""\\x00""\\x04"
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Hex encoding
+
+\fBdecode-hex\fP  
+\fBencode-hex\fP   
+See all 
+\fBdocumentation\fP

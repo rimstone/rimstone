@@ -1,0 +1,48 @@
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2018-2025 Gliim LLC. 
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
+
+policy_module(rr, 2.0.0)
+
+########################################
+#
+# Declarations
+#
+
+#create rr file type
+type rrfile_t;
+files_type(rrfile_t);
+
+
+#create rr execute type
+type rim_t;
+domain_type(rim_t)
+
+#create fcgi port type for rimstone
+type rrport_t;
+corenet_port(rrport_t)
+
+#make execute type be the same as unconfined_t
+optional_policy(`
+     unconfined_domain(rim_t)
+')
+
+require {
+    type unconfined_t;
+    role unconfined_r;
+}
+
+#add to unconfine role
+role unconfined_r types rim_t;
+#set transition on execution of rrfile_t (by the unconfined process) to rim_t type
+type_transition unconfined_t rrfile_t : process rim_t;
+#allow transition from unconfined to rim_t
+allow unconfined_t rim_t : process transition;
+#allow execution of rrfile_t by the unconfined (which will then transion as above)
+allow unconfined_t rrfile_t : file { execute read getattr };
+#allow rim_t process domain to actually execute the rrfile_t
+allow rim_t rrfile_t : file {  ioctl read getattr lock execute execute_no_trans entrypoint open} ;
+#allow rimstone port to bind
+allow rim_t rrport_t:tcp_socket { connect bind name_bind accept listen};
+

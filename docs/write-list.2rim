@@ -1,0 +1,167 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+write-list \-  (linked-list)
+.SH PURPOSE
+Write key/value pair into a linked list.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+write-list <list> key <key> \\
+    value <value> \\
+    [ append [ <append> ] ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+write-list adds a pair of key/value strings to the linked <list>, specified with <key> and <value> (in "key" and "value" clauses, collectively called an "element"). 
+
+The key/value pair is added just prior to the list's current position, thus becoming a current element. 
+
+If "append" clause is used without boolean variable <append>, or if <append> evaluates to true, then the element is added at the end of the list, and the list's current element becomes the newly added one.
+
+.SH EXAMPLES
+Add a key/value pair to the end of the list:
+
+.RS 4
+.EX
+
+new-list mylist
+write-list mylist key "mykey" value "myvalue" append
+
+.EE
+.RE
+
+The following is a list that is process-scoped, i.e. it is a linked-list server, which can add, delete, read and position to various elements:
+
+.RS 4
+.EX
+
+%% /llsrv public
+    // Create linked list just once for the life of the process
+    do-once
+    new-list t process-scope
+    end-do-once
+
+    // Get input parameters
+    get-param op
+    get-param key default-value ""
+    get-param data default-value ""
+
+    if-true op equal "add" // Add data to list
+        // Make a copy of key,data so they are RimStone-allocated
+        write-list t key (key) value data append
+        @Added [<<print-out key>>] value [<<print-out data>>]
+
+    else-if op equal "delete" // Delete first data and obtain the value deleted
+        position-list t first
+        read-list t key (key) value val status st
+        if-true st equal RIM_ERR_EXIST
+            @Not found
+        else-if
+            // If found, then delete key and value
+            @Deleted key [<<print-out key>>], [<<print-out val>>]
+            delete-list t
+        end-if
+
+    else-if op equal "next" // Position to next element
+        position-list t next status st
+        if-true st equal RIM_OKAY
+            @Okay
+        else-if
+            @Not found
+        end-if
+
+    else-if op equal "last" // Position to last element
+        position-list t last status st
+        if-true st equal RIM_OKAY
+            @Okay
+        else-if
+            @Not found
+        end-if
+
+    else-if op equal "previous" // Position to element
+        position-list t previous status st
+        if-true st equal RIM_OKAY
+            @Okay
+        else-if
+            @Not found
+        end-if
+
+    else-if op equal "first" // Get first element
+        position-list t first status st
+        if-true st equal RIM_OKAY
+            @Okay
+        else-if
+            @Not found
+        end-if
+
+    else-if op equal "query" // Get current element
+        read-list t key (key) value val status st
+        if-true st equal RIM_ERR_EXIST
+            @Not found
+        else-if
+            @Key [<<print-out key>>], value [<<print-out val>>]
+        end-if
+
+    else-if op equal "purge" // remove all, keep the list
+        purge-list t
+    end-if
+%%
+
+.EE
+.RE
+
+Create application:
+
+.RS 4
+.EX
+
+rim -k linkserver
+
+.EE
+.RE
+
+Start the server:
+
+.RS 4
+.EX
+
+mrim -w 1 linkserver
+
+.EE
+.RE
+
+Try it out:
+
+.RS 4
+.EX
+
+rim -r --req="/llsrv/op=add/key=1/data=1" --exec --service
+rim -r --req="/llsrv/op=add/key=2/data=2" --exec --service
+rim -r --req="/llsrv/op=query" --exec --service
+rim -r --req="/llsrv/op=previous" --exec --service
+rim -r --req="/llsrv/op=query" --exec --service
+
+.EE
+.RE
+
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Linked list
+
+\fBdelete-list\fP  
+\fBget-list\fP  
+\fBnew-list\fP  
+\fBposition-list\fP  
+\fBpurge-list\fP  
+\fBread-list\fP  
+\fBwrite-list\fP   
+See all 
+\fBdocumentation\fP

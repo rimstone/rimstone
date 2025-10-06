@@ -1,0 +1,1919 @@
+#!/bin/bash
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2018-2025 Gliim LLC.  
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
+
+#variable names for RimStone start with RIM_ (RIM_C_ being compiling-related) and _ (internal)
+
+#
+#
+#make script for RimStone application
+#
+#
+
+#
+#Set one or the other
+#
+#_BETA=""
+
+#enable "extended globs" (such as "parameter expansion" or ${!X}
+shopt -s extglob nullglob globstar
+#display error context if rim.has a shell error, source file bash only
+set -eE -o functrace
+trap 'echo "Error: status $?, $(caller), line ${BASH_SOURCE[0]}/${LINENO}"' ERR
+function exit_s() {
+    #remove trap so we don't have a message if we're exiting on purpose
+    trap - ERR
+    exit $1
+}
+#
+#
+#
+#Emitting error messages
+#
+#
+#
+function error() {
+#$1 is message
+    echo -e "** Error: $1" 1>&2
+    exit_s -1
+}
+
+#cannot run as run as it might mess up permissions. 
+if [[ $EUID -eq 0 ]]; then error "You cannot run as root or sudo";  fi
+
+
+export RIM_USER=$(whoami)
+#make sure HOME is available, some apps wipe it out like apache setenv
+if [ "$HOME" == "" ]; then
+    HOME=$(eval echo ~$RIM_USER)
+fi
+export HOME
+#location of RimStone data
+export RIM_DATA="$HOME/.rimstone"
+#make sure  local directory exists, installation should have created it
+if [ ! -d "$RIM_DATA" ]; then
+    mkdir -p $RIM_DATA/src
+    if [ ! -d "$RIM_DATA" ]; then
+        error "Cannot create directories under $RIM_DATA, please make sure it can be created and is writeable"
+    fi
+fi
+
+
+#
+#
+#DO NOT change these values, they are changed here by Makefile per platform when make install is done
+export RIM_LIBRARY_PATH="$RIM_DATA/lib"
+. "$RIM_LIBRARY_PATH"/sys
+#find out where this script runs from (i.e. where 'rim' actually is, minus /usr/bin)
+#end of DO-NOT-change
+#
+#
+
+#by default, make is silent (except for messages we emit). For debugging, use -e to see everything that's going on (this shows rimstone execution too!)
+RIM_SHOW_MAKE="-s"
+
+
+#get gcc version
+export RIM_C_GCC
+read -r RIM_C_GCC < <(gcc --version)
+
+export RIM_C_RESTPATH=""
+export RIM_C_MAXUPLOAD="25000000"
+export RIM_C_CLIENT_TOUT="5"
+export RIM_C_CPUS=$(nproc)
+if (( RIM_C_CPUS < 1 )); then
+    export RIM_C_CPUS="1"
+fi
+export RIM_C_MAXERRORS="5"
+export RIM_C_DEBUG="0" # not by default
+export RIM_C_DEVEL="1" # devel by default
+
+
+#defaults for quick install
+_PROXYPORT="80"
+
+#display RimStone usage
+#
+#Internal options that may go away:
+#--asan build with ASAN
+#--asan-opt print out ASAN option to prefix the execution with, also works with prefix mrim for better coverage of SERVICE program
+#--prof build with gprof
+#--debug is internal option that executes the code in a manner that facilitates RimStone debugging (it's an add-on to --devel)
+#
+function use_message() {
+    echo "Usage: $0  OPTIONS 
+OPTIONS:
+
+-k <app> create application <app> with default settings
+-c       clean make artifacts for a rebuild
+-v       show version
+-s       show detailed execution (script tracing)
+-e N     show last N program backtraces
+-o       show documentation directory
+-l       show library directory
+-m       setup syntax highlighting for Vim
+-u       substitute environment variables in stdin
+-r       display shell commands to run a program
+             --req=\"/<request name><url payload>\"
+             --method=\"<request method>\"
+             --content=\"<file name>\"
+             --content-type=\"<content type>\"
+             --exec
+             --app=\"application path\" 
+             --service
+             --remote=\"server IP:port\"
+             --socket=\"socket path\"
+             --arg=\"arguments\"
+-q       build application
+             --db=\"mariadb:<db name>|postgres:<db name>|
+                 sqlite:<db name> ...\" 
+             --lflag=<linker flags> 
+             --cflag=<c flags> 
+             --c-lines 
+             --posix-regex
+             --devel | --release
+             --fpe
+             --maxupload=<max upload size>
+             --client-timeout=<timeout>
+             --path=\"/some/path\"
+             --max-errors=<max errors>
+             --plain-diag
+             --optimize-memory
+             --parallel=<compiling threads>
+             --public
+             --single-file
+             --exclude-dir=<dir list>
+             --ignore-warn
+             --verbose
+-p <app> package application 
+             --version=<version>
+-a <pkg> install package <pkg> created with -p
+             --downgrade
+             --all
+-i       display build flags for FastCGI client
+             --include
+                 displays C compile flags
+             --link
+                 displays C linking flags
+--man    display all RimStone topic available (--man all)
+             or view a topic (--man <topic>)
+-h       this help
+Type 'man rim' for more information.
+"
+}
+
+ERREX="RimStone application not created yet. Please use 'rim -k' or mrim to create an application first"
+function setup_app_name() {
+    NAME="$1"
+    check_name "$NAME" "application name"
+    export RIM_BLD=$RIM_DATA/apps/$NAME/.bld
+    if [[ ! -d "$RIM_BLD" ]]; then error "$ERREX"; fi
+    export RIM_H="$RIM_DATA/apps/$NAME"
+    if [[ ! -d "$RIM_H" ]]; then error "$ERREX"; fi
+    export RIM_A="$RIM_H/app"
+    if [[ ! -d "$RIM_A" ]]; then error "$ERREX"; fi
+}
+
+#process all command-line options
+function main() {
+
+
+
+#list of RimStone options for getop
+_OPT_STATUS="0"
+#do NOT use optional :: args - they must always be used as -e3 for example - there can be no space. This is awkward and unwieldy.
+_opts=$(getopt -a -n $0 -o k:e:,q,p:,a:,o,l,m,i,h,c,v,s,u,r --long verbose,ignore-warn,exclude-dir:,man:,single-file,public,parallel:,db:,lflag:,cflag:,arg:,plain-diag,optimize-memory,posix-regex,asan,asan-opt,prof,content:,content-type:,silent-header,service,remote:,socket:,app:,path:,c-lines,debug,devel,fpe,release,req:,exec,method:,maxupload:,client-timeout:,max-errors:,version:,downgrade,all,force-user,include,link,safe -- "$@") || _OPT_STATUS=$?
+if [ $_OPT_STATUS -ne 0 ]; then
+    use_message 1>&2
+    exit_s -1
+fi
+
+#init flags used to emit helpful messages
+_DEVOPT=0
+_DO_QUICK=0
+
+#if nothing at all passed that is valid: make rimstone application - that is just 'rimstone'
+    eval set -- "$_opts"
+    while true; do 
+    case "$1" in 
+        --c-lines  )
+            export RIM_C_SKIPLINES="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --public  )
+            export RIM_C_PUBLIC="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --single-file  )
+            export RIM_C_SINGLE_FILE="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --man  )
+            if [ "$2" == "all" ]; then
+                RRMAN=($RIM_DATA/man/man2/*.2rim) 2>/dev/null || true
+                for i in ${RRMAN[*]}; do i=${i##*/};echo ${i%.*}; done | more
+            else
+                if [ ! -f "$RIM_DATA/man/man2/$2.2rim" ]; then
+                    error "Man page [$2] does not exist. Use '--man all' to view all pages"
+                fi
+                cat $RIM_DATA/man/man2/$2.2rim |preconv|groff -man -T utf8 -P -c|more
+            fi
+            shift 2
+            exit 0
+            ;;
+        --verbose  )
+            export RIM_C_SHOW="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --ignore-warn  )
+            export RIM_C_IGNORE_WARN="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --release  )
+            export RIM_C_DEVEL="0"
+            _DEVOPT=1
+            shift 
+            ;;
+        --devel  )
+            export RIM_C_DEVEL="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --fpe  )
+            export RIM_C_FPE="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --debug  )
+            export RIM_C_DEBUG="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --asan-opt  )
+            echo "ASAN_OPTIONS=log_path=asan:halt_on_error=0"
+            exit 0
+            ;;
+        --prof  )
+            export RIM_C_PROF="1"
+            _DEVOPT=1
+            shift 
+            ;;
+        --asan  )
+            export RIM_C_ASAN="1"
+            _DEVOPT=1
+            shift 
+            ;;
+#rim -r to talk to service (local socket by default)
+        --service  )
+            _REQ_SRV="1"
+            shift 
+            ;;
+        --path  )
+            export RIM_C_RESTPATH="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --client-timeout  )
+            export RIM_C_CLIENT_TOUT="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --maxupload  )
+            export RIM_C_MAXUPLOAD="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --max-errors  )
+            export RIM_C_MAXERRORS="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --posix-regex  )
+            export RIM_C_POSIXREGEX="1"
+            _DEVOPT=1
+            shift
+            ;;
+        --cflag  )
+            export RIM_C_CFLAGS="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        -u )
+#subst env vars from stdin to stdout
+            "$RIM_LIBRARY_PATH"/v1 -envsub
+            exit 0
+            ;;
+        -e )
+#display last N errors from backtrace
+            _SHOWERROR="$2"
+            shift 2
+            ;;
+        -p )
+#package application
+            _PACK_APP="$2"
+            shift 2
+            ;;
+        -a )
+#install app packaged with -p
+            _UNPACK_APP="$2"
+            shift 2
+            ;;
+        --force-user  )
+            if [ "$_PACK_APP" == "" ]; then error "--force-user can be used after -p only"; fi
+            _PACK_APP_FORCE_USER="1"
+            shift 1
+            ;;
+        --version  )
+            if [ "$_PACK_APP" == "" ]; then error "--version can be used after -p only"; fi
+            export _PACK_APP_VERSION="$2"
+            shift 2
+            ;;
+        --all  )
+            if [ "$_UNPACK_APP" == "" ]; then error "--all can be used after -a only"; fi
+            export _UNPACK_ALL="1"
+            shift 1
+            ;;
+        --downgrade  )
+            if [ "$_UNPACK_APP" == "" ]; then error "--downgrade can be used after -a only"; fi
+            export _UNPACK_DOWNGRADE="1"
+            shift 1
+            ;;
+        --lflag  )
+            export RIM_C_LFLAGS="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --content-type  )
+#content type
+            _REQ_CONTENT_TYPE="$2"
+            shift 2
+            ;;
+        --content  )
+            #content file (read from file)
+            _REQ_CONTENT="$2"
+            shift 2
+            ;;
+        --silent-header )
+#silent-header for --exec
+            _REQ_SILENT_HEADER=1
+            shift 1
+            ;;
+        --arg  )
+#arguments for command-line execution
+            _REQ_ARG="$2"
+            shift 2
+            ;;
+        --method  )
+#request method (GET, POST...)
+            _REQ_METHOD="$2"
+            shift 2
+            ;;
+        --exec  )
+#request execute
+            _REQ_EXEC="1"
+            shift 1
+            ;;
+        --app  )
+#app name (script name) for -r
+            _REQ_APP="$2"
+            shift 2
+            ;;
+        --socket  )
+#socket for -r --exec
+            _REQ_SOCK="$2"
+            shift 2
+            ;;
+        --remote  )
+#serverIP:port for -r --exec
+            _REQ_IP="$2"
+            shift 2
+            ;;
+        --req  )
+#request name+payload 
+            _REQ_URL="$2"
+            shift 2
+            ;;
+        -k  )
+#create new application
+            _NEWAPP="1"
+            _NAME="$2"
+            shift 2
+            ;;
+        -r  )
+#display bash to run command-line program
+            _COMMRUN="1"
+            shift
+            ;;
+        -h  )
+#help message
+            use_message
+            shift
+            exit
+            ;;
+        -m )
+#Vim highlighting
+            _DO_HIGHLIGHT="1"
+            shift 
+            ;;
+        --link )
+#display FastCGI link
+            _DO_CLIENT_LINK="1"
+            shift 
+            ;;
+        --include )
+#display FastCGI include
+            _DO_CLIENT_INCLUDE="1"
+            shift 
+            ;;
+        -i )
+#display FastCGI client flags
+            _DO_CLIENT="1"
+            shift 
+            ;;
+        -q )
+#quick setup
+            _DO_QUICK="1"
+            shift 
+            ;;
+        --exclude-dir )
+#exclude directories for compilation
+            RIM_DIR_EXCLUDE="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        --parallel )
+#parallel compilation override
+            CPUS="$2"
+            if (( CPUS >= 1 && CPUS < RIM_C_CPUS * 3 )); then
+                export RIM_C_CPUS=$CPUS
+            fi
+            _DEVOPT=1
+            shift 2
+            ;;
+        --db )
+#db vendor
+            _ALLDB="$2"
+            _DEVOPT=1
+            shift 2
+            ;;
+        -c )
+#clean the project's temp and object files. This is to be able to fully recompile the project afterwards.
+            _DO_CLEAN="1"
+            shift 
+            ;;
+        -l )
+#show lib directory
+            echo "$RIM_LIBRARY_PATH"
+            shift 
+            exit
+            ;;
+        -o )
+#show documentation directory
+            docdir
+            shift 
+            exit
+            ;;
+        -s )
+#display rimstone script's execution in detail
+            export RIM_SHOW_MAKE=
+            set -x
+#this flag is if -s applies only to -q (i.e. compilation)
+#            _DEVOPT=1
+            shift 
+            ;;
+        -v )
+#display version of RimStone
+            rim_version
+            exit
+            ;;
+        -- ) 
+            shift 
+            break
+            ;;
+        * ) 
+            use_message 1>&2
+            exit_s -1
+        esac
+    done
+
+#something extra and unexpected, complain about it, probably an error
+    if [ "$1" != "" ]; then
+        error "Unknown input [$1]"
+    fi
+
+    #this is important so that any other script (especially sourced) does NOT inherit parameters passed to here! Example: rim -a would 
+    #pass -a to rimlib which wasn't the intent at all
+    eval set --
+
+    if [ "$RIM_C_DEVEL" == "1" ]; then
+        RDEST="devel"
+    else
+        if [ "$RIM_C_FPE" == "1" ]; then
+            error "Cannot use --fpe with release build"
+        fi
+        if [ "$RIM_C_DEBUG" == "1" ]; then
+            error "Cannot use --debug with release build"
+        fi
+        RDEST="release"
+    fi
+
+#we always first check if application is being created, so then afterwards it can be made etc; thus we don't exit 
+    if [ "$_NEWAPP" == "1" ]; then
+        if [ "$_NAME" == "" ]; then
+            error "You must specify application name you wish to create"
+        fi
+        check_name "$_NAME" "application name"
+        #make ./rimstone for
+        ECODE=0
+        mrim -i -u $(whoami) $_NAME || ECODE=$?
+        #exit immediately if not successful
+        if [ "$ECODE" != "0" ]; then
+            exit_s $ECODE
+        fi
+        #otherwise check if we want to do -q too
+        if [ "$_DO_QUICK" != "1" ]; then
+            exit_s $ECODE
+        fi
+    fi
+
+#handle client fastcgi app building
+    if [[ "$_DO_QUICK" == "1" && "$_DO_CLIENT" == "1" ]]; then
+        error "Cannot use both -i and -q options. Use one or the other"
+    fi
+    if [ "$_DO_CLIENT" == "1" ]; then
+        show_client_bld
+        exit 0
+    fi
+
+#internal: Address Sanitizer only with debug
+    if [[ "$RIM_C_ASAN" == "1" && "$RIM_C_DEVEL" != "1" ]]; then
+        error "In order to use ASAN, you must use --devel option"
+    fi
+
+
+#before app name checking b/c it doesn't have anything to do with it
+    if [ "$_DO_HIGHLIGHT" != "" ]; then
+        setup_highlighting
+        exit 0
+    fi
+
+#can run this from anywhere if has --req and (--service or --app), otherwise must be in app dir
+    if [[ "$_COMMRUN" != "" && ("$_REQ_APP" != "" ||  ("$_REQ_SRV" != "" && ("$_REQ_IP" != "" || "$_REQ_SOCK" != "")))  ]]; then
+        _TOEXEC=".rim_reqexec"
+        #need || true to remove temp file
+        show_run_program || true
+        rm -f "$_TOEXEC"
+        exit 0
+    fi
+
+    if [ "$_PACK_APP" != "" ]; then
+        if [ "$_UNPACK_APP" != "" ]; then error "Cannot package and install app at the same time"; fi
+        packapp $_PACK_APP
+        exit 0
+    fi
+
+    if [ "$_UNPACK_APP" != "" ]; then
+        if [ "$_PACK_APP" != "" ]; then error "Cannot package and install app at the same time"; fi
+        unpackapp $_UNPACK_APP
+        exit 0
+    fi
+
+
+#
+#
+#
+# At this point forward, application must have been created for options handled below
+#
+#
+
+#application name created with mrim in .vappname, which must exist
+    if [ -f ".vappname" ]; then
+        #this is special $() which doesn't create subshell, but just reads contents into a variable
+        export RIM_C_NAME=$(<.vappname)
+    else
+        error "$ERREX"
+    fi
+    setup_app_name "$RIM_C_NAME"
+
+#THEN perform any actions
+
+#check for source only if compiling or cleaning up
+    if [[ "$_DO_QUICK" == "1" || "$_DO_CLEAN" == "1" ]]; then
+        GLIST_L=(*.rim) 2>/dev/null || true
+        GLIST_C=${#GLIST_L[@]}
+        if [ "$GLIST_C" == "0" ]; then
+            error "No RimStone source source code found."
+        fi
+        if [[ ! -d "$RIM_A" || ! -d "$RIM_BLD" ]]; then
+            error "RimStone application [$RIM_C_NAME] does not exist. Use 'rim -k' to create it."
+        fi
+    fi
+    if [[ "$_DO_QUICK" == "0" && "$_DEVOPT" == "1" ]]; then
+        error "Use -q if you intend to make the application."
+    fi
+
+    if [ "$_SHOWERROR" != "" ]; then
+        showerr $_SHOWERROR
+        exit 0
+    fi
+
+    if [ "$_COMMRUN" != "" ]; then
+        _TOEXEC="$RIM_BLD/.reqexec"
+        #this is if running rim -r from outside source directory
+        if [ ! -f $RIM_BLD/blds ]; then
+            error "Cannot find application, use --app option."
+        fi
+        . $RIM_BLD/blds
+        show_run_program
+        exit 0
+    fi
+
+#perform cleaning FIRST. Must 
+    if [ "$_DO_CLEAN" == "1" ]; then
+        rim_clean
+        exit 0
+    fi
+
+
+#perform any actions
+#autoapp make app automatically. It exits at its end
+    if [ "$_DO_QUICK" == "1" ]; then 
+#build app
+        autoapp
+    fi
+
+
+#these are 'in-conclusion' actions, they happen LAST
+    error "No action specified."
+}
+
+
+
+
+#
+#
+#Functions used in processing
+#
+#
+
+
+#
+#
+#
+#Show flags for client FastCGI app building. 
+#
+#
+#
+function show_client_bld() {
+#if neither --cflag nor --lflag specified, print out both
+    if [[ "$_DO_CLIENT_INCLUDE" != "1" &&  "$_DO_CLIENT_LINK" != "1" ]]; then
+        _DO_CLIENT_INCLUDE=1
+        _DO_CLIENT_LINK=1
+    fi
+#print the flag asked for, if both, place them on the same line
+    if [ "$_DO_CLIENT_INCLUDE" == "1" ]; then
+        echo -n "-I$HOME/.rimstone/include "
+    fi
+    if [ "$_DO_CLIENT_LINK" == "1" ]; then
+        echo -n "-L$RIM_LIBRARY_PATH/$RDEST -lrimcli -Wl,--rpath=$RIM_LIBRARY_PATH/$RDEST "
+    fi
+    #use LTO for building clients
+    echo "-flto=auto "
+}
+
+#
+#
+#
+#Setup keyword highlighting for Vim
+#
+#
+#
+function setup_highlighting() {
+    mkdir -p $HOME/.vim
+    mkdir -p $HOME/.vim/syntax
+    mkdir -p $HOME/.vim/indent
+    cp $RIM_LIBRARY_PATH/rim.vim $HOME/.vim/syntax/rim.vim
+    cp $RIM_LIBRARY_PATH/rim_indent.vim $HOME/.vim/indent/rim.vim
+
+#make sure .vimrc exists
+    if [[ ! -f "$HOME/.vimrc" ]]; then echo "">"$HOME/.vimrc"; fi
+#delete old
+    sed -i '/"rimstone-lang/d' $HOME/.vimrc
+#and previous name
+    sed -i '/"rimstone-lang/d' $HOME/.vimrc
+
+#make sure it's only if vim installed
+    echo "if has('syntax') \"rimstone-lang" >> $HOME/.vimrc
+
+#set .rim file type to use rim.vim above
+    echo "  autocmd BufRead,BufNewFile *.rim set filetype=rim \"rimstone-lang" >> $HOME/.vimrc
+
+#make sure syntax is on
+    echo "  filetype indent on \"rimstone-lang" >> $HOME/.vimrc
+#make sure syntax is on
+    echo "  syntax on \"rimstone-lang" >> $HOME/.vimrc
+    echo "endif \"rimstone-lang" >> $HOME/.vimrc
+}
+
+
+#
+#
+#Get last part of a path
+#Fast, without using subshells
+#
+#
+function last_path_seg() {
+    P="$1"
+    P="${P%/}"          
+    RIM_LAST_PATH_SEG="${P##*/}"
+}
+
+
+#
+#
+#
+#Display bash to run command-line program
+#
+#
+#
+function show_run_program() {
+    #RIM_C_RESTPATH is set and restored from blds file, so even if it's not in rim -r, it was in rim -q
+    #and here it is now - this is so we don't have to remember the path set if we're in development build directory
+    if [ "$RIM_C_RESTPATH" == "" ];  then
+        _APATH="/$RIM_C_NAME"
+    else
+        #remove any trailing / with ${X%%<pattern>}
+        _APATH="${RIM_C_RESTPATH%%+(/)}"
+    fi
+#--app overrides current working directory application above
+    if [ "$_REQ_APP" != "" ]; then
+        _APATH="$_REQ_APP"
+    fi
+#get app name from _APATH, it's the last path segment, since _APATH is application path
+    last_path_seg "$_APATH"
+    _ANAME="$RIM_LAST_PATH_SEG"
+    _REQ_PATH="/<request name><url payload>"
+    _REQ_QUERY="<request query>"
+    if [ "$_REQ_URL" != "" ]; then
+        if [[ ! "$_REQ_URL" =~ ^/.*$ ]]; then
+            error "Request path (--req) must be a path (it must start with a forward slash)"
+        fi
+        if [[ "$_REQ_URL" =~ ^.*\?.*$ ]]; then
+            #fast parsing of path without using subshells
+            IFS='?' read -ra PQ <<< "$_REQ_URL"
+            _REQ_PATH="${PQ[0]}"
+            _REQ_QUERY="${PQ[1]}"
+        else
+            _REQ_PATH="$_REQ_URL"
+            _REQ_QUERY=""
+        fi
+    fi
+    if [ "$_REQ_METHOD" == "" ]; then
+        _REQ_METHOD="GET"
+    fi
+    _CONT=""
+    _CONTL=""
+    _CONTT="export CONTENT_TYPE="
+    _SHEADER="export RIM_SILENT_HEADER=no"
+    if [ "$_REQ_SILENT_HEADER" == "1" ]; then
+        _SHEADER="export RIM_SILENT_HEADER=yes"
+    else
+#unset" means it's not set in bash. This is used to override any already exising yes or no in the user's environment. If that was no or yes
+#then it would control, and we don't want that. Explicit silent-header will set to yes, but if not set, then server will decide what to do because
+#now we have -z flag in mrim that can do that or a request can use silent-header.
+        _SHEADER="unset RIM_SILENT_HEADER
+export RIM_SILENT_HEADER"
+    fi
+    if [[ "$_REQ_CONTENT_TYPE" != "" && "$_REQ_CONTENT" == "" ]]; then
+        error "Cannot use --content-type without --content"
+    fi
+    if [ "$_REQ_CONTENT" != "" ]; then
+        if [ ! -f "$_REQ_CONTENT" ]; then
+           error "Cannot access file $_REQ_CONTENT"
+        fi
+        _CONT="cat '$_REQ_CONTENT' | "
+        _CONTL="export CONTENT_LENGTH=\$(stat -c%s '$_REQ_CONTENT')"
+        if [ "$_REQ_CONTENT_TYPE" != "" ]; then
+            _CONTT="export CONTENT_TYPE='$_REQ_CONTENT_TYPE'"
+        fi
+    else
+        _CONTL="export CONTENT_LENGTH="
+    fi
+    echo "$_CONTT
+$_CONTL
+$_SHEADER
+export REQUEST_METHOD=$_REQ_METHOD
+export SCRIPT_NAME=\"$_APATH\"
+export PATH_INFO=\"$_REQ_PATH\"
+export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
+    if [ "$_REQ_SRV" == "1" ]; then
+        if [[ "$_REQ_IP" != "" && "$_REQ_SOCK" != "" ]]; then
+            error "Cannot use both --remote and --socket"
+        fi
+        if [ "$_REQ_IP" != "" ]; then
+            echo "${_CONT}"$RIM_LIBRARY_PATH"/rimcli \"$_REQ_IP\"" >> $_TOEXEC 
+        else
+            if [ "$_REQ_SOCK" != "" ]; then
+                if [ ! -S "$_REQ_SOCK" ]; then
+                    error "Cannot access socket $_REQ_SOCK or is not a socket file"
+                fi
+                echo "${_CONT}"$RIM_LIBRARY_PATH"/rimcli $_REQ_SOCK" >> $_TOEXEC 
+            else
+                echo "${_CONT}"$RIM_LIBRARY_PATH"/rimcli $RIM_DATA/apps/$_ANAME/sock/.sock" >> $_TOEXEC 
+            fi
+        fi
+    else
+        if [[ "$_REQ_IP" != "" || "$_REQ_SOCK" != "" ]]; then
+            error "Cannot use --remote or --socket without --service"
+        fi
+        #add arguments if specified for command-line run
+        ADD_ARG=""
+        if [ "$_REQ_ARG" != "" ]; then
+            IFS=' ' read -r -a ADD_ARG <<< "$_REQ_ARG"
+        fi
+        echo -n "${_CONT}$RIM_DATA/apps/$_ANAME/.bld/$_ANAME" >> $_TOEXEC 
+        if [ "$_REQ_ARG" != "" ]; then
+            ARG_LEN=${#ADD_ARG[@]}
+            for (( i=0; i<$ARG_LEN; i++ )); do
+                echo -n " '${ADD_ARG[$i]}'" >> $_TOEXEC
+            done
+        fi
+        echo "" >> $_TOEXEC 
+    fi
+    if [[ "$_REQ_EXEC" == "1" && "$_REQ_URL" == "" ]]; then
+        error "Cannot use --exec without --req"
+    fi
+    if [ "$_REQ_EXEC" == "1" ]; then
+       chmod +x $_TOEXEC
+       RCODE=0
+       . $_TOEXEC || RCODE=$?
+       if [ "$RCODE" != "0" ]; then
+           exit_s $RCODE
+       fi
+    else
+        cat $_TOEXEC
+    fi
+}
+
+#           
+#           
+#           
+#Take all parameters, and sort them as versions, then find the lowest version of them all
+#version is something like num.num.num
+#           
+#
+#           
+function lowest_version() {
+    echo "$@" | sed 's/ /\n/g'| sort -V | head -n 1
+}  
+
+#
+#
+#
+#Check package version to be numbers and dots
+#
+#
+#
+check_package_version() {
+    if ! [[ "$1" =~ ^[0-9.]+$ ]]; then
+        error "Version [$1] is incorrect"
+    fi
+}
+
+
+
+#
+#
+#
+#Install application $1
+#
+#
+#
+function unpackapp() {
+    #check file for validity
+    echo "Checking package..."
+    PFILE="$1"
+    if [[ ! -f "$PFILE" ]]; then
+        error "File [$PFILE] does not exist"
+    fi
+    E=0; tar -tf "$PFILE" >/dev/null 2>&1 || E=$?
+    if [ "$E" != "0" ]; then error "File [$PFILE] is not a valid tar.gz archive"; fi
+
+    echo "Creating temporary directory..."
+    #make a tmp directory for this unpacking 
+    RIM_TMP="$HOME/.rimstone/tmp/install/$PFILE"
+    mkdir -p $RIM_TMP
+    if [[ ! -d "$RIM_TMP" ]]; then error "Cannot create temporary directory"; fi
+    #untar file
+    tar xvfz "$PFILE" -C $RIM_TMP
+    cd $RIM_TMP/package
+    echo "Using temporary directory [$RIM_TMP/package]"
+    #if --force-user used, check user
+    PUSER="$(cat .user)"
+    if [[ -f ".user.force" ]]; then
+        if [ "$RIM_USER" != "$PUSER" ]; then
+            error "This application requires that Operating System user name is [$PUSER]"
+        fi
+    fi
+
+    #get app name
+    echo "Checking package name..."
+    if [[ ! -f ".name" ]]; then
+        error "No name specified for package"
+    else
+        #first check name is okay
+        APP=$(cat .name)
+        check_name "$APP" "application name"
+        echo "Creating application [$APP] in user account [$PUSER]..."
+        #create application
+        F=".mrimart"
+        if [[ ! -f "$F" ]]; then error "File [$F] is missing"; fi
+        #change user if not the same
+        if [ "$RIM_USER" != "$PUSER" ]; then
+            #Linux user can only have alphanumerics, underscores and hyphens, so this will work
+            sed -i 's/\s\+-u\s\+'$PUSER'/ -u '$RIM_USER'/g' $F
+        fi
+        chmod +x $F
+        E=0; ./$F||E=$?
+        if [ "$E" != "0" ]; then error "Cannot create RimStone application, statement [$(cat $F)]"; fi
+        #check app dirs okay
+        setup_app_name "$APP"
+    fi
+    #
+    #
+    #now RIM_... like RIM_BLD are available
+    #
+    #
+
+    #for --version, check if upgrade or downgrade
+    echo "Checking package version..."
+    if [[ ! -f ".version" ]]; then
+        error "No version specified for package"
+    else
+        if [[ ! -f $RIM_H/.version ]]; then old_ver=0; else old_ver=$(cat $RIM_H/.version); fi
+        new_ver=$(cat .version)
+        check_package_version "$new_ver"
+        lowv=$(lowest_version "$old_ver" "$new_ver")
+        if [[ "$lowv" == "$new_ver" && "$old_ver" != "$new_ver" ]]; then
+            if [ "$_UNPACK_DOWNGRADE" != "1" ]; then
+                error "This package would downgrade application. If that is what you want, use --downgrade"
+            else
+                echo "Downgrading from [$old_ver] to [$new_ver] as requested"
+            fi
+        fi
+        cp -f .version $RIM_H/.version
+    fi
+
+    #databases (db)
+    cp -rf db $RIM_H
+
+    #re-enact the settings
+    . ./blds
+    echo "Checking databases..."
+    if [ "$RIM_DBS" != "" ]; then
+        echo "The following database configuration files are used. You may need to edit their database login information, if different than the computer where the package was created:"
+        for i in $RIM_DBS; do
+            i=$(sed 's|^\([^:]\+\):\(.*\)$|    Configuration file ['"$RIM_H/db/"'\2] for a \1 database|g'<<<$i)
+            echo $i
+        done
+    fi
+
+    #check libraries missing
+    #make sure $1 is not passed to rimlib
+    eval set --
+    echo "Checking required libraries..."
+    . $RIM_BIN_PATH/rimlib 
+    discovery
+    DISP_LIB=
+    NL=$'\n'
+    if [[ -f "libs/curl" && "$RIM_CURL_EX" != "0"  ]]; then 
+        DISP_LIB+="$RIM_CURL_I$NL";
+    fi
+    if [[ -f "libs/pcre2" && "$RIM_PCRE2_EX" != "0"  ]]; then 
+        DISP_LIB+="$RIM_PCRE2_I$NL";
+    fi
+    if [[ -f "libs/crypto" && "$RIM_CRYPTO_EX" != "0"  ]]; then 
+        DISP_LIB+="$RIM_CRYPTO_I$NL";
+    fi
+    if [[ -f "libs/mariadb" && "$RIM_MARIADB_EX" != "0"  ]]; then
+        DISP_LIB+="$RIM_MARIADB_I$NL";
+    fi
+    if [[ -f "libs/postgres" && "$RIM_POSTGRES_EX" != "0"  ]]; then
+        DISP_LIB+="$RIM_POSTGRES_I$NL";
+    fi
+    if [[ -f "libs/sqlite" && "$RIM_SQLITE_EX" != "0"  ]]; then
+        DISP_LIB+="$RIM_SQLITE_I$NL";
+    fi
+    if [[ -f "libs/xml" && "$RIM_XML_EX" != "0"  ]]; then
+        DISP_LIB+="$RIM_XML_I$NL";
+    fi
+    if [[ "$RIM_C_FPE" == "1" && "$RIM_UBSAN_EX" != "0"  ]]; then
+        DISP_LIB+="$RIM_UBSAN_I$NL";
+    fi
+    if [ "$DISP_LIB" != "" ]; then
+        echo "Some libraries are not installed and need to be installed for application to work. You can 1) install them now by entering 'yes' (in which case the commands below will execute), or 2) enter 'no', install them yourself and try again. In either scenario you will need sudo privileges."
+        echo
+        exec_install "$DISP_LIB" 0
+        echo
+        if [ "$_UNPACK_ALL" != "1" ]; then
+            read -p "Install libraries now? (yes to proceed)" inst
+        fi
+        if [[ "$_UNPACK_ALL" == "1" || "$inst" == "yes" ]]; then
+            exec_install "$DISP_LIB" 1
+        else
+            error "Package not installed, exiting"
+        fi
+    fi
+
+    echo "Checking for any unresolved libraries..."
+    #check if any unresolved libs
+    E=0; NFS=$(ldd ./$APP.srvc 2>&1 | grep --text ' => not found') || E=$?
+    if [ "$NFS" != "" ]; then 
+        error "Some libraries are still unresolved:\n$NFS"; 
+    fi
+
+    echo "Copying executables..."
+    #make sure they are executable
+    chmod +x $APP $APP.srvc
+    #copy executables
+    cp -f "$APP" "$APP.srvc" blds $RIM_BLD/
+    if [[ ! -f ".vappname" ]]; then
+        echo -n "$APP" > .vappname
+    fi
+
+}
+
+#
+#
+#
+#Package application $1 (always non empty)
+#
+#
+#
+#MUST add RimStone version, so we can check on target
+function packapp() {
+    echo "*** Note: Packaging process will include database configuration files. If you do not use passwordless login for databases, and if there is a potential risk, you should blank any such passwords out before building the executables."
+    APP=$1
+    export RIM_H="$RIM_DATA/apps/$APP"
+    export RIM_BLD="$RIM_DATA/apps/$APP/.bld"
+    #test application created based on name
+    if [[ ! -d "$RIM_DATA/apps/$APP" || ! -f "$RIM_H/.mrimart" ]]; then
+        error "Application must be created first. Use 'rim -k' or mrim to create and application"
+    fi
+    #test application built. We ensure build was successful by 1) checking executables exist, .succ* files are there (which are removed
+    #just prior to build) and blds file is there with settings
+    if [[ ! -f "$RIM_BLD/$APP" || ! -f "$RIM_BLD/$APP.srvc" || ! -f "$RIM_BLD/blds" || ! -f "$RIM_BLD/.succ.srv" || ! -f "$RIM_BLD/.succ" ]]; then
+        error "Application must be built to be packaged. Build it first with --release option prior to packaging"
+    fi
+    . "$RIM_BLD/blds" 
+    #check built as release
+    if [ "$RIM_C_DEBUG" == "1" ]; then
+        error "Application must be built with --release option to be packaged"
+    fi
+    #package directory
+    rm -rf $RIM_BLD/package
+    mkdir -p $RIM_BLD/package
+    mkdir -p $RIM_BLD/package/libs
+    if [[ ! -d "$RIM_BLD/package" ]]; then
+        error "Could not create [$RIM_BLD/package] directory"
+    fi
+    if [[ ! -d "$RIM_BLD/package/libs" ]]; then
+        error "Could not create [$RIM_BLD/package/libs] directory"
+    fi
+    #database config files
+    if [[ -d "$RIM_H/db" ]]; then
+        cp -rf "$RIM_H/db" $RIM_BLD/package
+        if [[ ! -d "$RIM_BLD/package/db" ]]; then
+            error "Could not create [$RIM_BLD/package/db] directory"
+        fi
+    fi
+    #app directory
+    cp -rf "$RIM_H/app" $RIM_BLD/package
+    if [[ ! -d "$RIM_BLD/package/app" ]]; then
+        error "Could not create [$RIM_BLD/package/app] directory"
+    fi
+    #name of app
+    echo -n "$APP" > $RIM_BLD/package/.name
+    #user of app (if asked for)
+    echo -n "$RIM_USER" > $RIM_BLD/package/.user
+    if [ "$_PACK_APP_FORCE_USER" == "1" ]; then
+        echo -n "1" > $RIM_BLD/package/.user.force
+    fi
+    #binaries, app creation, settings
+    cp "$RIM_BLD/$APP" "$RIM_BLD/$APP.srvc" "$RIM_H/.mrimart" "$RIM_BLD/blds"   $RIM_BLD/package
+    if [ "$_PACK_APP_VERSION" != "" ]; then
+        echo -n "$_PACK_APP_VERSION" > $RIM_BLD/package/.version
+        if [[ ! -f "$RIM_BLD/package/.version" ]]; then
+            error "Could not write .version file"
+        fi
+    else
+        error "Version not specified (use --version)"
+    fi
+    #find out which libraries are neeeded for this package
+    if [[ -f "$RIM_BLD/.mod.CURL" ]]; then echo -n "1" > $RIM_BLD/package/libs/curl; fi
+    if [[ -f "$RIM_BLD/.mod.PCRE2" ]]; then echo -n "1" > $RIM_BLD/package/libs/pcre2; fi
+    if [[ -f "$RIM_BLD/.mod.CRYPTO" ]]; then echo -n "1" > $RIM_BLD/package/libs/crypto; fi
+    if [[ -f "$RIM_BLD/.mod.MARIADB" ]]; then echo -n "1" > $RIM_BLD/package/libs/mariadb; fi
+    if [[ -f "$RIM_BLD/.mod.POSTGRES" ]]; then echo -n "1" > $RIM_BLD/package/libs/postgres; fi
+    if [[ -f "$RIM_BLD/.mod.SQLITE" ]]; then echo -n "1" > $RIM_BLD/package/libs/sqlite; fi
+    if [[ -f "$RIM_BLD/.mod.XML" ]]; then echo -n "1" > $RIM_BLD/package/libs/xml; fi
+    #create package
+    PFILE="$APP.tar.gz" 
+    tar cvfz "$PFILE" -C $RIM_BLD/ package
+    echo "Packaged application [$APP] into file [$PFILE]"
+}
+
+#
+#
+#
+#Show last $1 errors from backtrace
+#
+#
+#
+function showerr() {
+    #accounts for too many files
+    ERRF=$(find $RIM_DATA/apps/$RIM_C_NAME/trace/ -maxdepth 1 -name "bt*" -type f -printf '%T@ %p\n' | sort -k1,1nr |  awk '{print $2}'| head -$1)
+    if [ "$ERRF" != "" ]; then
+        for i in $ERRF; do
+            echo "******* File: $i"
+            cat $i
+            echo ""
+        done
+    fi
+}
+
+#
+#
+#
+#Get database vendors and names from dbvendor:dbname ... format, which is the input ($1)
+#
+#
+#
+function getdbs() {
+#database vendor/name pairs
+
+    _DBL="$1"
+    _j=0
+    for _i in $_DBL; do
+#-n says do not print non-matches, p says print matches only
+        _DBV[$_j]=$(sed -n 's/\(.*\):\(.*\)/\1/p' <<<$_i)
+        _DBN[$_j]=$(sed -n 's/\(.*\):\(.*\)/\2/p' <<<$_i)
+        if [[ "${_DBV[$_j]}" != "mariadb" && "${_DBV[$_j]}" != "postgres" && "${_DBV[$_j]}" != "sqlite" ]]; then
+            error "Database [${_DBV[$_j]}] is not supported (specify database as vendor:database_name, and in case of multiple databases separated them with a space in a quoted value)"
+        fi
+        if [ "${_DBN[$_j]}" == "" ]; then
+            error "Database configuration file not specified"
+        fi
+        if [[ ! "$_DBVALL" =~ " ${_DBV[$_j]} " ]]; then
+            _DBVALL="$_DBVALL ${_DBV[$_j]} "
+        fi
+        ((_j=_j+1))
+    done
+}
+
+#
+#
+#
+#Autocreate settings file used to recompile if one (or more) of them changes
+#File $RIM_BLD/blds is used in vmakefile as a signal to recompile all (if changed)
+#Sole purpose is to know when to recompile, nothing is cached as far as command-line params go.
+#
+#RIM_C_MAXERRORS does not affect compilation, only the output of errors, so not
+#part of mkset.
+#RIM_C_VERSION ensures your apps are recompiled when upgrading/downgrading
+#
+#
+function mkset() {
+    echo "RIM_C_SKIPLINES='$RIM_C_SKIPLINES'
+RIM_C_ASAN='$RIM_C_ASAN'
+RIM_C_PROF='$RIM_C_PROF'
+RIM_C_IGNORE_WARN='$RIM_C_IGNORE_WARN'
+RIM_C_SHOW='$RIM_C_SHOW'
+RIM_C_GCC='$RIM_C_GCC'
+RIM_C_VERSION='$RIM_VERSION$_BETA'
+RIM_C_DEVEL='$RIM_C_DEVEL'
+RIM_C_FPE='$RIM_C_FPE'
+RIM_C_DEBUG='$RIM_C_DEBUG'
+RIM_C_PUBLIC='$RIM_C_PUBLIC'
+RIM_C_SINGLE_FILE='$RIM_C_SINGLE_FILE'
+RIM_C_MAXUPLOAD='$RIM_C_MAXUPLOAD'
+RIM_C_CLIENT_TOUT='$RIM_C_CLIENT_TOUT'
+RIM_C_RESTPATH='$RIM_C_RESTPATH'
+RIM_C_CFLAGS='$RIM_C_CFLAGS'
+RIM_C_LFLAGS='$RIM_C_LFLAGS'
+RIM_C_LFLAGS='$RIM_C_LFLAGS'
+RIM_C_POSIXREGEX='$RIM_C_POSIXREGEX'
+RIM_DBS='$_ALLDB'
+" > $RIM_BLD/.blds
+    if [ ! -f "$RIM_BLD/blds" ]; then
+        cp -f $RIM_BLD/.blds $RIM_BLD/blds
+    else
+        _ECODE="0"
+        diff $RIM_BLD/.blds $RIM_BLD/blds > /dev/null || _ECODE="$?"
+        if [ "$_ECODE" != 0 ]; then
+            cp -f $RIM_BLD/.blds $RIM_BLD/blds
+        fi
+    fi
+}
+
+
+#
+#
+#
+#Show documentation directory
+#
+#
+#
+function docdir() {
+    echo "$RIM_DATA/rimstone"
+}
+
+#
+#
+#
+#Check if app name is valid
+#
+#
+#
+function check_name() {
+#$1 is the name
+#$2 is the type of it (used in error message)
+    if [[ ! "$1" =~ ^[-a-zA-Z0-9_]{1,30}$ ]]; then
+        error "$2 name can be made up of alphanumerical characters only, hyphen or underscore, and its length must be between 1 and 30 characters, found [$1]"
+    fi
+}
+
+
+
+
+
+
+#
+#
+#Discovery of what's installed and prepare for build to minimize use of includes and libs
+#
+#
+function read_modules() {
+#
+    #begin automatic libs discovery
+    #release name
+    #This MUST be exported here, otherwise v1 will NOT see them, no matter the settings in rimlib!!
+    export RIM_REL_NAME=
+    #includes
+    export RIM_MARIADB_INC=
+    export RIM_SQLITE_INC=
+    export RIM_CURL_INC=
+    export RIM_PCRE2_INC=
+    export RIM_CRYPTO_INC=
+    export RIM_POSTGRES_INC=
+    export RIM_XML_INC=
+    #
+    #do libs exist or not
+    export RIM_MARIADB_EX=
+    export RIM_SQLITE_EX=
+    export RIM_CURL_EX=
+    export RIM_PCRE2_EX=
+    export RIM_CRYPTO_EX=
+    export RIM_POSTGRES_EX=
+    export RIM_XML_EX=
+    export RIM_UBSAN_EX=
+    #rimstone libs
+    export RIM_MARIADB_LIB_S=
+    export RIM_SQLITE_LIB_S=
+    export RIM_CURL_LIB_S=
+    export RIM_PCRE2_LIB_S=
+    export RIM_CRYPTO_LIB_S=
+    export RIM_POSTGRES_LIB_S=
+    export RIM_XML_LIB_S=
+    #install instructions
+    export RIM_XML_INSTALL=
+    export RIM_MARIADB_INSTALL=
+    export RIM_SQLITE_INSTALL=
+    export RIM_CURL_INSTALL=
+    export RIM_PCRE2_INSTALL=
+    export RIM_CRYPTO_INSTALL=
+    export RIM_POSTGRES_INSTALL=
+    export RIM_UBSAN_INSTALL=
+    #package names
+    export RIM_XML_PACKAGE=
+    export RIM_MARIADB_PACKAGE=
+    export RIM_SQLITE_PACKAGE=
+    export RIM_CURL_PACKAGE=
+    export RIM_PCRE2_PACKAGE=
+    export RIM_CRYPTO_PACKAGE=
+    export RIM_POSTGRES_PACKAGE=
+    #3rd party libs
+    export RIM_XML_LIB=
+    export RIM_MARIADB_LIB=
+    export RIM_SQLITE_LIB=
+    export RIM_CURL_LIB=
+    export RIM_PCRE2_LIB=
+    export RIM_CRYPTO_LIB=
+    export RIM_POSTGRES_LIB=
+    export RIM_UBSAN_LIB=
+    #determine library existance
+    #make sure $1 is not passed to rimlib
+    eval set --
+    . $RIM_BIN_PATH/rimlib 
+    #make all include paths available if needed (we only include those actually used so not to waste time processing .h files we don't need)
+    export RIM_ALL_INCLUDE="$RIM_MARIADB_INC $RIM_SQLITE_INC $RIM_CURL_INC $RIM_PCRE2_INC $RIM_CRYPTO_INC $RIM_POSTGRES_INC $RIM_XML_INC"
+    #delete mod files, set by v1 to determine which libs are actually used by RimStone application
+    rm -f $RIM_BLD/.mod.*
+    #
+    #end automatic libs discovery
+    #used in vmakecommon/install to properly link modules at link-time and to substitute stubs for those modules that are not used
+    #
+}
+
+#
+#
+#
+#make generated files affect recompilation ONLY if they are different
+#
+#
+#
+function copy_if_diff () {
+    F="$1"
+    _ISDIFF=$(diff $RIM_BLD/$F.new $RIM_BLD/$F 2>/dev/null) || true
+    if [[ "$_ISDIFF" != "" || ! -f "$RIM_BLD/$F" ]]; then
+        mv $RIM_BLD/$F.new $RIM_BLD/$F
+    else
+        rm -rf $RIM_BLD/$F.new
+    fi
+}
+
+
+
+#
+#
+#sets a list of many source code files (source.rim, rimapp.h, rim_dispatch_request.c etc.)
+#takes care of generated vs provided source code: if a certain handler is provided, then don't generate it.
+#
+#
+function gen_src() {
+    [[ "$RIM_C_SHOW" == "1" ]] && echo "RimStone: Analyzing source files."
+
+#
+#Files generated here are $RIM_BLD/source.rim,rimapp.h,rim_dispatch_request.c.
+#
+
+#
+#Setup directory for set-param'eters where all parameter names for application will go to
+#
+    if [ ! -d $RIM_BLD/.setparam ]; then
+        rm -rf $RIM_BLD/.setparam || true
+        mkdir -p $RIM_BLD/.setparam
+    fi
+
+#
+#Setup directory for where we record all request handlers called and who called them
+#
+    if [ ! -d $RIM_BLD/.calledreq ]; then
+        rm -rf $RIM_BLD/.calledreq || true
+        mkdir -p $RIM_BLD/.calledreq
+    fi
+
+
+#
+#Generate source.rim, all the source files needed for RimStone app
+#
+    _T="source.rim"
+#this is all source files, including C files
+#
+    RIM_CLIST_A=(*.c) 2>/dev/null || true # this is an array
+    RIM_CLIST=${RIM_CLIST_A[*]} # this is a string
+#
+    RIM_RIMLIST_A=(*.rim) 2>/dev/null || true
+    RIM_RIMLIST=${RIM_RIMLIST_A[*]}
+#
+    RIM_HLIST_A=(*.h) 2>/dev/null || true
+    RIM_HLIST=${RIM_HLIST_A[*]}
+#
+#RIM_REQLIST is really a list of requests, which we get from the list of source files
+#RIM_RIMLIST is the list of rimstone files - note these are "flattened" so that any directory structure works in a flat directory with / substituted for __
+    RIM_REQLIST=""
+    RIM_REQLIST_C=0
+    for i in $RIM_RIMLIST; do
+#we can do this since we prohibit line splitting for begin-handler or %%
+        RS=$(sed -n 's/^\s*\(%%\|begin\-handler\) \s*\([^ \t]\+\).*/\2/gp' $i)
+        for OF in $RS; do #take request paths and turn them into flat files
+            OF=${OF/#\//}
+            OF=${OF//\//__}
+            RIM_REQLIST="$RIM_REQLIST
+$OF"
+            ((RIM_REQLIST_C=RIM_REQLIST_C+1))
+        done
+    done
+
+    NL=$'\n'
+#
+#
+#
+    TNEW=""
+    TNEW+="#SPDX-License-Identifier: Apache-2.0$NL"
+    TNEW+="#Copyright 2018-2025 Gliim LLC. $NL"
+    TNEW+=$NL
+    TNEW+="#$NL"
+    TNEW+="#Lists source files in your application. This is an auto-generated file.$NL"
+    TNEW+="#$NL"
+    TNEW+=$'\n'
+    TNEW+="#Include files here:$NL"
+    _HFILES=$(grep --text -a -v rimapp.h <<<"$RIM_HLIST" | xargs)
+    TNEW+="RIM_HEADER_FILES=$_HFILES$NL"
+    TNEW+=$NL
+    TNEW+="#Source files here:$NL"
+    TNEW+="RIM_SOURCE_FILES=$RIM_RIMLIST$NL"
+    TNEW+="RIM_SOURCE_C_FILES=$RIM_CLIST$NL"
+    echo "$TNEW" >$RIM_BLD/$_T.new
+
+    _ISDIFF=$(diff $RIM_BLD/$_T.new $RIM_BLD/$_T 2>/dev/null) || true
+    if [[ "$_ISDIFF" != "" || ! -f "$RIM_BLD/$_T" ]]; then
+        mv $RIM_BLD/$_T.new $RIM_BLD/$_T
+    else
+        rm -rf $RIM_BLD/$_T.new
+    fi
+
+
+
+#
+#Generate rimapp.h, a file that has a list of C declarations neeeded to build an app
+#
+    _T="rimapp.h"
+
+    TNEW=""
+    TNEW+="// SPDX-License-Identifier: Apache-2.0$NL"
+    TNEW+="// Copyright 2018-2025 Gliim LLC.$NL"
+    TNEW+=$NL
+    TNEW+="// This is an auto-generated file for a RIM application$NL"
+    TNEW+=$NL
+    TNEW+="#ifndef _RIMAPP$NL"
+    TNEW+="#define _RIMAPP$NL"
+    TNEW+=$NL
+    if [ "$_HFILES" != "" ]; then
+        for i in $_HFILES; do
+            ONEH=$(sed 's/\(.*\)/#include "\1"/g' <<< $i)
+            TNEW+="$ONEH$NL"
+        done
+        TNEW+=$NL
+    fi
+    TNEW+="// function prototypes of your code$NL"
+#declare all functions, including non-request ones (whether implemented or not)
+    for _F in $RIM_REQLIST; do
+        RN=${_F%.*}
+        #function name cannot have -
+        RN=${RN//-/_}
+        #if main, cannot have that, since we have main() already. Must delete $_T.new in order to regenerate, otherwise main would remain
+        #NOTE: if updating here, update in v1.c in is_reserved()
+        CC_KEYS=" auto break bool case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while main "
+        if [[ " $CC_KEYS " =~ .*\ $RN\ .* ]]; then
+            rm -f $RIM_BLD/$_T.new 
+            error "Service handler name cannot be a C reserved word [$RN]"
+        fi
+        TNEW+="rim_num ${RN}();$NL"
+    done
+    TNEW+="$NL"
+    TNEW+="#endif$NL"
+    echo "$TNEW" >$RIM_BLD/$_T.new 
+
+    #if newly generated file is the same as the old one, don't touch the old one in order to
+    #prevent recompilation needlessly
+    _ISDIFF=$(diff $RIM_BLD/$_T.new $RIM_BLD/$_T 2>/dev/null) || true
+    if [[ "$_ISDIFF" != "" || ! -f "$RIM_BLD/$_T" ]]; then
+        mv $RIM_BLD/$_T.new $RIM_BLD/$_T
+    else
+        rm -rf $RIM_BLD/$_T.new
+    fi
+
+#
+#Generate rim_dispatch_request.c, the main request handler. Based on the source code names of handler files (.rim files)
+#
+    _T=".flatsrc/rim_dispatch_request.c"
+#Generate request files, this is used for a dispatcher
+#and for a dispatcher, only request files matter 
+    if [ "$RIM_REQLIST_C" == "0" ]; then
+        error "Application must have at least one .rim file, or no begin-handler (or %%) statements found"
+    fi
+
+    TNEW=""
+    TNEW+="// SPDX-License-Identifier: Apache-2.0$NL"
+    TNEW+="// Copyright 2018-2025 Gliim LLC. $NL"
+    TNEW+=$NL
+    TNEW+="// RIM auto-generated request dispatcher$NL"
+    TNEW+=$NL
+    TNEW+="#include \"rim.h\"$NL"
+    TNEW+="void rim_dispatch_request() {$NL"
+
+
+#req_done used to skip before/after execution if no handler used
+    TNEW+="    volatile int req_done;$NL" #volatile because of longjmp, so the init below doesn't get optimized
+
+    if [ "$RIM_REQLIST_C" != "0" ]; then
+        TNEW+="    char *req=rim_get_config()->ctx.req->name;$NL"
+    fi
+    #
+    # Setting up longjmp must be done after ANY local variables are established so they are not lost after any exit-handler
+    # or errors. This is because stack pointer after sigsetjmp will be LOST. So all local vars definitions must be PRIOR to it
+    #
+#longjmp for when a request exits via exit-handler. If return value is <>0, it means
+#this is a call from longjmp, and we should proceed to right after rim_dispatch_request - that is the extent
+#of unwinding, such that we rollback uncommitted transactions, shutdown request and release all memory and
+#then move on to the next request.
+#Cannot place setjmp within if, may not process correctly when jump happens.
+#We use rim_done_setjmp to prohibit exit-handler from executing the jump unless sigsetjmp was done first at runtime.
+    TNEW+="    int ret_val = sigsetjmp(rim_jmp_buffer, 1);$NL"
+    TNEW+="    if (ret_val != 0) goto end_point_exit;$NL"
+    TNEW+="    rim_done_setjmp = 1;$NL"
+#right now the return value is always 0 (directly or called from longjmp)
+#the jump will work because all we do is go to after_handler() function, which doesn't depend on any
+#automatic variables from rim_dispatch_request, and after that function exits
+#
+#
+    TNEW+="    req_done = 0;$NL" #must be initialized separately (not as int req_done=0;) because longjmp may return to the same function and won't be initialized again
+#
+#
+#
+#create file with all request names for v1 to process for the main function code. This way all request info is stored as constants to be loaded as program's data, meaning the fastest possible in huge memory blocks, without having to set up each individually
+#first line is the number of lines that follow, to make code generation easier
+    _F_FIRST=""
+    REQL="$RIM_REQLIST_C$NL"
+    for _F in $RIM_REQLIST; do
+        RN=${_F%.*}
+        #function name cannot have -
+        RN=${RN//-/_}
+        if [ "$_F_FIRST" == "" ]; then _F_FIRST="$RN"; fi
+        REQL+="$RN$NL"
+    done
+    echo -n "$REQL" >$RIM_BLD/.reqlist.new
+#
+#
+#
+    TNEW+="  rim_request_handler _rim_req_handler;$NL"
+    TNEW+="  rim_num found = RIM_OKAY;$NL"
+    #if only a single request, speed things up by checking simply if that's the one, and run it (i.e. do not call rim_find_hash)
+    if [ "$RIM_REQLIST_C" == "1" ]; then
+        TNEW+="    if (!strcmp (req, \"$_F_FIRST\") || req[0] == 0) _rim_req_handler = $_F_FIRST; else found = RIM_ERR_EXIST;$NL"
+    else
+#get handler function that handles this request from the pre-computed hash. Both what's in rim_dispatch and req are NOT rimstone mem, so false for is_rimstone memory
+        TNEW+="    _rim_req_handler = rim_find_hash (&rim_dispatch, req, 0, &found, false);$NL"
+    fi
+#before handler executes only IF req found a handler, that's why it's not in front of if()
+    TNEW+="      if (found == RIM_OKAY) {$NL"
+    TNEW+="        before_handler();$NL"
+    TNEW+="        req_done = 1;$NL"
+    TNEW+="        _rim_req_handler();$NL"
+    TNEW+="    } else {$NL"
+    TNEW+="        rim_bad_request();$NL"
+    TNEW+="        rim_replace_string (req, strlen(req), \"__\", \"/\", 1, NULL, 1);$NL"  # subst makes for smaller string, so okay, this is to show proper path in error
+    TNEW+="        rim_report_error (\"Request [%s] not found\", req);$NL"
+    TNEW+="    }$NL"
+
+#when exit-handler is done, this is where we must end up. Since this code is executed after
+#rim_dispatch_request, we can't longjump here. We long jump to a prior point and then go to here.
+    TNEW+="end_point_exit:$NL"
+#set rim_done_setjmp to 0, because if we do exit-handler in after_handler(), it would go into infinite loop, coming back to after.
+#this way, exit-handler in after_handler, or anywhere afterwards, will do nothing. Only when the next request comes along, and rim_done_setjmp is set to 1
+#in the beginning of this function, we will actually jump to end_point_exit:
+    TNEW+="    rim_done_setjmp = 0;$NL"
+#regardless of whether a request normally ended, or had exit-handler, it would come here, and before anything else, memory handling must be set back
+#to RimStone, or otherwise, and rim_* memory function will fail if set to true. after_handler() should not be affected by type of memory used.
+
+#cannot do exit-handler in after_handler - must simply do return(s)
+    TNEW+="    if (req_done == 1) { after_handler(); }$NL"
+#
+#There can be NOTHING after .after() that uses any automatic variables from rim_dispatch_request() or
+#exit-handler (and longjmp) will not work
+#
+    TNEW+="}$NL"
+    TNEW+=$NL
+    echo "$TNEW">$RIM_BLD/$_T.new
+
+    copy_if_diff "$_T"
+    copy_if_diff ".reqlist"
+}
+
+
+
+#
+#
+#
+#Create linkage for before,after events. _weak_ linkage didn't work because RimStone should produce
+#a program that links *only* with RimStone libs. It means we only distribute a single file, which is a program,
+#that has only the minimal set of code - and this program uses RimStone's shared library. Hence, all is shared 
+#(the program between different instance and all the shared libs).
+#RIM_EVENT_STUBS is all the stubs used.
+#So, RIM_EVENT_STUBS could be "$RIM_DEST/rimstone/stub_after.o" but then available after vmakefile will be "$RIM_BLD/before_handler.o"
+#and all three will be present (one empty and two implemented)
+#
+#
+#
+function stub_events() {
+    RIM_EVENT_STUBS=
+    if [ ! -f "before-handler.rim" ]; then
+        RIM_EVENT_STUBS="$RIM_EVENT_STUBS $RIM_LIBRARY_PATH/$RDEST/stub_before.o"
+    fi
+    if [ ! -f "after-handler.rim" ]; then
+        RIM_EVENT_STUBS="$RIM_EVENT_STUBS $RIM_LIBRARY_PATH/$RDEST/stub_after.o"
+    fi
+    export RIM_EVENT_STUBS
+}
+
+
+#
+#
+#
+#Turn path-based source into a flat __ based source files 
+#Cannot remove and then copy b/c this would cause make to re-make all files
+#each time since their timestamp would change. So we must use -p flag of cp
+#to preserve source file's timestamps.
+#This converts x/y/z into x__y__z files and a-b.rim into a_b.rim
+#So we can do full path URL based structure and "flatten" it as it
+#always was prior to this
+#
+#
+#
+function flatten_source() {
+#directory where we build is .flatsrc
+    if [ "$RIM_DIR_EXCLUDE" != "" ]; then
+        #make a list of directories we can iterate over, it's decorated as well so we can easily compare with
+        #eligible files
+        RIM_DIR_EXCLUDE_F=${RIM_DIR_EXCLUDE//,/ }
+    fi
+
+
+#delete all, b/c what happens when renaming, deleting files - they
+#would still hang in .flatsrc directory, and we can copy without recompiling
+#if no changes, because we use ln -s which preserves timestamps for make
+    rm -rf $RIM_BLD/.flatsrc
+    mkdir -p $RIM_BLD/.flatsrc
+
+#use find, with maxdepth of 1 for flat dir
+    F0=(*) 2>/dev/null || true
+    F1=(**/*) 2>/dev/null || true
+    F0+=("${F1[@]}")
+    for i in "${F0[@]}"; do
+        if [ -f "$i" ]; then 
+            i="./$i"
+#for each file remove leading ./, then convert all / to __ and
+#all - to _
+            OF=${i/#\.\//}
+            EXCL=0
+            for k in $RIM_DIR_EXCLUDE_F; do
+                k="${k}/"
+                if [[ "$OF" == "$k"* ]]; then
+                    EXCL=1
+                    break
+                fi
+            done
+            if [ "$EXCL" == "1" ]; then continue; fi
+            OF=${OF//\//__}
+            ln -s $PWD/$i $RIM_BLD/.flatsrc/$OF 2>/dev/null || true
+        fi
+    done
+#make sure app name is there too, || true is b/c find will find it and it will exist
+#    ln -s .vappname $RIM_BLD/.flatsrc || true
+}
+
+
+#
+#
+#
+#Build RimStone app
+#
+#
+#
+function build_app() {
+    if [ ! -d $RIM_BLD ]; then
+        error "Application does not exist, use 'rim -k' to create it"
+    fi
+    [[ "$RIM_C_SHOW" == "1" ]] && echo "RimStone: Gathering source files."
+    flatten_source
+
+#once source is flattened, go there, but in a new shell ()
+#so we can switch to .flatsrc directory, and no matter where this 
+#compilation ends, we end up in current dir after it's done, because
+#were' in subshell
+#save current working directory, it's needed as -srcdir param to v1
+    ECODE=0 #necessary for ECODE to work below (because if there's no error then ECODE=$? never runs and ECODE is undefined
+    ( 
+    export RIM_CDIR="$PWD"
+    cd $RIM_BLD/.flatsrc
+    _VFILES_A=(*.rim) 2>/dev/null || true
+    _VFILES=${_VFILES_A[*]}
+    if [ "$_VFILES" == "0" ]; then error "Your application must have at least one .rim file"; fi
+#set .dbvendors for v1 to pickup
+    db_lib
+#get any modules in use, and generate a list of all modules
+    read_modules
+#generate needed source code
+    gen_src
+#generate stubs (if needed) for events (before, after)
+    stub_events
+#create file that tells make to recompile if options changed
+    mkset
+#check if any libs installed changed (added or removed). Just upgrade/downgrade doesn't count
+#Note this RRLIBS must match what' recorded in Makefile exactly (order and all)
+    RRLIBS="RIM_MARIADB_EX='$RIM_MARIADB_EX';RIM_SQLITE_EX='$RIM_SQLITE_EX';RIM_CURL_EX='$RIM_CURL_EX';RIM_PCRE2_EX='$RIM_PCRE2_EX';RIM_CRYPTO_EX='$RIM_CRYPTO_EX';RIM_POSTGRES_EX='$RIM_POSTGRES_EX';RIM_XML_EX='$RIM_XML_EX'"
+    if [ -f "$RIM_DATA/rimstone/.rim.libs" ]; then
+        read -r -d '' RRLIBS_OLD < $RIM_DATA/rimstone/.rim.libs
+    else
+        RRLIBS_OLD=
+    fi
+    if [[ "$RRLIBS_OLD"  != "$RRLIBS" ]]; then
+        echo "Recompiling RimStone objects due to change in installed libraries; this happens only when libraries used by RimStone are installed or removed. Please wait for it to complete." 
+        CDIR="$PWD"
+        tar xvfz $RIM_DATA/rimstone/rimstone.tar.gz -C $RIM_DATA/rimstone/src/ >/dev/null
+        cd $RIM_DATA/rimstone/src
+        make clean 
+        make -j $(nproc) 
+        make install DESTDIR=$RIM_DATA 
+        echo "$RRLIBS" > $RIM_DATA/rimstone/.rim.libs
+        echo "RimStone objects recompiled, continuing."
+        cd $CDIR
+    fi
+#check if gcc version has changed, it means we need to recompile LTO from /rimstone/src
+#changing gcc version would make project recompile since RIM_C_GCC is part of mkset()
+#Note this RIM_C_GCC must match what' recorded in Makefile exactly 
+    if [ -f "$RIM_DATA/rimstone/.rim.gcc" ]; then
+        read -r -d '' RIM_CHECK_GCC < $RIM_DATA/rimstone/.rim.gcc
+    else
+        RIM_CHECK_GCC=
+    fi
+    #if we want release and it's not built yet
+    if [[ "$RIM_C_DEVEL" == "0" && "$RIM_C_GCC"  != "$RIM_CHECK_GCC" ]]; then
+        #
+        #this should NOT run in subshell because we want to exit if there's an error here!
+        #
+        echo "Recompiling RimStone LTO objects; this happens only when gcc version changes or the first time release is made. Please wait for it to complete." 
+        CDIR="$PWD"
+        tar xvfz $RIM_DATA/rimstone/rimstone.tar.gz -C $RIM_DATA/rimstone/src/ >/dev/null
+        cd $RIM_DATA/rimstone/src
+        make clean 
+        make -j $(nproc) REL=1
+        make install DESTDIR=$RIM_DATA REL=1
+        echo "$RIM_C_GCC" > $RIM_DATA/rimstone/.rim.gcc 
+        echo "RimStone LTO objects recompiled, continuing."
+        cd $CDIR
+    fi
+
+
+#make the application (compile and link) in parallel
+#if RIM_SHOW_MAKE is not "-s", then it's not silent, and display what it's doing
+#otherwise use -s for silent
+#We ignore return code from vmakefile (and make it exit 0 when we exit), we though check if there's anything in standard error!
+#This makes gnu make quiet, so we don't get useless message that some rule failed; we already know that if there's an error output
+#All output from vmakefile that's relevant to RimStone is prefixed with 'RimStone: ', so we filter out anything else.
+    make -j$RIM_C_CPUS $RIM_SHOW_MAKE -f "$RIM_LIBRARY_PATH"/vmakefile all 2>$RIM_BLD/.make.output 
+    ) || ECODE=$? 
+    if [ "$ECODE" == "0" ]; then
+        if [ "$RIM_C_SHOW" == "1" ]; then
+            if [ "$RIM_C_DEVEL" == "0" ]; then
+                echo "RimStone: Made RELEASE executables"
+            else
+                echo "RimStone: Made DEVEL executables"
+                if [ "$RIM_C_DEBUG" == "1" ]; then
+                    echo "RimStone: Added DEBUG code"
+                fi
+            fi
+        fi
+    else
+        #without || true here, our trap (see beginning of rim) will cause ugly (and useless) message
+        #use --text, for instance if there's a binary stray char and the error message has it; without --text, all we get is 'binary file matches' (weird)
+        cat $RIM_BLD/.make.output|grep --text 'RimStone: ' | grep --text -v "^make:" |sed 's/__/\//g' 1>&2 || true
+        echo "There are errors in making your application (complete log at $RIM_BLD/.make.output)."
+    fi
+    exit_s $ECODE
+}
+
+#
+#
+#
+#Command line options implementation
+#
+#
+#
+
+function rim_version() {
+#the final year is based on the year when the last Makefile ran, which is a pretty good indicator of when was the last change done here by the author;
+#of course, for those who compile from source, and don't use the provided deb/dnf packages, it will always be the current year - that is not the intention -
+#in that case, change this manually to the year from the official distribution!!!! That is required under most copyright laws, in which the second year should
+#be the year of the last change by the author.
+    echo "RimStone $RIM_VERSION$_BETA on $RIM_PLATFORM_ID ($RIM_PLATFORM_VERSION). Copyright (c) 2018-$(date '+%Y') Gliim LLC. RimStone uses other libraries, including OpenSSL, SQLite, Postgres, MariaDB, PCRE2, Curl, LibXML2, FastCGI, Libbacktrace. See "license" documentation page for acknowledgements and the full list (on the web or 'rim --man license' from command line)."
+
+}
+
+#
+#
+#
+#display file or empty string if it doesn't exist
+#
+#
+#
+function cat0() {
+    if [ ! -f "$1" ]; then echo ""; else cat "$1"; fi
+}
+
+
+
+#
+#
+#
+#Quick auto app maker
+#
+#
+#
+function autoapp() {
+
+    build_app 
+    exit 0
+}
+
+
+#
+#
+#
+#Set library modules from --db. Either db_lib (-q) or init_db (-qa) is executed, but not both
+#
+#
+#
+function db_lib() {
+#parse --db input
+#get list of dbs - add any new db vendors here (currently mariadb and postgres)
+    rm -f $RIM_BLD/.dbvendors
+    getdbs "$_ALLDB"
+    _TOTDB="${#_DBV[@]}"
+    for (( _i=0; _i<$_TOTDB; _i++ )); do
+#must copy array element 
+        _DBNAME="${_DBN[$_i]}"
+        _DBCONF="$_DBNAME"
+#build list of all
+        _ALLC="$_ALLC
+$_DBCONF"
+        _DBMAKE="${_DBV[$_i]}"
+        if [ "$_DBMAKE" == "sqlite" ]; then
+            if [ "$_DONELITE" == "" ]; then
+                _DONELITE="1"
+            fi    
+#for v1.c to pick up
+            echo "${_DBCONF}=sqlite" >> $RIM_BLD/.dbvendors
+            if [ ! -f "$_DBCONF" ]; then
+                error "Database configuration file [$_DBCONF] ($_DBMAKE) not found"
+            fi
+            "$RIM_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $RIM_H/db/"$_DBCONF"
+        fi
+        if [ "$_DBMAKE" == "mariadb" ]; then
+            if [ "$_DONEMARIA" == "" ]; then
+                _DONEMARIA="1"
+            fi    
+#for v1.c to pick up
+            echo "${_DBCONF}=mariadb" >> $RIM_BLD/.dbvendors
+            if [ ! -f "$_DBCONF" ]; then
+                error "Database configuration file [$_DBCONF] ($_DBMAKE) not found"
+            fi
+            "$RIM_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $RIM_H/db/"$_DBCONF"
+        fi
+        if [ "$_DBMAKE" == "postgres" ]; then
+            if [ "$_DONEPG" == "" ]; then
+                _DONEPG="1"
+            fi
+#for v1.c to pick up
+            echo "${_DBCONF}=postgres" >> $RIM_BLD/.dbvendors
+            if [ ! -f "$_DBCONF" ]; then
+                error "Database configuration file [$_DBCONF] ($_DBMAKE) not found"
+            fi
+            "$RIM_LIBRARY_PATH"/v1 -envsub < "$_DBCONF" > $RIM_H/db/"$_DBCONF"
+        fi
+    done
+#check db conf name unique
+    _TUNIQ=$(sort -k 1 <<<$_ALLC|uniq|wc -l)
+    _TOT=$(wc -l <<<$_ALLC)
+    if [ "$_TUNIQ" != "$_TOT" ]; then
+        error "Database configuration names must be unique"
+    fi
+}
+
+
+
+#
+#
+#
+#Clean building artifacts of RimStone code to rebuilt it entirely
+#
+#
+#
+function rim_clean() {
+#clean the source and other code, so the next rimstone app compilation will be a full rebuild
+    make $RIM_SHOW_MAKE -f "$RIM_LIBRARY_PATH"/vmakefile clean
+}
+
+
+main "$@"
+
+
+

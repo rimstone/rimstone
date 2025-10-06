@@ -13,7 +13,7 @@
  */
 // Modifications Copyright 2018-2025 Gliim LLC. 
 // Modifications in this file licensed under Apache License v2. See LICENSE file in the main directory.
-// On the web http://golf-lang.com/ - this file is part of Golf framework.
+// On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
 
 #ifndef _FCGIAPP_H
 #define _FCGIAPP_H

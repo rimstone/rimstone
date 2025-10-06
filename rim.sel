@@ -1,0 +1,42 @@
+#!/bin/bash
+#SPDX-License-Identifier: Apache-2.0
+#Copyright 2018-2025 Gliim LLC. 
+#Licensed under Apache License v2. See LICENSE file.
+#On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
+
+#generate SELinux policies
+
+#$1 is lib dir, $2 is data dir, $3 is bindir
+
+LIBDIR="$1"
+SELINUXDIR="$2"
+RIMDIR="$3"
+
+cd $LIBDIR
+mkdir -p $LIBDIR/tmp
+cp -f rr.te rim.te $LIBDIR/tmp/
+cd $LIBDIR/tmp
+make -f /usr/share/selinux/devel/Makefile rr.pp 
+install -D -m 0600 rr.pp -t $SELINUXDIR/selinux/packages/rim/ 
+checkmodule -M -m -o rim.mod rim.te 
+semodule_package -o rim.pp -m rim.mod 
+install -D -m 0600 rim.pp -t $SELINUXDIR/selinux/packages/rim/ 
+
+if (( $EUID == 0 )); then
+    semodule -n -i "$SELINUXDIR/selinux/packages/rim/rr.pp"
+    semodule -n -i "$SELINUXDIR/selinux/packages/rim/rim.pp"
+fi
+
+if [ -d "$RIMDIR" ]; then 
+    if /usr/sbin/selinuxenabled ; then 
+        if (( $EUID == 0 )); then
+            load_policy
+            #set file types here, .fc setting won't work
+            sudo semanage fcontext -a -t rrfile_t "$RIMDIR(/.*)?"
+            restorecon -R $RIMDIR
+        fi
+    fi
+fi
+
+cd $LIBDIR
+rm -rf $LIBDIR/tmp

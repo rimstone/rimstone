@@ -1,0 +1,46 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+file-storage \- RimStone documentation (files)
+.SH DESCRIPTION
+RimStone provides a file directory that you can use for any general purpose, including for storing \fBtemporary-file\fPs. This directory is also used for automatic upload of files from clients. It provides a two-tier directory system, with sub-directories automatically created to spread the files for faster access.
+
+Files in RimStone file directory are located in the sub-directories of:
+
+.RS 4
+.EX
+
+$HOME/.rimstone/apps/<app-name>/file
+
+.EE
+.RE
+
+If you wish to place this directory in another physical location, see \fBrim\fP.
+
+You can create files here by means of \fBuniq-file\fP, where a new unique file is created - with the file name made available to you. This directory is also used for uploading of files from clients (such as web browsers or mobile device cameras) - the uploading is handled automatically by RimStone (see \fBget-param\fP).
+
+In general, a number of sub-directories is created within the file directory that contain files, which allows for billions of files to be kept. This scheme also allows for faster access to file nodes due to relatively low number of sub-directories and files randomly spread per each such sub-directory. The random spreading of files across subdirectories is done automatically.
+
+Do not rename file names or sub-directory names stored under file directory.
+.SH SEE ALSO
+ Files
+
+\fBchange-mode\fP  
+\fBclose-file\fP  
+\fBcopy-file\fP  
+\fBdelete-file\fP  
+\fBfile-position\fP  
+\fBfile-storage\fP  
+\fBfile-uploading\fP  
+\fBget-upload\fP  
+\fBlock-file\fP  
+\fBopen-file\fP  
+\fBread-file\fP  
+\fBread-line\fP  
+\fBrename-file\fP  
+\fBstat-file\fP  
+\fBtemporary-file\fP  
+\fBuniq-file\fP  
+\fBunlock-file\fP  
+\fBwrite-file\fP   
+See all 
+\fBdocumentation\fP

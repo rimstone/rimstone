@@ -1,0 +1,52 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+continue-loop \-  (program-flow)
+.SH PURPOSE
+Continue to the top of a loop.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+continue-loop
+
+.EE
+.RE
+
+.SH DESCRIPTION
+continue-loop will continue execution at the top of the loop at \fBstart-loop\fP, \fBrun-query\fP, or \fBread-line\fP statements. 
+
+.SH EXAMPLES
+Skip the processing if it's the loop #300:
+
+.RS 4
+.EX
+
+set-number cont_loop = 300
+start-loop repeat 1000 use i start-with 1
+    if-true i equal cont_loop
+        continue-loop 
+    end-if
+    @Completed <<print-out i>> loops so far
+end-loop
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Program flow
+
+\fBbreak-loop\fP  
+\fBcall-handler\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBquit-process\fP  
+\fBreturn-handler\fP  
+\fBstart-loop\fP   
+See all 
+\fBdocumentation\fP

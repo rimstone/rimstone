@@ -1,0 +1,48 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+code-blocks \- RimStone documentation (program-flow)
+.SH DESCRIPTION
+
+.LP
+.B CODE BLOCKS
+.LP
+
+Use curly braces ("{" and "}") to open and close a code block. They create a separate scope for previously non-existing variables defined within them, which begins with "{" and ends with "}". Note that if a variable existed in an outer scope, it cannot be created again in the inner scope; rather it's the same variable.
+
+Note that \fBif-true\fP, \fBrun-query\fP, \fBstart-loop\fP and \fBread-line\fP statements contain implicit code blocks, meaning the code between them and the accompanying end-statement is within implicit "{" and "}".
+
+.SH EXAMPLES
+The following code will first print out "outside" and then "inside" twice, illustrating the fact that variable "s1" is defined only in the outer scope once. Variable "s2" exists only in inner scope:
+
+.RS 4
+.EX
+
+begin-handler /scope public
+    set-string s1="outside"
+    print-out s1 new-line
+    {
+        set-string s1="inside"
+        print-out s1 new-line
+    }
+    print-out s1 new-line
+end-handler
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Program flow
+
+\fBbreak-loop\fP  
+\fBcall-handler\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBquit-process\fP  
+\fBreturn-handler\fP  
+\fBstart-loop\fP   
+See all 
+\fBdocumentation\fP

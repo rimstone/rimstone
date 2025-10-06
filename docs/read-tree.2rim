@@ -1,0 +1,121 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+read-tree \-  (tree)
+.SH PURPOSE
+Search/update a tree.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+read-tree <tree> \\
+    ( equal <search key> | lesser <search key> | greater <search key> | \\
+        lesser-equal <search key> | greater-equal <search key> | \\
+        min-key | max-key ) \\
+    [ value <value> ] \\
+    [ update-value <update value> ] \\
+    [ key <key> ] \\
+    [ status <status> ] \\
+    [ new-cursor <cursor> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+read-tree will search <tree> (created with \fBnew-tree\fP) for a node with the string key that is:
+
+.RS 4
+\[bu]    
+equal to <search key> ("equal" clause)
+
+.RE
+
+.RS 4
+\[bu]    
+lesser than <search key> ("lesser" clause)
+
+.RE
+
+.RS 4
+\[bu]    
+greater than <search key> ("greater" clause)
+
+.RE
+
+.RS 4
+\[bu]    
+lesser or equal than <search key> ("lesser-equal" clause)
+
+.RE
+
+.RS 4
+\[bu]    
+greater or equal than <search key> ("greater-equal" clause)
+
+.RE
+
+.RS 4
+\[bu]    
+a minimum key in the tree ("min-key" clause)
+
+.RE
+
+.RS 4
+\[bu]    
+a maximum key in the tree ("max-key" clause)
+.RE
+
+The <status> in "status" clause will be RIM_OKAY if a key conforming to one of these criteria is found, and RIM_ERR_EXIST if not. 
+
+If a key is found, the value associated with the key can be obtained with "value" clause in <value>; an existing key used to originally insert this value into the tree can be obtained with "key" clause in string <key>. If a key is not found, both <value> and <key> are unchanged. 
+
+You can update the value associated with a found key with "update-value" clause by specifying <update value> string. This update is performed after <value> has been retrieved, allowing you to obtain the previous value in the same statement. 
+
+If you'd like to iterate the ordered list of keys in a tree, create a <cursor> by using "new-cursor" clause, in which case <cursor> will be positioned on a found tree node. See \fBuse-cursor\fP for more on using cursors. Cursors are useful in range searches; typically you'd find a key that is an upper or lower bound of a range and then keep iterating to a lesser or greater value until some criteria is met, such as when the opposite bound is found. RimStone treees are by default constructed so that such iterations are O(1) in complexity, meaning each is a single tree node access (see \fBnew-tree\fP). 
+
+.SH EXAMPLES
+In this example, a million key/value pairs are inserted into a tree, and then each of them is searched for and then displayed back (see \fBwrite-tree\fP for more on inserting into a tree). Both the key and the data are a numerical value of a key:
+
+.RS 4
+.EX
+
+%% /tree-example public
+
+    new-tree mytree key-as "positive integer" // create new tree
+
+    set-number i
+    start-loop use i start-with 0 repeat 1000000
+        number-string i to key
+        set-string data=key
+        write-tree mytree key (key) value data // insert key/data to the tree
+    end-loop
+
+    start-loop use i start-with 0 repeat 1000000
+        number-string i to key
+        // search tree for each key previously inserted
+        read-tree mytree equal (key) status st value data
+        if-true st not-equal RIM_OKAY
+            @Could not find key <<print-out key>>
+        else-if
+            @Found data <<print-out data>> associated with key <<print-out key>>
+        end-if
+        delete-string key
+    end-loop
+%%
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Tree
+
+\fBdelete-tree\fP  
+\fBget-tree\fP  
+\fBnew-tree\fP  
+\fBpurge-tree\fP  
+\fBread-tree\fP  
+\fBuse-cursor\fP  
+\fBwrite-tree\fP   
+See all 
+\fBdocumentation\fP

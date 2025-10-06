@@ -1,0 +1,74 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+cos \-  (math-functions)
+.SH PURPOSE
+Cosine functions.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+cos( <var> )
+
+.EE
+.RE
+
+.SH DESCRIPTION
+cos returns cosine of <var>, where <var> is given in radians. <var> is a number or a double and the result is a double.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+set-double d = cos(1) + 1
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Math functions
+
+\fBabd\fP  
+\fBabn\fP  
+\fBacos\fP  
+\fBacosh\fP  
+\fBasin\fP  
+\fBasinh\fP  
+\fBatan\fP  
+\fBatan2\fP  
+\fBatanh\fP  
+\fBcbrt\fP  
+\fBceil\fP  
+\fBcopysign\fP  
+\fBcos\fP  
+\fBcosh\fP  
+\fBdbl\fP  
+\fBerf\fP  
+\fBerfc\fP  
+\fBexp\fP  
+\fBexp2\fP  
+\fBfloor\fP  
+\fBfmod\fP  
+\fBhypot\fP  
+\fBisinf\fP  
+\fBisnan\fP  
+\fBldexp\fP  
+\fBlgamma\fP  
+\fBlog\fP  
+\fBlog10\fP  
+\fBlog2\fP  
+\fBmath-functions\fP  
+\fBnextafter\fP  
+\fBnum\fP  
+\fBpow\fP  
+\fBround\fP  
+\fBsin\fP  
+\fBsinh\fP  
+\fBsqrt\fP  
+\fBtan\fP  
+\fBtanh\fP  
+\fBtrunc\fP   
+See all 
+\fBdocumentation\fP

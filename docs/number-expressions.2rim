@@ -1,0 +1,87 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+number-expressions \- RimStone documentation (numbers)
+.SH DESCRIPTION
+A number expression uses operators plus (+), minus (-), multiply (*), divide (/), modulus (%), bitwise operators (& for and, | for or, ^ for xor and ~ for negation), parenthesis () and \fBmath-functions\fP that return a number. For example:
+
+.RS 4
+.EX
+
+set-number n1 = 10+(4*n2-5)%3
+
+.EE
+.RE
+
+You can use number expressions anywhere number is expected as an input to any statement.
+
+Note that character constants (such as 'A', 'z' etc.) are considered numbers with the value equal to their single-byte ASCII equivalent (i.e. unsigned numbers 0-255), for example this will assign 65 to "n":
+
+.RS 4
+.EX
+
+set-number n = 'A'
+
+.EE
+.RE
+
+Any subscripted string is also considered a number, for instance "n" would be 117 (since 's' is 115):
+
+.RS 4
+.EX
+
+set-string str = 'some'
+set-number n = str[0] + 2
+
+.EE
+.RE
+
+Other than decimals and character constants, you can also use hexadecimal numbers (such as 0xffaa), and octal numbers (such as 0710).
+
+.LP
+.B STRING SUBSCRIPTION
+.LP
+
+You can access each byte of a string as an unsigned 8-bit number:
+
+.RS 4
+.EX
+
+set-string str = "GOAT"
+set-string n = 10+str[2]
+
+.EE
+.RE
+
+Variable "n" will have a value of 75 (10+'A' or 10+65).
+
+.LP
+.B SUBSCRIPTION SHORTCUT
+.LP
+
+You can reference number arrays elements (see \fBnew-array\fP) by using subscription operator ([]), for instance:
+
+.RS 4
+.EX
+
+new-array narr type number
+write-array narr key 0 value 10
+write-array narr key 1 value narr[0]
+set-number n = 1 + narr[1] * 2
+
+.EE
+.RE
+
+Read about \fBmixing-doubles-and-numbers\fP.
+
+Note that no checks are performed to catch overflows and underflows. With number expressions, such events may produce incorrect results but the program will continue, and represent bugs in your code. Division by zero however will cause your program to \fBerror out\fP. Use "--fpe" option in \fBrim\fP during debugging and testing to catch such problems.
+.SH SEE ALSO
+ Numbers
+
+\fBabs-number\fP  
+\fBmixing-doubles-and-numbers\fP  
+\fBnumber-expressions\fP  
+\fBnumber-string\fP  
+\fBset-number\fP  
+\fBstring-number\fP   
+See all 
+\fBdocumentation\fP

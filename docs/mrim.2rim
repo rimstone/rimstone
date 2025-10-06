@@ -1,0 +1,340 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+mrim \-  (service-manager)
+.SH PURPOSE
+Run and manage services.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+mrim <options> <app name>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+mrim is a service manager. A service is started as a number of concurrent processes serving application requests, typically from reverse-proxy servers such as Apache, Nginx, HAProxy or others. Use mrim to create RimStone applications, including both service and command-line.
+
+A number of options are available to setup and manage the execution of a RimStone program as an application server, which can be accessed either via TCP/IP or a Unix domain socket. 
+
+<app name> specifies the name of your application. Each application must have a unique name. <app name> may contain alphanumeric characters and an underscore, must start with a character and its maximum length is 30. 
+
+mrim runs as a light-weight daemon (often requiring only 100-150K of resident RAM), with a separate instance for each application specified by the <app name>. When mrim starts your service, its current directory is set to $HOME/.rimstone/apps/<app name>/app. The permissions context is inherited from the caller, so the effective user ID, group ID and any supplemental groups are that of the caller. You can use tools like runuser to specifically set the permissions context.
+
+mrim will re-start service processes that exited or died, keeping the number of processes as specified, unless -n option is used. The number of worker processes can be specified with a fixed (-w) option, or it can dynamically change based on the load (-d option), including none at all. Hence, it is possible to have no worker processes at all, and they will be started when incoming request(s) come in, and stay up as determined by the request load.
+
+<options> are:
+
+.RS 4
+\[bu]    
+-i
+Initialize the directory and file structure for application <app name>. If you are building application from source code, this must be executed in the source code directory; mrim will create file ".rimapp" which identifies the application so \fBrim\fP can run in the directory. The directory structure is setup in $HOME/.rimstone/apps/<app name> (see \fBdirectories\fP).
+
+.RE
+
+.RS 4
+\[bu]    
+-u <OS user>
+The owner of your application. This is only used when initializing directory structure used by mrim (see -i option). Do not use it otherwise. It cannot be root. 
+
+.RE
+
+.RS 4
+\[bu]    
+-r <proxy group>
+The group of proxy web server (such as Apache or Nginx). This is only used when initializing directory structure used by mrim (see -i option). Do not use it otherwise. It restricts the ability to connect to your application only to the members of said group (in addition to the user who owns your server) when a Unix socket is used, otherwise anyone can connect. If you are not a member of this group, then you must invoke mrim with sudo - this is the only time this is necessary (see below an example on how to run with sudo).
+
+.RE
+
+.RS 4
+\[bu]    
+-f
+Run in the foreground. The process does not return to the command line prompt until it is stopped. Useful for debugging and where foreground processing is required.
+
+.RE
+
+.RS 4
+\[bu]    
+-p <port number>
+TCP/IP port number your service program will listen on (and accept connections), if you are using TCP/IP. You typically need to specify ProxyPass, "location" or similar FastCGI directives in your proxy web server so it can connect to your application. If you are using \fBClient-API\fP or \fBcall-remote\fP, you would use "<host name>:<port number>", for instance "127.0.0.1:2301" if the server is local and <port number> is 2301. You can either use TCP/IP or Unix domain sockets (-x option). Typically, you would use Unix domain sockets if proxy web server runs on the same computer as your application server. If you specify neither -x nor -p, -x (unix domain socket) is the default. 
+
+.RE
+
+.RS 4
+\[bu]    
+-x
+Use Unix domain socket to connect from proxy web server to your application server. This socket is automatically created by mrim and its full path name is "$HOME/.rimstone/apps/<app name>/sock/sock" (you can connect to it via \fBClient-API\fP, \fBcall-remote\fP etc.). When using a proxy web server (like Apache or Nginx), you typically need to specify ProxyPass, "location" or similar FastCGI directives so it can connect to your application. If you specify neither -x nor -p (TCP/IP socket), then -x (unix domain socket) is the default.
+
+.RE
+
+.RS 4
+\[bu]    
+-l <backlog size>
+The size of socket listening backlog for incoming connections. It must be a number between 10 and SOMAXCONN-1, inclusive. The default is 400. Increase it if your system is very busy to improve performance.
+
+.RE
+
+.RS 4
+\[bu]    
+-d
+Dynamically change the number of service processes ("worker" processes) to match the request load (adaptive mode). Use with "max-worker" and "min-worker" options. You cannot use -w with this option. The number of processes needed is determined based on any pending connections that are not answered by any running processes. If there are more incoming connections than processes, the number of processes will grow. If no such connections are detected (i.e. existing processes are capable of handling any incoming requests), the number of processes does not grow and will decrease to the point of minimum necessary number of workers. In that case, given release time (-t option), the number of processes will slowly decline until the incoming requests warrant otherwise. The number of running processes thus will fluctuate based on the actual load, these options, as well as --min-worker and --max-worker options. If neither -d nor -w is specified, -d is the default.
+
+.RE
+
+.RS 4
+\[bu]    
+--min-worker=<min workers>
+Minimum number of service processes that run in adaptive mode (-d option). The default is 5. You can set this to 0 if needed to save memory. This option can be used only with -d option.
+
+.RE
+
+.RS 4
+\[bu]    
+--max-worker=<max workers>
+Maximum number of service processes that run in adaptive mode (-d option). The default is 20. This option can be used only with -d option.
+
+.RE
+
+.RS 4
+\[bu]    
+-t <release time>
+Timeout before the number of service processes is reduced to meet the reduced load. The default is 30 seconds, and it can be a value between 5 seconds and 86400 seconds (i.e. a day).
+
+.RE
+
+.RS 4
+\[bu]    
+-w <worker processes>
+Number of parallel service processes ("worker" processes) that will be started. These processes do not exit; they serve incoming requests in parallel, one request per process. The number of processes should be guided by the concurrent user demand of your application. If neither -d nor -w is specified, -d is the default.
+
+.RE
+
+.RS 4
+\[bu]    
+-m <command>
+Send a command to mrim daemon serving an application. <command> can be "start" (to start service processes), "stop" (to stop them), "restart" (to restart them), "quit" (to stop mrim daemon altogether) or "status" (to display status of mrim). 
+
+.RE
+
+.RS 4
+\[bu]    
+-n
+Do not restart service processes if they exit or die. However, in adaptive mode (-d option), this option has no effect.
+
+.RE
+
+.RS 4
+\[bu]    
+-g
+Do not restart service processes when their executable changes. By default, they will be automatically restarted, which is useful when in development, or upgrading the server executable.
+
+.RE
+
+.RS 4
+\[bu]    
+-a <args>
+Specify any command-line arguments for your application (see "arg-count" and "arg-value" clauses in \fBget-req\fP). The <args> should be double-quoted as a whole, while use of single quotes to quote arguments that contain whitespaces is permitted. 
+
+.RE
+
+.RS 4
+\[bu]    
+-z
+Suppress HTTP headers in all \fBservice\fP handlers in the application. This is equivalent to having \fBsilent-header\fP implied at the beginning of each \fBservice handler\fP. Use this option only if service is not used as a web service (i.e. the output will not have HTTP headers), or for testing or elsewhere where such headers may not be needed. Otherwise, you can use "--silent-header" option in \fBrim\fP or "RIM_SILENT_HEADER" environment variable in \fBClient-API\fP to control from command-line or a client if headers are output or not.
+
+.RE
+
+.RS 4
+\[bu]    
+-s <sleep millisecs>
+The basis time period (in milliseconds) that mrim will sleep before checking for commands (specified by -m option), or check for dead service processes that need restarting. It can be between 100 and 5000 milliseconds. Smaller value will mean higher responsiveness but also higher CPU usage. The default value usually suffices, and should not be changed without due consideration.
+
+.RE
+
+.RS 4
+\[bu]    
+-e
+Display verbose messages.
+
+.RE
+
+.RS 4
+\[bu]    
+-c <program>
+Full absolute path to your service program. If omitted, the executable $HOME/.rimstone/bld/<app name>/<app name>.srvc is assumed, which is the standard RimStone service executable. If present, but without any slashes in it to indicate path (including current directory as ./), then this executable is assumed to be $HOME/.rimstone/bld/<app name>/<program>.
+
+.RE
+
+.RS 4
+\[bu]    
+-v
+Display mrim version (which matches RimStone version) as well as copyright and license.
+
+.RE
+
+.RS 4
+\[bu]    
+-h,--help
+Display help.
+
+.RE
+
+mrim writes log file at $HOME/.rimstone/apps/<app name>/.mrimlog file. This file is overwritten when mrim starts, so it contains the log of the current daemon instance only.
+
+.LP
+.B EXIT CODE
+.LP
+
+When starting, mrim exits with 0 if successful and 1 if it is already running. If service executable cannot run, the exit code is -1. When creating application, mrim exits with 0 if successful, and -1 if not.
+
+.LP
+.B PROCESS CONTROL
+.LP
+
+When mrim is told to stop the application (with "-m stop" arguments), it will send SIGTERM signal to all its children. All RimStone processes will complete the current request before exiting, assuming they are currently processing a request; otherwise they will exit immediately. 
+
+If mrim is terminated without "-m stop", (for example with SIGKILL signal), then all its chidlren will immediately terminate with SIGKILL as well, regardless of whether they are currently processing any requests or not.
+
+.LP
+.B EXAMPLES
+.LP
+
+
+.RS 4
+\[bu]    
+To begin using mrim for a specific application, you must initialize it first. For example, if your application name is "myapp" and the user who will run application is the currently logged-on user:
+
+.RS 4
+.EX
+
+rim -k myapp
+
+.EE
+.RE
+
+Note that you need to use $(which mrim) when using sudo, since root's user directory has no RimStone installation and mrim executable won't be found. Since shell $() construct is executed by bash prior to the command, this will produce the correct executable path for mrim.
+
+.RE
+
+.RS 4
+\[bu]    
+The initialization needs to be done only once. Following the above, you can start your service application with 3 server processes:
+
+.RS 4
+.EX
+
+mrim -w 3 myapp
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+To stop your service processes:
+
+.RS 4
+.EX
+
+mrim -m stop -- myapp
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+To restart them:
+
+.RS 4
+.EX
+
+mrim -m restart -- myapp
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+To stop the server entirely (meaning to stop the resident mrim daemon serving your particular application):
+
+.RS 4
+.EX
+
+mrim -m quit -- myapp
+
+.EE
+.RE
+
+
+.RE
+
+.RS 4
+\[bu]    
+To view status of mrim daemon for your application:
+
+.RS 4
+.EX
+
+mrim -m status -- myapp
+
+.EE
+.RE
+
+
+.RE
+
+
+.LP
+.B RUNNING YOUR APPLICATION SERVER ON SYSTEM STARTUP
+.LP
+
+If you want your application to run on system startup (so you don't have to run it manually), you can add it to systemd configuration. Here is an example (replace <app name> with your application name and <app owner> with the name of the Operating System user under which your application is installed):
+
+.RS 4
+.EX
+
+[Unit]
+Description=RimStone Service Program Manager for [<app name>] application.
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/mrim <app name>
+ExecStop=/usr/bin/mrim -m quit <app name>
+KillMode=process
+Restart=on-failure
+User=<app owner>
+
+[Install]
+WantedBy=multi-user.target
+
+.EE
+.RE
+
+The above should be saved in the directory given by the output of the following system command:
+
+.RS 4
+.EX
+
+pkg-config systemd --variable=systemdsystemunitdir
+
+.EE
+.RE
+
+The file should be saved as <app name>.service (or similar). Once saved, you can use standard systemctl commands to start, stop and restart your service.
+.SH SEE ALSO
+ Service manager
+
+\fBmrim\fP   
+See all 
+\fBdocumentation\fP

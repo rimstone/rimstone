@@ -1,0 +1,55 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+delete-lifo \-  (LIFO)
+.SH PURPOSE
+Delete LIFO list elements.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+delete-lifo <list> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+delete-lifo will delete the most recently added elements to the LIFO <list> up to the last one read, including. <list> was created by \fBnew-lifo\fP. 
+
+Right after \fBrewind-lifo\fP, no element was read yet, and delete-lifo will have no effect. Note that \fBwrite-lifo\fP also performs an implicit \fBrewind-lifo\fP.
+
+After any \fBread-lifo\fP, delete-lifo wil delete all elements up to the element read, including that element.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+new-lifo mylist
+
+// Add data to the list
+write-lifo mylist key "key1" value "value1"
+write-lifo mylist key "some2" value "other2"
+
+// Get first data from the list, it will be "some2" key
+read-lifo mylist key k value v
+
+// Delete first element from the list, so list will have only "key1" key
+delete-lifo mylist
+
+.EE
+.RE
+
+.SH SEE ALSO
+ LIFO
+
+\fBdelete-lifo\fP  
+\fBget-lifo\fP  
+\fBnew-lifo\fP  
+\fBpurge-lifo\fP  
+\fBread-lifo\fP  
+\fBrewind-lifo\fP  
+\fBwrite-lifo\fP   
+See all 
+\fBdocumentation\fP

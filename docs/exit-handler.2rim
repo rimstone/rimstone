@@ -1,0 +1,82 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+exit-handler \-  (program-flow)
+.SH PURPOSE
+Exit current request processing.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+exit-handler [ <request status> ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+Exits current request by transferring control directly after the top-level \fBrequest\fP dispatcher. If there is an \fBafter-handler\fP, it will still execute, unless exit-handler is called from \fBbefore-handler\fP.
+
+<request status> number is a request status returned to the caller; if not specified, then it's the value specified in the last executed \fBexit-status\fP statement; if none executed in the request, then it's 0.
+
+.SH EXAMPLES
+Returning status of 20:
+
+.RS 4
+.EX
+
+begin-handler /req-handler public
+    ...
+    exit-status 20
+    ...
+    exit-handler
+    ...
+end-handler
+
+.EE
+.RE
+
+Returning status of 0:
+
+.RS 4
+.EX
+
+begin-handler /req-handler public
+    ...
+    exit-handler
+    ...
+end-handler
+
+.EE
+.RE
+
+Returning status of 10:
+
+.RS 4
+.EX
+
+begin-handler /req-handler public
+    ...
+    exit-handler 10
+    ...
+end-handler
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Program flow
+
+\fBbreak-loop\fP  
+\fBcall-handler\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBquit-process\fP  
+\fBreturn-handler\fP  
+\fBstart-loop\fP   
+See all 
+\fBdocumentation\fP

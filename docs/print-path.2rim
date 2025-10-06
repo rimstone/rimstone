@@ -1,0 +1,67 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+print-path \-  (output)
+.SH PURPOSE
+Print out URL that leads to a request handler.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+print-path <request path> [ new-line ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+print-path outputs URL application path of a URL that called this \fBrequest\fP handler, followed by string <request path>.
+
+If no "--path" option in \fBrim\fP is used to specify URL application path, then it is the same as application name prepended with a forward slash, followed by "/<request path>":
+
+.RS 4
+.EX
+
+/<app name>/<request path>
+
+.EE
+.RE
+
+print-path is used in construction of URLs or HTML forms (either for HTML or API) to refer back to the same application. Use it to create the absolute URL path to refer back to a service of yours so you can issue \fBrequest\fPs to it. 
+
+For example, this is a link that specifies request to service "/show-notes":
+
+.RS 4
+.EX
+
+@<a href="<<print-path "/show-notes">>?date=yesterday">Show Notes</a> 
+
+.EE
+.RE
+
+If you are building HTML forms, you can add a note with:
+
+.RS 4
+.EX
+
+@<form action='<<print-path "/add-note">>' method="POST">
+@<input type="text" name="note" value="">
+@</form>
+
+.EE
+.RE
+
+See \fBrequest\fP for more on URL structure.
+
+If "new-line" clause is used, then a new line ("\\n") is output after the URL path.
+.SH SEE ALSO
+ Output
+
+\fBfinish-output\fP  
+\fBflush-output\fP  
+\fBoutput-statement\fP  
+\fBprint-format\fP  
+\fBprint-out\fP  
+\fBprint-path\fP   
+See all 
+\fBdocumentation\fP

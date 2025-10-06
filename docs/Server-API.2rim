@@ -1,0 +1,206 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+Server-API \- RimStone documentation (API)
+.SH DESCRIPTION
+RimStone can be used in \fBextended-mode\fP, where non-RimStone code or libraries can be linked with your application.
+
+Such code can be from a library (see --llflag and --cflag options in \fBrim\fP), or can be written directly as C code, i.e. files with .c and .h extension together with your RimStone application. To do this, use \fBcall-extended\fP statement.
+
+Any function with C linkage can be used provided:
+
+.RS 4
+\[bu]    
+its parameters are (by value or reference) only of type: "int64_t" (number type in RimStone), "bool" (bool type in RimStone) or "char *" (string type in RimStone).
+
+.RE
+
+.RS 4
+\[bu]    
+it must not return any value (i.e. it must have a "void" return type).
+.RE
+
+When allocating strings in extended code, you must use RimStone memory management functions. These functions are based on standard C library (such as malloc or free), but are not compatible with them because RimStone manages such memory on top of the standard C library.
+
+The functions you can use are:
+
+.RS 4
+\[bu]    
+char *rim_strdup (char *s) which creates a copy of a null-terminated string "s". A pointer to memory data is returned.
+
+
+.RE
+
+.RS 4
+\[bu]    
+char *rim_strdupl (char *s, rim_num from, rim_num l) which creates a copy of memory data pointed to by "s", starting from byte "from" of length "l". Note that "from" is indexed from 0. A pointer to memory data is returned.
+
+
+.RE
+
+.RS 4
+\[bu]    
+void *rim_malloc(size_t size) which allocates memory of size "s" and returns a pointer to it.
+
+
+.RE
+
+.RS 4
+\[bu]    
+void *rim_calloc(size_t nmemb, size_t size) allocates "nmemb" blocks of memory (each of size "size") and returns a pointer to it. Memory is initialized to all zero bytes.
+
+
+.RE
+
+.RS 4
+\[bu]    
+num rim_mem_get_id (void *ptr) returns RimStone memory handle for memory "ptr".
+
+
+.RE
+
+.RS 4
+\[bu]    
+void *rim_realloc(rim_num r, size_t size) reallocates memory identified with RimStone memory handle "r" (see rim_mem_get_id()) to a new size of "size" and returns a pointer to it. Note that you can only reallocate the memory you created with rim_malloc() and rim_calloc() - do not attempt to reallocate RimStone memory passed to your function. RimStone in general never reallocates any existing memory in any statement.
+
+
+.RE
+
+.RS 4
+\[bu]    
+void rim_mem_set_len (rim_num r, rim_num len) sets the length of memory identified with RimStone memory handle "r" to "len" bytes. Note that all RimStone memory must have a null-byte at the end for consistency, regardless of whether such memory holds pure binary data or an actual null-delimited string. So for example, a string "abc" would have "len" set to 4 to include a null byte, and binary data "\\xFF\\x00\\x01" (which consists of 3 bytes, the middle of which is a null byte) would have "len" also set to 4 and you would place an extra zero byte at the end of it even if it's not part of the actual useful data. Note that whatever memory length you set, it must be lesser or equal to the length of memory you have actually allocated.
+
+
+.RE
+
+.RS 4
+\[bu]    
+num rim_mem_get_len (rim_num r) returns the length of memory identified with RimStone memory handle "r". The length returned is 1 bytes less than the memory set by rim_mem_set_len(), so for example for string "abc" the return value would be 3, as it would be for "\\xFF\\x00\\x01".
+.RE
+
+
+You can use rim_malloc(), rim_calloc() and rim_realloc() to create new RimStone-compatible memory - and assuming you have set the last byte of any such memory to a null byte, the resulting memory will be properly sized for RimStone usage. 
+
+If you have memory that's already provided from elsewhere, you can use rim_strdup() or rim_strdupl() to create a copy of it that's compatible with RimStone. 
+
+If RimStone memory you created with these functions has extra unused bytes, you can use either rim_realloc() to reduce its footprint, or you can use rim_mem_set_len() to set its length.
+
+Note that if you use C code included with a RimStone project, you must include "rim.h" file in each of them. You do not need to manually include any other ".h" files (header files), as they will be automatically picked up.
+
+.SH EXAMPLES
+Place the following files in a separate directory for demonstration purposes.
+
+In this example, "example.rim" will use C functions from "example.c", and "example.h" will have declarations of those functions. File "example.c" implements a factorial function, as well as a function that will store the factorial result in an output message that's allocated and passed back to your RimStone code:
+
+.RS 4
+.EX
+
+\[char35]include "rim.h"
+
+void get_factorial(rim_num f, rim_num *res)
+{
+    *res = 1;
+    rim_num i;
+    for (i = 2; i <= f; i++) {
+        *res *= i;
+    }
+}
+
+\[char35]define MEMSIZE 200
+void fact_msg (rim_num i, char **res)
+{
+    // rimstone rule: outgoing string must NOT free or realloc its incoming value
+    // all else is allowed
+    char *r = rim_malloc (MEMSIZE);
+    rim_num f;
+    get_factorial (i, &f);
+    rim_num bw = snprintf(r, MEMSIZE, "Factorial value (message from C function) is %ld", f) + 1;
+    // reduce memory footprint to match the memory used (including the null byte)
+    // you can also use rim_mem_set_len() with bw as length for better performance 
+    // (but also higher memory usage)
+    *res = rim_realloc (rim_mem_get_id(r), bw);
+}
+
+.EE
+.RE
+
+File "example.h" declares the above functions:
+
+.RS 4
+.EX
+
+void get_factorial(rim_num f, rim_num *res);
+void fact_msg (rim_num i, char **res);
+
+.EE
+.RE
+
+File "example.rim" will call the above functions and display the results:
+
+.RS 4
+.EX
+
+extended-mode
+
+begin-handler /example public
+
+    set-number fact
+    call-extended get_factorial (10, &fact)
+    @Factorial is <<print-out fact>>
+
+    set-string res
+    call-extended fact_msg (10, &res)
+    print-out res
+    @
+end-handler
+
+.EE
+.RE
+
+Create application "example":
+
+.RS 4
+.EX
+
+rim -k example
+
+.EE
+.RE
+
+Make the application:
+
+.RS 4
+.EX
+
+rim -q
+
+.EE
+.RE
+
+Run it:
+
+.RS 4
+.EX
+
+rim -r --req="/example" --exec --silent-header
+
+.EE
+.RE
+
+The output is, as expected:
+
+.RS 4
+.EX
+
+Factorial is 3628800
+Factorial value (message from C function) is 362880
+
+.EE
+.RE
+
+.SH SEE ALSO
+ API
+
+\fBClient-API\fP  
+\fBServer-API\fP   
+See all 
+\fBdocumentation\fP

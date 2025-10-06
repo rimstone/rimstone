@@ -1,0 +1,33 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+uninstall \- RimStone documentation (install-rimstone)
+.SH DESCRIPTION
+
+.LP
+.B UNINSTALL RIMSTONE IF INSTALLED FROM SOURCE
+.LP
+
+Run from command line:
+
+.RS 4
+.EX
+
+make uninstall
+
+.EE
+.RE
+
+
+.LP
+.B APPLICATION FILES
+.LP
+
+Note that $HOME/.rimstone/apps/<app name> directory will not be removed for any application, since it may contain application files; you may delete it if there's no data there you care about, or you backed it up.
+.SH SEE ALSO
+ Install rimstone
+
+\fBinstall-package\fP  
+\fBinstall-rimstone\fP  
+\fBuninstall\fP   
+See all 
+\fBdocumentation\fP

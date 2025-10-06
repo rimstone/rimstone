@@ -1,0 +1,166 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+set-string \-  (strings)
+.SH PURPOSE
+Set value of a string variable.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+set-string <variable> [ unquoted ] [ = <string> ] [ process-scope ]
+
+set-string <variable> [ <index> ] = <number>
+
+set-string <variable> length <length> 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+String variable <variable> will be assigned a value of <string> if clause "=" is present; otherwise <variable> is assigned an empty string. If "process-scope" clause is used, then <string> is assigned only the first time set-string executes.
+
+.LP
+.B WITH PROCESS-SCOPE CLAUSE
+.LP
+
+If "process-scope" clause is used, then <variable> keeps its value across requests, i.e. for the life of the process. Note that a process-scoped string variable can only be assigned in set-string. However, it can be used as a regular string in any other statement.
+
+.LP
+.B WITH LENGTH CLAUSE
+.LP
+
+If "length" clause is used, then the length of string <variable> is set to <length>. Just like with all other string statements, you can only set the new length of the string between zero and the current string length. This is useful mostly when manipulating string's individual bytes, and generally not in other cases (see \fBnew-string\fP).
+
+.LP
+.B WITH UNQUOTED CLAUSE
+.LP
+
+If "unquoted" clause is used, then <string> literal is unquoted, and everything from equal clause ("=") to the rest of the line is a <string>; in this case there is no need to escape double quotes or backslashes. Note that in this case, "unquoted" and any other clause must appear prior to equal clause ("=") and after variable, because they wouldn't otherwise be recognized. For instance:
+
+.RS 4
+.EX
+
+set-string my_string unquoted = this is "some" string where escape characters like \\n do "not work"
+
+.EE
+.RE
+
+This is the same as:
+
+.RS 4
+.EX
+
+set-string my_string = "this is \[char92]"some\[char92]" string where escape characters like \\n do \[char92]"not work\[char92]""
+
+.EE
+.RE
+
+"unquoted" clause is useful when writing string literals that would otherwise need lots of escaping. You can use double backslash at the end of the line to split the line with new line in between:
+
+.RS 4
+.EX
+
+set-string unq1 unquoted =This is one line\\
+        second line and\\
+        third!
+
+.EE
+.RE
+
+The above will create a string:
+
+.RS 4
+.EX
+
+This is one line
+second line and
+third!
+
+.EE
+.RE
+
+
+.LP
+.B CONCATENATING STRING LITERALS
+.LP
+
+A string can be represented as a concatenation of string literals; this is useful when you want to preserve spaces, for instance:
+
+.RS 4
+.EX
+
+set-string a="something is " \\
+    "  very good " \\
+    " with spaces!! "
+// string is "something is   very good  with spaces!! "
+
+.EE
+.RE
+
+
+.LP
+.B SET A BYTE IN A STRING
+.LP
+
+You can also use set-string to set a byte in it; in this case <index> byte in <variable> string is set to <number>. <index> starts with 0 for the first byte. For instance, the resulting "str" will be "Aome string" since 65 is a number representation of 'A':
+
+.RS 4
+.EX
+
+set-string str = "some string"
+set-string str[0] = 65
+// or using a character constant as a number, to the same effect
+set-string str[0] = 'A'
+
+.EE
+.RE
+
+
+.SH EXAMPLES
+Initialize "my_string" variable to "":
+
+.RS 4
+.EX
+
+set-string my_string 
+
+.EE
+.RE
+
+Initialize "my_string" variable to "abc":
+
+.RS 4
+.EX
+
+set-string my_string = "abc"
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Strings
+
+\fBcopy-string\fP  
+\fBcount-substring\fP  
+\fBdelete-string\fP  
+\fBdouble-string\fP  
+\fBlower-string\fP  
+\fBmatch-regex\fP  
+\fBnew-string\fP  
+\fBnumber-string\fP  
+\fBread-split\fP  
+\fBreplace-string\fP  
+\fBscan-string\fP  
+\fBset-string\fP  
+\fBsplit-string\fP  
+\fBstring-double\fP  
+\fBstring-expressions\fP  
+\fBstring-length\fP  
+\fBstring-number\fP  
+\fBtrim-string\fP  
+\fBupper-string\fP  
+\fBwrite-string\fP   
+See all 
+\fBdocumentation\fP

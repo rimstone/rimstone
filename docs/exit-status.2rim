@@ -1,0 +1,47 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+exit-status \-  (program-execution)
+.SH PURPOSE
+Set handler exit status.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+exit-status <request status>
+
+.EE
+.RE
+
+.SH DESCRIPTION
+exit-status specifies <request status>, which must be a number; this is the status that is passed out of the request to the external caller (see \fBrequest\fP and \fBexit-handler\fP).
+
+<request status> can be obtained with "exit-status" clause in \fBread-remote\fP in the service caller; when the program runs as \fBcommand-line\fP, <request status> is program's exit code. 
+
+exit-status can be specified anywhere in the code, and does not mean exiting the \fBrequest\fP's processing; to do that, either use \fBexit-handler\fP or simply allow the handler to reach its end. If your program encounters difficulties and \fBerrors out\fP, then the <request status> is always a fixed reserved value of 107, regardless of you setting it with exit-status.
+
+When exit-status is not used, the default exit code is 0. When multiple exit-status statements run in a sequence, the request status is that of the last one that executes.
+
+If you want to specify request status and exit request processing at the same time, use \fBexit-handler\fP.
+
+.SH EXAMPLES
+When the program exits, its exit code will be 12:
+
+.RS 4
+.EX
+
+exit-status 12
+\[char46]..
+exit-handler
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Program execution
+
+\fBexec-program\fP  
+\fBexit-status\fP   
+See all 
+\fBdocumentation\fP

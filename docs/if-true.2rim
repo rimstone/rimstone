@@ -1,0 +1,199 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+if-true \-  (program-flow)
+.SH PURPOSE
+Comparison statement.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+if-true <comparison>
+    <any code>
+[
+else-if <comparison>
+    <any code>
+] ...
+[
+else-if
+    <any code>
+] 
+end-if
+
+.EE
+.RE
+
+.SH DESCRIPTION
+if-true statement will evaluate a <comparison> and if true, it will execute <any code> that immediately follows; if false, it will evaluate the optional following <comparison> in else-if statement, and if true it will execute <any code> that immediately follows it; and so on; if none of the comparisons are true, then an optional <any code> following else-if statement will execute; regardless of which <any code> executes (or if any does), the execution will continue after end-if.
+
+There can be only one "else-if" statement without a condition, and it must be the last one. 
+
+<comparison> is
+
+.RS 4
+\[bu]    
+For strings:
+
+.RS 4
+.EX
+
+<string> \\
+   ( equal | not-equal | \\
+   lesser-than | lesser-equal | \\
+   greater-than | greater-equal | \\
+   contain | not-contain ) \\
+<check string> \\
+ [ case-insensitive ] [ length <length> ]
+
+.EE
+.RE
+
+If "equal", "not-equal", "lesser-than", "lesser-equal", "greater-than" or "greater-equal" clause is used, a comparison succeeds if <string> is equal, not equal, lesser, lesser or equal, greater or greater-or-equal than <check string>, respectively. 
+
+If "contain" or "not-contain" clause is used, a comparison succeeds if <string> is contained or not contained in <check string>, respectively. 
+
+If "case-insensitive" clause is used, a comparison is performed without case sensitivity; this option is meant for null-terminated strings, while for non-null terminated strings it produces an undefined result.
+
+If "length" clause is used, only the first <length> bytes of the strings are compared; this clause is not available for "contain" and "not-contain".
+
+
+.RE
+
+.RS 4
+\[bu]    
+For numbers and doubles (<value> is a number of a double):
+
+.RS 4
+.EX
+
+<value> \\
+   ( equal | not-equal | \\
+   lesser-than | lesser-equal | \\
+   greater-than | greater-equal | \\
+   every | not-every ) \\
+<check value>  [ error-margin <error margin> ] ...
+
+.EE
+.RE
+
+If "equal", "not-equal", "lesser-than", "lesser-equal", "greater-than" or "greater-equal" clause is used, a comparison succeeds if <value> is equal, not equal, lesser, lesser or equal, greater or greater-or-equal than <check value>, respectively.
+
+If "every" is used, then the comparison succeeds if the modulo of <value> and <check value> is 0 - this is useful in executing some code every N times but not the ones in between; with "not-every" the comparison success is this modulo is not 0 which is useful to execute code all the times except every Nth.
+
+"error-margin" is valid for "equal" or "not-equal" comparisions, and for double only. Since doubles may be difficult to compare for equality, you can specify the margin of error (i.e. 1E-7), so that comparisions succeed if the difference between two doubles is lesser than this value. For instance, to limit double comparison to two decimals, "error-margin" should be 1e-2. Unless you have a reason not to use "error-margin" when comparing doubles (such as if they are rounded, or if you know how they are calculated and thus what the internal representation would be), you should always use it.
+
+
+.RE
+
+.RS 4
+\[bu]    
+For booleans:
+
+.RS 4
+.EX
+
+<boolean> ( equal | not-equal ) <check boolean>  ...
+
+.EE
+.RE
+
+
+.RE
+
+If "equal" or "not-equal" clause is used, a comparison succeeds if <boolean> is equal or not equal than <check boolean>, respectively. 
+
+.LP
+.B MULTIPLE COMPARISONS
+.LP
+
+For convenience, multiple <comparisons> can be connected by either "and" or "or" clause, but not both in the same <condition> (in order to keep comparisons readable; see \fBboolean-expressions\fP for constructing more involved boolean expressions). "and" clause uses logical AND to connect <comparisons> and it succeeds if all <comparison>s succeed. "or" clause uses logical OR to connect <comparisons> and it succeeds if at least one <comparison>s succeeds (if such a <comparison> is found, the following ones are not checked). 
+
+.LP
+.B NESTING
+.LP
+
+if-true can be nested, which can be up to 30 levels deep.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+%% /if-test public
+    get-param inp
+    if-true inp equal "1"
+        @Found "1" in input
+    else-if inp equal "2"  or inp equal "3"
+        @Found "2" or "3" in input
+        get-param inp_num
+        string-number inp_num to n
+        if-true n equal 4
+            @Found 4 in more input
+        else-if n equal 5  and  inp equal "4"
+            @Found 5 in more input and "4" in input
+        else-if
+            @Something else
+        end-if
+    else-if
+        @Found something else
+    end-if
+%%
+
+.EE
+.RE
+
+<string>, <number> and <boolean> can be expressions, for instance:
+
+.RS 4
+.EX
+
+set-string str1="one"
+set-string str2="two"
+if-true str1+" "+str2 not-equal "one two"
+    @It can't be true!
+end-if
+\[char46]..
+set-bool b1 = str1 not-equal "one"
+set-bool b2 = str2 equal "two"
+if-true b1 && b2 equal false
+    @It is true!
+end-if
+\[char46]..
+set-number n1 = 20
+if-true n1+10 equal 30 and !b1 equal true and str1 equal "one"
+    @It is true!
+end-if
+
+.EE
+.RE
+
+Check two doubles for equality with a margin of error - in this case they are considered equal as the margin of error is greater than the difference:
+
+.RS 4
+.EX
+
+set-double d = 62009.755529200672754
+if-true dl equal 62009.755529 error-margin 1E-4
+    @The doubles are equal
+end-if
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Program flow
+
+\fBbreak-loop\fP  
+\fBcall-handler\fP  
+\fBcode-blocks\fP  
+\fBcontinue-loop\fP  
+\fBdo-once\fP  
+\fBexit-handler\fP  
+\fBif-defined\fP  
+\fBif-true\fP  
+\fBquit-process\fP  
+\fBreturn-handler\fP  
+\fBstart-loop\fP   
+See all 
+\fBdocumentation\fP

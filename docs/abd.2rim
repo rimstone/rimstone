@@ -1,0 +1,74 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+abd \-  (math-functions)
+.SH PURPOSE
+Absolute value of a double.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+abd( <var> )
+
+.EE
+.RE
+
+.SH DESCRIPTION
+abd returns the absolute value of a double. <var> is a number or a double and the result is a double.
+
+.SH EXAMPLES
+
+.RS 4
+.EX
+
+set-double d = abd(-1) + 1
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Math functions
+
+\fBabd\fP  
+\fBabn\fP  
+\fBacos\fP  
+\fBacosh\fP  
+\fBasin\fP  
+\fBasinh\fP  
+\fBatan\fP  
+\fBatan2\fP  
+\fBatanh\fP  
+\fBcbrt\fP  
+\fBceil\fP  
+\fBcopysign\fP  
+\fBcos\fP  
+\fBcosh\fP  
+\fBdbl\fP  
+\fBerf\fP  
+\fBerfc\fP  
+\fBexp\fP  
+\fBexp2\fP  
+\fBfloor\fP  
+\fBfmod\fP  
+\fBhypot\fP  
+\fBisinf\fP  
+\fBisnan\fP  
+\fBldexp\fP  
+\fBlgamma\fP  
+\fBlog\fP  
+\fBlog10\fP  
+\fBlog2\fP  
+\fBmath-functions\fP  
+\fBnextafter\fP  
+\fBnum\fP  
+\fBpow\fP  
+\fBround\fP  
+\fBsin\fP  
+\fBsinh\fP  
+\fBsqrt\fP  
+\fBtan\fP  
+\fBtanh\fP  
+\fBtrunc\fP   
+See all 
+\fBdocumentation\fP
