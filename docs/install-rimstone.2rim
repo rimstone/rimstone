@@ -35,7 +35,7 @@ If you use git, from its official GitHub repo (depth is 1 for performance and to
 .RS 4
 .EX
 
-git clone --depth 1 git clone --depth 1 https://github.com/rimstone/rimstone.git
+git clone --depth 1 https://github.com/rimstone/rimstone.git
 cd rimstone
 \[char46]/riminst.sh
 \[char46] $HOME/.bashrc

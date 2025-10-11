@@ -306,7 +306,7 @@ build_structure:
 	install -D -m 0700 rimsetenv.sh -t $(V_LIB)/
 	install -D -m 0600 LICENSE -t $(V_RIM_ABOUT)/ 
 	install -D -m 0600 NOTICE -t $(V_RIM_ABOUT)/
-	install -D -m 0600 README -t $(V_RIM_ABOUT)/
+	install -D -m 0600 README.md -t $(V_RIM_ABOUT)/
 	install -D -m 0600 CONTRIBUTING -t $(V_RIM_ABOUT)/
 	install -m 0700 -d $(V_BIN)/
 	install -m 0700 -d $(V_TMP)/
@@ -317,7 +317,7 @@ build_structure:
 	if [ ! -L "$(V_BIN)/gg" ]; then ln -s $(V_BIN)/rim $(V_BIN)/gg; fi
 	$(AT)#install map pages if not a debian package, which does it automatically. man pages will not exist for install of LTO (source recompile in package).
 	$(AT)if [ -d docs ]; then install -m 0700 -d $(V_MAN) ; install -D -m 0600 docs/*.2rim -t $(V_MAN)/ ; sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(V_MAN)/*.2rim; sed -i "s/\$$DATE/$(DATE)/g" $(V_MAN)/*.2rim; fi
-	@GF=".version .version_public CONTRIBUTING LICENSE Makefile NOTICE README arr.c btrace/LICENSE btrace/atomic.c btrace/backtrace-supported.h btrace/backtrace.c btrace/backtrace.h btrace/config.h btrace/dwarf.c btrace/elf.c btrace/fileline.c btrace/filenames.h btrace/internal.h btrace/mmap.c btrace/mmapio.c btrace/posix.c btrace/print.c btrace/simple.c btrace/sort.c btrace/state.c chandle.c curl.c db.c fcgi/LICENSE fcgi/fastcgi.h fcgi/fcgiapp.c fcgi/fcgiapp.h fcgi/rimsock.c fcgi/rimsock.h fcgi/strerror.c hash.c json.c lite.c mrim.c msg.c mys.c pcre2.c pg.c rcli.c rcli.h rim rim.h rim.sel rim.te rim.vim rim_indent.vim rim_temp.h rimcli.c rimcommon.c rimcommon.h riminst.sh rimlib rimmem.c rimrt.c rimrtc.c rimsetenv.sh rr.te sec.c stub.c stub_after.c stub_before.c sys tree.c utf.c utfs.c v1.c vmakefile xml.c "; tar cvfz rimstone.tar.gz $$GF>/dev/null
+	@GF=".version .version_public CONTRIBUTING LICENSE Makefile NOTICE README.md arr.c btrace/LICENSE btrace/atomic.c btrace/backtrace-supported.h btrace/backtrace.c btrace/backtrace.h btrace/config.h btrace/dwarf.c btrace/elf.c btrace/fileline.c btrace/filenames.h btrace/internal.h btrace/mmap.c btrace/mmapio.c btrace/posix.c btrace/print.c btrace/simple.c btrace/sort.c btrace/state.c chandle.c curl.c db.c fcgi/LICENSE fcgi/fastcgi.h fcgi/fcgiapp.c fcgi/fcgiapp.h fcgi/rimsock.c fcgi/rimsock.h fcgi/strerror.c hash.c json.c lite.c mrim.c msg.c mys.c pcre2.c pg.c rcli.c rcli.h rim rim.h rim.sel rim.te rim.vim rim_indent.vim rim_temp.h rimcli.c rimcommon.c rimcommon.h riminst.sh rimlib rimmem.c rimrt.c rimrtc.c rimsetenv.sh rr.te sec.c stub.c stub_after.c stub_before.c sys tree.c utf.c utfs.c v1.c vmakefile xml.c "; tar cvfz rimstone.tar.gz $$GF>/dev/null
 	$(AT)install -D -m 0600 rimstone.tar.gz -t $(V_SHARE)/ 
 
 #This, if needed, must be run as root (obviously). For instance, if you have SELinux enabled, and you want to run a server that's accessed from say a web server

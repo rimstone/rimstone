@@ -95,7 +95,7 @@ echo "if [ -f $HOME/.rimstone/lib/rimsetenv.sh ]; then . $HOME/.rimstone/lib/rim
 #execute for this session in case it's sourced
 . $HOME/.rimstone/lib/rimsetenv.sh
 #setup vim highlighting
-gg -m
+rim -m
 
 #setup minimum permissions (inlcuding for Unix sockets)
 echo "Setting permissions..."
@@ -107,6 +107,6 @@ if [ "$E" == "0" ]; then
     ECODE=0
     mandb -u -c || ECODE=$? >/dev/null
 else
-    echo "man not available, use 'gg --man all|topic' to get help from command line"
+    echo "man not available, use 'rim --man all|topic' to get help from command line"
 fi
 

@@ -181,6 +181,12 @@ RimStone philosophy is to minimize the need to check for such conditions by prev
 Errors that are correctable programmatically are reported and you can check them, for example when opening a file that may or may not exist.
 
 Overall, the goal is to stop execution when necessary and to offer the ability to handle an issue when warranted, in order to increase run-time safety and provide instant clues about conditions that must be corrected.
+
+.LP
+.B AN INTERESTING SIDE EFFECT
+.LP
+
+One side effect of how RimStone does things is that each statement uses whatever natural words describe its function. For instance \fBcall-web\fP statement (which calls a web resource like an URL) will use clauses like "response", "status", "method", "request-body", "cookie-jar" etc, which are obviously evocative of the data either supplied or expected from the statement. And such clauses can be put in any order. That's great. In another statement however, all these clauses can be variable names. It means that RimStone is natively context sensitive. While that can be achieved with most parsing tools, it does get dicey, which is why RimStone parser is hand made.
 .SH SEE ALSO
  Language
 
