@@ -9,7 +9,7 @@ Return from current request handler back to its caller.
 .RS 4
 .EX
 
-return-handler  [ <return value> ]
+return-handler  [ <return code> ]
 
 .EE
 .RE
@@ -17,7 +17,7 @@ return-handler  [ <return value> ]
 .SH DESCRIPTION
 Returns from current request handler by transferring control back to its caller. If the current request handler is handling an external request (such as from a web browser, API, command line etc.), then return-handler is equivalent to \fBexit-handler\fP. If the current request handler was handling an internal request (i.e. called from another request handler with \fBcall-handler\fP), then control transfers back to that handler immediately after call-handler.
 
-For internal requests, the number <return value> will be passed back to the caller, who can obtain it via "return-value" clause in \fBcall-handler\fP. If <return value> is omitted, or if no return-handler is used (and the request handler finished by reaching its end), then it is 0. If current request handler is handling an external request, then <return value> will also set the handler's exit status (see \fBexit-status\fP and \fBexit-handler\fP).
+For internal requests, the number <return code> will be passed back to the caller, who can obtain it via "return-code" clause in \fBcall-handler\fP. If <return code> is omitted, or if no return-handler is used (and the request handler finished by reaching its end), then it is 0. If current request handler is handling an external request, then <return code> will also set the handler's exit status (see \fBexit-status\fP and \fBexit-handler\fP).
 
 .SH EXAMPLES
 In this example, "req-handler" (the caller) will call "other-handler" (the callee), which will return to the caller (immediately after call-handler). Here's the caller:
@@ -27,7 +27,7 @@ In this example, "req-handler" (the caller) will call "other-handler" (the calle
 
 begin-handler /req-handler public
     ...
-    call-handler "/other-handler" return-value rval
+    call-handler "/other-handler" return-code rval
     ...
 end-handler
 

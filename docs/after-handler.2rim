@@ -40,6 +40,7 @@ end-after-handler
 \fBafter-handler\fP  
 \fBbefore-handler\fP  
 \fBbegin-handler\fP  
-\fBcall-handler\fP   
+\fBcall-handler\fP  
+\fBinput-output-parameters\fP   
 See all 
 \fBdocumentation\fP

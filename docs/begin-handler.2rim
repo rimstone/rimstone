@@ -9,7 +9,9 @@ Define a request handler.
 .RS 4
 .EX
 
-begin-handler <request path> [ private | public ]
+begin-handler <request path> [ private | public ] \\
+    [ get-param ( <name> [ type <type> ] [ default-value <value> ] ) , ... ]
+
     <any code>
 end-handler
 
@@ -38,6 +40,44 @@ If "private" clause is used, then a handler cannot be called from an outside cal
 If neither "public" nor "private" is used, then the default is "private". This default mechanism automatically guards direct execution by outside callers of all handlers not marked "public"; it provides automatic safety guard. 
 
 You can change this default behavior with "--public" option in \fBrim\fP, in which case the default is "public". This is useful if either all request handlers should be public, or if only a handful fixed ones are private.
+
+.LP
+.B INPUT PARAMETERS
+.LP
+
+"get-param" clause can be used to specify input parameters; the usage is the same as with standalone \fBget-param\fP statement (see for details). You can obtain some input parameters this way, none, or all of them. If a parameter is conditional, i.e. depending on the value of other parameter(s), you'd likely obtain it inside the handler implementation when such condition is satisfied. This clause can be used for more concise code and to semantically state which parameters should be obtained regardless of any conditions.
+
+For instance:
+
+.RS 4
+.EX
+
+begin-handler /my-handler get-param p1
+    ...
+end-handler
+
+.EE
+.RE
+
+is the same as:
+
+.RS 4
+.EX
+
+begin-handler /my-handler 
+    get-param p1
+    ...
+end-handler
+
+.EE
+.RE
+
+
+.LP
+.B INPUT AND OUTPUT PARAMETERS TO REQUEST HANDLERS
+.LP
+
+Read more at \fBinput-output-parameters\fP.
 
 .SH EXAMPLES
 The following begin-handler is implemented in file "items/wines/red-wine.rim":
@@ -70,6 +110,7 @@ Another way to write this is:
 \fBafter-handler\fP  
 \fBbefore-handler\fP  
 \fBbegin-handler\fP  
-\fBcall-handler\fP   
+\fBcall-handler\fP  
+\fBinput-output-parameters\fP   
 See all 
 \fBdocumentation\fP

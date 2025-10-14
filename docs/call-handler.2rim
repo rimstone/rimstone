@@ -10,7 +10,9 @@ Call another handler within the same process.
 .RS 4
 .EX
 
-call-handler <request path> [ return-value  <return value> ]
+call-handler <request path> [ return-code  <return code> ] \\
+    [ set-param ( <name> [ = <value> ] ) , ... ] \\
+    [ get-param ( <name> [ type <type> ] [ default-value <value> ] ) , ... ]
 
 .EE
 .RE
@@ -22,9 +24,36 @@ Calls another handler within the same request in the same process. You can call 
 
 Use \fBset-param\fP and \fBget-param\fP to pass parameters between the caller and callee handlers.
 
-You can obtain a <return value> from the called handler <request path> by using "return-value" clause. See \fBreturn-handler\fP on how to return a number value from <request path> handler.
+You can obtain a <return code> from the called handler <request path> by using "return-code" clause. See \fBreturn-handler\fP on how to return a code (i.e. a number value) from <request path> handler.
 
 call-handler uses the same high-performance hash table used by a \fBrequest\fP to route requests by name; if <request path> is a constant string, then a hash table lookup is performed only once for the life of the process and all subsequent calls use a cached address of the request handler.
+
+.LP
+.B PARAMETERS
+.LP
+
+You can set parameters before call-handler executes using "set-param" clause, which behaves the same way as if those parameters were set just before call-handler; see \fBset-param\fP for more details. You can also get parameters after call-handler executes using "get-param" clause, which behave the same way as if those parameters were to be obtained just after call-handler; see \fBget-param\fP for more details. For example:
+
+.RS 4
+.EX
+
+call-handler "/handler" set-param inp=1, var="some data" get-param out, new_var type number
+
+.EE
+.RE
+
+is the same as:
+
+.RS 4
+.EX
+
+set-param inp=1, var="some data"
+call-handler "/handler"
+get-param out, new_var type number
+
+.EE
+.RE
+
 
 .LP
 .B CALL DEPTH
@@ -137,6 +166,7 @@ Output: This is sub! with output [got input: new string]
 \fBafter-handler\fP  
 \fBbefore-handler\fP  
 \fBbegin-handler\fP  
-\fBcall-handler\fP   
+\fBcall-handler\fP  
+\fBinput-output-parameters\fP   
 See all 
 \fBdocumentation\fP

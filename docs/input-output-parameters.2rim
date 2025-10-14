@@ -1,0 +1,79 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+input-output-parameters \- RimStone documentation (service-processing
+request-data)
+.SH DESCRIPTION
+
+.LP
+.B INPUT AND OUTPUT PARAMETERS TO REQUEST HANDLERS
+.LP
+
+\fBget-param\fP (either as a standalone statement or as a clause in \fBcall-handler\fP and \fBbegin-handler\fP) can be used to get 
+
+.RS 4
+\[bu]    
+handler's input parameters into its local variables, and 
+
+.RE
+
+.RS 4
+\[bu]    
+handler's output parameters into caller's local variables.
+.RE
+
+Similarly, \fBset-param\fP (either as a standalone statement or as a clause in \fBcall-handler\fP) can be used to set
+
+.RS 4
+\[bu]    
+handler's input parameters in the caller, and
+
+.RE
+
+.RS 4
+\[bu]    
+handler's output parameters.
+.RE
+
+These are serving as a functional equivalent of an "input/output parameter" notion. Note that parameters are of global scope within a single request; however, once obtained with "get-param" in a handler they are stored in local variables which makes them the same as a typical input parameter in many languages (see Types discussion in \fBget-param\fP as to which types are copied by value and which by reference).
+
+The same parameter (i.e. of the same name) can be used in any number of handlers, assuming the type is the same everywhere. The global nature of parameters means their value can be obtained anywhere during the processing of the same request; their values are reset with each new request.
+
+The reason for this is to both provide the same input/output parameter paradigm that's omnipresent in most programming languages, and at the same time to facilitate simpler and clearer sharing of data anywhere during the request processing (thus alleviating the need for classic global variables). In addition, it provides for the same treatment of input parameters regardless of whether a handler is called locally or remotely across servers.
+
+.SH EXAMPLES
+In this example, "set-param" is used to set input parameters "pp1" and "pp2" in \fBcall-handler\fP, and "get-param" is used to get those input parameters in begin-handler ("%%" for short). Conversely, "set-param" is used to set output parameters "res1" and "res2" in "/req/sub-req" handler implementation, and "get-param" is used to get the those output parameters in \fBcall-handler\fP:
+
+.RS 4
+.EX
+
+%% /req/sub-req get-param pp1 type number, pp2 type number
+    print-out "Input is ", pp1, ", ", pp2 new-line
+    set-param res1=pp1+pp2, res2=pp1*pp2
+%%
+
+// Call the above /req/sub-req request handler 
+%% /req public
+    call-handler "/req/sub-req" set-param pp1=10, pp2=20 get-param res1 type number, res2 type number
+    print-out "Result is ", res1, " and ", res2 new-line
+%%
+
+.EE
+.RE
+
+The result in "/req" will be 30 for "res1" variable, and 200 for "res2".
+.SH SEE ALSO
+ Request data
+
+\fBget-param\fP  
+\fBinput-output-parameters\fP  
+\fBrequest-body\fP  
+\fBset-param\fP   
+ Service processing
+
+\fBafter-handler\fP  
+\fBbefore-handler\fP  
+\fBbegin-handler\fP  
+\fBcall-handler\fP  
+\fBinput-output-parameters\fP   
+See all 
+\fBdocumentation\fP

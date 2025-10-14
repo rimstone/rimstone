@@ -24,7 +24,7 @@
 #include "rimcommon.h"
 
 // Version+Release. We use major plus minor plus release, as in 1.3.34,2.1.11,3.7.41... 
-#define RIM_VERSION "4.0.6"
+#define RIM_VERSION "4.1.0"
 
 // Client error codes
 #define RIM_OKAY 0 // success

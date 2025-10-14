@@ -940,12 +940,75 @@ syn region rim_r_construct___ start="^[[:space:]]*%%" skip="\\[[:space:]]*$" end
     syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct___,rim_r_inline___,rim_r_at
     syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct___,rim_r_inline___,rim_r_at
     syn match rim_h_construct___ "^[[:space:]]*%%" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " , \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " ,,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " ,$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " default-value \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " get-param \@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " private \@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " private,\@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " private$" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " public \@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " public,\@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " public$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " bool-array \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " bool-array,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " bool-array$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " double-array \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " double-array,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " double-array$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " number-array \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " number-array,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " number-array$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " string-array \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " string-array,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " string-array$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " bool \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " bool,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " bool$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " double \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " double,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " double$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " encrypt-decrypt \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " encrypt-decrypt,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " encrypt-decrypt$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " fifo \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " fifo,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " fifo$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " file \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " file,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " file$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " hash \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " hash,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " hash$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " lifo \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " lifo,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " lifo$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " list \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " list,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " list$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " message \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " message,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " message$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " number \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " number,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " number$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " service \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " service,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " service$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " split-string \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " split-string,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " split-string$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " string \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " string,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " string$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " tree \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " tree,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " tree$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " tree-cursor \@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " tree-cursor,\@=" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " tree-cursor$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " type \@=" contained containedin=rim_r_construct___
     hi def link rim_h_clause___    rimClause
     hi def link rim_h_clause_output___    rimClauseOutput
     hi def link rim_h_construct___    rimConstruct
@@ -954,12 +1017,75 @@ syn region rim_r_construct_begin_handler start="^[[:space:]]*begin-handler" skip
     syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_begin_handler,rim_r_inline_begin_handler,rim_r_at
     syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_begin_handler,rim_r_inline_begin_handler,rim_r_at
     syn match rim_h_construct_begin_handler "^[[:space:]]*begin-handler" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " , \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " ,,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " ,$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " default-value \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " get-param \@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " private \@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " private,\@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " private$" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " public \@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " public,\@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " public$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " bool-array \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " bool-array,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " bool-array$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " double-array \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " double-array,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " double-array$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " number-array \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " number-array,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " number-array$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " string-array \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " string-array,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " string-array$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " bool \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " bool,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " bool$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " double \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " double,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " double$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " encrypt-decrypt \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " encrypt-decrypt,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " encrypt-decrypt$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " fifo \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " fifo,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " fifo$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " file \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " file,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " file$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " hash \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " hash,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " hash$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " lifo \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " lifo,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " lifo$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " list \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " list,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " list$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " message \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " message,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " message$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " number \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " number,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " number$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " service \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " service,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " service$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " split-string \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " split-string,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " split-string$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " string \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " string,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " string$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " tree \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " tree,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " tree$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " tree-cursor \@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " tree-cursor,\@=" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " tree-cursor$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " type \@=" contained containedin=rim_r_construct_begin_handler
     hi def link rim_h_clause_begin_handler    rimClause
     hi def link rim_h_clause_output_begin_handler    rimClauseOutput
     hi def link rim_h_construct_begin_handler    rimConstruct
@@ -1008,9 +1134,6 @@ syn region rim_r_construct_set_param start="^[[:space:]]*set-param" skip="\\[[:s
     syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_set_param,rim_r_inline_set_param,rim_r_at
     syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_set_param,rim_r_inline_set_param,rim_r_at
     syn match rim_h_construct_set_param "^[[:space:]]*set-param" contained containedin=rim_r_construct_set_param
-    syn match rim_h_clause_set_param " , \@=" contained containedin=rim_r_construct_set_param
-    syn match rim_h_clause_set_param " ,,\@=" contained containedin=rim_r_construct_set_param
-    syn match rim_h_clause_set_param " ,$" contained containedin=rim_r_construct_set_param
     hi def link rim_h_clause_set_param    rimClause
     hi def link rim_h_clause_output_set_param    rimClauseOutput
     hi def link rim_h_construct_set_param    rimConstruct
@@ -1436,8 +1559,118 @@ syn region rim_r_construct_call_handler start="^[[:space:]]*call-handler" skip="
     syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_call_handler,rim_r_inline_call_handler,rim_r_at
     syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_call_handler,rim_r_inline_call_handler,rim_r_at
     syn match rim_h_construct_call_handler "^[[:space:]]*call-handler" contained containedin=rim_r_construct_call_handler
-    syn match rim_h_clause_output_call_handler " return-value \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " , \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " ,,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " ,$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " ,\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " , \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " default-value \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " default-value \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " get-param \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " get-param \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_output_call_handler " return-code \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " return-code \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " return-value \@=" contained containedin=rim_r_construct_call_handler
     syn match rim_h_print_inline_call_handler " return-value \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " set-param \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " set-param \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " bool-array \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " bool-array,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " bool-array$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " bool-array\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " bool-array \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " double-array \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " double-array,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " double-array$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " double-array\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " double-array \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " number-array \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " number-array,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " number-array$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " number-array\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " number-array \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " string-array \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " string-array,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " string-array$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " string-array\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " string-array \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " bool \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " bool,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " bool$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " bool\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " bool \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " double \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " double,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " double$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " double\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " double \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " encrypt-decrypt \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " encrypt-decrypt,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " encrypt-decrypt$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " encrypt-decrypt\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " encrypt-decrypt \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " fifo \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " fifo,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " fifo$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " fifo\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " fifo \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " file \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " file,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " file$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " file\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " file \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " hash \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " hash,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " hash$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " hash\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " hash \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " lifo \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " lifo,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " lifo$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " lifo\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " lifo \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " list \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " list,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " list$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " list\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " list \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " message \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " message,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " message$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " message\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " message \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " number \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " number,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " number$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " number\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " number \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " service \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " service,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " service$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " service\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " service \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " split-string \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " split-string,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " split-string$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " split-string\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " split-string \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " string \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " string,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " string$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " string\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " string \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " tree \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " tree,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " tree$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " tree\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " tree \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " tree-cursor \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " tree-cursor,\@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_clause_call_handler " tree-cursor$" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " tree-cursor\(>>\)\@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_print_inline_call_handler " tree-cursor \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " type \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " type \@=" contained containedin=rim_r_inline_call_handler
     syn region rim_r_inline_call_handler start="<<[[:space:]]*call-handler \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=rim_r_at keepend
     syn match rim_h_print_inline_call_handler '<<[[:space:]]*call-handler \@=' contained containedin=rim_r_inline_call_handler
     syn match rim_h_print_inline_call_handler '>>' contained containedin=rim_r_inline_call_handler

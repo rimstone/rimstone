@@ -4,7 +4,7 @@ documentation \- RimStone documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR RIMSTONE VERSION 4.0.6
+.B REFERENCE FOR RIMSTONE VERSION 4.1.0
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
@@ -506,6 +506,7 @@ Regex
 Request data
 
 \fBget-param\fP  
+\fBinput-output-parameters\fP  
 \fBrequest-body\fP  
 \fBset-param\fP   
 .RE
@@ -576,7 +577,8 @@ Service processing
 \fBafter-handler\fP  
 \fBbefore-handler\fP  
 \fBbegin-handler\fP  
-\fBcall-handler\fP   
+\fBcall-handler\fP  
+\fBinput-output-parameters\fP   
 .RE
 
 

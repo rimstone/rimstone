@@ -67,10 +67,17 @@ print-out quantity
 .EE
 .RE
 
+
+.LP
+.B INPUT AND OUTPUT PARAMETERS TO REQUEST HANDLERS
+.LP
+
+Read more at \fBinput-output-parameters\fP.
 .SH SEE ALSO
  Request data
 
 \fBget-param\fP  
+\fBinput-output-parameters\fP  
 \fBrequest-body\fP  
 \fBset-param\fP   
 See all 

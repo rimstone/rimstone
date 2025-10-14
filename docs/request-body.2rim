@@ -36,6 +36,7 @@ request-body reqb
  Request data
 
 \fBget-param\fP  
+\fBinput-output-parameters\fP  
 \fBrequest-body\fP  
 \fBset-param\fP   
 See all 

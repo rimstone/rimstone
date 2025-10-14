@@ -82,6 +82,9 @@
 #define RIM_KEYNEXT "next"
 #define RIM_KEYKEY "key "
 #define RIM_KEYRETURNVALUE "return-value "
+#define RIM_KEYRETURNCODE "return-code "
+#define RIM_KEYSETPARAM "set-param "
+#define RIM_KEYGETPARAM "get-param "
 #define RIM_KEYGETLESSER "get-lesser"
 #define RIM_KEYLESSER "lesser "
 #define RIM_KEYLESSERTHAN "lesser-than "
@@ -677,6 +680,8 @@ bool math_fun (char *name, rim_num *params);
 bool c_name (char *name);
 rim_num check_num_or_double (char *v, rim_num j);
 char *promote_double (char *v);
+void process_param_set (char *mtext);
+void process_param_get (char *mtext);
 
 //
 //
@@ -684,6 +689,145 @@ char *promote_double (char *v);
 //
 //
 
+//
+// Process get-param. mtext is the source of the statement
+//
+void process_param_get (char *mtext)
+{
+    while (1) 
+    {
+        char *comma = find_keyword (mtext, RIM_KEYCOMMA, 0);
+        carve_statement (&comma, "get-param", RIM_KEYCOMMA, 0, 1); // separate entries with comma first, so
+                                                                  // this find/carve MUST come before the rest below!
+                                                                  //
+        char *defval = find_keyword (mtext, RIM_KEYDEFAULTVALUE, 1);
+        char *type = find_keyword (mtext, RIM_KEYTYPE, 1);
+        carve_statement (&type, "get-param", RIM_KEYTYPE, 0, 1);
+        carve_statement (&defval, "get-param", RIM_KEYDEFAULTVALUE, 0, 1);
+        if (type != NULL) trimit (type); // type has to match
+        carve_stmt_obj (&mtext, true, false);
+
+        rim_num t;
+        if (type == NULL) define_statement (&mtext, (t=RIM_DEFSTRING), false);
+        else define_statement (&mtext, (t=typeid(type)), false);
+        //
+        save_param (mtext, typeid(typename(t))); // t here *cannot* be process-scope, params are only non-process types
+                                         // though you can pass along process-scope at run time of course.
+                                         // this normalizes, so RIM_DEFSTRINGSTATIC shows up as RIM_DEFSTRING
+        if (defval != NULL)
+        {
+            if (cmp_type (t, RIM_DEFSTRING))
+            {
+                make_mem(&defval);
+                check_var (&defval, RIM_DEFSTRING);
+            }
+            else if (cmp_type (t, RIM_DEFDOUBLE))
+            {
+                check_var (&defval, RIM_DEFDOUBLE);
+            }
+            else if (cmp_type (t, RIM_DEFNUMBER))
+            {
+                check_var (&defval, RIM_DEFNUMBER);
+            }
+            else if (cmp_type (t, RIM_DEFBOOL))
+            {
+                check_var (&defval, RIM_DEFBOOL);
+            }
+            else rim_report_error ("Cannot specify default value for this type in get-param, parameter [%s]", mtext);
+        }
+        //
+        // No need to check_var when define_statement is with "true" as the second argument, since it
+        // means the variable is created of that type for sure, and it can't have been or will be created before or after.
+        //
+        //
+        {
+            if (cmp_type (t, RIM_DEFNUMBER))
+            {
+                oprintf ("%s=_rim_sprm_par[_rim_aprm_%s].set ? _rim_sprm_par[_rim_aprm_%s].tval.numval:", mtext,mtext,mtext);
+                if (defval != NULL) oprintf ("(%s);\n", defval);
+                else oprintf ("(rim_report_error (\"Trying to obtain value of parameter [%%s] that was not set\", _rim_sprm_par[_rim_aprm_%s].name),0);\n", mtext);
+            }
+            else if (cmp_type (t, RIM_DEFDOUBLE))
+            {
+                oprintf ("%s=_rim_sprm_par[_rim_aprm_%s].set ? _rim_sprm_par[_rim_aprm_%s].tval.dblval:", mtext,mtext,mtext);
+                if (defval != NULL) oprintf ("(%s);\n", defval);
+                else oprintf ("(rim_report_error (\"Trying to obtain value of parameter [%%s] that was not set\", _rim_sprm_par[_rim_aprm_%s].name),0);\n", mtext);
+            }
+            else if (cmp_type (t, RIM_DEFBOOL)) 
+            {
+                oprintf ("%s=_rim_sprm_par[_rim_aprm_%s].set ? _rim_sprm_par[_rim_aprm_%s].tval.logic:", mtext,mtext,mtext);
+                if (defval != NULL) oprintf ("(%s);\n", defval);
+                else oprintf ("(rim_report_error (\"Trying to obtain value of parameter [%%s] that was not set\", _rim_sprm_par[_rim_aprm_%s].name),0);\n", mtext);
+            }
+            else 
+            {
+                oprintf("{ typeof(%s) _rim_param = " , mtext);
+                oprintf("rim_get_input_param (_rim_aprm_%s, %ld, %s);\n", mtext, t, defval==NULL?"NULL":defval);
+                //
+                if (cmp_type(t,RIM_DEFSTRING)) oprintf ("rim_mem_add_ref (_rim_param, 0);\n");
+                oprintf ("%s = _rim_param;}\n", mtext);
+            }
+        }
+
+        // we used to forbid non-string/bool/number in non-call-handler. But we should be able to create say index in call-handler and pass it back
+        // to caller. In rimrt.c, we error out if such param with such type is not found.
+        // if ((t != RIM_DEFNUMBER && t != RIM_DEFBOOL && t != RIM_DEFSTRING) && !rim_is_sub) rim_report_error ("get-param type [%s] can only be used within call-handler", typename(t));
+
+        if (comma == NULL) break; else mtext = comma;
+    }
+}
+
+//
+// Process set-param. mtext is the source of the statement
+//
+void process_param_set (char *mtext)
+{
+    while (1) 
+    {
+        char *comma = find_keyword (mtext, RIM_KEYCOMMA, 0);
+        carve_statement (&comma, "set-param", RIM_KEYCOMMA, 0, 1); // separate entries with comma first, so
+                                                                  // this find/carve MUST come before the rest below!
+                                                                  //
+        char *eq = find_keyword (mtext, RIM_KEYEQUALSHORT, 0);
+
+        carve_statement (&eq, "set-param", RIM_KEYEQUALSHORT, 0, 1);
+        carve_stmt_obj (&mtext, true, false);
+        if (rim_is_valid_param_name(mtext, false, false) != 1) rim_report_error( "parameter name [%s] is not valid, it can have only alphanumeric characters and underscores, and must start with an alphabet character", mtext);
+
+        if (eq == NULL) eq = rim_strdup (mtext); // if no =, assume it's the variable with the same name
+        make_mem(&eq);
+        rim_num type = check_var (&eq, RIM_DEFUNKN);
+        if (type == RIM_DEFUNKN) rim_report_error (RIM_VAR_NOT_EXIST, eq);
+        save_param (mtext, typeid(typename(type))); // t here *cannot* be process-scope, params are only non-process types
+                                         // though you can pass along process-scope at run time of course.
+                                         // this normalizes, so RIM_DEFSTRINGSTATIC shows up as RIM_DEFSTRING
+
+
+
+        //
+        if (cmp_type(type, RIM_DEFNUMBER)) 
+        {
+            oprintf ("_rim_sprm_par[_rim_aprm_%s].tval.numval = %s;\n", mtext, eq);
+            oprintf ("_rim_sprm_par[_rim_aprm_%s].set = true;\n", mtext);
+        }
+        else if (cmp_type(type, RIM_DEFDOUBLE)) 
+        {
+            oprintf ("_rim_sprm_par[_rim_aprm_%s].tval.dblval = %s;\n", mtext, eq);
+            oprintf ("_rim_sprm_par[_rim_aprm_%s].set = true;\n", mtext);
+        }
+        else if (cmp_type(type, RIM_DEFBOOL)) 
+        {
+            oprintf ("_rim_sprm_par[_rim_aprm_%s].tval.logic = %s;\n", mtext, eq);
+            oprintf ("_rim_sprm_par[_rim_aprm_%s].set = true;\n", mtext);
+        }
+        else
+        {
+            oprintf("rim_set_input (_rim_aprm_%s, %s, %ld); ", mtext, eq, type);
+        }
+
+        if (comma == NULL) break; else mtext = comma;
+    }
+}
 
 //
 // Replace / with /(double) in a double expression; this avoids integer divisions that round the result.
@@ -8163,9 +8307,22 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                     {
                         RIM_GUARD
                         i = newI;
-                        char *rval = find_keyword (mtext, RIM_KEYRETURNVALUE, 1);
-                        carve_statement (&rval, "call-handler", RIM_KEYRETURNVALUE, 0, 1);
+                        char *rval = find_keyword (mtext, RIM_KEYRETURNCODE, 1);
+
+                        //
+                        //This block delete when new major release
+                        bool old_return = false;
+                        if (rval == NULL) { rval = find_keyword (mtext, RIM_KEYRETURNVALUE, 1); old_return = true; }
+                        //
+
+                        char *spar = find_keyword (mtext, RIM_KEYSETPARAM, 1);
+                        char *gpar = find_keyword (mtext, RIM_KEYGETPARAM, 1);
+                        carve_statement (&rval, "call-handler", old_return?RIM_KEYRETURNVALUE:RIM_KEYRETURNCODE, 0, 1);
+                        carve_statement (&spar, "call-handler", RIM_KEYSETPARAM, 0, 1);
+                        carve_statement (&gpar, "call-handler", RIM_KEYGETPARAM, 0, 1);
                         define_statement (&rval, RIM_DEFNUMBER, false); 
+
+                        if (spar != NULL) process_param_set (spar); // set parameters *before* calling the handler
 
                         //
                         // must check if mtext clause is string constant *before* other variable checks below, because
@@ -8217,6 +8374,17 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         }
                         oprintf ("rim_req.sub_depth--;\n");
                         oprintf ("}\n");
+
+                        // get-param *after* the call-handler
+                        if (gpar != NULL)
+                        {
+                            process_param_get (gpar);
+                            //
+                            // RIM_KEYCOMMA RIM_KEYDEFAULTVALUE RIM_KEYTYPE 
+                            // Make vim recognize type names
+                            //
+                            // RIM_KEY_T_STRING RIM_KEY_T_BOOL RIM_KEY_T_NUMBER RIM_KEY_T_DOUBLE RIM_KEY_T_MESSAGE RIM_KEY_T_SPLITSTRING RIM_KEY_T_HASH RIM_KEY_T_ARRAYSTRING RIM_KEY_T_ARRAYNUMBER RIM_KEY_T_ARRAYBOOL RIM_KEY_T_ARRAYDOUBLE RIM_KEY_T_TREE RIM_KEY_T_TREECURSOR RIM_KEY_T_FIFO RIM_KEY_T_LIFO RIM_KEY_T_LIST RIM_KEY_T_ENCRYPT RIM_KEY_T_FILE RIM_KEY_T_SERVICE 
+                        }
 
                         continue;
                     }
@@ -9084,91 +9252,12 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         RIM_GUARD
                         i = newI;
 
-                        while (1) 
-                        {
-                            char *comma = find_keyword (mtext, RIM_KEYCOMMA, 0);
-                            carve_statement (&comma, "get-param", RIM_KEYCOMMA, 0, 1); // separate entries with comma first, so
-                                                                                      // this find/carve MUST come before the rest below!
-                                                                                      //
-                            char *defval = find_keyword (mtext, RIM_KEYDEFAULTVALUE, 1);
-                            char *type = find_keyword (mtext, RIM_KEYTYPE, 1);
-                            carve_statement (&type, "get-param", RIM_KEYTYPE, 0, 1);
-                            carve_statement (&defval, "get-param", RIM_KEYDEFAULTVALUE, 0, 1);
-                            if (type != NULL) trimit (type); // type has to match
-                            carve_stmt_obj (&mtext, true, false);
-
-                            rim_num t;
-                            if (type == NULL) define_statement (&mtext, (t=RIM_DEFSTRING), false);
-                            else define_statement (&mtext, (t=typeid(type)), false);
-                            //
-                            save_param (mtext, typeid(typename(t))); // t here *cannot* be process-scope, params are only non-process types
-                                                             // though you can pass along process-scope at run time of course.
-                                                             // this normalizes, so RIM_DEFSTRINGSTATIC shows up as RIM_DEFSTRING
-                            if (defval != NULL)
-                            {
-                                if (cmp_type (t, RIM_DEFSTRING))
-                                {
-                                    make_mem(&defval);
-                                    check_var (&defval, RIM_DEFSTRING);
-                                }
-                                else if (cmp_type (t, RIM_DEFDOUBLE))
-                                {
-                                    check_var (&defval, RIM_DEFDOUBLE);
-                                }
-                                else if (cmp_type (t, RIM_DEFNUMBER))
-                                {
-                                    check_var (&defval, RIM_DEFNUMBER);
-                                }
-                                else if (cmp_type (t, RIM_DEFBOOL))
-                                {
-                                    check_var (&defval, RIM_DEFBOOL);
-                                }
-                                else rim_report_error ("Cannot specify default value for this type in get-param, parameter [%s]", mtext);
-                            }
-                            //
-                            // No need to check_var when define_statement is with "true" as the second argument, since it
-                            // means the variable is created of that type for sure, and it can't have been or will be created before or after.
-                            //
-                            //
-                            {
-                                if (cmp_type (t, RIM_DEFNUMBER))
-                                {
-                                    oprintf ("%s=_rim_sprm_par[_rim_aprm_%s].set ? _rim_sprm_par[_rim_aprm_%s].tval.numval:", mtext,mtext,mtext);
-                                    if (defval != NULL) oprintf ("(%s);\n", defval);
-                                    else oprintf ("(rim_report_error (\"Trying to obtain value of parameter [%%s] that was not set\", _rim_sprm_par[_rim_aprm_%s].name),0);\n", mtext);
-                                }
-                                else if (cmp_type (t, RIM_DEFDOUBLE))
-                                {
-                                    oprintf ("%s=_rim_sprm_par[_rim_aprm_%s].set ? _rim_sprm_par[_rim_aprm_%s].tval.dblval:", mtext,mtext,mtext);
-                                    if (defval != NULL) oprintf ("(%s);\n", defval);
-                                    else oprintf ("(rim_report_error (\"Trying to obtain value of parameter [%%s] that was not set\", _rim_sprm_par[_rim_aprm_%s].name),0);\n", mtext);
-                                }
-                                else if (cmp_type (t, RIM_DEFBOOL)) 
-                                {
-                                    oprintf ("%s=_rim_sprm_par[_rim_aprm_%s].set ? _rim_sprm_par[_rim_aprm_%s].tval.logic:", mtext,mtext,mtext);
-                                    if (defval != NULL) oprintf ("(%s);\n", defval);
-                                    else oprintf ("(rim_report_error (\"Trying to obtain value of parameter [%%s] that was not set\", _rim_sprm_par[_rim_aprm_%s].name),0);\n", mtext);
-                                }
-                                else 
-                                {
-                                    oprintf("{ typeof(%s) _rim_param = " , mtext);
-                                    oprintf("rim_get_input_param (_rim_aprm_%s, %ld, %s);\n", mtext, t, defval==NULL?"NULL":defval);
-                                    //
-                                    if (cmp_type(t,RIM_DEFSTRING)) oprintf ("rim_mem_add_ref (_rim_param, 0);\n");
-                                    oprintf ("%s = _rim_param;}\n", mtext);
-                                }
-                            }
-                            //
-                            // Make vim recognize type names
-                            //
-                            // RIM_KEY_T_STRING RIM_KEY_T_BOOL RIM_KEY_T_NUMBER RIM_KEY_T_DOUBLE RIM_KEY_T_MESSAGE RIM_KEY_T_SPLITSTRING RIM_KEY_T_HASH RIM_KEY_T_ARRAYSTRING RIM_KEY_T_ARRAYNUMBER RIM_KEY_T_ARRAYBOOL RIM_KEY_T_ARRAYDOUBLE RIM_KEY_T_TREE RIM_KEY_T_TREECURSOR RIM_KEY_T_FIFO RIM_KEY_T_LIFO RIM_KEY_T_LIST RIM_KEY_T_ENCRYPT RIM_KEY_T_FILE RIM_KEY_T_SERVICE 
-
-                            // we used to forbid non-string/bool/number in non-call-handler. But we should be able to create say index in call-handler and pass it back
-                            // to caller. In rimrt.c, we error out if such param with such type is not found.
-                            // if ((t != RIM_DEFNUMBER && t != RIM_DEFBOOL && t != RIM_DEFSTRING) && !rim_is_sub) rim_report_error ("get-param type [%s] can only be used within call-handler", typename(t));
-
-                            if (comma == NULL) break; else mtext = comma;
-                        }
+                        process_param_get (mtext);
+                        //
+                        // RIM_KEYCOMMA RIM_KEYDEFAULTVALUE RIM_KEYTYPE 
+                        // Make vim recognize type names
+                        //
+                        // RIM_KEY_T_STRING RIM_KEY_T_BOOL RIM_KEY_T_NUMBER RIM_KEY_T_DOUBLE RIM_KEY_T_MESSAGE RIM_KEY_T_SPLITSTRING RIM_KEY_T_HASH RIM_KEY_T_ARRAYSTRING RIM_KEY_T_ARRAYNUMBER RIM_KEY_T_ARRAYBOOL RIM_KEY_T_ARRAYDOUBLE RIM_KEY_T_TREE RIM_KEY_T_TREECURSOR RIM_KEY_T_FIFO RIM_KEY_T_LIFO RIM_KEY_T_LIST RIM_KEY_T_ENCRYPT RIM_KEY_T_FILE RIM_KEY_T_SERVICE 
 
                         continue;
                     }
@@ -9177,51 +9266,7 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         RIM_GUARD
                         i = newI;
 
-                        while (1) 
-                        {
-                            char *comma = find_keyword (mtext, RIM_KEYCOMMA, 0);
-                            carve_statement (&comma, "set-param", RIM_KEYCOMMA, 0, 1); // separate entries with comma first, so
-                                                                                      // this find/carve MUST come before the rest below!
-                                                                                      //
-                            char *eq = find_keyword (mtext, RIM_KEYEQUALSHORT, 0);
-
-                            carve_statement (&eq, "set-param", RIM_KEYEQUALSHORT, 0, 1);
-                            carve_stmt_obj (&mtext, true, false);
-                            if (rim_is_valid_param_name(mtext, false, false) != 1) rim_report_error( "parameter name [%s] is not valid, it can have only alphanumeric characters and underscores, and must start with an alphabet character", mtext);
-
-                            if (eq == NULL) eq = rim_strdup (mtext); // if no =, assume it's the variable with the same name
-                            make_mem(&eq);
-                            rim_num type = check_var (&eq, RIM_DEFUNKN);
-                            if (type == RIM_DEFUNKN) rim_report_error (RIM_VAR_NOT_EXIST, eq);
-                            save_param (mtext, typeid(typename(type))); // t here *cannot* be process-scope, params are only non-process types
-                                                             // though you can pass along process-scope at run time of course.
-                                                             // this normalizes, so RIM_DEFSTRINGSTATIC shows up as RIM_DEFSTRING
-
-
-     
-                            //
-                            if (cmp_type(type, RIM_DEFNUMBER)) 
-                            {
-                                oprintf ("_rim_sprm_par[_rim_aprm_%s].tval.numval = %s;\n", mtext, eq);
-                                oprintf ("_rim_sprm_par[_rim_aprm_%s].set = true;\n", mtext);
-                            }
-                            else if (cmp_type(type, RIM_DEFDOUBLE)) 
-                            {
-                                oprintf ("_rim_sprm_par[_rim_aprm_%s].tval.dblval = %s;\n", mtext, eq);
-                                oprintf ("_rim_sprm_par[_rim_aprm_%s].set = true;\n", mtext);
-                            }
-                            else if (cmp_type(type, RIM_DEFBOOL)) 
-                            {
-                                oprintf ("_rim_sprm_par[_rim_aprm_%s].tval.logic = %s;\n", mtext, eq);
-                                oprintf ("_rim_sprm_par[_rim_aprm_%s].set = true;\n", mtext);
-                            }
-                            else
-                            {
-                                oprintf("rim_set_input (_rim_aprm_%s, %s, %ld); ", mtext, eq, type);
-                            }
-
-                            if (comma == NULL) break; else mtext = comma;
-                        }
+                        process_param_set (mtext);
 
 
                         continue;
@@ -9310,8 +9355,11 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         }
                         char *priv = find_keyword (mtext, RIM_KEYPRIVATE, 0);
                         char *pub = find_keyword (mtext, RIM_KEYPUBLIC, 0);
+                        char *gpar = find_keyword (mtext, RIM_KEYGETPARAM, 1);
                         carve_statement (&priv, "begin-handler", RIM_KEYPRIVATE, 0, 0);
                         carve_statement (&pub, "begin-handler", RIM_KEYPUBLIC, 0, 0);
+                        carve_statement (&gpar, "call-handler", RIM_KEYGETPARAM, 0, 1);
+
 
 
                         done_handler = true;
@@ -9345,6 +9393,16 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         {
                             oprintf ("if (rim_req.sub_depth==1) rim_report_error(\"This service [%s] can only be called as call-handler. If you wish to call this handler from an outside caller, either use 'public' in begin-handler, or to make all handlers public, use '--public' with '-q' when making the application.\");\n", mtext);
                             rim_is_sub = true;
+                        }
+                        // get-param *before* the begin-handler begins but after the beginning of function impl
+                        if (gpar != NULL)
+                        {
+                            process_param_get (gpar);
+                            //
+                            // RIM_KEYCOMMA RIM_KEYDEFAULTVALUE RIM_KEYTYPE 
+                            // Make vim recognize type names
+                            //
+                            // RIM_KEY_T_STRING RIM_KEY_T_BOOL RIM_KEY_T_NUMBER RIM_KEY_T_DOUBLE RIM_KEY_T_MESSAGE RIM_KEY_T_SPLITSTRING RIM_KEY_T_HASH RIM_KEY_T_ARRAYSTRING RIM_KEY_T_ARRAYNUMBER RIM_KEY_T_ARRAYBOOL RIM_KEY_T_ARRAYDOUBLE RIM_KEY_T_TREE RIM_KEY_T_TREECURSOR RIM_KEY_T_FIFO RIM_KEY_T_LIFO RIM_KEY_T_LIST RIM_KEY_T_ENCRYPT RIM_KEY_T_FILE RIM_KEY_T_SERVICE 
                         }
 
                         continue;

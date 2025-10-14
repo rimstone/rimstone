@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define RIM_VERSION "4.0.6"
+#define RIM_VERSION "4.1.0"
 
 // OS Name and Version
 #define RIM_OS_NAME  RIM_OSNAME
