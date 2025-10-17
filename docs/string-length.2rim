@@ -17,7 +17,51 @@ string-length <string> to <length>
 .SH DESCRIPTION
 string-length will place the number of bytes in <string> into number <length>.
 
-Note that <string> does not need to be null-terminated, meaning it can be a binary or text string. <length> is the number of bytes comprising any such string.
+Note that <string> does not need to be null-terminated, meaning it can be a binary or text string. <length> is the number of bytes comprising any such string. 
+
+Note that length of the string is not calculated; rather it is kept in a pre-fetched, cached location right next to the data itself for fast retrieval.
+
+.LP
+.B STRING LENGTH AS A FUNCTION
+.LP
+
+You can also use "strlen()" function to obtain string length as a number. You can use it in number or double expressions. The following two are equivalent:
+
+.RS 4
+.EX
+
+set-string s = "string"
+string-length s to len
+print-out "Half of length is ", len/2 new-line
+
+.EE
+.RE
+
+and
+
+.RS 4
+.EX
+
+set-string s = "string"
+print-out "Half of length is ", strlen(s)/2 new-line
+
+.EE
+.RE
+
+which would yield "3".
+
+An example in expression:
+
+.RS 4
+.EX
+
+set-string s = "other string"
+set-number n = strlen("some string") + strlen (s) -1
+
+.EE
+.RE
+
+The result for "n" would be 22.
 
 .SH EXAMPLES
 Variable "len" will be 6:

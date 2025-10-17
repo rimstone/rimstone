@@ -8,6 +8,8 @@ request-data)
 .B INPUT AND OUTPUT PARAMETERS TO REQUEST HANDLERS
 .LP
 
+Parameters are name/value pairs that are global in scope within a request. The value can be set directly, and obtained in a local variable. The parameters serve a purpose of sharing data between different parts of a request implementation, including as input and output parameters to handlers. Each parameter can be both an input and output parameter.
+
 \fBget-param\fP (either as a standalone statement or as a clause in \fBcall-handler\fP and \fBbegin-handler\fP) can be used to get 
 
 .RS 4
@@ -34,9 +36,20 @@ handler's input parameters in the caller, and
 handler's output parameters.
 .RE
 
-These are serving as a functional equivalent of an "input/output parameter" notion. Note that parameters are of global scope within a single request; however, once obtained with "get-param" in a handler they are stored in local variables which makes them the same as a typical input parameter in many languages (see Types discussion in \fBget-param\fP as to which types are copied by value and which by reference).
+
+.LP
+.B GLOBAL NATURE WITH LOCAL DATA
+.LP
+
+The parameters can serve as a functional equivalent of an "input/output parameter" notion. Note that parameters are of global scope within a single request; however, once obtained with "get-param" in a handler they are stored in local variables which makes them the same as a typical input parameter in many languages (see Types discussion in \fBget-param\fP as to which types are copied by value and which by reference).
 
 The same parameter (i.e. of the same name) can be used in any number of handlers, assuming the type is the same everywhere. The global nature of parameters means their value can be obtained anywhere during the processing of the same request; their values are reset with each new request.
+
+.LP
+.B SEAMLESS SHARING OF DATA
+.LP
+
+This approach makes the data sharing within a single request seamless. For instance, using some value several handler calls down no longer necessitates passing this value down via parameters; it can be simply used by name and delivered to a local variable and either changed without affecting the original or update the original. This approach uses the best of enapsulation and data sharing, with less code and more clarity.
 
 The reason for this is to both provide the same input/output parameter paradigm that's omnipresent in most programming languages, and at the same time to facilitate simpler and clearer sharing of data anywhere during the request processing (thus alleviating the need for classic global variables). In addition, it provides for the same treatment of input parameters regardless of whether a handler is called locally or remotely across servers.
 
@@ -61,6 +74,33 @@ In this example, "set-param" is used to set input parameters "pp1" and "pp2" in 
 .RE
 
 The result in "/req" will be 30 for "res1" variable, and 200 for "res2".
+
+
+.B - Getting and setting parameters anywhere
+
+One of the advantages of parameters mentioned above, is the ability to use them anywhere, even when "skipping" encapsulation layers. For example, in this example, the main handler ("/req") is calling subhandler ("/req/sub-req"), which is calling sub-subhandler ("/req/sub/sub-req"), and the input and output parameters can be obtained and set in the sub-subhandler, completely bypassing the subhandler. This illustrates the semantics of parameters - they are not global variables but rather global parameters:
+
+.RS 4
+.EX
+
+%% /req/sub/sub-req get-param pp1 type number, pp2 type number
+    print-out "Input is ", pp1, ", ", pp2 new-line
+    set-param res1=pp1+pp2, res2=pp1*pp2
+%%
+
+%% /req/sub-req
+    call-handler "/req/sub/sub-req"
+%%
+
+// Call the above /req/sub-req request handler
+%% /req public
+    call-handler "/req/sub-req" set-param pp1=10, pp2=20 get-param res1 type number, res2 type number
+    print-out "Result is ", res1, " and ", res2 new-line
+%%
+
+.EE
+.RE
+
 .SH SEE ALSO
  Request data
 

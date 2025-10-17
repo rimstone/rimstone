@@ -677,6 +677,7 @@ char *make_empty_const (rim_num sz);
 void mark_lib (char *lib);
 bool math_fun_n (char *name, rim_num *params);
 bool math_fun (char *name, rim_num *params);
+bool str_fun (char *name);
 bool c_name (char *name);
 rim_num check_num_or_double (char *v, rim_num j);
 char *promote_double (char *v);
@@ -899,6 +900,17 @@ bool c_name (char *name)
     return false;
 }
 
+//
+// Return true if name is a string function, false otherwise
+//
+bool str_fun (char *name)
+{
+    if (!strcmp (name, "strlen"))
+    {
+        return true;
+    }
+    else return false;
+}
 
 //
 // Return true if name is a math function. params is 1 or 2 (the number of input params). 
@@ -1719,7 +1731,36 @@ char *check_exp (char *cur, bool *found, bool isd, bool comma)
     else
     {
         // Find begin token of an expression
-        if (*cur == '#') 
+        rim_num llen = strlen("strlen");
+        if (!strncmp (cur, "strlen", llen) && (cur[llen] == ' ' || cur[llen] == '('))
+        {
+            *found = true;
+            // it is strlen () function, or at least it should be
+            cur = cur+llen;
+            // process string inside and calculate its length
+            rim_num lname;
+            char *name = upcoming_name (&cur, &lname);
+            if (name != NULL) rim_report_error ("Left parenthesis not found after strlen function call");
+            char *inner_cur = cur;
+            rim_num type;
+            char *end_par = rim_find_keyword0 (cur+1, RIM_KEYPARRIGHT, 0, 1);
+            if (end_par == NULL) rim_report_error ("Missing right parenthesis in strlen function call");
+            *end_par = 0;
+            rim_num inner_len = strlen (cur+1);
+            char *res = check_str (cur+1, &type);
+            //
+            char s2nvar[300];
+            char *s2n = s2nvar;
+            snprintf (s2n, sizeof (s2nvar), "rim_mem_get_len(%s)", res);
+            make_var (&s2n, isd?RIM_DEFDOUBLE:RIM_DEFNUMBER, true);
+            //
+            // subst expression with var _000
+            // extra +1 is for trailing ")"
+            replace_var (inner_cur-lname-llen, inner_len+lname+1+llen, s2n);
+            *end_par = ' '; // make space where ")" was
+            cur = end_par + 1; // continue right after ")"
+        }
+        else if (*cur == '#') 
         {
             // this is conversion from string to number
             *found = true;
@@ -2318,7 +2359,7 @@ bool add_var (char *var, rim_num type, char *realname, bool watched_for_unused)
         return true;  
     }
     // check if variable name reserved
-    if (math_fun (var, NULL) || math_fun_n (var, NULL) || c_name (var)) rim_report_error ("Cannot use name [%s] for a variable because it is reserved", var);
+    if (math_fun (var, NULL) || math_fun_n (var, NULL) || str_fun (var) || c_name (var)) rim_report_error ("Cannot use name [%s] for a variable because it is reserved", var);
     // Add if not found, this is hash for exact variable scope
     char *decname=rim_malloc (RIM_MAX_DECNAME+1);
     snprintf (decname, RIM_MAX_DECNAME, "%ld_%ld+%s", rim_level, rim_resurr[rim_level], var);
@@ -3181,7 +3222,8 @@ void parse_cond(char *cm, char *bifs, char *ifs, char *ife)
         errorm = find_keyword (cm, RIM_KEYERRORMARGIN, 1);
         len = find_keyword (cm, RIM_KEYLENGTH, 1);
 
-        if (eq == NULL && neq == NULL && less == NULL && lesseq == NULL && gr == NULL && mod == NULL && notmod == NULL && greq == NULL && cont == NULL && notcont == NULL && caseins == NULL && errorm == NULL && len == NULL) rim_report_error ("conditional clause is missing or empty");
+        // do not use caseins, errorm and len here, those are *only* as a subclause to one of these!
+        if (eq == NULL && neq == NULL && less == NULL && lesseq == NULL && gr == NULL && mod == NULL && notmod == NULL && greq == NULL && cont == NULL && notcont == NULL ) rim_report_error ("conditional clause is missing or empty");
 
         rim_num eq_pos = INT_MAX;
         rim_num neq_pos = INT_MAX;
@@ -3965,6 +4007,11 @@ rim_num check_var (char **var, rim_num type)
                         return check_type (RIM_DEFDOUBLE, type); 
                     }
                     if (math_fun_n (firstn, NULL)) 
+                    {
+                        *var = process_number_exp (v, false);
+                        return check_type (RIM_DEFNUMBER, type); 
+                    }
+                    if (str_fun (firstn)) 
                     {
                         *var = process_number_exp (v, false);
                         return check_type (RIM_DEFNUMBER, type); 
