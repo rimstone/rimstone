@@ -31,6 +31,12 @@ When building your client executable, you can either specify build flags by usin
 .RS 4
 \[bu]    
 It is MT-safe, so you can use it in multi-threaded applications, such as to make many requests in parallel.
+
+.RE
+
+.RS 4
+\[bu]    
+It comes with messaging API (see \fBClient-API-and-messaging\fP).
 .RE
 
 See Examples section below for detailed examples.
@@ -819,6 +825,7 @@ The output shows service exit code (82, see \fBexit-status\fP in the RimStone co
  API
 
 \fBClient-API\fP  
+\fBClient-API-and-messaging\fP  
 \fBServer-API\fP   
 See all 
 \fBdocumentation\fP

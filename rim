@@ -679,7 +679,7 @@ function show_client_bld() {
     fi
 #print the flag asked for, if both, place them on the same line
     if [ "$_DO_CLIENT_INCLUDE" == "1" ]; then
-        echo -n "-I$HOME/.rimstone/include "
+        echo -n "-I$HOME/.rimstone/include -DRIM_MSG_CLI "
     fi
     if [ "$_DO_CLIENT_LINK" == "1" ]; then
         echo -n "-L$RIM_LIBRARY_PATH/$RDEST -lrimcli -Wl,--rpath=$RIM_LIBRARY_PATH/$RDEST "
@@ -818,15 +818,15 @@ export QUERY_STRING=\"$_REQ_QUERY\""> $_TOEXEC
             error "Cannot use both --remote and --socket"
         fi
         if [ "$_REQ_IP" != "" ]; then
-            echo "${_CONT}"$RIM_LIBRARY_PATH"/rimcli \"$_REQ_IP\"" >> $_TOEXEC 
+            echo "${_CONT}"$RIM_BIN_PATH"/rimcli \"$_REQ_IP\"" >> $_TOEXEC 
         else
             if [ "$_REQ_SOCK" != "" ]; then
                 if [ ! -S "$_REQ_SOCK" ]; then
                     error "Cannot access socket $_REQ_SOCK or is not a socket file"
                 fi
-                echo "${_CONT}"$RIM_LIBRARY_PATH"/rimcli $_REQ_SOCK" >> $_TOEXEC 
+                echo "${_CONT}"$RIM_BIN_PATH"/rimcli $_REQ_SOCK" >> $_TOEXEC 
             else
-                echo "${_CONT}"$RIM_LIBRARY_PATH"/rimcli $RIM_DATA/apps/$_ANAME/sock/.sock" >> $_TOEXEC 
+                echo "${_CONT}"$RIM_BIN_PATH"/rimcli $RIM_DATA/apps/$_ANAME/sock/.sock" >> $_TOEXEC 
             fi
         fi
     else

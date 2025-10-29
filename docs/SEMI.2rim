@@ -12,7 +12,7 @@ SEMI (SimplE Message Interface) is a binary format used to write (pack) and read
 .EE
 .RE
 
-<key> can be comprised of any characters other than equal sign("=") or an exclamation point ("!"), and any surrounding whitespaces are trimmed.  
+<key> can be comprised of any alphanumeric characters, spaces, underscores or hyphens, and any surrounding whitespaces are trimmed.  
 
 Value is always preceded by a 8-byte length of value (as a binary number in big-endian 64bit format), followed by the value itself, followed by the new line ("\\n") at the end which is not counted in length. A special <key> is "comment", which is always ignored, and serves the purpose of general commenting. 
 

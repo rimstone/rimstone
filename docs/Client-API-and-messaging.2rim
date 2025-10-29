@@ -1,0 +1,121 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+Client-API-and-messaging \- RimStone documentation (API)
+.SH DESCRIPTION
+RimStone provides \fBSEMI\fP messaging API for a C client (see \fBClient-API\fP). It means you can read sets of key/value pairs sent by the server, and also create sets of key/value pairs and send them to the server (or read to/write from a file etc.).
+
+This API is binary-compatible with \fBnew-message\fP, \fBwrite-message\fP, \fBread-message\fP etc.
+
+The following C API is provided:
+
+.RS 4
+\[bu]    
+rim_msg * rim_new_msg (char *from, rim_num from_len);
+Create a new message, which is a pointer to a variable of type "rim_msg". 
+
+If this is a new empty message (i.e. with no data), then use NULL for "from" and 0 from "from_len". Typically, this is what you'd use when building a new message you intend to send to the server, write into a file etc.
+
+If you're creating a new message from an existing one, then "from" is the message body and "from_len" is its length (see rim_get_msg() and rim_get_msg_len() to get them, respectively). Typically, this is what you'd do if you received a message from the server, read it from a file etc.
+
+
+.RE
+
+.RS 4
+\[bu]    
+void rim_write_msg(rim_msg *msg, char *key, char *val, rim_num val_len);
+Write data to a message.
+
+"msg" is a message created with rim_new_msg(). 
+
+Data written is key "key" and value "val" of length "val_len". See \fBSEMI\fP on details as to what the key can be, while value can be any binary data. Note that both key and value are copied into a message, and thus can go out of scope or be freed after the call.
+
+
+.RE
+
+.RS 4
+\[bu]    
+rim_num rim_read_msg(rim_msg *msg, char **key, char **val, rim_num *val_len);
+Read data from a message.
+
+"msg" is a message created with rim_new_msg(). 
+
+"key" is the key read, and "val" is the value read, while "val_len" is the length of value read.
+
+The return value is RIM_OKAY if message is read, RIM_ERR_LENGTH if trying to read beyond the end of message and RIM_ERR_FORMAT if the message is not in \fBSEMI\fP format.
+
+Note that "val" is not allocated and should not be freed (it is a part of the message data), while "key" is allocated and should be freed when not needed. For this reason, you should not free the message data (see rim_get_msg()), nor the message itself if the value is still needed (see Example below).
+
+
+.RE
+
+.RS 4
+\[bu]    
+char *rim_get_msg(rim_msg *msg);
+Get the message data.
+
+"msg" is a message created with rim_new_msg(). 
+
+Return value is the message data, which is the data you can send to server, or the data you would receive from server. It consists of all key/value pairs that make up the message, whether it's produced somewhere else or you created it rim_write_msg().
+
+
+.RE
+
+.RS 4
+\[bu]    
+rim_num rim_get_len (rim_msg *msg);
+Get the length of message data.
+
+"msg" is a message created with rim_new_msg(). 
+
+Return value is the length of message data, which can be binary. You can use this length when sending data to server, writing it to a file etc.
+.RE
+
+
+.SH EXAMPLES
+Here's the sample code illustrating use of the API:
+
+.RS 4
+.EX
+
+\[char35]include "rcli.h" // include C API header file
+
+\[char46]..
+
+rim_msg *msg; // message type variable
+
+// Create new message
+msg = rim_new_msg (NULL, 0);
+
+\[char46]..
+
+// Write key/value (assuming value is a zero-bound string)
+char key[100], value[100];
+strcpy (key, "some key");
+strcpy (value, "some key");
+rim_write_msg (msg, key, value, strlen(value));
+
+\[char46]..
+
+// Read key/value from the message
+char *k, *v;
+rim_num len;
+rim_read_msg (msg, &k, &v, &len);
+
+\[char46]..
+
+// Free the message data
+free (rim_get_msg(msg));
+// Free the message
+free (msg);
+
+.EE
+.RE
+
+.SH SEE ALSO
+ API
+
+\fBClient-API\fP  
+\fBClient-API-and-messaging\fP  
+\fBServer-API\fP   
+See all 
+\fBdocumentation\fP

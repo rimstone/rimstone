@@ -241,9 +241,9 @@ copy_binaries: build_spec  build_structure
 	if [ "$(REL)" == "1" ]; then install -m 0700 release/v1 -t $(V_LIB)/
 	install -m 0700 release/mrim  -t $(V_BIN)/ 
 	if [ ! -L "$(V_BIN)/mgrg" ]; then ln -s $(V_BIN)/mrim $(V_BIN)/mgrg; fi
-	install -m 0700 release/rimcli  -t $(V_LIB)/; fi
+	install -m 0700 release/rimcli  -t $(V_BIN)/; fi
 	$(AT)#GG_COMPAT
-	if [ ! -L "$(V_LIB)/ggcli" ]; then ln -s $(V_LIB)/rimcli $(V_LIB)/ggcli; fi
+	if [ ! -L "$(V_LIB)/ggcli" ]; then ln -s $(V_BIN)/rimcli $(V_LIB)/ggcli; fi
 	$(AT)#the following are copied here and in build_structure. The reason is that RimStone developer can change them
 	$(AT)#so they need to be copied here. But when first installing RimStone, they need to be present in order to
 	$(AT)#build the rest (well not vmakefile, so it is not in build_structure rule; sys and rim are needed there
@@ -261,6 +261,7 @@ copy_binaries: build_spec  build_structure
 	install -D -m 0600 rimcommon.h -t $(V_INC)/
 	install -D -m 0600 fcgi/fcgiapp.h -t $(V_INC)/
 	install -D -m 0600 rcli.h -t $(V_INC)/
+	install -D -m 0600 rimmsg.h -t $(V_INC)/
 	$(AT)#GG_COMPAT
 	if [ ! -L "$(V_INC)/gcli.h" ]; then ln -s $(V_INC)/rcli.h $(V_INC)/gcli.h; fi
 	read -r RIM_C_GCC < <(gcc --version);echo "$$RIM_C_GCC" > $(V_SHARE)/.rim.gcc
@@ -293,6 +294,7 @@ build_structure:
 	install -D -m 0600 rimcommon.h -t $(V_INC)/
 	install -D -m 0600 fcgi/fcgiapp.h -t $(V_INC)/
 	install -D -m 0600 rcli.h -t $(V_INC)/
+	install -D -m 0600 rimmsg.h -t $(V_INC)/
 	install -m 0700 -d $(V_LIB)/
 	install -m 0700 -d $(V_LIB)/devel/
 	install -m 0700 -d $(V_LIB)/release/
@@ -317,7 +319,7 @@ build_structure:
 	if [ ! -L "$(V_BIN)/gg" ]; then ln -s $(V_BIN)/rim $(V_BIN)/gg; fi
 	$(AT)#install map pages if not a debian package, which does it automatically. man pages will not exist for install of LTO (source recompile in package).
 	$(AT)if [ -d docs ]; then install -m 0700 -d $(V_MAN) ; install -D -m 0600 docs/*.2rim -t $(V_MAN)/ ; sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(V_MAN)/*.2rim; sed -i "s/\$$DATE/$(DATE)/g" $(V_MAN)/*.2rim; fi
-	@GF=".version .version_public CONTRIBUTING LICENSE Makefile NOTICE README.md arr.c btrace/LICENSE btrace/atomic.c btrace/backtrace-supported.h btrace/backtrace.c btrace/backtrace.h btrace/config.h btrace/dwarf.c btrace/elf.c btrace/fileline.c btrace/filenames.h btrace/internal.h btrace/mmap.c btrace/mmapio.c btrace/posix.c btrace/print.c btrace/simple.c btrace/sort.c btrace/state.c chandle.c curl.c db.c fcgi/LICENSE fcgi/fastcgi.h fcgi/fcgiapp.c fcgi/fcgiapp.h fcgi/rimsock.c fcgi/rimsock.h fcgi/strerror.c hash.c json.c lite.c mrim.c msg.c mys.c pcre2.c pg.c rcli.c rcli.h rim rim.h rim.sel rim.te rim.vim rim_indent.vim rim_temp.h rimcli.c rimcommon.c rimcommon.h riminst.sh rimlib rimmem.c rimrt.c rimrtc.c rimsetenv.sh rr.te sec.c stub.c stub_after.c stub_before.c sys tree.c utf.c utfs.c v1.c vmakefile xml.c "; tar cvfz rimstone.tar.gz $$GF>/dev/null
+	@GF=".version .version_public CONTRIBUTING LICENSE Makefile NOTICE README.md arr.c btrace/LICENSE btrace/atomic.c btrace/backtrace-supported.h btrace/backtrace.c btrace/backtrace.h btrace/config.h btrace/dwarf.c btrace/elf.c btrace/fileline.c btrace/filenames.h btrace/internal.h btrace/mmap.c btrace/mmapio.c btrace/posix.c btrace/print.c btrace/simple.c btrace/sort.c btrace/state.c chandle.c curl.c db.c fcgi/LICENSE fcgi/fastcgi.h fcgi/fcgiapp.c fcgi/fcgiapp.h fcgi/rimsock.c fcgi/rimsock.h fcgi/strerror.c hash.c json.c lite.c mrim.c msg.c mys.c pcre2.c pg.c rcli.c rcli.h rim rim.h rim.sel rim.te rim.vim rim_indent.vim rim_temp.h rimcli.c rimcommon.c rimcommon.h riminst.sh rimlib rimmem.c rimmsg.h rimrt.c rimrtc.c rimsetenv.sh rr.te sec.c stub.c stub_after.c stub_before.c sys tree.c utf.c utfs.c v1.c vmakefile xml.c "; tar cvfz rimstone.tar.gz $$GF>/dev/null
 	$(AT)install -D -m 0600 rimstone.tar.gz -t $(V_SHARE)/ 
 
 #This, if needed, must be run as root (obviously). For instance, if you have SELinux enabled, and you want to run a server that's accessed from say a web server
@@ -475,7 +477,10 @@ $(RDEST)/hash.o: hash.c rim.h
 $(RDEST)/json.o: json.c rim.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS) 
-$(RDEST)/msg.o: msg.c rim.h
+$(RDEST)/msgcli.o: msg.c rimcommon.h rimmsg.h
+	$(AT)echo -n "."
+	$(AT)$(CC) -c -DRIM_MSG_CLI -o $@ $< $(CFLAGS) 
+$(RDEST)/msg.o: msg.c rim.h rimmsg.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS) 
 $(RDEST)/tree.o: tree.c rim.h
@@ -577,7 +582,7 @@ $(RDEST)/rimmems.o: rimmem.c rim.h
 $(RDEST)/mrim.o: mrim.c rimcommon.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS) 
-$(RDEST)/librimcli.a: $(RDEST)/rcli.o $(RDEST)/rimcommon.o
+$(RDEST)/librimcli.a: $(RDEST)/rcli.o $(RDEST)/msgcli.o $(RDEST)/rimcommon.o
 	$(AT)echo -n "."
 	$(AT)rm -f $@
 	$(AT)$(CCAR) $@ $^ 
@@ -587,14 +592,14 @@ $(RDEST)/rimmemcommon.o: rimcommon.c rimcommon.h
 $(RDEST)/rimcommon.o: rimcommon.c rimcommon.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS) 
-$(RDEST)/rcli.o: rcli.c rim.h rcli.h
+$(RDEST)/rcli.o: rcli.c rim.h rcli.h rimcommon.h rimmsg.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS)
 $(RDEST)/librimscli.a: $(RDEST)/srvrcli.o $(RDEST)/rimmemcommon.o
 	$(AT)echo -n "."
 	$(AT)rm -f $@
 	$(AT)$(CCAR) $@ $^ 
-$(RDEST)/srvrcli.o: rcli.c rim.h rcli.h
+$(RDEST)/srvrcli.o: rcli.c rim.h rcli.h rimcommon.h rimmsg.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS) -DRIM_RIMMEM=1
 $(RDEST)/librimfcgi.a: $(RDEST)/fcgi/fcgiapp.o $(RDEST)/fcgi/rimsock.o

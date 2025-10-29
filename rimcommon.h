@@ -16,9 +16,56 @@
 #include <unistd.h>
 #include <string.h>
 #include <malloc.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <ctype.h>
+
+#define RIM_OKAY 0
+// Error codes
+#define RIM_ERR_OPEN -1
+#define RIM_ERR_OPEN_TARGET -2
+#define RIM_ERR_READ -3
+#define RIM_ERR_WRITE -4
+#define RIM_ERR_POSITION -5
+#define RIM_ERR_TOO_MANY -6
+#define RIM_ERR_DELETE -7
+#define RIM_ERR_FAILED -8
+#define RIM_ERR_WEB_CALL -9
+#define RIM_ERR_CREATE -10 
+#define RIM_ERR_EXIST -11
+#define RIM_ERR_INVALID -12
+#define RIM_ERR_RENAME -13
+#define RIM_ERR_MEMORY -14
+#define RIM_ERR_UTF -15
+#define RIM_ERR_FORMAT -16
+#define RIM_ERR_CLOSE -17
+#define RIM_ERR_OVERFLOW -18
+#define RIM_ERR_LENGTH -20
+#define RIM_ERR_REFERENCE -21
+#define RIM_ERR_JSON -22
+#define RIM_ERR_XML -23
+// new errors below
+// the last error, it's NOT user interfacing
+// Note that there's RIM_CLI_ERR_TOTAL error in cli.h under -255 (so -254, -253 etc.) and those can NOT
+// be used here in rim.h (must not overlap), so currently its 16, so the last error number here is 
+// actually -255+16 (and not -255), which is -239 currently
+#define RIM_ERR_UNKNOWN -255
 
 typedef int64_t rim_num;
 typedef double rim_dbl; // future enhancement might include GMP (GNU Multiple Precision Arithmetic Lib) or MPFR
+
+
+// memory alignment of 16 bytes for alloc'd data storage
+#define RIM_ALIGN (sizeof(rim_head))
+//
+// Header prior to alloced memory. id is index into vm[]. This is the string in RimStone, and the actual string follows right after,
+// allowing for good prefetching for a string.
+//
+typedef struct s_rim_head {
+    rim_num id; 
+    rim_num len;
+} rim_head;
+
 
 #ifdef RIM_RIMMEM
 void *rim_malloc(size_t size);

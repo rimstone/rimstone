@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define RIM_VERSION "4.2.0"
+#define RIM_VERSION "4.3.0"
 
 // OS Name and Version
 #define RIM_OS_NAME  RIM_OSNAME
@@ -195,14 +195,6 @@ rim_num rim_gen_write (bool is_error, char *s, rim_num nbyte);
 // memory that's made from string literal (like process, but can never be released)
 #define RIM_MEM_CONST 8
 //
-//
-// Header prior to alloced memory. id is index into vm[]. This is the string in RimStone, and the actual string follows right after,
-// allowing for good prefetching for a string.
-//
-typedef struct s_rim_head {
-    rim_num id; 
-    rim_num len;
-} rim_head;
 //  
 //
 // memory list, maximum of about 2^47-1 allocated memory blocks per request
@@ -230,8 +222,6 @@ typedef struct s_vml { // total size 8 bytes
 } vml;
 #define RIM_MAX_REF ((rim_num)(1<<8)-1)
 #define RIM_MAX_MEM (((rim_num)1<<45)-1)
-// memory alignment of 16 bytes for alloc'd data storage
-#define RIM_ALIGN (sizeof(rim_head))
 #define rim_free(x) _rim_free(x)
 // rim_free_int() is internal version of rim_free() which DOES always delete memory (rim_free() in general doesn't unless at the end of request)
 //
@@ -363,36 +353,6 @@ RIM_ALWAYS_INLINE static inline void rim_mem_set_len(void *ptr,rim_num length) {
 #define RIM_DIR 2
 // Info codes, when it's okay, but it needs to give more info
 #define RIM_INFO_EXIST 1
-// Error codes
-#define RIM_OKAY 0
-#define RIM_ERR_OPEN -1
-#define RIM_ERR_OPEN_TARGET -2
-#define RIM_ERR_READ -3
-#define RIM_ERR_WRITE -4
-#define RIM_ERR_POSITION -5
-#define RIM_ERR_TOO_MANY -6
-#define RIM_ERR_DELETE -7
-#define RIM_ERR_FAILED -8
-#define RIM_ERR_WEB_CALL -9
-#define RIM_ERR_CREATE -10 
-#define RIM_ERR_EXIST -11
-#define RIM_ERR_INVALID -12
-#define RIM_ERR_RENAME -13
-#define RIM_ERR_MEMORY -14
-#define RIM_ERR_UTF -15
-#define RIM_ERR_FORMAT -16
-#define RIM_ERR_CLOSE -17
-#define RIM_ERR_OVERFLOW -18
-#define RIM_ERR_LENGTH -20
-#define RIM_ERR_REFERENCE -21
-#define RIM_ERR_JSON -22
-#define RIM_ERR_XML -23
-// new errors below
-// the last error, it's NOT user interfacing
-// Note that there's RIM_CLI_ERR_TOTAL error in cli.h under -255 (so -254, -253 etc.) and those can NOT
-// be used here in rim.h (must not overlap), so currently its 16, so the last error number here is 
-// actually -255+16 (and not -255), which is -239 currently
-#define RIM_ERR_UNKNOWN -255
 //types of database
 #define RIM_DB_MARIADB 0
 #define RIM_DB_POSTGRES 1
@@ -474,10 +434,6 @@ RIM_ALWAYS_INLINE static inline void rim_mem_set_len(void *ptr,rim_num length) {
 //types of memory
 #define RIM_MEM_FREE 1
 #define RIM_MEM_FILE 2
-//mode of message usage
-#define RIM_MSG_NONE 0
-#define RIM_MSG_READ 1
-#define RIM_MSG_WRITE 2
 
 // used as a silly placeholder to replace with actual length in rim_puts to increase output performance
 #define RIM_EMPTY_LONG_PLAIN_ZERO 0
@@ -609,18 +565,6 @@ typedef struct rim_fifo_s
     rim_fifo_item *last_ptr; // end of list
     rim_fifo_item *retrieve_ptr; // where to get next one
 } rim_fifo;
-//
-// Message structure (generic)
-//
-typedef struct rim_msg_s
-{
-    char *data; // message itself
-    rim_num len; // current message length
-    rim_num tot; // total allocated, which can be far greater than current message length to avoid massive realloc-s
-    rim_num addinc; // add memory increment, starts with 128 and goes up to 4K
-    rim_num curr; // where in parsing, or adding to, is message currently
-    char mode; // RIM_MSG_NONE, RIM_MSG_READ, RIM_MSG_WRITE, default MSG_NONE, must delete msg to change from read to write and vice versa
-} rim_msg;
 //
 // File structure, for now just FILE *
 //
@@ -1433,11 +1377,9 @@ void rim_exit (void);
 char rim_decorate_path (char *reqname, rim_num reqname_len, char **p, rim_num p_len);
 rim_num rim_str2num (char *str, int base, rim_num *st);
 rim_dbl rim_str2dbl (char *str, rim_num *st);
-rim_num rim_read_msg(rim_msg *msg, char **key, char **val);
-void rim_write_msg(rim_msg *msg, char *key, char *val);
-void rim_del_msg(rim_msg *msg);
-char *rim_get_msg(rim_msg *msg);
-rim_msg * rim_new_msg (char *from);
+// msg
+#include "rimmsg.h"
+//
 void rim_sleepabit(rim_num milli);
 void rim_set_crash_handler(char *btrace);
 //

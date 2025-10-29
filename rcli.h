@@ -24,7 +24,7 @@
 #include "rimcommon.h"
 
 // Version+Release. We use major plus minor plus release, as in 1.3.34,2.1.11,3.7.41... 
-#define RIM_VERSION "4.2.0"
+#define RIM_VERSION "4.3.0"
 
 // Client error codes
 #define RIM_OKAY 0 // success
@@ -111,12 +111,14 @@ typedef struct rim_cli {
     } internal;
 } rim_cli;
 
-
 // API
 int rim_cli_request (rim_cli *fc_in);
 char *rim_cli_error (rim_cli *callin);
 char *rim_cli_data (rim_cli *callin);
 void rim_cli_delete (rim_cli *callin);
+
+// Message API
+#include "rimmsg.h"
 
 #include "rim_temp.h"
 #endif
