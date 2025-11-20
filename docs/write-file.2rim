@@ -24,7 +24,7 @@ write-file <file> | ( file-id <file id> ) \\
 .B WITHOUT FILE-ID
 .LP
 
-This is a simple method of writing a file. File named <file> is opened, data written, and file is closed. <file> can be a full path name, or a path relative to the application home directory (see \fBdirectories\fP).
+This is a simple method of writing a file. File named <file> is opened, data written, and file is closed. <file> can be a full path name, or a path relative to the current working directory (which by default is the application home directory, see \fBdirectories\fP).
 
 write-file writes <content> to <file>. If "append" clause is used without boolean variable <append>, or if <append> evaluates to true, the <content> is appended to the file; otherwise the file is overwritten with <content>, unless "position" clause is used in which case file is not overwritten and <content> is written at byte <position> (with 0 being the first byte). Note that <position> can be beyond the end of file, in which case null-bytes are written between the current end of file and <position>.
 
@@ -47,7 +47,7 @@ If "length" is not used, then a whole string is written to a file, and the numbe
 
 If "append" clause is used without boolean variable <append>, or if <append> evaluates to true, then file pointer is set at the end of file and data written.
 
-If "status" clause is used, then the number of bytes written is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be RIM_ERR_POSITION (if <position> is negative or file does not support it), RIM_ERR_WRITE (if there is an error writing file) or RIM_ERR_OPEN if file is not open. 
+If "status" clause is used, then the number of bytes written is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be RIM_ERR_POSITION (if <position> is negative or file does not support it) or RIM_ERR_WRITE (if there is an error writing file). If file is not open then your program will \fBerror out\fP.
 
 .SH EXAMPLES
 To overwrite file "/path/to/file" with "Hello World":

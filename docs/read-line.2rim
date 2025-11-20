@@ -21,7 +21,7 @@ end-read-line
 .SH DESCRIPTION
 read-line starts the loop in which a text <file> is read line by line into string <line content>, with end-read-line ending this loop. Once the end of <file> has been reached, or an error occurs, the loop exits. 
 
-<file> can be a full path name, or a path relative to the application home directory (see \fBdirectories\fP). 
+<file> can be a full path name, or a path relative to the current working directory (which by default is the application home directory, see \fBdirectories\fP). 
 
 <status> number will be RIM_ERR_READ if there is an error in reading file, or RIM_ERR_OPEN if file cannot be opened, or RIM_OKAY if end-of-file has been reached. Check for error after end-read-line statement. If a line was read successfully, then <status> is its length. 
 

@@ -144,7 +144,7 @@ RimStone goes a step further from memory safety. It also enforces status checkin
 .B TYPES
 .LP
 
-RimStone is a strongly-typed language, with only four primitive types (numbers, doubles, strings and booleans) and a number of structured types (array, message, split-string, hash, tree, tree-cursor, fifo, lifo, list, file and service). RimStone is a declarative language, with a few lines of code implementing large functionalities. RimStone is also very simple, as it's designed to achieve application goals with less coding.
+RimStone is a strongly-typed language, with only four primitive types (numbers, doubles, strings and booleans) and a number of structured types (array, message, split-string, hash, tree, tree-cursor, fifo, lifo, list, file, directory and service). RimStone is a declarative language, with a few lines of code implementing large functionalities. RimStone is also very simple, as it's designed to achieve application goals with less coding.
 
 The number type is a signed 64-bit integer (as a decimal, octal or hexadecimal C notation). The double type is a signed double precision 64-bit floating point numeric value. The boolean type evaluates to true (non-zero) or false (zero). The string type evaluates to any sequence of bytes (binary or text) that is always trailed with a null character regardless, which is not counted in string's length. All constants follow C rules of formatting.
 
@@ -229,12 +229,6 @@ Do not use object names (such as variables and request names) that start with "_
 .LP
 
 See \fBcontributions\fP for more information.
-
-.LP
-.B AUTHOR
-.LP
-
-RimStone programming language (or rimstone-lang) is created and written by Serge Miatovich (hello@rimstone-lang.com). 
 .SH SEE ALSO
  General
 

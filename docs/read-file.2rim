@@ -27,7 +27,7 @@ read-file <file> | ( file-id <file id> ) \\
 
 This is a simple method of reading a file. File named <file> is opened, data read, and file is closed. 
 
-<file> can be a full path name, or a path relative to the application home directory (see \fBdirectories\fP).
+<file> can be a full path name, or a path relative to the current working directory (which by default is the application home directory, see \fBdirectories\fP).
 
 Data read is stored into string <content>. Note that file can be binary or text and <content> may have null-bytes. 
 
@@ -53,7 +53,7 @@ If "length" clause is used, then <length> number of bytes is read, otherwise the
 
 Note that when you reach the end of file and no more bytes can be read, <status> is 0.
 
-If "status" clause is used, then the number of bytes read is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be RIM_ERR_POSITION (if <position> is negative, outside the file, or file does not support it), RIM_ERR_READ (if <length> is negative or there is an error reading file) or RIM_ERR_OPEN if file is not open. If the number of bytes read isn't what's requested, you can use "end-of-file" clause to get boolean <eof>, which is true if the end of file happened, or false if there is an error (in which case you can use "errno" clause in \fBget-req\fP to obtain the actual reason for error).
+If "status" clause is used, then the number of bytes read is stored to <status>, unless error occurred, in which case <status> has the error code. The error code can be RIM_ERR_POSITION (if <position> is negative, outside the file, or file does not support it) or RIM_ERR_READ (if <length> is negative or there is an error reading file). If file is not open, then your program will \fBerror out\fP. If the number of bytes read isn't what's requested, you can use "end-of-file" clause to get boolean <eof>, which is true if the end of file happened, or false if there is an error (in which case you can use "errno" clause in \fBget-req\fP to obtain the actual reason for error).
 
 .SH EXAMPLES
 To read the entire file and create both the variable that holds its content and the status variable:

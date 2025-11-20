@@ -36,9 +36,12 @@ change-mode "myfile" mode 0760
 
 \fBchange-dir\fP  
 \fBchange-mode\fP  
+\fBclose-dir\fP  
 \fBdelete-dir\fP  
 \fBdirectories\fP  
-\fBnew-dir\fP   
+\fBnew-dir\fP  
+\fBopen-dir\fP  
+\fBread-dir\fP   
  Files
 
 \fBchange-mode\fP  

@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define RIM_VERSION "4.3.1"
+#define RIM_VERSION "4.4.0"
 
 // OS Name and Version
 #define RIM_OS_NAME  RIM_OSNAME
@@ -84,6 +84,8 @@
 #include <sys/file.h>
 // Data conversion
 #include <endian.h>
+// Directory handling
+#include <dirent.h>
 #include "rimcommon.h"
 
 // PCRE2 calls, include pcre2 and use only one (pcre2 or glibc), depending on pcre2 version (use pcre2 if its version >=10.37, see pcre2.c)
@@ -189,11 +191,17 @@ rim_num rim_gen_write (bool is_error, char *s, rim_num nbyte);
 
 //
 //
-// RimStone memory
+// RimStone types of memory
 // process-request mem
-#define RIM_MEM_PROCESS 4
 // memory that's made from string literal (like process, but can never be released)
+// These are bit fields to allow for bitwise checks (as opposed to checking each value separately) when we 
+// check for more than one at the same time (so we can do RIM_MEM_FILE|RIM_MEM_DIR). If we want to pack more than 7
+// values in a byte, then code checking this with | (bitwise OR) ***MUST*** be reworked!!!
+#define RIM_MEM_FREE 1
+#define RIM_MEM_FILE 2
+#define RIM_MEM_PROCESS 4
 #define RIM_MEM_CONST 8
+#define RIM_MEM_DIR 16
 //
 //  
 //
@@ -206,6 +214,7 @@ rim_num rim_gen_write (bool is_error, char *s, rim_num nbyte);
 // status has: 
 // RIM_MEM_FREE bit set if this is freed block, 0 if not. 
 // RIM_MEM_FILE bit set if this is a file that eventually needs to close (unless closed already)
+// RIM_MEM_DIR bit set if this is a dir that eventually needs to close (unless closed already)
 // RIM_MEM_PROCESS bit set if this is process memory, i.e. not to be released at the end of request
 // RIM_MEM_CONST bit set if this is memory that can't be freed
 // ref is the number of references to process memory (max of 2^8-1 or 255), which is the number of "duplications" (by reference) of the same memory.
@@ -351,6 +360,12 @@ RIM_ALWAYS_INLINE static inline void rim_mem_set_len(void *ptr,rim_num length) {
 // Type of object in file system
 #define RIM_FILE 1
 #define RIM_DIR 2
+#define RIM_CHAR 3
+#define RIM_FIFO 4
+#define RIM_SOCK 5
+#define RIM_BLOCK 6
+#define RIM_LINK 7
+#define RIM_UNKNOWN 8
 // Info codes, when it's okay, but it needs to give more info
 #define RIM_INFO_EXIST 1
 //types of database
@@ -391,6 +406,7 @@ RIM_ALWAYS_INLINE static inline void rim_mem_set_len(void *ptr,rim_num length) {
 #define RIM_DEFDOUBLESTATIC 35
 #define RIM_DEFARRAYDOUBLE 36
 #define RIM_DEFARRAYDOUBLESTATIC 37
+#define RIM_DEFDIR 38
 #define RIM_DEFUNKN 1024
 // type names
 #define RIM_KEY_T_STRING "string"
@@ -413,6 +429,7 @@ RIM_ALWAYS_INLINE static inline void rim_mem_set_len(void *ptr,rim_num length) {
 #define RIM_KEY_T_LIST "list"
 #define RIM_KEY_T_ENCRYPT "encrypt-decrypt"
 #define RIM_KEY_T_FILE "file"
+#define RIM_KEY_T_DIR "directory"
 #define RIM_KEY_T_SERVICE "service"
 //
 //
@@ -431,9 +448,6 @@ RIM_ALWAYS_INLINE static inline void rim_mem_set_len(void *ptr,rim_num length) {
 #define RIM_RANDOM_NUM 0
 #define RIM_RANDOM_STR 1
 #define RIM_RANDOM_BIN 2
-//types of memory
-#define RIM_MEM_FREE 1
-#define RIM_MEM_FILE 2
 
 // used as a silly placeholder to replace with actual length in rim_puts to increase output performance
 #define RIM_EMPTY_LONG_PLAIN_ZERO 0
@@ -566,16 +580,24 @@ typedef struct rim_fifo_s
     rim_fifo_item *retrieve_ptr; // where to get next one
 } rim_fifo;
 //
-// File structure, for now just FILE *
+// File structure, for now just file descriptor
 //
 typedef struct rim_file_s
 {
-    FILE **f; // pointer to file pointer
+    int *f; // pointer to file ID
     union {
         rim_num memind; // pointer to file pointer's location in RimStone's memory mgmt system
         rim_num id;     // OR it's a file ID for lock-file
     } attr;
 } rim_file;
+//
+// Directory object
+//
+typedef struct rim_directory_s
+{
+    DIR **dir; 
+    rim_num memind; // pointer to dir pointer's location in RimStone's memory mgmt system
+} rim_directory;
 // 
 // Configuration context data for application, read from config file. Does not change during a request.
 //
@@ -1180,7 +1202,7 @@ void *rim_get_input_param (rim_num name_id, rim_num type, char *defval);
 rim_num rim_is_positive_num (char *s);
 void rim_copy_string (char *src, rim_num from, char **dst, rim_num len);
 void rim_alter_string (char *tgt, char *copy, rim_num swith, rim_num len, bool begin);
-rim_num rim_exec_program (char *prg, char *argv[], rim_num num_args, FILE *fin, FILE **fout, FILE **ferr, char *inp, rim_num inp_len, char **out_buf, char **err_buf);
+rim_num rim_exec_program (char *prg, char *argv[], rim_num num_args, FILE *fin, FILE **fout, FILE **ferr, char *inp, rim_num inp_len, char **out_buf, char **err_buf, char **env);
 rim_num rim_subs(char *s, void **call_handler);
 void rim_get_debug_options();
 rim_num rim_flush_printf(rim_num fin);
@@ -1199,8 +1221,8 @@ rim_num rim_count_substring (char *str, char *find, rim_num len_find, rim_num ca
 rim_num rim_replace_string (char *str, rim_num strsize, char *find, char *subst, rim_num all, char **last, rim_num case_sensitive);
 void rim_trim (char *str, rim_num *len, bool alloc);
 char *rim_trim_ptr (char *str, rim_num *len);
-void rim_file_stat (char *dir, rim_num *type, rim_num *size, rim_num *mode);
-rim_num rim_get_open_file_size(FILE *f);
+void rim_file_stat (char *dir, rim_num *type, bool *is_soft, bool *is_hard, rim_num *size, rim_num *mode);
+rim_num rim_get_open_file_size(int f);
 void rim_memory_init ();
 void *rim_malloc(size_t size);
 void rim_free_int(void *x);
@@ -1284,15 +1306,14 @@ rim_num rim_copy_file (char *src, char *dst);
 void rim_b64_decode (char* in, rim_num ilen, char** out);
 void rim_b64_encode(char* in, rim_num in_len, char** out);
 rim_num rim_read_file (char *name, char **data, rim_num pos, rim_num len, bool *eof);
-rim_num rim_read_file_id (FILE *f, char **data, rim_num pos, rim_num len, bool ispos, bool *eof);
+rim_num rim_read_file_id (int f, char **data, rim_num pos, rim_num len, bool ispos, bool *eof);
 rim_num rim_is_number (char *s, rim_num *prec, rim_num *scale, rim_num *positive);
 void rim_clear_config();
 void rim_init_header (rim_header *header, rim_num init_type, char is_request);
 rim_num rim_write_file (char *file_name, char *content, rim_num content_len, char append, rim_num pos, char ispos);
-rim_num rim_write_file_id (FILE *f, char *content, rim_num content_len, char append, rim_num pos, char ispos);
-rim_num rim_get_file_pos(FILE *f, rim_num *pos);
-rim_num rim_set_file_pos(FILE *f, rim_num pos);
-rim_num rim_reg_file(FILE **f);
+rim_num rim_write_file_id (int f, char *content, rim_num content_len, char append, rim_num pos, char ispos);
+rim_num rim_get_file_pos(int f, rim_num *pos);
+rim_num rim_set_file_pos(int f, rim_num pos);
 void rim_set_json (rim_json **j, bool noenum, char *data);
 void rim_del_json (rim_json **j);
 char *rim_json_err();
@@ -1316,8 +1337,10 @@ rim_num rim_copy_data_from_num (char **data, rim_num val);
 void file_too_large(rim_input_req *iu, rim_num max_size);
 void oops(rim_input_req *iu, char *err);
 rim_num rim_total_so(rim_so_info **sos);
-FILE *rim_fopen (char *file_name, char *mode);
-int rim_fclose (FILE *f);
+FILE *rim_fopen1 (char *file_name, char *mode);
+int rim_fopen (char *file_name, int mode);
+int rim_dclose (DIR *dir);
+int rim_fclose (int f);
 rim_num rim_regex(char *look_here, char *find_this, char *replace, char **res, rim_num utf, rim_num case_insensitive, rim_num single_match, regex_t **cached);
 void rim_regfree(regex_t *preg);
 void rim_set_env(char *arg);

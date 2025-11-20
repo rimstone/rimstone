@@ -15,7 +15,7 @@ delete-file <file location> [ status <status var> ]
 .RE
 
 .SH DESCRIPTION
-File specified with <file location> is deleted. <file location> can be given with an absolute path or relative to the application home directory (see \fBdirectories\fP). 
+File specified with <file location> is deleted. <file location> can be given with an absolute path or relative to the current working directory (by default it's the application home directory, see \fBdirectories\fP). 
 
 If "status" is specified, the status is stored into <status var>. The status is RIM_OKAY on success or if the file did not exist, and RIM_ERR_DELETE on failure. 
 

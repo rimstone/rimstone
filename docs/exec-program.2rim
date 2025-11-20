@@ -16,13 +16,14 @@ exec-program <program path> \\
         | ( input-file <input file> ) ] \\
     [ ( output <output string>  ) \\
         | ( output-file <output file> ) ] \\
+    [ environment <name>=<value> [ , ... ] ] \\
     [ ( error <error string> ) | ( error-file <error file> ) ]
 
 .EE
 .RE
 
 .SH DESCRIPTION
-exec-program executes a program specified in <program path>, which can be a program name without path that exists in the path specified by the PATH environment variable; or an absolute path; or a path relative to the application home directory (see \fBdirectories\fP).
+exec-program executes a program specified in <program path>, which can be a program name without path that exists in the path specified by the PATH environment variable; or an absolute path; or a path relative to the current working directory (by default it's the application home directory, see \fBdirectories\fP).
 
 A program can have input arguments (specified as strings with "args" clause), and if there are more than one, they must be separated by a comma. There is no limit on the number of input arguments, other than of the underlying Operating System. 
 
@@ -37,6 +38,8 @@ You can redirect the program's output (which is "stdout") to a file <output file
 To get the program's error output (which is "stderr") to file <error file>, use "error-file" clause. Alternatively, program's error output can be captured in <error string> (via "error" clause).
 
 If <input file> cannot be opened, RIM_ERR_READ is reported in <exit status>, and if either <output file> or <error file> cannot be opened, the status is RIM_ERR_WRITE.
+
+Executed program will inherit the environment in your program. You can specify additional environment variables that are set only for the executed program by using "environment" clause in the form of <name>=<value>, where both <name> and <value> are strings; for example "VAR"="VALUE".
 
 Note that in general a program is considered successfully executed if it returns RIM_OKAY (i.e. zero). Most programs returning non-zero value mean failure.
 

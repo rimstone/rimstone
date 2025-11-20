@@ -31,7 +31,7 @@ Application directory. All application data is kept here. It is created with 711
 .RS 4
 \[bu]    
 $HOME/.rimstone/apps/<app name>/app
-Application home directory. This is the current working directory when your application runs. Copy/move here any files and directories your application needs. It is created with 700 privileges.
+Application home directory. This is by default the current working directory when your application runs (see also \fBchange-dir\fP). Copy/move here any files and directories your application needs. It is created with 700 privileges.
 
 
 .RE
@@ -73,9 +73,12 @@ ln -s /home/disk0/file $HOME/.rimstone/apps/<app name>/file
 
 \fBchange-dir\fP  
 \fBchange-mode\fP  
+\fBclose-dir\fP  
 \fBdelete-dir\fP  
 \fBdirectories\fP  
-\fBnew-dir\fP   
+\fBnew-dir\fP  
+\fBopen-dir\fP  
+\fBread-dir\fP   
  General
 
 \fBabout-rimstone\fP  

@@ -94,6 +94,36 @@ syn region rim_r_construct_open_file start="^[[:space:]]*open-file" skip="\\[[:s
     hi def link rim_h_clause_output_open_file    rimClauseOutput
     hi def link rim_h_construct_open_file    rimConstruct
     hi def link rim_h_print_inline_open_file    rimConstruct
+syn region rim_r_construct_close_dir start="^[[:space:]]*close-dir" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_close_dir,rim_r_inline_close_dir,rim_r_at
+    syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_close_dir,rim_r_inline_close_dir,rim_r_at
+    syn match rim_h_construct_close_dir "^[[:space:]]*close-dir" contained containedin=rim_r_construct_close_dir
+    syn match rim_h_clause_output_close_dir " status \@=" contained containedin=rim_r_construct_close_dir
+    hi def link rim_h_clause_close_dir    rimClause
+    hi def link rim_h_clause_output_close_dir    rimClauseOutput
+    hi def link rim_h_construct_close_dir    rimConstruct
+    hi def link rim_h_print_inline_close_dir    rimConstruct
+syn region rim_r_construct_read_dir start="^[[:space:]]*read-dir" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_read_dir,rim_r_inline_read_dir,rim_r_at
+    syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_read_dir,rim_r_inline_read_dir,rim_r_at
+    syn match rim_h_construct_read_dir "^[[:space:]]*read-dir" contained containedin=rim_r_construct_read_dir
+    syn match rim_h_clause_output_read_dir " status \@=" contained containedin=rim_r_construct_read_dir
+    syn match rim_h_clause_output_read_dir " to \@=" contained containedin=rim_r_construct_read_dir
+    syn match rim_h_clause_output_read_dir " type \@=" contained containedin=rim_r_construct_read_dir
+    hi def link rim_h_clause_read_dir    rimClause
+    hi def link rim_h_clause_output_read_dir    rimClauseOutput
+    hi def link rim_h_construct_read_dir    rimConstruct
+    hi def link rim_h_print_inline_read_dir    rimConstruct
+syn region rim_r_construct_open_dir start="^[[:space:]]*open-dir" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_open_dir,rim_r_inline_open_dir,rim_r_at
+    syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_open_dir,rim_r_inline_open_dir,rim_r_at
+    syn match rim_h_construct_open_dir "^[[:space:]]*open-dir" contained containedin=rim_r_construct_open_dir
+    syn match rim_h_clause_output_open_dir " dir-id \@=" contained containedin=rim_r_construct_open_dir
+    syn match rim_h_clause_output_open_dir " status \@=" contained containedin=rim_r_construct_open_dir
+    hi def link rim_h_clause_open_dir    rimClause
+    hi def link rim_h_clause_output_open_dir    rimClauseOutput
+    hi def link rim_h_construct_open_dir    rimConstruct
+    hi def link rim_h_print_inline_open_dir    rimConstruct
 syn region rim_r_construct_close_file start="^[[:space:]]*close-file" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_close_file,rim_r_inline_close_file,rim_r_at
     syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_close_file,rim_r_inline_close_file,rim_r_at
@@ -1882,10 +1912,12 @@ syn region rim_r_construct_stat_file start="^[[:space:]]*stat-file" skip="\\[[:s
     syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_stat_file,rim_r_inline_stat_file,rim_r_at
     syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_stat_file,rim_r_inline_stat_file,rim_r_at
     syn match rim_h_construct_stat_file "^[[:space:]]*stat-file" contained containedin=rim_r_construct_stat_file
+    syn match rim_h_clause_output_stat_file " hard-link \@=" contained containedin=rim_r_construct_stat_file
     syn match rim_h_clause_output_stat_file " mode \@=" contained containedin=rim_r_construct_stat_file
     syn match rim_h_clause_output_stat_file " name \@=" contained containedin=rim_r_construct_stat_file
     syn match rim_h_clause_output_stat_file " path \@=" contained containedin=rim_r_construct_stat_file
     syn match rim_h_clause_output_stat_file " size \@=" contained containedin=rim_r_construct_stat_file
+    syn match rim_h_clause_output_stat_file " soft-link \@=" contained containedin=rim_r_construct_stat_file
     syn match rim_h_clause_output_stat_file " type \@=" contained containedin=rim_r_construct_stat_file
     hi def link rim_h_clause_stat_file    rimClause
     hi def link rim_h_clause_output_stat_file    rimClauseOutput
@@ -2189,6 +2221,7 @@ syn region rim_r_construct_exec_program start="^[[:space:]]*exec-program" skip="
     syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_exec_program,rim_r_inline_exec_program,rim_r_at
     syn match rim_h_construct_exec_program "^[[:space:]]*exec-program" contained containedin=rim_r_construct_exec_program
     syn match rim_h_clause_exec_program " args \@=" contained containedin=rim_r_construct_exec_program
+    syn match rim_h_clause_exec_program " environment \@=" contained containedin=rim_r_construct_exec_program
     syn match rim_h_clause_output_exec_program " error \@=" contained containedin=rim_r_construct_exec_program
     syn match rim_h_clause_exec_program " error-file \@=" contained containedin=rim_r_construct_exec_program
     syn match rim_h_clause_exec_program " input \@=" contained containedin=rim_r_construct_exec_program

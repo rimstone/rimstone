@@ -4,7 +4,7 @@ documentation \- RimStone documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR RIMSTONE VERSION 4.3.1
+.B REFERENCE FOR RIMSTONE VERSION 4.4.0
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
@@ -121,9 +121,12 @@ Directories
 
 \fBchange-dir\fP  
 \fBchange-mode\fP  
+\fBclose-dir\fP  
 \fBdelete-dir\fP  
 \fBdirectories\fP  
-\fBnew-dir\fP   
+\fBnew-dir\fP  
+\fBopen-dir\fP  
+\fBread-dir\fP   
 .RE
 
 

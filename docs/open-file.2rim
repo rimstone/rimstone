@@ -19,7 +19,7 @@ open-file <file name> file-id <file id> \\
 .SH DESCRIPTION
 Opens file given by <file name> for reading and writing and creates an open file variable identified by <file id>.
 
-<file name> can be a full path name, or a path relative to the application home directory (see \fBdirectories\fP).
+<file name> can be a full path name, or a path relative to the current working directory (which is by default the application home directory, see \fBdirectories\fP).
 
 You can obtain the status of file opening via <status> number (in "status" clause). The <status> is RIM_OKAY if file is opened, or RIM_ERR_OPEN if could not open file.
 

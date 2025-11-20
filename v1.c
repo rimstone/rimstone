@@ -55,6 +55,8 @@
 #define RIM_KEYMODE "mode "
 #define RIM_KEYCREATE "create "
 #define RIM_KEYTYPE "type "
+#define RIM_KEYSOFTLINK "soft-link "
+#define RIM_KEYHARDLINK "hard-link "
 #define RIM_KEYONERRORCONTINUE "on-error-continue"
 #define RIM_KEYONERROREXIT "on-error-exit"
 #define RIM_KEYADD "add "
@@ -184,6 +186,7 @@
 #define RIM_KEYAPPPATH "app-path "
 #define RIM_KEYPATH "path "
 #define RIM_KEYFILEID "file-id "
+#define RIM_KEYDIRID "dir-id "
 #define RIM_KEYSAMESITE "same-site "
 #define RIM_KEYDIRECTORY "directory"
 #define RIM_KEYUSER "user "
@@ -2400,6 +2403,7 @@ rim_num typeid (char *type)
     else if (!strcmp (type, RIM_KEY_T_LIST))  return RIM_DEFLIST;
     else if (!strcmp (type, RIM_KEY_T_ENCRYPT)) return RIM_DEFENCRYPT;
     else if (!strcmp (type, RIM_KEY_T_FILE)) return RIM_DEFFILE;
+    else if (!strcmp (type, RIM_KEY_T_DIR)) return RIM_DEFDIR;
     else if (!strcmp (type, RIM_KEY_T_SERVICE)) return RIM_DEFSERVICE;
     else if (!strcmp (type, RIM_KEY_T_BOOL)) return RIM_DEFBOOL;
     else rim_report_error ("Unknown type [%s]", type);
@@ -5487,6 +5491,7 @@ rim_num define_statement (char **statement, rim_num type, bool always)
         else if (type == RIM_DEFLISTSTATIC) oprintf ("static rim_list *%s = NULL;\n", *statement);
         else if (type == RIM_DEFENCRYPT) oprintf ("EVP_CIPHER_CTX *%s = NULL;\n", *statement);
         else if (type == RIM_DEFFILE) oprintf ("rim_file *%s = NULL;\n", *statement);
+        else if (type == RIM_DEFDIR) oprintf ("rim_directory *%s = NULL;\n", *statement);
         else if (type == RIM_DEFSERVICE) oprintf ("rim_cli *%s = NULL;\n", *statement);
         else if (type == RIM_DEFBOOL) oprintf ("bool %s = false;\n", *statement);
         else if (type == RIM_DEFBOOLSTATIC) oprintf ("static bool %s = false;\n", *statement);
@@ -6164,10 +6169,7 @@ void init_rim_gen_ctx (rim_gen_ctx *gen_ctx)
 //
 void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
 {
-    FILE *f;
-
-
-    f = rim_fopen (file_name, "r");
+    FILE* f = rim_fopen1 (file_name, "r");
     if (f == NULL)
     {
         rim_report_error( "Error opening file [%s]", file_name);
@@ -7139,6 +7141,7 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         
 
                         // Get keywords (if used)
+                        char *env = find_keyword (mtext, RIM_KEYENVIRONMENT, 1);
                         char *program_args = find_keyword (mtext, RIM_KEYARGS, 1);
                         char *program_status = find_keyword (mtext, RIM_KEYSTATUS, 1);
                         char *program_error = find_keyword (mtext, RIM_KEYERROR, 1);
@@ -7149,6 +7152,7 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         char *err_file = find_keyword (mtext, RIM_KEYERRORFILE, 1);
                         char *in_file = find_keyword (mtext, RIM_KEYINPUTFILE, 1);
 
+                        carve_statement (&env, "exec-program", RIM_KEYENVIRONMENT, 0, 1);
                         carve_statement (&program_args, "exec-program", RIM_KEYARGS, 0, 1);
                         carve_statement (&program_status, "exec-program", RIM_KEYSTATUS, 0, 1);
                         carve_statement (&program_output, "exec-program", RIM_KEYOUTPUT, 0, 1);
@@ -7184,6 +7188,14 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         if (err_file != NULL && program_error != NULL) rim_report_error( "Specify either error-file or error in exec-program statement");
                         if (in_file != NULL && program_input != NULL) rim_report_error( "Specify either input-file or input in exec-program statement");
                         if (program_input == NULL && program_input_length != NULL) rim_report_error( "Cannot use input-length without 'input' in exec-program statement");
+                        // setup any additional environment variables
+                        char env_var[100];
+                        if (env != NULL) 
+                        {
+                            snprintf (env_var, sizeof (env_var), "_rim_exec_env%ld", total_exec_programs);
+                            outargs(env, env_var, "char *", 0, 1, RIM_DEFSTRING, RIM_DEFSTRING);
+                        }
+
 
                         oprintf ("rim_num _rim_prg_status%ld = 0;\n", total_exec_programs);
                         oprintf("RIM_UNUSED (_rim_prg_status%ld);\n", total_exec_programs); // if status not used by the developer
@@ -7192,7 +7204,7 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         if (err_file != NULL)
                         {
                             // this is error-file. 
-                            oprintf ("_rim_prg_err_file%ld = rim_fopen ((%s), \"w+\");\n", total_exec_programs, err_file);
+                            oprintf ("_rim_prg_err_file%ld = rim_fopen1 ((%s), \"w+\");\n", total_exec_programs, err_file);
                             // we set status to -8 if cannot open for writing
                             //RIM_ERR is set in rim_fopen
                             oprintf ("if (_rim_prg_err_file%ld == NULL) {_rim_prg_status%ld=RIM_ERR_WRITE;} else { \n", total_exec_programs, total_exec_programs);
@@ -7200,7 +7212,7 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         if (out_file != NULL)
                         {
                             // this is output-file. We open file for writing, and we close it after we're done
-                            oprintf ("_rim_prg_out_file%ld = rim_fopen ((%s), \"w+\");\n", total_exec_programs, out_file);
+                            oprintf ("_rim_prg_out_file%ld = rim_fopen1 ((%s), \"w+\");\n", total_exec_programs, out_file);
                             // we set status to -8 if cannot open for writing
                             //RIM_ERR is set in rim_fopen
                             oprintf ("if (_rim_prg_out_file%ld == NULL) {_rim_prg_status%ld=RIM_ERR_WRITE;} else { \n", total_exec_programs, total_exec_programs);
@@ -7210,7 +7222,7 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         if (in_file != NULL)
                         {
                             // this is input-file. We open it for reading, and close after we're done
-                            oprintf ("_rim_prg_in_file%ld = rim_fopen ((%s), \"r\");\n", total_exec_programs, in_file);
+                            oprintf ("_rim_prg_in_file%ld = rim_fopen1 ((%s), \"r\");\n", total_exec_programs, in_file);
                             // for status, we set it to -9 if cannot read
                             //RIM_ERR is set in rim_fopen
                             oprintf ("if (_rim_prg_in_file%ld == NULL) {_rim_prg_status%ld=RIM_ERR_READ;} else {\n", total_exec_programs, total_exec_programs);
@@ -7226,7 +7238,7 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         // generate run-time call to execute program
                         // exec_inputs is always at least 1 (to account for args[0] being program name)
                         // this is output (i.e. string output)
-                        oprintf ("_rim_st = rim_exec_program(%s, _rim_prg_arr%ld, %ld, _rim_prg_in_file%ld, &(_rim_prg_out_file%ld), &(_rim_prg_err_file%ld), %s, %s, %s%s%s, %s%s%s);\n",
+                        oprintf ("_rim_st = rim_exec_program(%s, _rim_prg_arr%ld, %ld, _rim_prg_in_file%ld, &(_rim_prg_out_file%ld), &(_rim_prg_err_file%ld), %s, %s, %s%s%s, %s%s%s, %s);\n",
                         mtext, 
                         total_exec_programs, 
                         exec_inputs, 
@@ -7240,7 +7252,8 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         program_output==NULL ? "":")", 
                         program_error==NULL ? "":"&(", 
                         program_error==NULL ? "NULL":program_error, 
-                        program_error==NULL ? "":")");
+                        program_error==NULL ? "":")",
+                        env==NULL?"NULL":env_var);
                         if (program_status!=NULL) oprintf("%s=_rim_st;\n", program_status);
                         else oprintf ("if (_rim_st != RIM_OKAY) rim_report_error (\"%s\", \"%s\", (rim_num)%ld, _rim_st);\n", RIM_STMT_FAIL_CHECK, rim_valid_rim_name, lnum);
                         if (err_file != NULL) oprintf ("}\n");
@@ -7844,12 +7857,16 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                     {
                         RIM_GUARD
                         i = newI;
+                        char *soft = find_keyword (mtext, RIM_KEYSOFTLINK, 1);
+                        char *hard = find_keyword (mtext, RIM_KEYHARDLINK, 1);
                         char *path = find_keyword (mtext, RIM_KEYPATH, 1);
                         char *basename = find_keyword (mtext, RIM_KEYNAME, 1);
                         char *type = find_keyword (mtext, RIM_KEYTYPE, 1);
                         char *size = find_keyword (mtext, RIM_KEYSIZE, 1);
                         char *mode = find_keyword (mtext, RIM_KEYMODE, 1);
 
+                        carve_statement (&soft, "stat-file", RIM_KEYSOFTLINK, 0, 1);
+                        carve_statement (&hard, "stat-file", RIM_KEYHARDLINK, 0, 1);
                         carve_statement (&path, "stat-file", RIM_KEYPATH, 0, 1);
                         carve_statement (&basename, "stat-file", RIM_KEYNAME, 0, 1);
                         carve_statement (&type, "stat-file", RIM_KEYTYPE, 0, 1);
@@ -7858,7 +7875,7 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         carve_stmt_obj (&mtext, true, true);
 
 
-                        rim_num tot_opt = (path!=NULL?1:0)+(basename!=NULL?1:0)+(type!=NULL?1:0)+(size!=NULL?1:0)+(mode!=NULL?1:0);
+                        rim_num tot_opt = (path!=NULL?1:0)+(basename!=NULL?1:0)+(hard!=NULL?1:0)+(soft!=NULL?1:0)+(type!=NULL?1:0)+(size!=NULL?1:0)+(mode!=NULL?1:0);
                         if (tot_opt == 0)
                         {
                             rim_report_error( "At least one clause must be in stat-file statement");
@@ -7867,13 +7884,15 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&type, RIM_DEFNUMBER, false);
                         define_statement (&mode, RIM_DEFNUMBER, false);
                         define_statement (&path, RIM_DEFSTRING, false);
+                        define_statement (&soft, RIM_DEFBOOL, false);
+                        define_statement (&hard, RIM_DEFBOOL, false);
                         define_statement (&basename, RIM_DEFSTRING, false);
 
                         check_var (&mtext, RIM_DEFSTRING);
 
                         if (size != NULL || type != NULL || mode != NULL) 
                         {
-                            oprintf ("rim_file_stat (%s, %s%s%s, %s%s%s, %s%s%s);\n", mtext, type==NULL?"":"&(",type==NULL?"NULL":type,type==NULL?"":")",  size==NULL?"":"&(",size==NULL?"NULL":size,size==NULL?"":")",   mode==NULL?"":"&(",mode==NULL?"NULL":mode,mode==NULL?"":")");
+                            oprintf ("rim_file_stat (%s, %s%s%s, %s%s%s, %s%s%s, %s%s%s, %s%s%s);\n", mtext, type==NULL?"":"&(",type==NULL?"NULL":type,type==NULL?"":")",  soft==NULL?"":"&(",soft==NULL?"NULL":soft,soft==NULL?"":")", hard==NULL?"":"&(",hard==NULL?"NULL":hard,hard==NULL?"":")", size==NULL?"":"&(",size==NULL?"NULL":size,size==NULL?"":")",   mode==NULL?"":"&(",mode==NULL?"NULL":mode,mode==NULL?"":")");
                         }
                         // basename and path must use strdup on argument because it may be altered
                         // also strdup the result because it may be overwritten by subsequent calls
@@ -10383,6 +10402,9 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
 
                         if (length==NULL) length="0";
 
+                        // Check if file opened, pretty fatal
+                        if (fileid != NULL) oprintf ("if ((%s) == NULL) rim_report_error (\"Cannot write to file that is not open\");\n", fileid);
+
                         if (fileid != NULL) oprintf("_rim_st=rim_write_file_id (*((%s)->f), %s, %s, %s, %s, %s);\n", fileid, from, length, appendc, pos == NULL ? "0":pos, pos==NULL?"0":"1");
                         else oprintf("_rim_st=rim_write_file (%s, %s, %s, %s, %s, %s);\n",mtext, from, length, appendc, pos == NULL ? "0":pos, pos==NULL?"0":"1");
                         // _rim_st here is the number of bytes written, so 0 or more is okay, less than 0 is error
@@ -10420,6 +10442,9 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         if (fileid != NULL) check_var (&fileid, RIM_DEFFILE);
 
                         if (length == NULL) length="0";
+
+                        // Fatail if not open
+                        if (fileid != NULL) oprintf ("if ((%s) == NULL) rim_report_error (\"Cannot read from file that is not open\");\n", fileid);
 
                         if (fileid != NULL) oprintf("_rim_st=rim_read_file_id (*((%s)->f), &(%s), %s, %s, %s, &_rim_st_bool);\n", fileid, read_to, pos==NULL?"0":pos, length, pos!=NULL?"true":"false");
                         else oprintf("_rim_st=rim_read_file (%s, &(%s), %s, %s, &_rim_st_bool);\n", read_from, read_to, pos==NULL?"0":pos, length);
@@ -11677,6 +11702,9 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         check_var (&set, RIM_DEFNUMBER);
                         check_var (&fileid, RIM_DEFFILE);
 
+                        // Fatal if not open
+                        oprintf ("if ((%s) == NULL) rim_report_error (\"Cannot position in file that is not open\");\n", fileid);
+
                         if (get == NULL && set == NULL)  rim_report_error( "either 'get' or 'set' must be used in file-position statement");
                         if (get != NULL && set != NULL)  rim_report_error( "cannot specify both 'get' and 'set' in file-position statement");
                         if (get != NULL) oprintf("_rim_st=rim_get_file_pos (*((%s)->f), &(%s));\n", fileid, get);
@@ -11698,15 +11726,121 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         define_statement (&st, RIM_DEFNUMBER, false);
                         //
                         check_var (&fileid, RIM_DEFFILE);
-
-                        oprintf("_rim_st = rim_fclose (*((%s)->f));\n", fileid);
+                        // If already closed, do not mess with it again
+                        oprintf ("if ((%s) != NULL ) { _rim_st = rim_fclose (*((%s)->f));\n", fileid, fileid);
                        // we do not check for status not being checked here
                         if (st != NULL) oprintf("%s = _rim_st;\n", st);
                         // set file pointer to NULL, because that's checked in rim_done()
                         // this is needed beyond rim_done(), any file op would check if NULL so avoids crashes
-                        oprintf ("*((%s)->f) = NULL;\n", fileid);
-                        oprintf("rim_mem_release ((%s)->attr.memind);\n", fileid); // also remove vm[] entry
-                        oprintf("rim_free (%s);\n", fileid); 
+                        oprintf("rim_free_int ((%s)->f);\n", fileid); // see comment in close-dir
+                        oprintf("rim_free_int (%s); \n", fileid); 
+                        oprintf ("(%s) = NULL; }\n", fileid);
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "open-dir", &mtext, &msize, 0, &rim_is_inline)) != 0)
+                    {
+                        RIM_GUARD
+                        i = newI;
+                        char *dirid = find_keyword (mtext, RIM_KEYDIRID, 1);
+                        char *st = find_keyword (mtext, RIM_KEYSTATUS, 1);
+
+                        carve_statement (&dirid, "open-dir", RIM_KEYDIRID, 1, 1);
+                        carve_statement (&st, "open-dir", RIM_KEYSTATUS, 0, 1);
+                        carve_stmt_obj (&mtext, true, true); 
+
+                        define_statement (&dirid, RIM_DEFDIR, true);
+                        define_statement (&st, RIM_DEFNUMBER, false);
+                        //
+                        check_var (&mtext, RIM_DEFSTRING);
+
+                        oprintf("%s = rim_calloc (1, sizeof(rim_directory));\n", dirid); // this sets dir pointer dir to NULL
+                        // use the same count for internals as for files
+                        // Dir/file descriptor cannot be static because when in a loop, each next open-dir overwrites the old.
+                        // When freeing, all of them point to the last. Once it's freed the first time, it's set to NULL, and all others
+                        // are NEVER freed, resulting in massive leak, which usually ends with an error that there's too many files open
+                        // since we only release 1 out of N in a loop!
+                        oprintf("DIR **_rim_dir_%ld = rim_malloc (sizeof(DIR*));\n", file_count);
+                        oprintf("*_rim_dir_%ld = opendir(%s);\n", file_count, mtext); 
+                        if (st == NULL) oprintf("if (*_rim_dir_%ld == NULL) rim_report_error (\"%s\", \"%s\", (rim_num)%ld, (rim_num)RIM_ERR_OPEN);\n", file_count,RIM_STMT_FAIL_CHECK, rim_valid_rim_name, lnum);
+                        else oprintf("if (*_rim_dir_%ld == NULL) { RIM_ERR; %s=RIM_ERR_OPEN;} else %s=RIM_OKAY;\n", file_count, st, st);
+                        // set DIR*, and also the index into gg[] (the memind member), so that when closing, it can 
+                        // clear the gg[]->ptr and make rim_done() faster
+                        // we set ->dir to be the pointer to
+                        // dir descriptor even if NULL, because ->dir is DIR** and should NEVER be NULL, rather *(of->dir) should be null
+                        oprintf ("(%s)->dir = _rim_dir_%ld; if (*_rim_dir_%ld != NULL) {rim_mem_set_status (rim_mem_get_id(_rim_dir_%ld), RIM_MEM_DIR);}\n", dirid,  file_count, file_count, file_count);
+                        file_count++;
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "read-dir", &mtext, &msize, 0, &rim_is_inline)) != 0)  
+                    {
+                        RIM_GUARD
+                        i = newI;
+                        char *to = find_keyword (mtext, RIM_KEYTO, 1);
+                        char *type = find_keyword (mtext, RIM_KEYTYPE, 1);
+                        char *st = find_keyword (mtext, RIM_KEYSTATUS, 1);
+
+
+                        carve_statement (&type, "read-dir", RIM_KEYTYPE, 0, 1);
+                        carve_statement (&to, "read-dir", RIM_KEYTO, 1, 1);
+                        carve_statement (&st, "read-dir", RIM_KEYSTATUS, 0, 1);
+                        carve_stmt_obj (&mtext, true, false);
+
+                        define_statement (&type, RIM_DEFNUMBER, false); 
+                        define_statement (&to, RIM_DEFSTRING, false); 
+                        define_statement (&st, RIM_DEFNUMBER, false); 
+
+                        check_var (&mtext, RIM_DEFDIR);
+
+                        // Fatal if not open
+                        oprintf ("if ((%s) == NULL) rim_report_error (\"Cannot read from directory that is not open\");\n", mtext);
+
+                        oprintf ("struct dirent *_rim_tmp_dir;\n");
+                        oprintf ("if (*((%s)->dir) != NULL && (_rim_tmp_dir = readdir(*((%s)->dir))) != NULL ) { \n;\n", mtext, mtext);
+                        oprintf ("rim_mem_add_ref((%s) = rim_strdup(_rim_tmp_dir->d_name),0);\n", to);
+                        if (st != NULL) oprintf ("%s=RIM_OKAY;\n", st);
+                        if (type != NULL) 
+                        {
+                            oprintf ("if (_rim_tmp_dir->d_type == DT_REG) (%s) = RIM_FILE;\n\
+                                    else if (_rim_tmp_dir->d_type == DT_DIR) (%s) = RIM_DIR;\n\
+                                    else if (_rim_tmp_dir->d_type == DT_LNK) (%s) = RIM_LINK;\n\
+                                    else if (_rim_tmp_dir->d_type == DT_SOCK) (%s) = RIM_SOCK;\n\
+                                    else if (_rim_tmp_dir->d_type == DT_FIFO) (%s) = RIM_FIFO;\n\
+                                    else if (_rim_tmp_dir->d_type == DT_CHR) (%s) = RIM_CHAR;\n\
+                                    else if (_rim_tmp_dir->d_type == DT_BLK) (%s) = RIM_BLOCK;\n\
+                                    else if (_rim_tmp_dir->d_type == DT_UNKNOWN) (%s) = RIM_UNKNOWN;\n", type, type, type, type, type, type, type, type);
+                        }
+                        oprintf ("} else { ;\n");
+                        oprintf ("(%s) = RIM_EMPTY_STRING;\n", to);
+                        if (st) oprintf ("%s=RIM_ERR_EXIST;\n", st);
+                        else oprintf("rim_report_error (\"%s\", \"%s\", (rim_num)%ld, (rim_num)RIM_ERR_EXIST);\n", RIM_STMT_FAIL_CHECK, rim_valid_rim_name, lnum);
+                        oprintf ("}\n");
+
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "close-dir", &mtext, &msize, 0, &rim_is_inline)) != 0)
+                    {
+                        RIM_GUARD
+                        i = newI;
+                        char *st = find_keyword (mtext, RIM_KEYSTATUS, 1);
+
+                        carve_statement (&st, "close-dir", RIM_KEYSTATUS, 0, 1);
+                        carve_stmt_obj (&mtext, true, false);
+                        define_statement (&st, RIM_DEFNUMBER, false);
+                        //
+                        check_var (&mtext, RIM_DEFDIR);
+
+                        // when error is RimStone one (in this case close-dir with NULL directory, then we use RIM_ERR0
+                        // closing it though when there's nothing (i.e. already closed) is not considered an error
+                        oprintf ("if ((%s) != NULL) { _rim_st = rim_dclose (*((%s)->dir));\n", mtext, mtext);
+                       // we do not check for status not being checked here
+                        if (st != NULL) oprintf("%s = _rim_st;\n", st);
+                        // set dir pointer to NULL, because that's checked in rim_done()
+                        // this is needed beyond rim_done(), any file op would check if NULL so avoids crashes
+                        oprintf("rim_free_int ((%s)->dir);\n", mtext); // also remove DIR*, which is a separate alloc
+                                                                          // because if close-dir not used, then it when freed
+                                                                          // we also do the closedir()
+                        oprintf("rim_free_int (%s);\n", mtext); 
+                        oprintf("(%s) = NULL; }\n", mtext); 
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "open-file", &mtext, &msize, 0, &rim_is_inline)) != 0)
@@ -11729,16 +11863,17 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
 
                         //RIM_ERR is set in rim_fopen
                         oprintf("%s = rim_calloc (1, sizeof(rim_file));\n", fileid); // this sets file pointer f to NULL
-                        // need static FILE * so that its address points to valid memory anytime, including in rim_done()
+                        // need static int * so that its address points to valid memory anytime, including in rim_done()
                         // where any open file descriptors are at least checked, if not closed
-                        oprintf("static FILE *_rim_fileid_%ld;\n", file_count); 
-                        oprintf("_rim_fileid_%ld = rim_fopen (%s, \"%s\");\n", file_count, mtext, newt!=NULL?"w+":"r+");
-                        if (st == NULL) oprintf("if (_rim_fileid_%ld == NULL) rim_report_error (\"%s\", \"%s\", (rim_num)%ld, (rim_num)RIM_ERR_OPEN);\n", file_count,RIM_STMT_FAIL_CHECK, rim_valid_rim_name, lnum);
-                        else oprintf("if (_rim_fileid_%ld == NULL) %s=RIM_ERR_OPEN; else %s=RIM_OKAY;\n", file_count, st, st);
+                        // see comment in open-dir as to why we malloc here
+                        oprintf("int *_rim_fileid_%ld = rim_malloc (sizeof(int));\n", file_count);
+                        oprintf("*_rim_fileid_%ld = rim_fopen (%s, %s);\n", file_count, mtext, newt!=NULL?"O_RDWR | O_CREAT | O_TRUNC":"O_RDWR");
+                        if (st == NULL) oprintf("if (*_rim_fileid_%ld == -1) rim_report_error (\"%s\", \"%s\", (rim_num)%ld, (rim_num)RIM_ERR_OPEN);\n", file_count,RIM_STMT_FAIL_CHECK, rim_valid_rim_name, lnum);
+                        else oprintf("if (*_rim_fileid_%ld == -1) %s=RIM_ERR_OPEN; else %s=RIM_OKAY;\n", file_count, st, st);
                         // set FILE*, and also the index into gg[] (the memind member), so that when closing, it can 
                         // clear the gg[]->ptr and make rim_done() faster
-                        // we set ->f to file descriptor even if NULL, because ->f is FILE** and should NEVER be NULL, rather *(of->f) should be null
-                        oprintf ("(%s)->f = &_rim_fileid_%ld; if (_rim_fileid_%ld != NULL) {(%s)->attr.memind = rim_reg_file(&_rim_fileid_%ld);}\n", fileid,  file_count, file_count, fileid, file_count);
+                        // we set ->f to file descriptor even if NULL, because ->f is int* and should NEVER be -1, rather *(of->f) should be -1
+                        oprintf ("(%s)->f = _rim_fileid_%ld; if (*_rim_fileid_%ld != -1) {rim_mem_set_status (rim_mem_get_id(_rim_fileid_%ld), RIM_MEM_FILE);}\n", fileid,  file_count, file_count, file_count);
                         file_count++;
                         continue;
                     }
@@ -12409,7 +12544,7 @@ int main (int argc, char* argv[])
 
     if (out_file_name != NULL)
     {
-        outf = rim_fopen (out_file_name, "w");
+        outf = rim_fopen1(out_file_name, "w");
         if (outf == NULL)
         {
             rim_report_error ( "Cannot open output file [%s] for writing, error [%s]", out_file_name, strerror(errno));
@@ -12427,7 +12562,7 @@ int main (int argc, char* argv[])
     // create hash for variables
     // first check the size of the source file, make hash size comparable to code length
     rim_num sz;
-    rim_file_stat (src_file_name, NULL, &sz, NULL);
+    rim_file_stat (src_file_name, NULL, NULL, NULL, &sz, NULL);
     sz = sz/10;
     if (sz < 100) sz = 100;
     rim_create_hash (&rim_varh, sz, NULL, false);
@@ -12460,6 +12595,12 @@ int main (int argc, char* argv[])
     add_var ("RIM_PATCH", RIM_DEFNUMBER, NULL, false);
     add_var ("RIM_DELETE", RIM_DEFNUMBER, NULL, false);
     add_var ("RIM_OTHER", RIM_DEFNUMBER, NULL, false);
+    add_var ("RIM_FIFO", RIM_DEFNUMBER, NULL, false);
+    add_var ("RIM_CHAR", RIM_DEFNUMBER, NULL, false);
+    add_var ("RIM_BLOCK", RIM_DEFNUMBER, NULL, false);
+    add_var ("RIM_LINK", RIM_DEFNUMBER, NULL, false);
+    add_var ("RIM_SOCK", RIM_DEFNUMBER, NULL, false);
+    add_var ("RIM_UNKNOWN", RIM_DEFNUMBER, NULL, false);
     add_var ("RIM_FILE", RIM_DEFNUMBER, NULL, false);
     add_var ("RIM_DIR", RIM_DEFNUMBER, NULL, false);
     add_var ("RIM_OKAY", RIM_DEFNUMBER, NULL, false);

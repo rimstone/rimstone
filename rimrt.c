@@ -1947,7 +1947,7 @@ static void rim_read_child (int ofd, char **out_buf)
 //      then both stdout/stderr go to fout/out_buf.
 // Return value is the exit status.
 //
-rim_num rim_exec_program (char *prg, char *argv[], rim_num num_args, FILE *fin, FILE **fout, FILE **ferr, char *inp, rim_num inp_len, char **out_buf, char **err_buf)
+rim_num rim_exec_program (char *prg, char *argv[], rim_num num_args, FILE *fin, FILE **fout, FILE **ferr, char *inp, rim_num inp_len, char **out_buf, char **err_buf, char **env)
 {
 
     if (argv[num_args] != NULL)
@@ -2035,6 +2035,17 @@ rim_num rim_exec_program (char *prg, char *argv[], rim_num num_args, FILE *fin, 
         if (errpipe[1] != -1) close(errpipe[1]);
         if (pipe2child[0] != -1) close(pipe2child[0]);    
         if (pipe2parent[1] != -1) close(pipe2parent[1]);
+
+        // set environment (additional, since **environ of the parent is inherited) variables
+        if (env != NULL)
+        {
+            // just advance env[] until no more, stop when NULL either for name or value in name=value
+            while (1)
+            {
+                if (env[0] != NULL && env[1] != NULL) setenv (env[0], env[1], 1); else break;
+                env = &(env[2]);
+            }
+        }
 
         int res = execvp(prg, (char *const*)argv); // will send data to parent
         if (res) // we're here only if execvp failed, otherwise execvp doesn't return
@@ -3287,8 +3298,8 @@ void rim_out_file (char *fname, rim_header *header)
     }
     long tstamp = (long)attr.st_mtime;
 
-    FILE *f = rim_fopen (fname, "r");
-    if (f == NULL)
+    int f = rim_fopen (fname, O_RDONLY);
+    if (f == -1)
     {
         rim_cant_find_file();
         return;
@@ -3298,15 +3309,14 @@ void rim_out_file (char *fname, rim_header *header)
         //
         // We're using long longs throughout Gliim
         //
-        fseek(f, 0, SEEK_END);
-        long fsize_l = ftell(f);
-        if (fsize_l >= (long)INT_MAX)
+        off_t fsize_l = lseek(f, 0, SEEK_END);
+        if (fsize_l == (off_t)-1)
         {
             rim_cant_find_file();
             return;
         }
         rim_num fsize = (rim_num) fsize_l;
-        fseek(f, 0, SEEK_SET);
+        lseek(f, 0, SEEK_SET);
 
         // 
         // check if file has already been delivered to the client
@@ -3330,7 +3340,7 @@ void rim_out_file (char *fname, rim_header *header)
             // Before sending any contents, must send \n 
             rim_gen_header_end ();
 
-            fclose (f);
+            close (f);
             return;
         }
 
@@ -3338,13 +3348,13 @@ void rim_out_file (char *fname, rim_header *header)
         // read file to be sent to the client
         //
         char *str = rim_malloc0(fsize + 1);
-        if (fread_unlocked(str, fsize, 1, f) != 1)
+        if (read(f, str, fsize) != fsize)
         {
             free (str);
             rim_cant_find_file();
             return;
         }
-        fclose(f);
+        close(f);
 
         //
         // The data read is in 'str' and the size of data is 'fsize'

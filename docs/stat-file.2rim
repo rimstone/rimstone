@@ -11,6 +11,7 @@ Get information about a file.
 
 stat-file <file> \\
     [ size <size> ] [ type <type> ] \\
+    [ soft-link <soft link> ] [ hard-link <hard link> ] \\
     [ path <path> ] [ name <name> ] \\
     [ mode <mode> ]
 
@@ -18,11 +19,13 @@ stat-file <file> \\
 .RE
 
 .SH DESCRIPTION
-stat-file obtains information about <file>, which is a string that is an absolute or relative path.
+stat-file obtains information about <file>, which is a string that is an absolute path or a path relative to the current working directory (which by default is the application home directory, see \fBdirectories\fP)
 
 Clause "size" will store file's size in bytes to number <size>, or it will be RIM_ERR_FAILED (if operation failed, likely because file does not exist or you have no permissions to access it). 
 
-Clause "type" will store file's type to number <type>, and it can be either RIM_FILE (if it's a file) or RIM_DIR (if it's a directory) or RIM_ERR_FAILED (if operation failed, likely because file does not exist or you have no permissions to access it). 
+Clause "type" will store file's type to number <type>, and it can be either RIM_FILE (if it's a regular file), RIM_DIR (if it's a directory), RIM_CHAR (if it's a character device), RIM_FIFO (if it's a FIFO file), RIM_BLOCK (if it's a block device), RIM_SOCK (if it's a socket), RIM_UNKNOWN (if type cannot be determined) or RIM_ERR_FAILED (if operation failed, likely because file does not exist or you have no permissions to access it). 
+
+To determine if <file> is a soft link, use "soft-link" clause; boolean <soft link> will be true if <file> is, and false if it is not a soft link. To determine if <file> is a hard link, use "hard-link" clause; boolean <hard link> will be true if <file> is, and false if it is not a hard link.
 
 Clause "path" (in string <path>) obtains the fully resolved path of the <file> (including symbolic links), and "name" will provide its <name> (meaning a basename, without the path). If path cannot be resolved, then <path> is an empty string.
 

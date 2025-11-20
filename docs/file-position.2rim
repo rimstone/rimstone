@@ -23,7 +23,7 @@ If "set" clause is used, file position is set to <position> (with 0 being the fi
 
 If "get" clause is used, file position is obtained in <position> (with 0 being the first byte).
 
-<status> number in "status" clause will be RIM_OKAY if set/get succeeded, RIM_ERR_OPEN if file not open, or RIM_ERR_POSITION if not.
+<status> number in "status" clause will be RIM_OKAY if set/get succeeded or RIM_ERR_POSITION if not. If file is not open, then your program will \fBerror out\fP.
 
 Note that setting position past the last byte of file is okay for writing - in this case the bytes between the end of file and the <position> are filled with null-bytes when the write operation occurs.
 

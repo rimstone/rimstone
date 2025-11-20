@@ -14,7 +14,7 @@
 int rim_errno=0;
 
 // Function prototypes
-static rim_num rim_core_write_file(FILE *f, rim_num content_len, char *content, char ispos, rim_num pos);
+static rim_num rim_core_write_file(int f, rim_num content_len, char *content, char ispos, rim_num pos);
 
 
 // 
@@ -257,9 +257,9 @@ char *rim_trim_ptr (char *str, rim_num *len)
 // Get Position from file FILE* f 
 // Returns RIM_OKAY if okay, RIM_ERR_POSITION if cannot do it
 //
-rim_num rim_get_file_pos(FILE *f, rim_num *pos)
+rim_num rim_get_file_pos(int f, rim_num *pos)
 {
-    long p = ftell (f);
+    rim_num p = (rim_num)lseek (f, 0, SEEK_CUR); 
     if (p == -1) {
         RIM_ERR;
         return RIM_ERR_POSITION;
@@ -273,14 +273,14 @@ rim_num rim_get_file_pos(FILE *f, rim_num *pos)
 // Returns RIM_OKAY if okay, RIM_ERR_POSITION if cannot do it
 // RIM_ERR_OPEN if file not opened
 //
-rim_num rim_set_file_pos(FILE *f, rim_num pos)
+rim_num rim_set_file_pos(int f, rim_num pos)
 {
-    if (f==NULL)
+    if (f==-1)
     {
         RIM_ERR;
         return RIM_ERR_OPEN;
     }
-    if (fseek (f,pos,SEEK_SET) != 0) {
+    if (lseek (f,pos,SEEK_SET) == (off_t)-1) {
         RIM_ERR;
         return RIM_ERR_POSITION;
     }
@@ -292,28 +292,49 @@ rim_num rim_set_file_pos(FILE *f, rim_num pos)
 // f is FILE *
 // Returns size of the file
 //
-rim_num rim_get_open_file_size(FILE *f)
+rim_num rim_get_open_file_size(int f)
 {
-    long ppos = ftell(f);
-    fseek(f, 0L, SEEK_END);
-    long size=ftell(f);
-    fseek(f, ppos, SEEK_SET); // position to where we were before
-    return (rim_num)size;
+    struct stat file_stats;
+    if (fstat(f, &file_stats) == -1) rim_report_error ("Cannot obtain file size of a valid file descriptor error [%d]", errno);
+    return (rim_num)file_stats.st_size;
 }
 
 // 
-// Returns RIM_DIR if 'dir' is a directory,
-// RIM_FILE if it's file, RIM_ERR_FAILED if can't stat
+// type is RIM_DIR if 'dir' is a directory, RIM_FILE if it's file, RIM_FIFO if fifo, etc. (see doc and below), 
+// RIM_UNKNOWN if not known, RIM_ERR_FAILED if can't stat
+// is_soft is true if soft link file, false otherwise; size is size, mode is 0777 mode. All can be NULL if not wanted.
+// is_hard is true if hard link, false otherwise.
 // Returns "size" of the file, or -1 if file cannot be stat'
 //
-void rim_file_stat (char *dir, rim_num *type, rim_num *size, rim_num *mode)
+void rim_file_stat (char *dir, rim_num *type, bool *is_soft, bool *is_hard, rim_num *size, rim_num *mode)
 {
     struct stat sb;
     if (stat(dir, &sb) == 0)
     {
+        if (is_soft)
+        {
+            struct stat lsb;
+            if (lstat(dir, &lsb) == 0)
+            {
+                if (S_ISLNK (lsb.st_mode)) *is_soft = true; else *is_soft = false;
+            } else *is_soft = false;
+        }
         if (type)
         {
-            if (S_ISDIR(sb.st_mode)) *type = RIM_DIR; else *type = RIM_FILE;
+            if (S_ISDIR(sb.st_mode)) *type = RIM_DIR; 
+            else if (S_ISREG(sb.st_mode)) 
+            {
+                *type = RIM_FILE; 
+                if (is_hard)
+                {
+                    if (sb.st_nlink > 1) *is_hard=true; else *is_hard = false;  // hard link (not soft detection!)
+                                                           // it can be on file ONLY, while soft link can be on a file, dir or socket!
+                }
+            }
+            else if (S_ISCHR(sb.st_mode)) *type = RIM_CHAR; 
+            else if (S_ISFIFO(sb.st_mode)) *type = RIM_FIFO; 
+            else if (S_ISBLK(sb.st_mode)) *type = RIM_BLOCK; 
+            else if (S_ISSOCK(sb.st_mode)) *type = RIM_SOCK; else *type = RIM_UNKNOWN;
         }
         if (size != NULL) *size = (rim_num)(sb.st_size);
         if (mode != NULL) *mode = (rim_num)(sb.st_mode);
@@ -716,8 +737,8 @@ rim_num rim_read_file (char *name, char **data, rim_num pos, rim_num len, bool *
     if (pos < 0) {RIM_ERR0; return RIM_ERR_POSITION;} // len is negative
     if (len < 0) {RIM_ERR0; return RIM_ERR_READ;} // pos is negative
 
-    FILE *f = rim_fopen (name, "r");
-    if (f == NULL)
+    int f = rim_fopen (name, O_RDONLY);
+    if (f == -1)
     {
         //rim_fopen sets RIM_ERR
         return RIM_ERR_OPEN;
@@ -732,43 +753,40 @@ rim_num rim_read_file (char *name, char **data, rim_num pos, rim_num len, bool *
     }
     if (pos > 0)
     {
-        if (fseek (f,pos,SEEK_SET) != 0) { 
+        if (lseek (f,pos,SEEK_SET) == (off_t)-1) { 
             RIM_ERR;
-            fclose (f);
+            close (f);
             *data = RIM_EMPTY_STRING;
             return RIM_ERR_POSITION;
         }
     }
     *data = rim_malloc (sz + 1);
     rim_num rd;
-    rd = fread_unlocked (*data, 1, sz, f);
-    if (rd != sz) 
+    // With read() only -1 is error, and 0 just means no more bytes
+    rd = read (f, *data, sz);
+    if (rd == -1)
     {
-        // if not read enough bytes it could be an error or FEOF
-        if (ferror_unlocked (f))
-        {
-            if (eof) *eof = false; // no FEOF for sure
-            // if error, it could be we read nothing, in which case RIM_ERR_READ is the status
-            if (rd == 0)
-            {
-                RIM_ERR;
-                rim_free_int (*data);
-                fclose(f); // here no need for clearerror
-                *data = RIM_EMPTY_STRING;
-                return RIM_ERR_READ;
-            }
-            else
-            {
-                // if short read <>0, but some error, user can get errno, file is closed further down, don't close it twice
-                RIM_ERR;
-            }
-        } 
-        else { if (eof) *eof = true; } // what else can be the reason for a short read if not EOF or error???
-                          // otherwise it's FEOF and less bytes are read
-    } else { if (eof) *eof = false; } // no feof if all bytes read
+        // error
+        RIM_ERR;
+        rim_free_int (*data);
+        close(f); // here no need for clearerror
+        *data = RIM_EMPTY_STRING;
+        return RIM_ERR_READ;
+    }
+    else if (rd != sz)
+    {
+        // EOF because we didn't get all we requested, this covers if rd is 0
+        // In C, only 0 is EOF; in RimStone any short read is logically EOF, which makes more sense.
+        if (eof) *eof = true; 
+    }
+    else
+    {
+        // read exactly sz data, so not eof
+        if (eof) *eof = false; 
+    }
     (*data)[rd] = 0;
     rim_mem_set_len (*data, rd+1);
-    fclose(f);
+    close(f);
     return rd;
 }
 
@@ -785,13 +803,13 @@ rim_num rim_read_file (char *name, char **data, rim_num pos, rim_num len, bool *
 // If there is not enough memory, rim_malloc will error out.
 // ispos is true if position is given
 //
-rim_num rim_read_file_id (FILE *f, char **data, rim_num pos, rim_num len, bool ispos, bool *eof)
+rim_num rim_read_file_id (int f, char **data, rim_num pos, rim_num len, bool ispos, bool *eof)
 {
 
     if (ispos && pos < 0) {RIM_ERR0; return RIM_ERR_POSITION;} // len is negative
     if (len < 0) {RIM_ERR0; return RIM_ERR_READ;} // len is negative
 
-    if (f == NULL)
+    if (f == -1)
     {
         RIM_ERR;
         return RIM_ERR_OPEN;
@@ -814,42 +832,33 @@ rim_num rim_read_file_id (FILE *f, char **data, rim_num pos, rim_num len, bool i
     }
     if (ispos)
     {
-        if (fseek (f,pos,SEEK_SET) != 0) { 
+        if (lseek (f,pos,SEEK_SET) == (off_t)-1) { 
             RIM_ERR;
             return RIM_ERR_POSITION;
         }
     }
     *data = rim_malloc (sz + 1);
     rim_num rd;
-    rd = fread_unlocked (*data, 1, sz, f);
-    if (rd != sz)
+    rd = read (f, *data, sz);
+    if (rd == -1)
     {
-        // if not read enough bytes it could be an error or FEOF
-        if (ferror_unlocked (f))
-        {
-            if (eof) *eof = false; // no FEOF for sure
-            // if error, it could be we read nothing, in which case RIM_ERR_READ is the status
-            if (rd == 0)
-            {
-                RIM_ERR;
-                clearerr_unlocked (f); // if ferror() was set
-                rim_free_int (*data);
-                // file not closed since we keep it open via file ID, and user can position somewhere where there's no error
-                *data = RIM_EMPTY_STRING;
-                return RIM_ERR_READ;
-            }
-            else
-            {
-                // if short read <>0, but some error, user can get errno, file is closed
-                RIM_ERR;
-                clearerr_unlocked (f); // if ferror() was set
-                // file not closed since we keep it open via file ID, and user can position somewhere where there's no error
-                // some data is returned, and user can check errno
-            }
-        } 
-        else { if (eof) *eof = true; } // what else can be the reason for a short read if not EOF or error???
-                          // user can now know this was a short read due to FEOF
-    } else { if (eof) *eof = false; } // no feof if all bytes read
+        // error
+        RIM_ERR;
+        rim_free_int (*data);
+        *data = RIM_EMPTY_STRING;
+        return RIM_ERR_READ;
+    }
+    else if (rd != sz)
+    {
+        // EOF because we didn't get all we requested, this covers if rd is 0
+        // In C, only 0 is EOF; in RimStone any short read is logically EOF, which makes more sense.
+        if (eof) *eof = true; 
+    }
+    else
+    {
+        // read exactly sz data, so not eof
+        if (eof) *eof = false; 
+    }
     (*data)[rd] = 0;
     return rd;
 }
@@ -980,7 +989,7 @@ rim_num rim_encode_base (rim_num enc_type, char *v, rim_num vLen, char **res, ri
 // as string and calculate length). Write to file 'f'.
 // Return # of bytes written or error. The caller can close the file if needed, it's not closed here.
 //
-static rim_num rim_core_write_file(FILE *f, rim_num content_len, char *content, char ispos, rim_num pos)
+static rim_num rim_core_write_file(int f, rim_num content_len, char *content, char ispos, rim_num pos)
 {
     rim_num lcontent = rim_mem_get_len(content);
     if (content_len == 0) content_len = lcontent;
@@ -988,14 +997,14 @@ static rim_num rim_core_write_file(FILE *f, rim_num content_len, char *content, 
 
     if (ispos == 1)  // positioning beyond the end of file is allowed. The gap will be filled with \0
     {
-        if (fseek (f,pos,SEEK_SET) != 0) {
+        if (lseek (f,pos,SEEK_SET) == (off_t)-1) {
             RIM_ERR;
             return RIM_ERR_POSITION;
         }
     }
     if (content_len == 0) return 0; // asked for 0 bytes, none written 
     // Use unlocked  for performance since RimStone is multi-process, and not MT
-    if (fwrite_unlocked(content, 1, (size_t)content_len, f) != (size_t) content_len)
+    if (write(f, content, (size_t)content_len) != (ssize_t) content_len)
     {
         RIM_ERR;
         return RIM_ERR_WRITE;
@@ -1023,18 +1032,18 @@ rim_num rim_write_file (char *file_name, char *content, rim_num content_len, cha
         return RIM_ERR_POSITION;
     }
 
-    FILE *f = NULL;
+    int f = -1;
     // ispos is 0 if no positioning
-    if (ispos == 0) f=rim_fopen (file_name,  append==1 ? "a+" : "w+"); // a+ for append, and truncate if neither append nor position
-    else f=rim_fopen (file_name,  "r+"); // need read+write for positioning
+    if (ispos == 0) f=rim_fopen (file_name,  append==1 ? O_RDWR | O_CREAT | O_APPEND : O_RDWR | O_CREAT | O_TRUNC); // a+ for append, and truncate if neither append nor position
+    else f=rim_fopen (file_name,  O_RDWR); // need read+write for positioning
 
-    if (f==NULL)
+    if (f == -1)
     {
         //rim_fopen sets RIM_ERR
         return RIM_ERR_OPEN;
     }
     rim_num retw = rim_core_write_file(f, content_len, content, ispos, pos);
-    fclose(f);
+    close(f);
     return retw;
 }
 
@@ -1049,10 +1058,10 @@ rim_num rim_write_file (char *file_name, char *content, rim_num content_len, cha
 // position, or number of bytes written, which is always the number of bytes requested (otherwise it's an error).
 // Maximum size of file is in 0..maxlonglong range.
 //
-rim_num rim_write_file_id (FILE *f, char *content, rim_num content_len, char append, rim_num pos, char ispos)
+rim_num rim_write_file_id (int f, char *content, rim_num content_len, char append, rim_num pos, char ispos)
 {
 
-    if (f==NULL)
+    if (f == -1)
     {
         RIM_ERR;
         return RIM_ERR_OPEN;
@@ -1065,8 +1074,7 @@ rim_num rim_write_file_id (FILE *f, char *content, rim_num content_len, char app
 
     if (append == 1) 
     {
-        rim_num ef =  rim_get_open_file_size(f);
-        if (fseek (f,ef,SEEK_SET) != 0) {
+        if (lseek (f,0,SEEK_END) == (off_t)-1) {
             RIM_ERR;
             return RIM_ERR_POSITION;
         }
@@ -1076,30 +1084,16 @@ rim_num rim_write_file_id (FILE *f, char *content, rim_num content_len, char app
 }
 
 
-//
-// Add file to RimStone's list of files to close. f is the pointer to FILE*.
-// When program closes file, it must set *f = NULL in order not to be double freed.
-// Returns memory index for FILE* in RimStone's mem system.
-//
-rim_num rim_reg_file(FILE **f)
-{
-    rim_num ind = rim_add_mem (f); // add pointer to file pointer so it can be closed if programmer doesn't do it
-                                     // thus preventing file descriptor leakage
-    // no need to setup head for memory, it's not used for FILE
-    rim_mem_set_status (ind, RIM_MEM_FILE);
-    return ind;
-}
-
 
 //
-// Close a file. 
-// Returns EOF if can't close, otherwise 0.
+// Close a dir.
+// Returns RIM_ERR_CLOSE if can't close, otherwise RIM_OKAY.
 //
-int rim_fclose (FILE *f)
+int rim_dclose (DIR *dir)
 {
-    if (f == NULL) { RIM_ERR0; return RIM_ERR_CLOSE; }
-    int res= fclose (f);
-    if (res == EOF) {
+    if (dir == NULL) { RIM_ERR0; return RIM_ERR_CLOSE; }
+    int res= closedir (dir);
+    if (res != 0) {
         RIM_ERR;
         return RIM_ERR_CLOSE;
     }
@@ -1107,11 +1101,26 @@ int rim_fclose (FILE *f)
 }
 
 //
-// Open a file. If open for writing, set permissions to 0770
+// Close a file. 
+// Returns RIM_ERR_CLOSE if can't close, otherwise RIM_OKAY.
+//
+int rim_fclose (int f)
+{
+    if (f == -1) { RIM_ERR0; return RIM_ERR_CLOSE; }
+    int res= close (f);
+    if (res == -1) {
+        RIM_ERR;
+        return RIM_ERR_CLOSE;
+    }
+    return RIM_OKAY;
+}
+
+//
+// Open a file as FILE *. If open for writing, set permissions to 0770
 // so it's read/write for owner/group
 // Returns NULL if can't open, file pointer if it can
 //
-FILE *rim_fopen (char *file_name, char *mode)
+FILE *rim_fopen1 (char *file_name, char *mode)
 {
     FILE *f = fopen (file_name, mode);
     // check if file opened
@@ -1123,6 +1132,34 @@ FILE *rim_fopen (char *file_name, char *mode)
         if (strchr (mode, 'a') != NULL || strchr (mode, 'w') != NULL)
         {
             fchmod (fileno (f), 0660);
+        }
+    } 
+    else
+    {
+        RIM_ERR;
+    }
+    return f;
+}
+
+//
+// Open a file. If open for writing, set permissions to 0770
+// so it's read/write for owner/group
+// Returns NULL if can't open, file pointer if it can
+//
+int rim_fopen (char *file_name, int mode)
+{
+    int f;
+    if ((mode & O_CREAT)) f = open (file_name, mode, 0660);
+    else f = open (file_name, mode);
+    // check if file opened
+    if (f != -1)
+    {
+        // if opened, check if mode has a(append) or w(write)
+        // in which case, the file may be created, so change to 
+        // -rw-rw----
+        if ((mode & O_APPEND) || ((mode & O_WRONLY) || (mode & O_RDWR)))
+        {
+            fchmod (f, 0660);
         }
     } 
     else
@@ -1443,6 +1480,7 @@ char *typename (rim_num type)
     else if (type == RIM_DEFLISTSTATIC) return RIM_KEY_T_LIST;
     else if (type == RIM_DEFENCRYPT) return RIM_KEY_T_ENCRYPT;
     else if (type == RIM_DEFFILE) return RIM_KEY_T_FILE;
+    else if (type == RIM_DEFDIR) return RIM_KEY_T_DIR;
     else if (type == RIM_DEFSERVICE) return RIM_KEY_T_SERVICE;
     else if (type == RIM_DEFBOOL) return RIM_KEY_T_BOOL;
     else if (type == RIM_DEFBOOLSTATIC) return RIM_KEY_T_BOOL;

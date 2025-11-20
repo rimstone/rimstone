@@ -45,12 +45,6 @@ char _RIM_EMPTY_STRING[1+16]="                " ""; // this allows [0] to be ass
 char *RIM_EMPTY_STRING = NULL; // initial value, so that origin adding of empty string via set_process succeeds
 
 
-// free block
-#define RIM_MEM_FREE 1
-// open file
-#define RIM_MEM_FILE 2
-
-
 
 // static variables used in memory handling
 // We delete old's request memory at the very start of a new request in generated code before any user code,
@@ -84,7 +78,7 @@ RIM_ALWAYS_INLINE inline void rim_mem_dec_process (void *s)
 
 
 //
-// Set status of memory, s is the status such as RIM_MEM_FILE
+// Set status of memory, s is the status such as RIM_MEM_FILE or RIM_MEM_DIR
 // ind is the index into vm[], ind cannot be -1.
 //
 RIM_ALWAYS_INLINE inline void rim_mem_set_status (rim_num ind, unsigned char s)
@@ -488,14 +482,25 @@ RIM_ALWAYS_INLINE inline char *rim_strdup (char *s)
 //
 RIM_ALWAYS_INLINE inline void rim_done ()
 {
-    FILE **f;
+    int *f;
+    DIR **dir;
+    // We do not do rim_mem_del_ord() because *all* ordinary memory is removed and we set vm_first_ord to -1 below
+    // Normally, rim_mem_del_ord() (if applicable, i.e. not PROCESS mem), free() and then release is the way to release memory
     if (vm != NULL)
     {
         rim_num i=vm_first_ord;
         while (i != -1)
         {
             rim_num j = vm[i].next; // get .next here, because rim_mem_release() below will change it
-            (__builtin_expect (!(vm[i].status & RIM_MEM_FILE), 1)) ? (free ((unsigned char*)vm[i].ptr), rim_mem_release(i), true) : (f = (FILE**)(vm[i].ptr), *f != NULL ? (fclose (*f), *f=NULL, true): true, true); // make sure it's NULL so the following request can use this file descriptor
+            (__builtin_expect (!(vm[i].status & (RIM_MEM_FILE|RIM_MEM_DIR)), 1)) ? 
+                (free ((unsigned char*)vm[i].ptr), true) 
+                : 
+                (
+                 (vm[i].status & RIM_MEM_FILE) ? (f = (int*)(vm[i].ptr+RIM_ALIGN), *f != -1 ? (close (*f), true): true) 
+                 : 
+                 (dir = (DIR**)(vm[i].ptr+RIM_ALIGN), *dir != NULL ? (closedir (*dir), true): true)
+                ); // make sure it's NULL so the following request can use this file descriptor
+            rim_mem_release(i);
             i = j;
         }
     }

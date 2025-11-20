@@ -24,7 +24,7 @@ send-file <file> [ headers \\
 .RE
 
 .SH DESCRIPTION
-When a client requests download of a file, you can use send-file to provide <file>, which is its location on the server, and is either a full path or relative to the application home directory (see \fBdirectories\fP). Note however that you can never use dot-dot (i.e. "..") in <file> - this is a security measure to avoid path-traversal attacks. Thus the file name should never have ".." in it, and if it does, the program will \fBerror out\fP.
+When a client requests download of a file, you can use send-file to provide <file>, which is its location on the server, and is either a full path or relative to the current working directory (which by default is the application home directory, see \fBdirectories\fP). Note however that you can never use dot-dot (i.e. "..") in <file> - this is a security measure to avoid path-traversal attacks. Thus the file name should never have ".." in it, and if it does, the program will \fBerror out\fP.
 
 .LP
 .B HEADERS

@@ -1,0 +1,77 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+read-dir \-  (directories)
+.SH PURPOSE
+Read the list of files and subdirectories in a directory.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+read-dir <dir id> to <name> \\
+    [ type <type> ] \\
+    [ status <status> ] 
+
+.EE
+.RE
+
+.SH DESCRIPTION
+Obtain the names of files and subdirectories under directory specified with <dir id>, along with their types. <dir id> is the value of directory stream type obtained by \fBopen-dir\fP. Typically this statement is used in a loop to obtain all directory entries untill there are none left.
+
+Name of a directory entry is obtained in <name> (in "to" clause). This is the name of a file or a directory, with each successive call yielding the next one.
+
+Type of each directory entry can be obtained in <type> (in "type" clause), and is a number that can be RIM_FILE (for an ordinary file), RIM_DIR (for a directory), RIM_LINK (for a soft link), RIM_SOCK (for a socket file), RIM_FIFO (for a FIFO file), RIM_CHAR (for a character device), RIM_BLOCK (for a block device), RIM_UNKNOWN (when cannot obtain the type). Note that RIM_UNKNOWN can be returned with certain file systems (especially older or more specialized ones) and if so, use \fBstat-file\fP to obtain the type of each directory entry (which can also differentiate between soft and hard links and provide other details).
+
+Status can be obtained in number <status> (in "status" clause), which can be RIM_OKAY if the entry obtained is valid, or RIM_ERR_EXIST if there are no more entries to read (which means all files and subdirectories in a directory have been obtained, and <name> is an empty string). If directory could not be opened in \fBopen-dir\fP, then your program will \fBerror out\fP if you use read-dir.
+
+Note that all files are listed with read-dir, i.e. there is no difference between "hidden" and "non-hidden" files. "Hidden" files simply have a dot as a first character. Also, among the directory entries are "." (current directory) and ".." (parent directory, if applicable).
+
+.SH EXAMPLES
+In this example, a list of files and directories in the current directory is displayed:
+
+.RS 4
+.EX
+
+begin-handler /dir public
+    // Get the directory where program is started (for command line execution)
+    get-sys directory to cdir
+    // Open directory for reading
+    open-dir cdir dir-id d
+    start-loop
+        // Obtain the next directory entry
+        read-dir d to e status s type t
+        if-true s not-equal RIM_OKAY
+            break-loop
+        end-if
+        if-true t not-equal RIM_UNKNOWN
+            // Display type
+            if-true t equal RIM_FILE
+                print-out "File: "
+            else-if t equal RIM_DIR
+                print-out "Dir: "
+            else-if
+                print-out "Other:"
+            end-if
+        end-if
+        // Display file/directory name
+        print-out e new-line
+    end-loop
+end-handler
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Directories
+
+\fBchange-dir\fP  
+\fBchange-mode\fP  
+\fBclose-dir\fP  
+\fBdelete-dir\fP  
+\fBdirectories\fP  
+\fBnew-dir\fP  
+\fBopen-dir\fP  
+\fBread-dir\fP   
+See all 
+\fBdocumentation\fP
