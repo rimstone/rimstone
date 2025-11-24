@@ -1,7 +1,7 @@
 ![RImStone Logo](https://rimstone-lang.com/rimstone-large.png)
 ## Example
 
-Here's what RimStone code looks like. Obviously it's just a tiny little snippet, and the highlighting is automatic in Vim editor. This queries a database to obtain a full path of an image and then sends it back to the web client (it's a part of [web file manager in less than 100 lines of code](https://rimstone-lang.com/article-file-manager.html) example:
+Here's what RimStone code looks like. It's just a tiny little snippet, and the highlighting is automatic in Vim editor. This handles the upload of a file, updating the database, and showing a confirmation web page to a web client (it's a part of [web file manager in less than 100 lines of code](https://rimstone-lang.com/article-file-manager.html) example:
 
 ![Rimstone Example](https://rimstone-lang.com/rimstone-code-example.png)
 
