@@ -1,6 +1,6 @@
 ![RImStone Logo](https://rimstone-lang.com/rimstone.png)
 
-RimStone is a memory-safe, high-performance programming language and framework. It's general purpose, web ready, simple and powerful. 
+RimStone is a memory-safe, high-performance programming language and framework. It's general purpose, web ready, easy to use and powerful. 
 
 Build web applications, distributed systems, middleware and command-line applications in minutes. Try [Hello World](https://rimstone-lang.com/article-hello.html) now, both as a command-line program and a service. RimStone applications are highly-optimized native executables without Virtual Machines.
 
