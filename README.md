@@ -32,7 +32,7 @@ Learn RimStone in no time with a number of step-by-step easy-to-replicate [full 
 
 ## Documentation
 
-RimStone comes with well-written [documentation](https://rimstone-lang.com/documentation.html).
+RimStone comes with a well-written [documentation](https://rimstone-lang.com/documentation.html).
 
 ## Install
 
