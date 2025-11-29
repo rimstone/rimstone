@@ -78,7 +78,13 @@ RimStone incorporates the source code of the following libraries:
 
 .RS 4
 \[bu]    
-\fBBSD 3 Clause Licensed\fP libbacktrace (\fBhttps://github.com/ianlancetaylor/libbacktrace/\fP). Copyright (C) 2012-2016 Free Software Foundation, Inc. See btrace subdirectory for its LICENSE file with the copyright notice.
+\fBBSD 3 Clause Licensed\fP libbacktrace (\fBhttps://github.com/ianlancetaylor/libbacktrace/\fP). See btrace subdirectory for its LICENSE file with the copyright notice.
+
+.RE
+
+.RS 4
+\[bu]    
+\fBMIT-licensed\fP template sorting code (Timsort, Quicksort etc. at \fBhttps://github.com/swenson/sort/\fP). See libsort subdirectory for its LICENSE.md and CONTRIBUTORS.md files with the copyright notice.
 
 .RE
 

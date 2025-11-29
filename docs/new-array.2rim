@@ -48,6 +48,7 @@ new-array arr
 \fBnew-array\fP  
 \fBpurge-array\fP  
 \fBread-array\fP  
+\fBsort-array\fP  
 \fBwrite-array\fP   
 See all 
 \fBdocumentation\fP

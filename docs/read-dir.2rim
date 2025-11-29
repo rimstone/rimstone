@@ -57,6 +57,7 @@ begin-handler /dir public
         // Display file/directory name
         print-out e new-line
     end-loop
+    close-dir d
 end-handler
 
 .EE

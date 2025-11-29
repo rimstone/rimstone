@@ -45,10 +45,10 @@ end-handler
 .SH SEE ALSO
  Messages
 
+\fBSEMI\fP  
 \fBget-message\fP  
 \fBnew-message\fP  
 \fBread-message\fP  
-\fBSEMI\fP  
 \fBwrite-message\fP   
 See all 
 \fBdocumentation\fP

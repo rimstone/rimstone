@@ -19,6 +19,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <ctype.h>
+// param.h for min/max without side effects
+#include <sys/param.h>
 
 #define RIM_OKAY 0
 // Error codes
@@ -65,8 +67,10 @@ typedef struct s_rim_head {
     rim_num id; 
     rim_num len;
 } rim_head;
-
-
+//
+// Get length of memory block. RIM_ALIGN is 2*sizeof(rim_num)
+// there's always trailing 0 set by all rimstone statements, so .len is useful length + 1
+#define rim_mem_get_len(s) (rim_num)(((rim_head*)((unsigned char *)(s)-RIM_ALIGN))->len-1)
 #ifdef RIM_RIMMEM
 void *rim_malloc(size_t size);
 #endif
@@ -92,6 +96,16 @@ size_t rim_dir (int type, char *dir, size_t dir_size, char *app, char *user);
 #define RIM_DIR_ART 13
 #define RIM_DIR_TMP 14
 #define RIM_DIR_TRACENAME 15
+
+// For sorting functions (this constant isn't defined for clients, hence ifdef)
+#ifdef RIM_ALWAYS_INLINE
+RIM_ALWAYS_INLINE 
+#endif
+static inline int rim_cm_str_sort (const char *a, rim_num la, const char *b, rim_num lb)  {
+    // this returns proper value for sorting
+    rim_num lmin = MIN(la,lb)+1; 
+    return strncmp(a,b,lmin);
+}
 
 
 #endif

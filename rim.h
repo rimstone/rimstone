@@ -18,7 +18,7 @@
 #endif
 
 // Version+Release. Just a simple number.
-#define RIM_VERSION "4.4.0"
+#define RIM_VERSION "5.0.0"
 
 // OS Name and Version
 #define RIM_OS_NAME  RIM_OSNAME
@@ -74,8 +74,6 @@
 #include <math.h>
 #include <fenv.h>
 #include <float.h>
-// param.h for min/max without side effects
-#include <sys/param.h>
 #include <stdint.h>
 // Fatal error logging
 #include <syslog.h>
@@ -237,10 +235,6 @@ typedef struct s_vml { // total size 8 bytes
 extern vml *vm;
 extern rim_num vm_curr;
 extern char* RIM_EMPTY_STRING;
-//
-// Get length of memory block. RIM_ALIGN is 2*sizeof(rim_num)
-// there's always trailing 0 set by all rimstone statements, so .len is useful length + 1
-#define rim_mem_get_len(s) (rim_num)(((rim_head*)((unsigned char *)(s)-RIM_ALIGN))->len-1)
 //
 // Get index of pointer in memory block, or -1 if string constant (string constants are NOT in variable table!)
 // at debug time, check each memory accessed is actually correct!
@@ -437,13 +431,6 @@ RIM_ALWAYS_INLINE static inline void rim_mem_set_len(void *ptr,rim_num length) {
 //
 //
 
-//
-// Constants used to denote deleted array element
-//
-#define RIM_STRING_NONE NULL
-#define RIM_NUMBER_NONE LLONG_MIN
-#define RIM_DOUBLE_NONE NAN
-#define RIM_BOOL_NONE 2
 //types of random data generation
 #define RIM_RANDOM_NUM 0
 #define RIM_RANDOM_STR 1
@@ -520,28 +507,120 @@ typedef struct rim_arraybool_s {
     char *logic; // for booleans
     rim_num max_elem; // how many total elements there can be - we don't allocate this before hand!
     rim_num alloc_elem; // how many elements are actually allocated
+    rim_num tot_elem; // how many elements that were actually set (including gaps when setting ahead)
     unsigned char process; // holds bits for process/const
 } rim_arraybool;
 typedef struct rim_arraydouble_s {
     rim_dbl *dbl; // for numbers
     rim_num max_elem; // how many total elements there can be - we don't allocate this before hand!
     rim_num alloc_elem; // how many elements are actually allocated
+    rim_num tot_elem; // how many elements that were actually set (including gaps when setting ahead)
     unsigned char process; // holds bits for process/const
 } rim_arraydouble;
 typedef struct rim_arraynumber_s {
     rim_num *num; // for numbers
     rim_num max_elem; // how many total elements there can be - we don't allocate this before hand!
     rim_num alloc_elem; // how many elements are actually allocated
+    rim_num tot_elem; // how many elements that were actually set (including gaps when setting ahead)
     unsigned char process; // holds bits for process/const
 } rim_arraynumber;
 typedef struct rim_arraystring_s {
     char **str;  // for strings
     rim_num max_elem; // how many total elements there can be - we don't allocate this before hand!
     rim_num alloc_elem; // how many elements are actually allocated
+    rim_num tot_elem; // how many elements that were actually set (including gaps when setting ahead)
     unsigned char process; // holds bits for process/const
 } rim_arraystring;
-
-
+// Sorting of various types, defined in libsort/sort.h
+//
+void rim_string_quick_sort(char **dst, const size_t size);
+void rim_number_quick_sort(rim_num *dst, const size_t size);
+void rim_double_quick_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_merge_sort(char **dst, const size_t size);
+void rim_number_merge_sort(rim_num *dst, const size_t size);
+void rim_double_merge_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_shell_sort(char **dst, const size_t size);
+void rim_number_shell_sort(rim_num *dst, const size_t size);
+void rim_double_shell_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_binary_insertion_sort(char **dst, const size_t size);
+void rim_number_binary_insertion_sort(rim_num *dst, const size_t size);
+void rim_double_binary_insertion_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_tim_sort(char **dst, const size_t size);
+void rim_number_tim_sort(rim_num *dst, const size_t size);
+void rim_double_tim_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_heap_sort(char **dst, const size_t size);
+void rim_number_heap_sort(rim_num *dst, const size_t size);
+void rim_double_heap_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_merge_sort_in_place(char **dst, const size_t size);
+void rim_number_merge_sort_in_place(rim_num *dst, const size_t size);
+void rim_double_merge_sort_in_place(rim_dbl *dst, const size_t size);
+//
+void rim_string_selection_sort(char **dst, const size_t size);
+void rim_number_selection_sort(rim_num *dst, const size_t size);
+void rim_double_selection_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_grail_sort(char **dst, const size_t size);
+void rim_number_grail_sort(rim_num *dst, const size_t size);
+void rim_double_grail_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_sqrt_sort(char **dst, const size_t size);
+void rim_number_sqrt_sort(rim_num *dst, const size_t size);
+void rim_double_sqrt_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_bubble_sort(char **dst, const size_t size);
+void rim_number_bubble_sort(rim_num *dst, const size_t size);
+void rim_double_bubble_sort(rim_dbl *dst, const size_t size);
+//
+// Now, the same but descending order
+void rim_string_desc_quick_sort(char **dst, const size_t size);
+void rim_number_desc_quick_sort(rim_num *dst, const size_t size);
+void rim_double_desc_quick_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_merge_sort(char **dst, const size_t size);
+void rim_number_desc_merge_sort(rim_num *dst, const size_t size);
+void rim_double_desc_merge_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_shell_sort(char **dst, const size_t size);
+void rim_number_desc_shell_sort(rim_num *dst, const size_t size);
+void rim_double_desc_shell_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_binary_insertion_sort(char **dst, const size_t size);
+void rim_number_desc_binary_insertion_sort(rim_num *dst, const size_t size);
+void rim_double_desc_binary_insertion_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_tim_sort(char **dst, const size_t size);
+void rim_number_desc_tim_sort(rim_num *dst, const size_t size);
+void rim_double_desc_tim_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_heap_sort(char **dst, const size_t size);
+void rim_number_desc_heap_sort(rim_num *dst, const size_t size);
+void rim_double_desc_heap_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_merge_sort_in_place(char **dst, const size_t size);
+void rim_number_desc_merge_sort_in_place(rim_num *dst, const size_t size);
+void rim_double_desc_merge_sort_in_place(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_selection_sort(char **dst, const size_t size);
+void rim_number_desc_selection_sort(rim_num *dst, const size_t size);
+void rim_double_desc_selection_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_grail_sort(char **dst, const size_t size);
+void rim_number_desc_grail_sort(rim_num *dst, const size_t size);
+void rim_double_desc_grail_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_sqrt_sort(char **dst, const size_t size);
+void rim_number_desc_sqrt_sort(rim_num *dst, const size_t size);
+void rim_double_desc_sqrt_sort(rim_dbl *dst, const size_t size);
+//
+void rim_string_desc_bubble_sort(char **dst, const size_t size);
+void rim_number_desc_bubble_sort(rim_num *dst, const size_t size);
+void rim_double_desc_bubble_sort(rim_dbl *dst, const size_t size);
 
 // 
 // Name/value pair for double-linked list API
@@ -1418,10 +1497,10 @@ char *rim_write_arraystring (rim_arraystring *arr, rim_num key, char **old_val);
 void rim_write_arraydouble (rim_arraydouble *arr, rim_num key, rim_num *old_val);
 void rim_write_arraynumber (rim_arraynumber *arr, rim_num key, rim_num *old_val);
 void rim_write_arraybool (rim_arraybool *arr, rim_num key, bool *old_val);
-char *rim_read_arraystring (rim_arraystring *arr, rim_num key, rim_num *st);
-rim_dbl rim_read_arraydouble (rim_arraydouble *arr, rim_num key, rim_num *st);
-rim_num rim_read_arraynumber (rim_arraynumber *arr, rim_num key, rim_num *st);
-bool rim_read_arraybool (rim_arraybool *arr, rim_num key, rim_num *st);
+char *rim_read_arraystring (rim_arraystring *arr, rim_num key);
+rim_dbl rim_read_arraydouble (rim_arraydouble *arr, rim_num key);
+rim_num rim_read_arraynumber (rim_arraynumber *arr, rim_num key);
+bool rim_read_arraybool (rim_arraybool *arr, rim_num key);
 //
 
 rim_num rim_tree_bal (rim_tree_node *tree);
@@ -1542,22 +1621,6 @@ extern char *rim_inp_body;
 extern char *rim_inp_url;
 extern char rim_finished_output;
 extern char rim_user_dir[RIM_MAX_OS_UDIR_LEN]; // user dir
-
-
-//
-//
-// The following through to MIG_END is the temporary wrapper for RIM_ to RIM_
-// Will be removed within 3-6 months
-//
-//
-// GG_COMPAT
-#include "rim_temp.h"
-//
-//
-// MIG_END
-//
-//
-
 
 
 

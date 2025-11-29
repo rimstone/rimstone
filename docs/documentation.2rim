@@ -4,12 +4,12 @@ documentation \- RimStone documentation (documentation)
 .SH DESCRIPTION
 
 .LP
-.B REFERENCE FOR RIMSTONE VERSION 4.4.0
+.B REFERENCE FOR RIMSTONE VERSION 5.0.0
 .LP
 
 Note: All the topics below are available as a \fBsingle-page documentation\fP. See below how to use man pages.
 
-Browse by topic:    API,   Application information,   Array,   Base64,   Booleans,   C language,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Doubles,   Encryption,   Error handling,   Examples,   FastCGI client,   FIFO,   Files,   General,   Hash,   Hex encoding,   Install rimstone,   JSON parsing,   Language,   License,   LIFO,   Linked list,   Math functions,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Rimstone compiler and utility,   Running application,   SELinux,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   URL encoding,   UTF,   Web,   Web encoding,   Web servers,   XML parsing
+Browse by topic:    API,   C language,   FIFO,   FastCGI client,   JSON parsing,   LIFO,   SELinux,   URL encoding,   UTF,   XML parsing,   Application information,   Array,   Base64,   Booleans,   Cookies,   Database,   Debugging,   Directories,   Distributed computing,   Documentation,   Doubles,   Encryption,   Error handling,   Examples,   Files,   General,   Hash,   Hex encoding,   Install rimstone,   Language,   License,   Linked list,   Math functions,   Memory,   Messages,   Numbers,   Output,   Program execution,   Program flow,   Quick start,   Regex,   Request data,   Request information,   Requests,   Rimstone compiler and utility,   Running application,   Service manager,   Service processing,   Strings,   System information,   Time,   Tree,   Web,   Web encoding,   Web servers
 
 
 
@@ -20,6 +20,104 @@ API
 \fBClient-API\fP  
 \fBClient-API-and-messaging\fP  
 \fBServer-API\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+C language
+
+\fBcall-extended\fP  
+\fBextended-mode\fP  
+\fBweb-framework-for-C-programming-language\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+FIFO
+
+\fBdelete-fifo\fP  
+\fBnew-fifo\fP  
+\fBpurge-fifo\fP  
+\fBread-fifo\fP  
+\fBrewind-fifo\fP  
+\fBwrite-fifo\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+FastCGI client
+
+\fBrimcli\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+JSON parsing
+
+\fBjson-doc\fP  
+\fBread-json\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+LIFO
+
+\fBdelete-lifo\fP  
+\fBget-lifo\fP  
+\fBnew-lifo\fP  
+\fBpurge-lifo\fP  
+\fBread-lifo\fP  
+\fBrewind-lifo\fP  
+\fBwrite-lifo\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+SELinux
+
+\fBSELinux\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+URL encoding
+
+\fBdecode-url\fP  
+\fBencode-url\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+UTF
+
+\fBtext-utf\fP  
+\fButf-text\fP   
+.RE
+
+
+
+.RS 4
+\[bu]    
+XML parsing
+
+\fBread-xml\fP  
+\fBxml-doc\fP   
 .RE
 
 
@@ -41,6 +139,7 @@ Array
 \fBnew-array\fP  
 \fBpurge-array\fP  
 \fBread-array\fP  
+\fBsort-array\fP  
 \fBwrite-array\fP   
 .RE
 
@@ -62,17 +161,6 @@ Booleans
 
 \fBboolean-expressions\fP  
 \fBset-bool\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-C language
-
-\fBcall-extended\fP  
-\fBextended-mode\fP  
-\fBweb-framework-for-C-programming-language\fP   
 .RE
 
 
@@ -204,29 +292,6 @@ Examples
 
 .RS 4
 \[bu]    
-FastCGI client
-
-\fBrimcli\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-FIFO
-
-\fBdelete-fifo\fP  
-\fBnew-fifo\fP  
-\fBpurge-fifo\fP  
-\fBread-fifo\fP  
-\fBrewind-fifo\fP  
-\fBwrite-fifo\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
 Files
 
 \fBchange-mode\fP  
@@ -300,16 +365,6 @@ Install rimstone
 
 .RS 4
 \[bu]    
-JSON parsing
-
-\fBjson-doc\fP  
-\fBread-json\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
 Language
 
 \fBinline-code\fP  
@@ -326,21 +381,6 @@ Language
 License
 
 \fBrimstone-license\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-LIFO
-
-\fBdelete-lifo\fP  
-\fBget-lifo\fP  
-\fBnew-lifo\fP  
-\fBpurge-lifo\fP  
-\fBread-lifo\fP  
-\fBrewind-lifo\fP  
-\fBwrite-lifo\fP   
 .RE
 
 
@@ -421,10 +461,10 @@ Memory
 \[bu]    
 Messages
 
+\fBSEMI\fP  
 \fBget-message\fP  
 \fBnew-message\fP  
 \fBread-message\fP  
-\fBSEMI\fP  
 \fBwrite-message\fP   
 .RE
 
@@ -548,19 +588,10 @@ Rimstone compiler and utility
 \[bu]    
 Running application
 
-\fBapplication-setup\fP  
 \fBCGI\fP  
+\fBapplication-setup\fP  
 \fBcommand-line\fP  
 \fBservice\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-SELinux
-
-\fBSELinux\fP   
 .RE
 
 
@@ -651,26 +682,6 @@ Tree
 
 .RS 4
 \[bu]    
-URL encoding
-
-\fBdecode-url\fP  
-\fBencode-url\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-UTF
-
-\fBtext-utf\fP  
-\fButf-text\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
 Web
 
 \fBcall-web\fP  
@@ -700,16 +711,6 @@ Web servers
 \fBconnect-haproxy-tcp-socket\fP  
 \fBconnect-nginx-tcp-socket\fP  
 \fBconnect-nginx-unix-socket\fP   
-.RE
-
-
-
-.RS 4
-\[bu]    
-XML parsing
-
-\fBread-xml\fP  
-\fBxml-doc\fP   
 .RE
 
 

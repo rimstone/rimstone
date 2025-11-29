@@ -1,0 +1,127 @@
+.TH RIM 2rim $VERSION $DATE Development Tools
+.SH NAME
+sort-array \-  (array)
+.SH PURPOSE
+Sort array.
+
+.SH SYNTAX
+
+.RS 4
+.EX
+
+sort-array <array> [ algorithm <algorithm> ] [ descending ]
+
+.EE
+.RE
+
+.SH DESCRIPTION
+sort-array will sort <array>, which was created with \fBnew-array\fP and must of type "string", "number" or "double". By default the "quick_sort" algorithm is used.
+
+.LP
+.B ALGORITHM
+.LP
+
+You can specify the algorithm to use with <algorithm> (in "algorithm" clause), which can be a string constant:
+
+.RS 4
+\[bu]    
+"quick_sort"
+
+.RE
+
+.RS 4
+\[bu]    
+"tim_sort"
+
+.RE
+
+.RS 4
+\[bu]    
+"merge_sort_in_place"
+
+.RE
+
+.RS 4
+\[bu]    
+"heap_sort"
+
+.RE
+
+.RS 4
+\[bu]    
+"merge_sort"
+
+.RE
+
+.RS 4
+\[bu]    
+"shell_sort"
+
+.RE
+
+.RS 4
+\[bu]    
+"binary_insertion_sort"
+
+.RE
+
+.RS 4
+\[bu]    
+"selection_sort'
+
+.RE
+
+.RS 4
+\[bu]    
+"grail_sort"
+
+.RE
+
+.RS 4
+\[bu]    
+"sqrt_sort"
+
+.RE
+
+.RS 4
+\[bu]    
+"bubble_sort"
+.RE
+
+Each algorithm has its own strengths, weaknesses and use cases, but in general the fastest are "quick_sort", "tim_sort", "heap_sort", "merge_sort_in_place" etc. For instance, "tim_sort" is generally guaranteed to have complexity of less than O(N log(N) and in the best case O(N), however it would generally use more memory than quick sort. You can experiment which algorithm best suites your real-world data, as actual performance may vary.
+
+.LP
+.B ORDER
+.LP
+
+By default, sorting is in the ascending order. To produce a descending sort, use "descending" clause.
+
+.SH EXAMPLES
+The array here will have values of "Z", D" and "A"; the sorted array will be "A", "D" and "Z":
+
+.RS 4
+.EX
+
+new-array arr 
+
+write-array arr key 0 value "Z"
+write-array arr key 1 value "D"
+write-array arr key 2 value "A"
+
+sort-array arr algorithm "tim_sort"
+
+print-out arr[0], " ", arr[1], " ", arr[2] new-line
+
+.EE
+.RE
+
+.SH SEE ALSO
+ Array
+
+\fBnew-array\fP  
+\fBpurge-array\fP  
+\fBread-array\fP  
+\fBsort-array\fP  
+\fBwrite-array\fP   
+See all 
+\fBdocumentation\fP

@@ -441,7 +441,6 @@ syn region rim_r_construct_read_array start="^[[:space:]]*read-array" skip="\\[[
     syn match rim_h_clause_read_array " delete,\@=" contained containedin=rim_r_construct_read_array
     syn match rim_h_clause_read_array " delete$" contained containedin=rim_r_construct_read_array
     syn match rim_h_clause_read_array " key \@=" contained containedin=rim_r_construct_read_array
-    syn match rim_h_clause_output_read_array " status \@=" contained containedin=rim_r_construct_read_array
     syn match rim_h_clause_output_read_array " value \@=" contained containedin=rim_r_construct_read_array
     hi def link rim_h_clause_read_array    rimClause
     hi def link rim_h_clause_output_read_array    rimClauseOutput
@@ -455,6 +454,18 @@ syn region rim_r_construct_purge_array start="^[[:space:]]*purge-array" skip="\\
     hi def link rim_h_clause_output_purge_array    rimClauseOutput
     hi def link rim_h_construct_purge_array    rimConstruct
     hi def link rim_h_print_inline_purge_array    rimConstruct
+syn region rim_r_construct_sort_array start="^[[:space:]]*sort-array" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
+    syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_sort_array,rim_r_inline_sort_array,rim_r_at
+    syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_sort_array,rim_r_inline_sort_array,rim_r_at
+    syn match rim_h_construct_sort_array "^[[:space:]]*sort-array" contained containedin=rim_r_construct_sort_array
+    syn match rim_h_clause_sort_array " algorithm \@=" contained containedin=rim_r_construct_sort_array
+    syn match rim_h_clause_sort_array " descending \@=" contained containedin=rim_r_construct_sort_array
+    syn match rim_h_clause_sort_array " descending,\@=" contained containedin=rim_r_construct_sort_array
+    syn match rim_h_clause_sort_array " descending$" contained containedin=rim_r_construct_sort_array
+    hi def link rim_h_clause_sort_array    rimClause
+    hi def link rim_h_clause_output_sort_array    rimClauseOutput
+    hi def link rim_h_construct_sort_array    rimConstruct
+    hi def link rim_h_print_inline_sort_array    rimConstruct
 syn region rim_r_construct_write_array start="^[[:space:]]*write-array" skip="\\[[:space:]]*$" end="$" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat,cComment,cCommentL keepend
     syn match rim_h_other_var '[_a-zA-Z][_a-zA-Z0-9]\+' contained containedin=rim_r_construct_write_array,rim_r_inline_write_array,rim_r_at
     syn match rim_h_other '[0-9]\+' contained containedin=rim_r_construct_write_array,rim_r_inline_write_array,rim_r_at
@@ -486,6 +497,7 @@ syn region rim_r_construct_new_array start="^[[:space:]]*new-array" skip="\\[[:s
     syn match rim_h_clause_new_array " process-scope \@=" contained containedin=rim_r_construct_new_array
     syn match rim_h_clause_new_array " process-scope,\@=" contained containedin=rim_r_construct_new_array
     syn match rim_h_clause_new_array " process-scope$" contained containedin=rim_r_construct_new_array
+    syn match rim_h_clause_new_array " type \@=" contained containedin=rim_r_construct_new_array
     syn match rim_h_clause_new_array " bool \@=" contained containedin=rim_r_construct_new_array
     syn match rim_h_clause_new_array " bool,\@=" contained containedin=rim_r_construct_new_array
     syn match rim_h_clause_new_array " bool$" contained containedin=rim_r_construct_new_array
@@ -498,7 +510,6 @@ syn region rim_r_construct_new_array start="^[[:space:]]*new-array" skip="\\[[:s
     syn match rim_h_clause_new_array " string \@=" contained containedin=rim_r_construct_new_array
     syn match rim_h_clause_new_array " string,\@=" contained containedin=rim_r_construct_new_array
     syn match rim_h_clause_new_array " string$" contained containedin=rim_r_construct_new_array
-    syn match rim_h_clause_new_array " type \@=" contained containedin=rim_r_construct_new_array
     hi def link rim_h_clause_new_array    rimClause
     hi def link rim_h_clause_output_new_array    rimClauseOutput
     hi def link rim_h_construct_new_array    rimConstruct
@@ -981,6 +992,7 @@ syn region rim_r_construct___ start="^[[:space:]]*%%" skip="\\[[:space:]]*$" end
     syn match rim_h_clause___ " public \@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " public,\@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " public$" contained containedin=rim_r_construct___
+    syn match rim_h_clause___ " type \@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " bool-array \@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " bool-array,\@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " bool-array$" contained containedin=rim_r_construct___
@@ -1038,7 +1050,6 @@ syn region rim_r_construct___ start="^[[:space:]]*%%" skip="\\[[:space:]]*$" end
     syn match rim_h_clause___ " tree-cursor \@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " tree-cursor,\@=" contained containedin=rim_r_construct___
     syn match rim_h_clause___ " tree-cursor$" contained containedin=rim_r_construct___
-    syn match rim_h_clause___ " type \@=" contained containedin=rim_r_construct___
     hi def link rim_h_clause___    rimClause
     hi def link rim_h_clause_output___    rimClauseOutput
     hi def link rim_h_construct___    rimConstruct
@@ -1058,6 +1069,7 @@ syn region rim_r_construct_begin_handler start="^[[:space:]]*begin-handler" skip
     syn match rim_h_clause_begin_handler " public \@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " public,\@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " public$" contained containedin=rim_r_construct_begin_handler
+    syn match rim_h_clause_begin_handler " type \@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " bool-array \@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " bool-array,\@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " bool-array$" contained containedin=rim_r_construct_begin_handler
@@ -1115,7 +1127,6 @@ syn region rim_r_construct_begin_handler start="^[[:space:]]*begin-handler" skip
     syn match rim_h_clause_begin_handler " tree-cursor \@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " tree-cursor,\@=" contained containedin=rim_r_construct_begin_handler
     syn match rim_h_clause_begin_handler " tree-cursor$" contained containedin=rim_r_construct_begin_handler
-    syn match rim_h_clause_begin_handler " type \@=" contained containedin=rim_r_construct_begin_handler
     hi def link rim_h_clause_begin_handler    rimClause
     hi def link rim_h_clause_output_begin_handler    rimClauseOutput
     hi def link rim_h_construct_begin_handler    rimConstruct
@@ -1176,6 +1187,7 @@ syn region rim_r_construct_get_param start="^[[:space:]]*get-param" skip="\\[[:s
     syn match rim_h_clause_get_param " ,,\@=" contained containedin=rim_r_construct_get_param
     syn match rim_h_clause_get_param " ,$" contained containedin=rim_r_construct_get_param
     syn match rim_h_clause_get_param " default-value \@=" contained containedin=rim_r_construct_get_param
+    syn match rim_h_clause_get_param " type \@=" contained containedin=rim_r_construct_get_param
     syn match rim_h_clause_get_param " bool-array \@=" contained containedin=rim_r_construct_get_param
     syn match rim_h_clause_get_param " bool-array,\@=" contained containedin=rim_r_construct_get_param
     syn match rim_h_clause_get_param " bool-array$" contained containedin=rim_r_construct_get_param
@@ -1233,7 +1245,6 @@ syn region rim_r_construct_get_param start="^[[:space:]]*get-param" skip="\\[[:s
     syn match rim_h_clause_get_param " tree-cursor \@=" contained containedin=rim_r_construct_get_param
     syn match rim_h_clause_get_param " tree-cursor,\@=" contained containedin=rim_r_construct_get_param
     syn match rim_h_clause_get_param " tree-cursor$" contained containedin=rim_r_construct_get_param
-    syn match rim_h_clause_get_param " type \@=" contained containedin=rim_r_construct_get_param
     hi def link rim_h_clause_get_param    rimClause
     hi def link rim_h_clause_output_get_param    rimClauseOutput
     hi def link rim_h_construct_get_param    rimConstruct
@@ -1604,6 +1615,8 @@ syn region rim_r_construct_call_handler start="^[[:space:]]*call-handler" skip="
     syn match rim_h_print_inline_call_handler " return-value \@=" contained containedin=rim_r_inline_call_handler
     syn match rim_h_clause_call_handler " set-param \@=" contained containedin=rim_r_construct_call_handler
     syn match rim_h_print_inline_call_handler " set-param \@=" contained containedin=rim_r_inline_call_handler
+    syn match rim_h_clause_call_handler " type \@=" contained containedin=rim_r_construct_call_handler
+    syn match rim_h_print_inline_call_handler " type \@=" contained containedin=rim_r_inline_call_handler
     syn match rim_h_clause_call_handler " bool-array \@=" contained containedin=rim_r_construct_call_handler
     syn match rim_h_clause_call_handler " bool-array,\@=" contained containedin=rim_r_construct_call_handler
     syn match rim_h_clause_call_handler " bool-array$" contained containedin=rim_r_construct_call_handler
@@ -1699,8 +1712,6 @@ syn region rim_r_construct_call_handler start="^[[:space:]]*call-handler" skip="
     syn match rim_h_clause_call_handler " tree-cursor$" contained containedin=rim_r_construct_call_handler
     syn match rim_h_print_inline_call_handler " tree-cursor\(>>\)\@=" contained containedin=rim_r_inline_call_handler
     syn match rim_h_print_inline_call_handler " tree-cursor \@=" contained containedin=rim_r_inline_call_handler
-    syn match rim_h_clause_call_handler " type \@=" contained containedin=rim_r_construct_call_handler
-    syn match rim_h_print_inline_call_handler " type \@=" contained containedin=rim_r_inline_call_handler
     syn region rim_r_inline_call_handler start="<<[[:space:]]*call-handler \@=" skip="\\[[:space:]]*$" end=">>" contains=cString,cNumbers,cOperator,cType,cConstant,cFormat contained containedin=rim_r_at keepend
     syn match rim_h_print_inline_call_handler '<<[[:space:]]*call-handler \@=' contained containedin=rim_r_inline_call_handler
     syn match rim_h_print_inline_call_handler '>>' contained containedin=rim_r_inline_call_handler

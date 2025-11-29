@@ -116,8 +116,8 @@ You can run your application as \fBservice\fP, \fBCGI\fP or \fBcommand-line\fP.
 .SH SEE ALSO
  Running application
 
-\fBapplication-setup\fP  
 \fBCGI\fP  
+\fBapplication-setup\fP  
 \fBcommand-line\fP  
 \fBservice\fP   
 See all 

@@ -156,8 +156,8 @@ You can also use a command-line program with \fBCGI\fP (Common Gateway Interface
 .SH SEE ALSO
  Running application
 
-\fBapplication-setup\fP  
 \fBCGI\fP  
+\fBapplication-setup\fP  
 \fBcommand-line\fP  
 \fBservice\fP   
 See all 

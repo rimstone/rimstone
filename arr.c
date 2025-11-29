@@ -13,30 +13,20 @@
 // function prototypes
 #ifdef RIM_ARR_STRING
 static void rim_init_array (rim_arraystring *arr, rim_num max_elem, unsigned char process);
+static inline void rim_set_string (char **arr, rim_num tot, char *val)
+{
+    rim_num i;
+    for (i = 0; i < tot; i++) arr[i] = val;
+}
 #endif
 #ifdef RIM_ARR_DOUBLE
 static void rim_init_array (rim_arraydouble *arr, rim_num max_elem, unsigned char process);
-static inline void rim_set_dbl (rim_dbl *arr, rim_num tot, rim_dbl val)
-{
-    rim_num i;
-    for (i = 0; i < tot; i++) arr[i] = val;
-}
 #endif
 #ifdef RIM_ARR_NUMBER
 static void rim_init_array (rim_arraynumber *arr, rim_num max_elem, unsigned char process);
-static inline void rim_set_num (rim_num *arr, rim_num tot, rim_num val)
-{
-    rim_num i;
-    for (i = 0; i < tot; i++) arr[i] = val;
-}
 #endif
 #ifdef RIM_ARR_BOOL
 static void rim_init_array (rim_arraybool *arr, rim_num max_elem, unsigned char process);
-static inline void rim_set_bool (char *arr, rim_num tot, char val)
-{
-    rim_num i;
-    for (i = 0; i < tot; i++) arr[i] = val;
-}
 #endif
 
 
@@ -62,23 +52,22 @@ static void rim_init_array (rim_arraybool *arr, rim_num max_elem, unsigned char 
     if (max_elem < 0) rim_report_error ("Maximum number of elements in array cannot be negative");
     if (max_elem == 0) max_elem = 1000000;
     if (max_elem < RIM_ARRAY_INC) max_elem = RIM_ARRAY_INC;
+    arr->tot_elem = 0;
     arr->max_elem = max_elem;
     arr->process = process;
     // make initial array
 #ifdef RIM_ARR_STRING
-    arr->str = rim_calloc (arr->alloc_elem = RIM_ARRAY_INC, sizeof(char*)); // all values NULL, i.e. RIM_STRING_NONE
+    arr->str = rim_malloc ((arr->alloc_elem = RIM_ARRAY_INC)*sizeof(char*)); 
+    rim_set_string (arr->str, arr->alloc_elem, RIM_EMPTY_STRING);
 #endif
 #ifdef RIM_ARR_DOUBLE
-    arr->dbl = rim_malloc ((arr->alloc_elem = RIM_ARRAY_INC)*sizeof(rim_dbl));
-    rim_set_dbl (arr->dbl, arr->alloc_elem, RIM_DOUBLE_NONE);
+    arr->dbl = rim_calloc ((arr->alloc_elem = RIM_ARRAY_INC),sizeof(rim_dbl));
 #endif
 #ifdef RIM_ARR_NUMBER
-    arr->num = rim_malloc ((arr->alloc_elem = RIM_ARRAY_INC)*sizeof(rim_num));
-    rim_set_num (arr->num, arr->alloc_elem, RIM_NUMBER_NONE);
+    arr->num = rim_calloc ((arr->alloc_elem = RIM_ARRAY_INC),sizeof(rim_num));
 #endif
 #ifdef RIM_ARR_BOOL
-    arr->logic = rim_malloc ((arr->alloc_elem = RIM_ARRAY_INC)*sizeof(char));
-    rim_set_bool (arr->logic, arr->alloc_elem, RIM_BOOL_NONE);
+    arr->logic = rim_calloc ((arr->alloc_elem = RIM_ARRAY_INC),sizeof(char));
 #endif
 }
 
@@ -183,41 +172,43 @@ RIM_ALWAYS_INLINE inline void rim_write_arraybool (rim_arraybool *arr, rim_num k
         if (arr->alloc_elem > arr->max_elem) arr->alloc_elem = arr->max_elem;
 #ifdef RIM_ARR_STRING
         arr->str = rim_realloc (rim_mem_get_id(arr->str), arr->alloc_elem * sizeof (char*));
-        memset (&(arr->str[old_alloc]),0, sizeof(char*)*(arr->alloc_elem - old_alloc));
+        rim_set_string (&(arr->str[old_alloc]), arr->alloc_elem - old_alloc, RIM_EMPTY_STRING);
 #endif
 #ifdef RIM_ARR_DOUBLE
         arr->dbl = rim_realloc (rim_mem_get_id(arr->dbl), arr->alloc_elem * sizeof (rim_dbl));
-        rim_set_dbl (&(arr->dbl[old_alloc]), arr->alloc_elem - old_alloc, RIM_DOUBLE_NONE);
+        memset (&(arr->dbl[old_alloc]),0, sizeof(rim_dbl)*(arr->alloc_elem - old_alloc));
 #endif
 #ifdef RIM_ARR_NUMBER
         arr->num = rim_realloc (rim_mem_get_id(arr->num), arr->alloc_elem * sizeof (rim_num));
-        rim_set_num (&(arr->num[old_alloc]), arr->alloc_elem - old_alloc, RIM_NUMBER_NONE);
+        memset (&(arr->num[old_alloc]),0, sizeof(rim_num)*(arr->alloc_elem - old_alloc));
 #endif
 #ifdef RIM_ARR_BOOL
         arr->logic = rim_realloc (rim_mem_get_id(arr->logic), arr->alloc_elem * sizeof (bool));
-        rim_set_bool (&(arr->logic[old_alloc]), arr->alloc_elem - old_alloc, RIM_BOOL_NONE);
+        memset (&(arr->logic[old_alloc]),0, sizeof(bool)*(arr->alloc_elem - old_alloc));
 #endif
     }
+    if (key >= arr->tot_elem) arr->tot_elem = key+1; // since key is a 0-based index and tot is the total number of elements
+                                                     // this counts how many are set, including gaps that are zeroed out
 
     if (old_val != NULL) 
     {
 #ifdef RIM_ARR_STRING
-        char *cstr = arr->str[key]==RIM_STRING_NONE?RIM_EMPTY_STRING:arr->str[key];
+        char *cstr = arr->str[key];
         *old_val = cstr;
         return cstr;
 #endif
 #ifdef RIM_ARR_DOUBLE
-        *old_val = isnan(arr->dbl[key])?0:arr->dbl[key];
+        *old_val = arr->dbl[key];
 #endif
 #ifdef RIM_ARR_NUMBER
-        *old_val = arr->num[key]==RIM_NUMBER_NONE?0:arr->num[key];
+        *old_val = arr->num[key];
 #endif
 #ifdef RIM_ARR_BOOL
-        *old_val = arr->logic[key]==RIM_BOOL_NONE?false:(arr->logic[key]);
+        *old_val = arr->logic[key];
 #endif
     }
 #ifdef RIM_ARR_STRING
-    else return arr->str[key]==RIM_STRING_NONE?RIM_EMPTY_STRING:arr->str[key];
+    else return arr->str[key];
 #endif
 
     // 
@@ -227,21 +218,20 @@ RIM_ALWAYS_INLINE inline void rim_write_arraybool (rim_arraybool *arr, rim_num k
 }
 
 //
-// Read array from arr, using key number. Delete if del true, and status st is RIM_OKAY if read, RIM_ERR_EXIST if key is not existing
-// s is status, always available (never NULL)
+// Read array from arr, using key number. 
 // Returns the value in the array. 
 //
 #ifdef RIM_ARR_STRING
-RIM_ALWAYS_INLINE inline char *rim_read_arraystring (rim_arraystring *arr, rim_num key, rim_num *st)
+RIM_ALWAYS_INLINE inline char *rim_read_arraystring (rim_arraystring *arr, rim_num key)
 #endif
 #ifdef RIM_ARR_DOUBLE
-RIM_ALWAYS_INLINE inline rim_dbl rim_read_arraydouble (rim_arraydouble *arr, rim_num key, rim_num *st)
+RIM_ALWAYS_INLINE inline rim_dbl rim_read_arraydouble (rim_arraydouble *arr, rim_num key)
 #endif
 #ifdef RIM_ARR_NUMBER
-RIM_ALWAYS_INLINE inline rim_num rim_read_arraynumber (rim_arraynumber *arr, rim_num key, rim_num *st)
+RIM_ALWAYS_INLINE inline rim_num rim_read_arraynumber (rim_arraynumber *arr, rim_num key)
 #endif
 #ifdef RIM_ARR_BOOL
-RIM_ALWAYS_INLINE inline bool rim_read_arraybool (rim_arraybool *arr, rim_num key, rim_num *st)
+RIM_ALWAYS_INLINE inline bool rim_read_arraybool (rim_arraybool *arr, rim_num key)
 #endif
 {
     if (__builtin_expect(key >= arr->max_elem || key < 0,0)) rim_report_error ("Index [%ld] to array is negative or is beyond maximum allowable size", key);
@@ -261,52 +251,16 @@ RIM_ALWAYS_INLINE inline bool rim_read_arraybool (rim_arraybool *arr, rim_num ke
 #endif
     }
 #ifdef RIM_ARR_STRING
-    if (__builtin_expect (arr->str[key]==RIM_STRING_NONE, 0))
-    {
-        *st=RIM_ERR_EXIST;
-        return RIM_EMPTY_STRING;
-    }
-    else
-    {
-        *st=RIM_OKAY;
-        return arr->str[key];
-    }
+    return arr->str[key];
 #endif
 #ifdef RIM_ARR_DOUBLE
-    if (__builtin_expect (isnan(arr->dbl[key]), 0)) // RIM_DOUBLE_NONE is NAN!
-    {
-        *st=RIM_ERR_EXIST;
-        return 0;
-    }
-    else
-    {
-        *st=RIM_OKAY;
-        return arr->dbl[key];
-    }
+    return arr->dbl[key];
 #endif
 #ifdef RIM_ARR_NUMBER
-    if (__builtin_expect (arr->num[key]==RIM_NUMBER_NONE, 0))
-    {
-        *st=RIM_ERR_EXIST;
-        return 0;
-    }
-    else
-    {
-        *st=RIM_OKAY;
-        return arr->num[key];
-    }
+    return arr->num[key];
 #endif
 #ifdef RIM_ARR_BOOL
-    if (__builtin_expect (arr->logic[key]==RIM_BOOL_NONE, 0))
-    {
-        *st=RIM_ERR_EXIST;
-        return false;
-    }
-    else
-    {
-        *st=RIM_OKAY;
-        return arr->logic[key];
-    }
+    return arr->logic[key];
 #endif
 }
 

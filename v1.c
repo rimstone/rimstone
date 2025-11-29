@@ -201,6 +201,8 @@
 #define RIM_KEYMETHOD "method "
 #define RIM_KEYLOCATION "location "
 #define RIM_KEYLOCAL "local "
+#define RIM_KEYALGORITHM "algorithm "
+#define RIM_KEYDESCENDING "descending"
 #define RIM_KEYARGS "args "
 #define RIM_KEYAVERAGEREADS "average-reads "
 #define RIM_KEYOUTPUTFILE "output-file "
@@ -1667,20 +1669,16 @@ bool process_array (char **cur_exp, rim_num *type_exp)
             // make expression to get a number/string/bool
             // NOTE: there is no add_ref for string here, because this is not assignment, just use in expression, if this is a 
             // lone set-string x = y[z], then set-string will do adding reference.
-            static rim_num arr_exp = 0;
-            oprintf ("rim_num _rim_st_arr_exp_%ld=0;\n", arr_exp);
             if (hash) snprintf (arrv, sizeof(arrv),"rim_hash_get (%s, %s);\n", cur, hash_key);
-            else snprintf (arrv, sizeof(arrv),"%s (%s, %s, &_rim_st_arr_exp_%ld);\n", arr_str?"rim_read_arraystring":(arr_num?"rim_read_arraynumber":(arr_dbl?"rim_read_arraydouble":"rim_read_arraybool")), cur, hash?hash_key:ind, arr_exp);
+            else snprintf (arrv, sizeof(arrv),"%s (%s, %s);\n", arr_str?"rim_read_arraystring":(arr_num?"rim_read_arraynumber":(arr_dbl?"rim_read_arraydouble":"rim_read_arraybool")), cur, hash?hash_key:ind);
             // get internal _000 variable
             char *arrv_p = arrv;
             // this is the *only* instance of internal being true for make_var() - because we're creating regular variable that must remain internal,
             // i.e. never again be processed by RimStone, or otherwise, since it's not in the format _rim_<type>... (see make_var()), then it wouldn't work
             // What's made here is next processed by gcc.
             make_var (&arrv_p, *type_exp = arr_str?(vtype==RIM_DEFARRAYSTRINGSTATIC?RIM_DEFSTRINGSTATIC:RIM_DEFSTRING):(arr_num?RIM_DEFNUMBER:(arr_bool?RIM_DEFBOOL:(arr_dbl?RIM_DEFDOUBLE:(vtype==RIM_DEFHASHSTATIC?RIM_DEFSTRINGSTATIC:RIM_DEFSTRING)))), true);
-            oprintf ("if (_rim_st_arr_exp_%ld != RIM_OKAY) rim_report_error (\"%s\", \"%s\", (rim_num)%ld, _rim_st);\n", arr_exp, RIM_STMT_FAIL_CHECK, rim_valid_rim_name, lnum);
             // get total length of x[y] expression here (as a second param below in replace_var())
             replace_var (cur, close_p-cur+1, arrv_p);
-            arr_exp++;
         }
         else if (cmp_type (vtype, RIM_DEFSTRING)) // if it's not an array, the only primitive type is for a string to have subscription!!
         {
@@ -10616,7 +10614,7 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                             check_var (&val, RIM_DEFSTRING);// here old_val can be used in val expression
                             oprintf ("rim_mem_add_ref (%s, rim_mem_process);\n", val);
 
-                            oprintf ("(%s)->str[%s] = (%s)==RIM_STRING_NONE?RIM_EMPTY_STRING:(%s);\n", mtext, key, val, val);
+                            oprintf ("(%s)->str[%s] = (%s);\n", mtext, key, val);
                             oprintf ("rim_mem_dec_process(_rim_str);\n");
                         }
                         else if (cmp_type (at, RIM_DEFARRAYDOUBLE)) 
@@ -10639,6 +10637,38 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         }
                         oprintf("rim_mem_process=0; }\n");
                         // both key and value are now referenced by the index as well as the original variables that put them here
+                        continue;
+                    }
+                    else if ((newI=recog_statement(line, i, "sort-array", &mtext, &msize, 0, &rim_is_inline)) != 0)  
+                    {
+                        RIM_GUARD
+                        i = newI;
+                        char *sort = find_keyword (mtext, RIM_KEYALGORITHM, 1);
+                        char *desc = find_keyword (mtext, RIM_KEYDESCENDING, 1);
+                        carve_statement (&sort, "sort-array", RIM_KEYALGORITHM, 0, 1);
+                        carve_statement (&desc, "sort-array", RIM_KEYDESCENDING, 0, 0);
+
+                        rim_mod_array = true;
+                        carve_stmt_obj (&mtext, true, false);
+
+                        if (sort != NULL)
+                        {
+                            rim_num lm = strlen (sort);
+                            sort = rim_trim_ptr(sort,  &lm);
+                            if (strcmp (sort, "\"quick_sort\"") && strcmp (sort, "\"merge_sort\"") && strcmp (sort, "\"shell_sort\"") && strcmp (sort, "\"binary_insertion_sort\"") && strcmp (sort, "\"tim_sort\"") && strcmp (sort, "\"heap_sort\"") && strcmp (sort, "\"merge_sort_in_place\"") && strcmp (sort, "\"selection_sort\"") && strcmp (sort, "\"grail_sort\"") && strcmp (sort, "\"sqrt_sort\"") && strcmp (sort, "\"bubble_sort\"")) rim_report_error ("sort-algorithm can be quick_sort, merge_sort, shell_sort, binary_insertion_sort, tim_sort, heap_sort, merge_sort_in_place, selection_sort, grail_sort, sqrt_sort, bubble_sort, found [%s]", sort);
+                            // make sort good for oprintf(), i.e. remove quotes
+                            sort++;
+                            sort[strlen (sort)-1] = 0;
+                        } else sort="quick_sort";
+                        if (desc != NULL) desc = "desc_"; else desc = "";
+                        // 
+                        // No need to check_var sort b/c we make sure above it's one of the constants!!!
+                        //
+                        rim_num at = check_var (&mtext, RIM_DEFUNKN);
+                        if (!cmp_type (at, RIM_DEFARRAYSTRING) && !cmp_type(at, RIM_DEFARRAYNUMBER) && !cmp_type(at, RIM_DEFARRAYDOUBLE)) rim_report_error("Unknown type [%s] in sort-array", typename(at));
+                        if (cmp_type (at, RIM_DEFARRAYSTRING)) oprintf("rim_string_%s%s ((%s)->str, (const size_t)((%s)->tot_elem));\n", desc, sort, mtext, mtext);
+                        else if (cmp_type (at, RIM_DEFARRAYNUMBER)) oprintf("rim_number_%s%s ((%s)->num, (const size_t)((%s)->tot_elem));\n", desc, sort, mtext, mtext);
+                        else if (cmp_type (at, RIM_DEFARRAYDOUBLE)) oprintf("rim_double_%s%s ((%s)->dbl, (const size_t)((%s)->tot_elem));\n", desc, sort, mtext, mtext);
                         continue;
                     }
                     else if ((newI=recog_statement(line, i, "purge-array", &mtext, &msize, 0, &rim_is_inline)) != 0)  
@@ -10666,16 +10696,13 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         char *key = find_keyword (mtext, RIM_KEYKEY, 1);
                         char *val = find_keyword (mtext, RIM_KEYVALUE, 1);
                         char *del = find_keyword (mtext, RIM_KEYDELETE0, 1);
-                        char *st = find_keyword (mtext, RIM_KEYSTATUS, 1);
 
 
                         carve_statement (&key, "read-array", RIM_KEYKEY, 1, 1);
                         carve_statement (&val, "read-array", RIM_KEYVALUE, 1, 1);
                         carve_statement (&del, "read-array", RIM_KEYDELETE0, 0, 2);
-                        carve_statement (&st, "read-array", RIM_KEYSTATUS, 0, 1);
                         carve_stmt_obj (&mtext, true, false);
 
-                        define_statement (&st, RIM_DEFNUMBER, false); 
 
                         rim_num at = check_var (&mtext, RIM_DEFUNKN);
                         if (!cmp_type (at, RIM_DEFARRAYSTRING) && !cmp_type(at, RIM_DEFARRAYNUMBER) && !cmp_type(at, RIM_DEFARRAYBOOL) && !cmp_type(at, RIM_DEFARRAYDOUBLE)) rim_report_error("Unknown type [%s] in read-array", typename(at));
@@ -10698,22 +10725,17 @@ void rim_gen_c_code (rim_gen_ctx *gen_ctx, char *file_name)
                         // is not RIM_OKAY
                         //
                         oprintf("{\n");
-                        oprintf ("rim_num _rim_st; ");
-                        if (cmp_type (at, RIM_DEFARRAYSTRING)) oprintf("char *_rim_afind = rim_read_arraystring (%s, %s, &_rim_st);\n", mtext, key);
-                        else if (cmp_type (at, RIM_DEFARRAYNUMBER)) oprintf("rim_num _rim_afind = rim_read_arraynumber (%s, %s, &_rim_st);\n", mtext, key);
-                        else if (cmp_type (at, RIM_DEFARRAYDOUBLE)) oprintf("rim_dbl _rim_afind = rim_read_arraydouble (%s, %s, &_rim_st);\n", mtext, key);
-                        else if (cmp_type (at, RIM_DEFARRAYBOOL)) oprintf("bool _rim_afind = rim_read_arraybool (%s, %s, &_rim_st);\n", mtext, key);
+                        if (cmp_type (at, RIM_DEFARRAYSTRING)) oprintf("char *_rim_afind = rim_read_arraystring (%s, %s);\n", mtext, key);
+                        else if (cmp_type (at, RIM_DEFARRAYNUMBER)) oprintf("rim_num _rim_afind = rim_read_arraynumber (%s, %s);\n", mtext, key);
+                        else if (cmp_type (at, RIM_DEFARRAYDOUBLE)) oprintf("rim_dbl _rim_afind = rim_read_arraydouble (%s, %s);\n", mtext, key);
+                        else if (cmp_type (at, RIM_DEFARRAYBOOL)) oprintf("bool _rim_afind = rim_read_arraybool (%s, %s);\n", mtext, key);
                         // if asked to delete, generate code to delete (check for false because opt_clause will create it)
-                        if (st == NULL)
-                        {
-                            oprintf ("if (__builtin_expect(_rim_st != RIM_OKAY, 0)) rim_report_error (\"%s\", \"%s\", (rim_num)%ld, _rim_st);\n", RIM_STMT_FAIL_CHECK, rim_valid_rim_name, lnum);
-                        } else oprintf ("%s=_rim_st;\n", st);
                         if (delc && strcmp (delc, "false"))
                         {
-                            if (cmp_type (at, RIM_DEFARRAYSTRING)) oprintf ("if (%s) {rim_mem_dec_process(_rim_afind); %s->str[%s] = RIM_STRING_NONE; }\n", delc, mtext, key);
-                            else if (cmp_type (at, RIM_DEFARRAYNUMBER))oprintf ("if (%s) {%s->num[%s] = RIM_NUMBER_NONE; }\n", delc, mtext, key);
-                            else if (cmp_type (at, RIM_DEFARRAYDOUBLE))oprintf ("if (%s) {%s->dbl[%s] = RIM_DOUBLE_NONE; }\n", delc, mtext, key);
-                            else if (cmp_type (at, RIM_DEFARRAYBOOL)) oprintf ("if (%s) {%s->logic[%s] = RIM_BOOL_NONE; }\n", delc, mtext, key);
+                            if (cmp_type (at, RIM_DEFARRAYSTRING)) oprintf ("if (%s) {rim_mem_dec_process(_rim_afind); %s->str[%s] = RIM_EMPTY_STRING; }\n", delc, mtext, key);
+                            else if (cmp_type (at, RIM_DEFARRAYNUMBER))oprintf ("if (%s) {%s->num[%s] = 0; }\n", delc, mtext, key);
+                            else if (cmp_type (at, RIM_DEFARRAYDOUBLE))oprintf ("if (%s) {%s->dbl[%s] = 0.0; }\n", delc, mtext, key);
+                            else if (cmp_type (at, RIM_DEFARRAYBOOL)) oprintf ("if (%s) {%s->logic[%s] = false; }\n", delc, mtext, key);
 
                         }
                         // assign result, add reference if string
@@ -12639,70 +12661,6 @@ int main (int argc, char* argv[])
     add_var ("RIM_JSON_TYPE_NONE", RIM_DEFNUMBER, NULL, false);
     add_var ("RIM_SOURCE_LINE", RIM_DEFNUMBER, NULL, false);
     add_var ("RIM_EMPTY_STRING", RIM_DEFSTRING, NULL, false);
-    // THE following is temporary for GG->RIM transition
-// GG_COMPAT
-    add_var ("GG_CLI_ERR_SOCK_READ", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_PROT_ERR", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_BAD_VER", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_SRV", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_UNK", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_OUT_MEM", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_RESOLVE_ADDR", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_PATH_TOO_LONG", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_CONNECT", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_TIMEOUT", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_SOCK_WRITE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_INTERNAL", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_ENV_TOO_LONG", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_BAD_TIMEOUT", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_ENV_ODD", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_SOCKET", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_CLI_ERR_TOTAL", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_GET", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_PUT", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_POST", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_PATCH", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_DELETE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_OTHER", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_FILE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_DIR", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_OKAY", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_OPEN", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_OPEN_TARGET", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_READ", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_WRITE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_POSITION", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_TOO_MANY", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_DELETE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_REFERENCE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_FAILED", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_WEB_CALL", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_CREATE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_EXIST", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_INVALID", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_RENAME", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_MEMORY", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_UTF", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_FORMAT", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_CLOSE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_OVERFLOW", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_LENGTH", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_JSON", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_XML", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_ERR_UNKNOWN", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_DB_MARIADB", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_DB_POSTGRES", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_DB_SQLITE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_INFO_EXIST", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_JSON_TYPE_STRING", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_JSON_TYPE_NUMBER", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_JSON_TYPE_REAL", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_JSON_TYPE_BOOL", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_JSON_TYPE_NULL", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_JSON_TYPE_NONE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_SOURCE_LINE", RIM_DEFNUMBER, NULL, false);
-    add_var ("GG_EMPTY_STRING", RIM_DEFSTRING, NULL, false);
-    // END of GG->RIM transition
     add_var ("NULL", RIM_DEFSTRING, NULL, false);
     //
     // C errno constant

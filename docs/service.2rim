@@ -75,8 +75,8 @@ In this case, the timeout is set to 8 seconds.
 .SH SEE ALSO
  Running application
 
-\fBapplication-setup\fP  
 \fBCGI\fP  
+\fBapplication-setup\fP  
 \fBcommand-line\fP  
 \fBservice\fP   
 See all 

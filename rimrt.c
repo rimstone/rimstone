@@ -866,13 +866,6 @@ rim_num rim_get_input(rim_input_req *req, char *method, char *input)
     if (sil[0] == 0) 
     {
         sil = rim_getenv_os ("RIM_SILENT_HEADER");
-// GG_COMPAT
-        if (sil[0] == 0) 
-        {
-            sil = rim_getenv ("GG_SILENT_HEADER");
-            if (sil[0] == 0) sil = rim_getenv_os ("GG_SILENT_HEADER");
-        }
-//
     }
     if (!strcmp (sil, "yes")) 
     {

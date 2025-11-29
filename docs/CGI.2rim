@@ -47,8 +47,8 @@ The following script sets up an application named "func_test" (any kind of appli
 .SH SEE ALSO
  Running application
 
-\fBapplication-setup\fP  
 \fBCGI\fP  
+\fBapplication-setup\fP  
 \fBcommand-line\fP  
 \fBservice\fP   
 See all 

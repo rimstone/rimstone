@@ -113,7 +113,7 @@ sudo pacman -U ./rimstone-main-arch-any.pkg.tar.zst
 .B BUILDING PACKAGES
 .LP
 
-If you are a packaging developer, the following can be used to build a RimStone package. All of these use \fBrimstone_4.4.0.orig.tar.gz\fP source archive; the naming convention is obviously for Debian, but all other packages have been made to conform for simplicity.
+If you are a packaging developer, the following can be used to build a RimStone package. All of these use \fBrimstone_5.0.0.orig.tar.gz\fP source archive; the naming convention is obviously for Debian, but all other packages have been made to conform for simplicity.
 
 .B - apt packaging
 

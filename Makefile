@@ -220,6 +220,7 @@ copy_binaries: build_spec  build_structure
 	if [ "$(RIM_CURL_EX)" == "0" ]; then install -m 0700 $(RDEST)/librimcurl.a -t $(V_LIB)/$(RDEST)/ ; fi
 	if [ "$(RIM_XML_EX)" == "0" ]; then install -m 0700 $(RDEST)/librimxml.a -t $(V_LIB)/$(RDEST)/ ; fi
 	install -m 0700 $(RDEST)/librimarr.a -t $(V_LIB)/$(RDEST)/
+	install -m 0700 $(RDEST)/librimarrsort.a -t $(V_LIB)/$(RDEST)/
 	if [ "$(RIM_PCRE2_EX)" == "0" ]; then install -m 0700 $(RDEST)/librimpcre2.a -t $(V_LIB)/$(RDEST)/ ; fi
 	install -m 0700 $(RDEST)/libsrvcrim.a -t $(V_LIB)/$(RDEST)/
 	install -m 0700 $(RDEST)/librim.a -t $(V_LIB)/$(RDEST)/
@@ -240,10 +241,7 @@ copy_binaries: build_spec  build_structure
 	install -m 0600 $(RDEST)/stub_xml.o -t $(V_LIB)/$(RDEST)/
 	if [ "$(REL)" == "1" ]; then install -m 0700 release/v1 -t $(V_LIB)/
 	install -m 0700 release/mrim  -t $(V_BIN)/ 
-	if [ ! -L "$(V_BIN)/mgrg" ]; then ln -s $(V_BIN)/mrim $(V_BIN)/mgrg; fi
 	install -m 0700 release/rimcli  -t $(V_BIN)/; fi
-	$(AT)#GG_COMPAT
-	if [ ! -L "$(V_LIB)/ggcli" ]; then ln -s $(V_BIN)/rimcli $(V_LIB)/ggcli; fi
 	$(AT)#the following are copied here and in build_structure. The reason is that RimStone developer can change them
 	$(AT)#so they need to be copied here. But when first installing RimStone, they need to be present in order to
 	$(AT)#build the rest (well not vmakefile, so it is not in build_structure rule; sys and rim are needed there
@@ -251,19 +249,12 @@ copy_binaries: build_spec  build_structure
 	$(AT)install -D -m 0600 vmakefile -t $(V_LIB)/
 	install -D -m 0700 sys -t $(V_LIB)/
 	install -D -m 0700 rim  -t $(V_BIN)/
-	$(AT)#GG_COMPAT
-	if [ ! -L "$(V_BIN)/gg" ]; then ln -s $(V_BIN)/rim $(V_BIN)/gg; fi
 	install -D -m 0700 rimlib  -t $(V_BIN)/
 	install -D -m 0600 rim.h -t $(V_INC)/
-	$(AT)#GG_COMPAT
-	if [ ! -L "$(V_INC)/golf.h" ]; then ln -s $(V_INC)/rim.h $(V_INC)/golf.h; fi
-	install -D -m 0600 rim_temp.h -t $(V_INC)/
 	install -D -m 0600 rimcommon.h -t $(V_INC)/
 	install -D -m 0600 fcgi/fcgiapp.h -t $(V_INC)/
 	install -D -m 0600 rcli.h -t $(V_INC)/
 	install -D -m 0600 rimmsg.h -t $(V_INC)/
-	$(AT)#GG_COMPAT
-	if [ ! -L "$(V_INC)/gcli.h" ]; then ln -s $(V_INC)/rcli.h $(V_INC)/gcli.h; fi
 	read -r RIM_C_GCC < <(gcc --version);echo "$$RIM_C_GCC" > $(V_SHARE)/.rim.gcc
 	echo "RIM_MARIADB_EX='$(RIM_MARIADB_EX)';RIM_SQLITE_EX='$(RIM_SQLITE_EX)';RIM_CURL_EX='$(RIM_CURL_EX)';RIM_PCRE2_EX='$(RIM_PCRE2_EX)';RIM_CRYPTO_EX='$(RIM_CRYPTO_EX)';RIM_POSTGRES_EX='$(RIM_POSTGRES_EX)';RIM_XML_EX='$(RIM_XML_EX)'" > $(V_SHARE)/.rim.libs
 	sed -i "s|^[ ]*export[ ]*RIM_LIBRARY_PATH[ ]*=.*|export RIM_LIBRARY_PATH=$(V_LIB)|g" $(V_LIB)/sys
@@ -288,9 +279,6 @@ build_structure:
 	install -m 0700 -d $(V_INC)/
 	install -m 0700 -d $(V_RIM_ABOUT)/
 	install -D -m 0600 rim.h -t $(V_INC)/
-	$(AT)#GG_COMPAT
-	if [ ! -L "$(V_INC)/golf.h" ]; then ln -s $(V_INC)/rim.h $(V_INC)/golf.h; fi
-	install -D -m 0600 rim_temp.h -t $(V_INC)/
 	install -D -m 0600 rimcommon.h -t $(V_INC)/
 	install -D -m 0600 fcgi/fcgiapp.h -t $(V_INC)/
 	install -D -m 0600 rcli.h -t $(V_INC)/
@@ -315,11 +303,9 @@ build_structure:
 	install -D -m 0700 sys -t $(V_LIB)/
 	install -D -m 0700 rimlib  -t $(V_BIN)/
 	install -D -m 0700 rim  -t $(V_BIN)/
-	$(AT)#GG_COMPAT
-	if [ ! -L "$(V_BIN)/gg" ]; then ln -s $(V_BIN)/rim $(V_BIN)/gg; fi
 	$(AT)#install map pages if not a debian package, which does it automatically. man pages will not exist for install of LTO (source recompile in package).
 	$(AT)if [ -d docs ]; then install -m 0700 -d $(V_MAN) ; install -D -m 0600 docs/*.2rim -t $(V_MAN)/ ; sed -i "s/\$$VERSION/$(PACKAGE_VERSION)/g" $(V_MAN)/*.2rim; sed -i "s/\$$DATE/$(DATE)/g" $(V_MAN)/*.2rim; fi
-	@GF=".version .version_public CONTRIBUTING LICENSE Makefile NOTICE README.md arr.c btrace/LICENSE btrace/atomic.c btrace/backtrace-supported.h btrace/backtrace.c btrace/backtrace.h btrace/config.h btrace/dwarf.c btrace/elf.c btrace/fileline.c btrace/filenames.h btrace/internal.h btrace/mmap.c btrace/mmapio.c btrace/posix.c btrace/print.c btrace/simple.c btrace/sort.c btrace/state.c chandle.c curl.c db.c fcgi/LICENSE fcgi/fastcgi.h fcgi/fcgiapp.c fcgi/fcgiapp.h fcgi/rimsock.c fcgi/rimsock.h fcgi/strerror.c hash.c json.c lite.c mrim.c msg.c mys.c pcre2.c pg.c rcli.c rcli.h rim rim.h rim.sel rim.te rim.vim rim_indent.vim rim_temp.h rimcli.c rimcommon.c rimcommon.h riminst.sh rimlib rimmem.c rimmsg.h rimrt.c rimrtc.c rimsetenv.sh rr.te sec.c stub.c stub_after.c stub_before.c sys tree.c utf.c utfs.c v1.c vmakefile xml.c "; tar cvfz rimstone.tar.gz $$GF>/dev/null
+	@GF=".version .version_public CONTRIBUTING LICENSE Makefile NOTICE README.md arr.c btrace/LICENSE btrace/atomic.c btrace/backtrace-supported.h btrace/backtrace.c btrace/backtrace.h btrace/config.h btrace/dwarf.c btrace/elf.c btrace/fileline.c btrace/filenames.h btrace/internal.h btrace/mmap.c btrace/mmapio.c btrace/posix.c btrace/print.c btrace/simple.c btrace/sort.c btrace/state.c chandle.c curl.c db.c fcgi/LICENSE fcgi/fastcgi.h fcgi/fcgiapp.c fcgi/fcgiapp.h fcgi/rimsock.c fcgi/rimsock.h fcgi/strerror.c hash.c json.c libsort/CONTRIBUTORS.md libsort/LICENSE.md libsort/sort.h libsort/sort_extra.h lite.c mrim.c msg.c mys.c pcre2.c pg.c rcli.c rcli.h rim rim.h rim.sel rim.te rim.vim rim_indent.vim rimcli.c rimcommon.c rimcommon.h riminst.sh rimlib rimmem.c rimmsg.h rimrt.c rimrtc.c rimsetenv.sh rr.te sec.c sort.c stub.c stub_after.c stub_before.c sys tree.c utf.c utfs.c v1.c vmakefile xml.c "; tar cvfz rimstone.tar.gz $$GF>/dev/null
 	$(AT)install -D -m 0600 rimstone.tar.gz -t $(V_SHARE)/ 
 
 #This, if needed, must be run as root (obviously). For instance, if you have SELinux enabled, and you want to run a server that's accessed from say a web server
@@ -382,7 +368,7 @@ build_spec_all:
 	$(AT)$(MAKE) REL=1 build_spec
 
 
-RRDEPS=$(RDEST)/v1 $(RDEST)/mrim $(RDEST)/libsrvcrim.a $(RDEST)/librim.a $(RDEST)/librimdb.a $(RDEST)/librimarr.a $(RDEST)/librimtree.a $(RDEST)/stub_after.o $(RDEST)/stub_before.o $(RDEST)/stub_crypto.o $(RDEST)/stub_xml.o $(RDEST)/stub_curl.o $(RDEST)/stub_arr.o $(RDEST)/stub_tree.o $(RDEST)/stub_pcre2.o $(RDEST)/stub_srvc.o $(RDEST)/stub_sqlite.o $(RDEST)/stub_postgres.o $(RDEST)/stub_mariadb.o $(RDEST)/stub_gendb.o $(RDEST)/librimcli.a $(RDEST)/librimscli.a $(RDEST)/librimbtrace.a $(RDEST)/librimfcgi.a $(RDEST)/rimcli
+RRDEPS=$(RDEST)/v1 $(RDEST)/mrim $(RDEST)/libsrvcrim.a $(RDEST)/librim.a $(RDEST)/librimdb.a $(RDEST)/librimarr.a $(RDEST)/librimarrsort.a $(RDEST)/librimtree.a $(RDEST)/stub_after.o $(RDEST)/stub_before.o $(RDEST)/stub_crypto.o $(RDEST)/stub_xml.o $(RDEST)/stub_curl.o $(RDEST)/stub_arr.o $(RDEST)/stub_tree.o $(RDEST)/stub_pcre2.o $(RDEST)/stub_srvc.o $(RDEST)/stub_sqlite.o $(RDEST)/stub_postgres.o $(RDEST)/stub_mariadb.o $(RDEST)/stub_gendb.o $(RDEST)/librimcli.a $(RDEST)/librimscli.a $(RDEST)/librimbtrace.a $(RDEST)/librimfcgi.a $(RDEST)/rimcli
 ifeq ($(RIM_MARIADB_EX),0)
     RRDEPS+=$(RDEST)/librimmys.a
 endif
@@ -446,6 +432,10 @@ $(RDEST)/librimcrypto.a: $(RDEST)/sec.o
 	$(AT)rm -f $@
 	$(AT)$(CCAR) $@  $^ 
 $(RDEST)/librimxml.a: $(RDEST)/xml.o 
+	$(AT)echo -n "."
+	$(AT)rm -f $@
+	$(AT)$(CCAR) $@ $^ 
+$(RDEST)/librimarrsort.a: $(RDEST)/arr_string_sort.o  $(RDEST)/arr_number_sort.o $(RDEST)/arr_double_sort.o $(RDEST)/arr_string_sort_desc.o  $(RDEST)/arr_number_sort_desc.o $(RDEST)/arr_double_sort_desc.o
 	$(AT)echo -n "."
 	$(AT)rm -f $@
 	$(AT)$(CCAR) $@ $^ 
@@ -552,6 +542,24 @@ $(RDEST)/curl.o: curl.c rim.h
 $(RDEST)/xml.o: xml.c rim.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS) 
+$(RDEST)/arr_string_sort_desc.o: sort.c rimcommon.h libsort/sort.h libsort/sort_extra.h
+	$(AT)echo -n "."
+	$(AT)$(CC) -c -o $@ sort.c $(CFLAGS) -DRIM_SORT_DESC -DSORT_EXTRA -Wno-missing-declarations -DRIM_ARR_STRING
+$(RDEST)/arr_double_sort_desc.o: sort.c rimcommon.h libsort/sort.h libsort/sort_extra.h
+	$(AT)echo -n "."
+	$(AT)$(CC) -c -o $@ sort.c $(CFLAGS) -DRIM_SORT_DESC -DSORT_EXTRA -Wno-missing-declarations -DRIM_ARR_DOUBLE
+$(RDEST)/arr_number_sort_desc.o: sort.c rimcommon.h libsort/sort.h libsort/sort_extra.h
+	$(AT)echo -n "."
+	$(AT)$(CC) -c -o $@ sort.c $(CFLAGS) -DRIM_SORT_DESC -DSORT_EXTRA -Wno-missing-declarations -DRIM_ARR_NUMBER
+$(RDEST)/arr_string_sort.o: sort.c rimcommon.h libsort/sort.h libsort/sort_extra.h
+	$(AT)echo -n "."
+	$(AT)$(CC) -c -o $@ sort.c $(CFLAGS) -DSORT_EXTRA -Wno-missing-declarations -DRIM_ARR_STRING
+$(RDEST)/arr_double_sort.o: sort.c rimcommon.h libsort/sort.h libsort/sort_extra.h
+	$(AT)echo -n "."
+	$(AT)$(CC) -c -o $@ sort.c $(CFLAGS) -DSORT_EXTRA -Wno-missing-declarations -DRIM_ARR_DOUBLE
+$(RDEST)/arr_number_sort.o: sort.c rimcommon.h libsort/sort.h libsort/sort_extra.h
+	$(AT)echo -n "."
+	$(AT)$(CC) -c -o $@ sort.c $(CFLAGS) -DSORT_EXTRA -Wno-missing-declarations -DRIM_ARR_NUMBER
 $(RDEST)/arr_string.o: arr.c rim.h
 	$(AT)echo -n "."
 	$(AT)$(CC) -c -o $@ $< $(CFLAGS) -DRIM_ARR_STRING
