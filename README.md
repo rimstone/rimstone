@@ -12,6 +12,8 @@ Build web applications, distributed systems, middleware and command-line applica
 
 [Install](#install)
 
+[Bugs and issues](#bugs-and-issues)
+
 [Blog](#blog)
 
 [Web site](#web-site)
@@ -46,6 +48,10 @@ cd rimstone-main
 RimStone uses toolkit libraries for some functionality (such as MariaDB/PostgreSQL/SQLite client, libxml2, CURL, OpenSSL), and to install those you'll need sudo of course (the RimStone installer can install those for you or you can do it yourself).  
 
 You can also install from the github repo, or from a package (such as for apt, dnf, zypper or pacman) - see [all installation methods](https://rimstone-lang.com/install-rimstone.html). All the files (including the above main.tar.gz as well as the packages) are in [RimStone releases](https://github.com/rimstone/rimstone/releases/tag/5.0.0).
+
+## Bugs and issues
+
+Send email to hello@rimstone-lang.com with the issue description.
 
 ## Blog
 Bookmark [RimStone blog](https://rimstone-lang.com/blog.html) for the latest releases, articles, examples etc.
