@@ -102,7 +102,7 @@ else
 endif
 
 #determine which libraries are present and which are not (0 means present)
-_dummy:=$(shell source ./rimlib && \
+_dummy:=$(shell . ./rimlib && \
     echo "" > .rimlib.mk && \
     echo "RIM_MARIADB_EX:=$$RIM_MARIADB_EX" >> .rimlib.mk && \
     echo "RIM_SQLITE_EX:=$$RIM_SQLITE_EX" >> .rimlib.mk && \
