@@ -4,7 +4,8 @@ on:
   push:
     tags:
       - '*' # Version tags like 1.2.3
-
+  workflow_dispatch: # This enables the "Run workflow" button
+  
 jobs:
   build:
     runs-on: ubuntu-latest
