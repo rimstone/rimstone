@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
+      fail-fast: false
       # Which flavors of linux to build on
       matrix:
         distro: [
@@ -27,6 +28,10 @@ jobs:
       image: ${{ matrix.distro }}
 
     steps:
+      - name: Pre-install tar for openSUSE
+        if: matrix.distro == 'opensuse/leap:latest'
+        run: zypper install -y tar gzip
+        
       - name: Checkout code
         uses: actions/checkout@v4
 
