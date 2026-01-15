@@ -7,9 +7,7 @@
 
 .ONESHELL:
 SHELL:=/bin/bash
-ifeq ($(shell id -u), 0)
-    $(error You cannot run this makefile as root or sudo)
-endif
+
 
 #this works even if sudo'd (unlike $USER)
 RRUSER=$(shell whoami) 
