@@ -38,6 +38,7 @@ jobs:
           elif [ -f /usr/bin/dnf ]; then
             dnf install -y gcc make gcc tar libcurl-devel pcre2-devel libxml2-devel openssl-devel mariadb-connector-c-devel libpq-devel policycoreutils policycoreutils-devel libselinux-utils sqlite-devel man-db policycoreutils-python-utils
           elif [ -f /usr/bin/pacman ]; then
+            pacman -Syu --noconfirm
             pacman -Sy --noconfirm base-devel tar pkgconf openssl curl mariadb-libs postgresql-libs sqlite3 pcre2 libxml2
           elif [ -f /usr/bin/zypper ]; then
             zypper install -y gcc make gcc tar libcurl-devel pcre2-devel libxml2-devel ssl-devel libmariadb-devel postgresql-devel sqlite3-devel selinux-policy-devel  
