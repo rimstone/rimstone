@@ -55,6 +55,7 @@ jobs:
         run: |
           # Make RimStone
           make clean
+          ./rimlib
           make
           DISTRO_NAME=$(echo "${{ matrix.distro }}" | sed 's/[:\/]/-/g')
           tar cvfz rimstone-${DISTRO_NAME} release
