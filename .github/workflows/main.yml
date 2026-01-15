@@ -28,6 +28,16 @@ jobs:
       image: ${{ matrix.distro }}
 
     steps:
+      - name: Create non-root user if missing
+        run: |
+            useradd -u 1001 -m builder || adduser -u 1001 -D builder
+            chown -R 1001:1001 .
+
+      - name: Run Make as non-root
+        # Use gosu or su-exec to switch to the UID 1001 user we just verified/created
+        run: |
+          # You may need to install 'gosu' or just use 'su'
+          su - $(id -nu 1001) -c "make"
       - name: Pre-install tar for openSUSE
         if: matrix.distro == 'opensuse/leap:latest'
         run: zypper install -y tar gzip
@@ -53,7 +63,7 @@ jobs:
         run: |
           # Make RimStone
           make clean
-          make
+          su builder -c "make"
           DISTRO_NAME=$(echo "${{ matrix.distro }}" | sed 's/[:\/]/-/g')
           tar cvfz rimstone-${DISTRO_NAME} release
 
