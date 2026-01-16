@@ -54,10 +54,10 @@ jobs:
       - name: Make Binary
         run: |
           # Make RimStone
-          make clean
           ./rimlib &&     echo "" > .rimlib.mk &&     echo "RIM_MARIADB_EX:=$RIM_MARIADB_EX" >> .rimlib.mk &&     echo "RIM_SQLITE_EX:=$RIM_SQLITE_EX" >> .rimlib.mk &&     echo "RIM_CURL_EX:=$RIM_CURL_EX" >> .rimlib.mk &&     echo "RIM_PCRE2_EX:=$RIM_PCRE2_EX" >> .rimlib.mk &&  "RIM_CRYPTO_EX:=$RIM_CRYPTO_EX" >> .rimlib.mk &&     echo "RIM_POSTGRES_EX:=$RIM_POSTGRES_EX" >> .rimlib.mk &&     echo "RIM_XML_EX:=$RIM_XML_EX" >> .rimlib.mk &&     echo "RIM_MARIADB_INC:=$RIM_MARIADB_INC" >> .rimlib.mk &&     echo "RIM_POSTGRES_INC:=$RIM_POSTGRES_INC" >> .rimlib.mk
           echo "RIMLIB:"
           cat .rimlib.mk
+          make clean
           make
           DISTRO_NAME=$(echo "${{ matrix.distro }}" | sed 's/[:\/]/-/g')
           tar cvfz rimstone-${DISTRO_NAME} release
