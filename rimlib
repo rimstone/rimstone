@@ -4,7 +4,7 @@
 #Licensed under Apache License v2. See LICENSE file.
 #On the web http://rimstone-lang.com/ - this file is part of RimStone framework.
 
-if [ $EUID -eq 0 ]; then echo "You cannot run this as sudo or root"; exit 1;  fi
+
 #determine library existance for RimStone compilation process (both produce and apps)
 
 #
